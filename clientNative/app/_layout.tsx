@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 export { ErrorBoundary } from 'expo-router';
@@ -23,22 +24,24 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={styles.root}>
-      <StatusBar style="light" hidden={showSplash} />
-      {showSplash ? (
-        <AppSplashScreen onFinish={handleSplashFinish} />
-      ) : (
-        <Stack>
-          <Stack.Screen name="index" options={{ title: 'MoviyAI' }} />
-        </Stack>
-      )}
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={styles.root}>
+        <StatusBar style="light" hidden={showSplash} />
+        {showSplash ? (
+          <AppSplashScreen onFinish={handleSplashFinish} />
+        ) : (
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#030308' } }}>
+            <Stack.Screen name="index" />
+          </Stack>
+        )}
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#020817',
+    backgroundColor: '#030308',
   },
 });
