@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
@@ -22,12 +23,22 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style={showSplash ? 'light' : 'auto'} />
-      <Stack>
-        <Stack.Screen name="index" options={{ title: 'MoviyAI' }} />
-      </Stack>
-      {showSplash ? <AppSplashScreen onFinish={handleSplashFinish} /> : null}
+    <GestureHandlerRootView style={styles.root}>
+      <StatusBar style="light" hidden={showSplash} />
+      {showSplash ? (
+        <AppSplashScreen onFinish={handleSplashFinish} />
+      ) : (
+        <Stack>
+          <Stack.Screen name="index" options={{ title: 'MoviyAI' }} />
+        </Stack>
+      )}
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#020817',
+  },
+});

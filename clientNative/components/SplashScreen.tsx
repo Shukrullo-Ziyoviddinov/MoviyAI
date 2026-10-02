@@ -1,5 +1,5 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, {
@@ -18,8 +18,8 @@ type SplashScreenProps = {
 };
 
 export function SplashScreen({ onFinish, durationMs = 2200 }: SplashScreenProps) {
-  const { width } = useWindowDimensions();
-  const logoSize = Math.min(width * 0.42, 196);
+  const { width, height } = useWindowDimensions();
+  const logoSize = Math.min(width * 0.52, 248);
 
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.88);
@@ -57,7 +57,7 @@ export function SplashScreen({ onFinish, durationMs = 2200 }: SplashScreenProps)
       locations={[0, 0.35, 0.7, 1]}
       start={{ x: 0.15, y: 0 }}
       end={{ x: 0.85, y: 1 }}
-      style={styles.root}
+      style={[styles.root, { width, height }]}
     >
       <Animated.View style={[styles.logoWrap, logoStyle]}>
         <Image
@@ -73,10 +73,9 @@ export function SplashScreen({ onFinish, durationMs = 2200 }: SplashScreenProps)
 
 const styles = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 100,
   },
   logoWrap: {
     alignItems: 'center',
