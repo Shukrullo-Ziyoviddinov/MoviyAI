@@ -11,12 +11,11 @@ import {
 import { ThemeToggle } from '@/components/profile/ThemeToggle';
 import { NotificationToggle } from '@/components/settings/NotificationToggle';
 import { SettingsMenuRow } from '@/components/settings/SettingsMenuRow';
+import { useLanguageStore, LANGUAGE_OPTIONS } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { StyleSheet, View } from 'react-native';
 
 type SettingsGeneralCardProps = {
-  onLanguage?: () => void;
-  onTheme?: () => void;
   onPrivacy?: () => void;
   onData?: () => void;
   onHelp?: () => void;
@@ -24,13 +23,16 @@ type SettingsGeneralCardProps = {
 };
 
 export function SettingsGeneralCard({
-  onLanguage,
   onPrivacy,
   onData,
   onHelp,
   onAbout,
 }: SettingsGeneralCardProps) {
   const { colors, isDark } = useTheme();
+  const language = useLanguageStore((s) => s.language);
+  const openLanguageModal = useLanguageStore((s) => s.openModal);
+  const langLabel =
+    LANGUAGE_OPTIONS.find((o) => o.code === language)?.label ?? "O'zbekcha";
 
   return (
     <View
@@ -49,9 +51,9 @@ export function SettingsGeneralCard({
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
         title="Til"
-        subtitle="O'zbekcha"
+        subtitle={langLabel}
         Icon={GlobeIcon}
-        onPress={onLanguage}
+        onPress={openLanguageModal}
       />
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow

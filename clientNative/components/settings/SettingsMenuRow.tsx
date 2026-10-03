@@ -21,14 +21,20 @@ export function SettingsMenuRow({
   title,
   subtitle,
   Icon,
-  iconColor = '#7DD3FC',
+  iconColor,
   value,
   onPress,
   right,
   showChevron = true,
   danger = false,
 }: SettingsMenuRowProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const resolvedIcon = danger
+    ? isDark
+      ? '#F87171'
+      : '#DC2626'
+    : iconColor ?? colors.accent;
+  const dangerTitle = isDark ? '#FCA5A5' : '#B91C1C';
 
   return (
     <Pressable
@@ -36,12 +42,24 @@ export function SettingsMenuRow({
       onPress={onPress}
       disabled={!onPress && !right}
     >
-      <View style={styles.iconBox}>
-        <Icon size={18} color={danger ? '#F87171' : iconColor} />
+      <View
+        style={[
+          styles.iconBox,
+          {
+            backgroundColor: isDark
+              ? 'rgba(30, 60, 140, 0.22)'
+              : 'rgba(30, 79, 214, 0.1)',
+            borderColor: isDark
+              ? 'rgba(70, 120, 220, 0.28)'
+              : 'rgba(30, 79, 214, 0.22)',
+          },
+        ]}
+      >
+        <Icon size={18} color={resolvedIcon} />
       </View>
 
       <View style={styles.textWrap}>
-        <Text style={[styles.title, { color: danger ? '#FCA5A5' : colors.text }]}>
+        <Text style={[styles.title, { color: danger ? dangerTitle : colors.text }]}>
           {title}
         </Text>
         {subtitle ? (
@@ -53,8 +71,13 @@ export function SettingsMenuRow({
         <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
       ) : null}
 
-      {right ? right : showChevron ? (
-        <ChevronRightIcon size={18} color={danger ? '#F87171' : colors.textMuted} />
+      {right ? (
+        right
+      ) : showChevron ? (
+        <ChevronRightIcon
+          size={18}
+          color={danger ? resolvedIcon : colors.textMuted}
+        />
       ) : null}
     </Pressable>
   );
@@ -74,9 +97,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(30, 60, 140, 0.22)',
     borderWidth: 1,
-    borderColor: 'rgba(70, 120, 220, 0.28)',
   },
   textWrap: {
     flex: 1,

@@ -1,4 +1,5 @@
 import { ChevronRightIcon, LogoutIcon } from '@/components/icons';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type SettingsLogoutButtonProps = {
@@ -6,13 +7,39 @@ type SettingsLogoutButtonProps = {
 };
 
 export function SettingsLogoutButton({ onPress }: SettingsLogoutButtonProps) {
+  const { isDark } = useTheme();
+  const red = isDark ? '#F87171' : '#DC2626';
+  const title = isDark ? '#FCA5A5' : '#B91C1C';
+
   return (
-    <Pressable style={styles.btn} onPress={onPress}>
-      <View style={styles.iconBox}>
-        <LogoutIcon size={18} color="#F87171" />
+    <Pressable
+      style={[
+        styles.btn,
+        {
+          backgroundColor: isDark
+            ? 'rgba(80, 20, 30, 0.45)'
+            : 'rgba(254, 226, 226, 0.95)',
+          borderColor: isDark
+            ? 'rgba(248, 113, 113, 0.25)'
+            : 'rgba(220, 38, 38, 0.22)',
+        },
+      ]}
+      onPress={onPress}
+    >
+      <View
+        style={[
+          styles.iconBox,
+          {
+            backgroundColor: isDark
+              ? 'rgba(239, 68, 68, 0.16)'
+              : 'rgba(220, 38, 38, 0.12)',
+          },
+        ]}
+      >
+        <LogoutIcon size={18} color={red} />
       </View>
-      <Text style={styles.text}>Tizimdan chiqish</Text>
-      <ChevronRightIcon size={18} color="#F87171" />
+      <Text style={[styles.text, { color: title }]}>Tizimdan chiqish</Text>
+      <ChevronRightIcon size={18} color={red} />
     </Pressable>
   );
 }
@@ -26,9 +53,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 14,
     borderRadius: 18,
-    backgroundColor: 'rgba(80, 20, 30, 0.45)',
     borderWidth: 1,
-    borderColor: 'rgba(248, 113, 113, 0.25)',
   },
   iconBox: {
     width: 38,
@@ -36,11 +61,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.16)',
   },
   text: {
     flex: 1,
-    color: '#FCA5A5',
     fontSize: 15,
     fontWeight: '600',
   },

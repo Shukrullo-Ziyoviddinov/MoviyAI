@@ -1,4 +1,5 @@
 import { SplashScreen as AppSplashScreen } from '@/components/SplashScreen';
+import { LanguageModal } from '@/components/language/LanguageModal';
 import { useTheme } from '@/src/stores/useThemeStore';
 import {
   CardStyleInterpolators,
@@ -48,6 +49,7 @@ function AppNavigator() {
           <Stack.Screen name="profile" />
           <Stack.Screen name="settings" />
         </Stack>
+        <LanguageModal />
       </GestureHandlerRootView>
     </>
   );
