@@ -11,6 +11,7 @@ import { ProfileMenuRow } from '@/components/profile/ProfileMenuRow';
 import { ThemeToggle } from '@/components/profile/ThemeToggle';
 import { useLanguageStore, LANGUAGE_OPTIONS } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 type ProfileMenuCardProps = {
@@ -26,11 +27,12 @@ export function ProfileMenuCard({
   onSettings,
   onLogout,
 }: ProfileMenuCardProps) {
+  const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const language = useLanguageStore((s) => s.language);
   const openLanguageModal = useLanguageStore((s) => s.openModal);
   const langLabel =
-    LANGUAGE_OPTIONS.find((o) => o.code === language)?.label ?? "O'zbekcha";
+    t(LANGUAGE_OPTIONS.find((o) => o.code === language)?.labelKey ?? 'language.uz');
 
   return (
     <View
@@ -40,8 +42,8 @@ export function ProfileMenuCard({
       ]}
     >
       <ProfileMenuRow
-        title="Saqlangan kinolar"
-        subtitle="Sevimli kinolaringiz ro'yxati"
+        title={t('profile.savedMovies')}
+        subtitle={t('profile.savedMoviesSub')}
         Icon={BookmarkIcon}
         iconColor="#60A5FA"
         iconBg="rgba(37, 99, 235, 0.2)"
@@ -50,8 +52,8 @@ export function ProfileMenuCard({
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
       <ProfileMenuRow
-        title="Saqlangan suhbatlar"
-        subtitle="Oldingi AI suhbatlaringiz"
+        title={t('profile.savedChats')}
+        subtitle={t('profile.savedChatsSub')}
         Icon={ChatBubbleIcon}
         iconColor="#A78BFA"
         iconBg="rgba(109, 40, 217, 0.2)"
@@ -60,8 +62,8 @@ export function ProfileMenuCard({
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
       <ProfileMenuRow
-        title="Sozlamalar"
-        subtitle="Ilovani sozlash"
+        title={t('profile.settings')}
+        subtitle={t('profile.settingsSub')}
         Icon={SettingsIcon}
         iconColor="#93C5FD"
         iconBg="rgba(59, 130, 246, 0.16)"
@@ -70,7 +72,7 @@ export function ProfileMenuCard({
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
       <ProfileMenuRow
-        title="Til"
+        title={t('common.language')}
         subtitle={langLabel}
         Icon={GlobeIcon}
         iconColor="#38BDF8"
@@ -80,8 +82,8 @@ export function ProfileMenuCard({
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
       <ProfileMenuRow
-        title="Tema"
-        subtitle={isDark ? "Qorong'i" : "Yorug'"}
+        title={t('common.theme')}
+        subtitle={isDark ? t('common.themeDark') : t('common.themeLight')}
         Icon={isDark ? MoonIcon : SunIcon}
         iconColor="#C4B5FD"
         iconBg="rgba(124, 58, 237, 0.18)"
@@ -91,8 +93,8 @@ export function ProfileMenuCard({
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
       <ProfileMenuRow
-        title="Chiqish"
-        subtitle="Hisobingizdan chiqish"
+        title={t('common.logout')}
+        subtitle={t('profile.logoutSub')}
         Icon={LogoutIcon}
         iconColor="#F87171"
         iconBg="rgba(239, 68, 68, 0.16)"

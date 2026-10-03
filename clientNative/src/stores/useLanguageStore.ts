@@ -1,3 +1,4 @@
+import i18n from '@/src/i18n';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -6,22 +7,22 @@ export type AppLanguage = 'uz' | 'ru' | 'en';
 
 export const LANGUAGE_OPTIONS: {
   code: AppLanguage;
-  label: string;
+  labelKey: 'language.uz' | 'language.ru' | 'language.en';
   flag: number;
 }[] = [
   {
     code: 'uz',
-    label: "O'zbekcha",
+    labelKey: 'language.uz',
     flag: require('../../assets/images/uzb-by.jpg'),
   },
   {
     code: 'ru',
-    label: 'Русский',
+    labelKey: 'language.ru',
     flag: require('../../assets/images/rubay.png'),
   },
   {
     code: 'en',
-    label: 'English',
+    labelKey: 'language.en',
     flag: require('../../assets/images/engby.png'),
   },
 ];
@@ -32,28 +33,30 @@ type LanguageState = {
   setLanguage: (language: AppLanguage) => void;
   openModal: () => void;
   closeModal: () => void;
-  label: () => string;
 };
 
 export const useLanguageStore = create<LanguageState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       language: 'uz',
       modalOpen: false,
 
-      setLanguage: (language) => set({ language }),
+      setLanguage: (language) => {
+        void i18n.changeLanguage(language);
+        set({ language });
+      },
       openModal: () => set({ modalOpen: true }),
       closeModal: () => set({ modalOpen: false }),
-
-      label: () => {
-        const found = LANGUAGE_OPTIONS.find((o) => o.code === get().language);
-        return found?.label ?? "O'zbekcha";
-      },
     }),
     {
       name: 'moviy-language',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ language: state.language }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.language) {
+          void i18n.changeLanguage(state.language);
+        }
+      },
     }
   )
 );

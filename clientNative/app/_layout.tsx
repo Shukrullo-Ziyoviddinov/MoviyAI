@@ -1,5 +1,8 @@
 import { SplashScreen as AppSplashScreen } from '@/components/SplashScreen';
 import { LanguageModal } from '@/components/language/LanguageModal';
+import { SideMenu } from '@/components/menu/SideMenu';
+import { BottomNav } from '@/components/nav/BottomNav';
+import '@/src/i18n';
 import { useTheme } from '@/src/stores/useThemeStore';
 import {
   CardStyleInterpolators,
@@ -32,23 +35,27 @@ function AppNavigator() {
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <GestureHandlerRootView style={[styles.root, { backgroundColor: colors.bg }]}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            cardStyle: { backgroundColor: colors.bg },
-            gestureEnabled: true,
-            gestureDirection: 'horizontal',
-            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-            transitionSpec: {
-              open: slideSpec,
-              close: slideSpec,
-            },
-          }}
-        >
-          <Stack.Screen name="index" options={{ animationEnabled: false }} />
-          <Stack.Screen name="profile" />
-          <Stack.Screen name="settings" />
-        </Stack>
+        <SideMenu>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              cardStyle: { backgroundColor: colors.bg },
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+              transitionSpec: {
+                open: slideSpec,
+                close: slideSpec,
+              },
+            }}
+          >
+            <Stack.Screen name="index" options={{ animationEnabled: false }} />
+            <Stack.Screen name="home" />
+            <Stack.Screen name="profile" />
+            <Stack.Screen name="settings" />
+          </Stack>
+        </SideMenu>
+        <BottomNav />
         <LanguageModal />
       </GestureHandlerRootView>
     </>

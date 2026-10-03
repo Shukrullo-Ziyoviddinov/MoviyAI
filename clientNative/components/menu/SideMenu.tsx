@@ -10,9 +10,9 @@ import {
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BackHandler,
   Pressable,
@@ -36,14 +36,14 @@ type IconComp = ComponentType<{ size?: number; color?: string }>;
 
 const NAV_ITEMS: {
   key: NavKey;
-  label: string;
+  labelKey: string;
   Icon: IconComp;
 }[] = [
-  { key: 'home', label: 'Bosh sahifa', Icon: HomeIcon },
-  { key: 'chat', label: 'AI Chat', Icon: ChatBubbleIcon },
-  { key: 'profile', label: 'Profil', Icon: PersonIcon },
-  { key: 'settings', label: 'Sozlamalar', Icon: SettingsIcon },
-  { key: 'newChat', label: 'Yangi chat', Icon: PlusIcon },
+  { key: 'home', labelKey: 'menu.home', Icon: HomeIcon },
+  { key: 'chat', labelKey: 'menu.chat', Icon: ChatBubbleIcon },
+  { key: 'profile', labelKey: 'menu.profile', Icon: PersonIcon },
+  { key: 'settings', labelKey: 'menu.settings', Icon: SettingsIcon },
+  { key: 'newChat', labelKey: 'menu.newChat', Icon: PlusIcon },
 ];
 
 const THRESHOLD = 0.4;
@@ -54,8 +54,18 @@ type SideMenuProps = {
   children: ReactNode;
 };
 
+function isNavActive(key: NavKey, pathname: string) {
+  if (key === 'home') return pathname === '/home';
+  if (key === 'chat') return pathname === '/' || pathname === '/index';
+  if (key === 'profile') return pathname === '/profile';
+  if (key === 'settings') return pathname === '/settings';
+  return false;
+}
+
 export function SideMenu({ children }: SideMenuProps) {
-  const { colors } = useTheme();
+  const { t } = useTranslation();
+  const { colors, isDark } = useTheme();
+  const pathname = usePathname();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const open = useSideMenuStore((state) => state.open);
@@ -105,7 +115,31 @@ export function SideMenu({ children }: SideMenuProps) {
     router.push('/settings');
   };
 
+  const goHome = () => {
+    closeMenu();
+    if (pathname === '/home') return;
+    router.push('/home');
+  };
+
+  const goChat = () => {
+    closeMenu();
+    if (pathname === '/' || pathname === '/index') return;
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/');
+  };
+
   const handleNav = (key: NavKey) => {
+    if (key === 'home') {
+      goHome();
+      return;
+    }
+    if (key === 'chat') {
+      goChat();
+      return;
+    }
     if (key === 'profile') {
       goProfile();
       return;
@@ -195,7 +229,7 @@ export function SideMenu({ children }: SideMenuProps) {
 
   return (
     <GestureDetector gesture={openGesture}>
-      <View style={styles.shell}>
+      <View style={[styles.shell, (layerOn || open) && styles.shellRaised]}>
         {children}
 
         <View
@@ -233,28 +267,39 @@ export function SideMenu({ children }: SideMenuProps) {
               </Pressable>
 
               <View style={styles.nav}>
-                {NAV_ITEMS.map(({ key, label, Icon }) => {
-                const active = key === 'chat';
+                {NAV_ITEMS.map(({ key, labelKey, Icon }) => {
+                const active = isNavActive(key, pathname);
                 const content = (
                   <>
-                    <Icon size={22} color={active ? colors.text : colors.icon} />
-                    <Text style={[styles.navLabel, { color: colors.text }, active && styles.navLabelActive]}>
-                      {label}
+                    <Icon size={22} color={active ? colors.accentBright : colors.icon} />
+                    <Text
+                      style={[
+                        styles.navLabel,
+                        { color: colors.text },
+                        active && styles.navLabelActive,
+                      ]}
+                    >
+                      {t(labelKey)}
                     </Text>
                   </>
                 );
 
                 if (active) {
                   return (
-                    <Pressable key={key} onPress={() => handleNav(key)}>
-                      <LinearGradient
-                        colors={[colors.panelSoft, colors.panel]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.navItemActive}
-                      >
-                        {content}
-                      </LinearGradient>
+                    <Pressable
+                      key={key}
+                      onPress={() => handleNav(key)}
+                      style={[
+                        styles.navItemActive,
+                        {
+                          backgroundColor: isDark
+                            ? 'rgba(30, 79, 214, 0.22)'
+                            : 'rgba(30, 79, 214, 0.1)',
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      {content}
                     </Pressable>
                   );
                 }
@@ -270,13 +315,17 @@ export function SideMenu({ children }: SideMenuProps) {
               <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
               <View style={styles.history}>
-                <Text style={[styles.historyTitle, { color: colors.text }]}>Oldingi suhbatlar</Text>
+                <Text style={[styles.historyTitle, { color: colors.text }]}>
+                  {t('menu.previousChats')}
+                </Text>
                 <View style={styles.historyEmpty} />
               </View>
 
               <Pressable style={styles.logout} onPress={closeMenu}>
                 <LogoutIcon size={22} color={colors.icon} />
-                <Text style={[styles.logoutText, { color: colors.text }]}>Chiqish</Text>
+                <Text style={[styles.logoutText, { color: colors.text }]}>
+                  {t('common.logout')}
+                </Text>
               </Pressable>
             </Animated.View>
           </GestureDetector>
@@ -290,8 +339,12 @@ const styles = StyleSheet.create({
   shell: {
     flex: 1,
   },
+  shellRaised: {
+    zIndex: 70,
+    elevation: 70,
+  },
   overlay: {
-    zIndex: 60,
+    zIndex: 70,
   },
   backdrop: {
     backgroundColor: '#000',
@@ -350,6 +403,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 12,
     borderRadius: 12,
+    borderWidth: 1,
   },
   navLabel: {
     fontSize: 15,

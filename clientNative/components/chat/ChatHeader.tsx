@@ -4,12 +4,14 @@ import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
+import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const HEADER_ROW_HEIGHT = 62;
 
 export function ChatHeader() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const item = useMediaViewerStore((state) => state.item);
@@ -23,12 +25,12 @@ export function ChatHeader() {
     try {
       const available = await Sharing.isAvailableAsync();
       if (!available) {
-        Alert.alert('Xato', 'Yuklab olish bu qurilmada mavjud emas.');
+        Alert.alert(t('common.error'), t('chat.downloadUnavailable'));
         return;
       }
       await Sharing.shareAsync(item.uri);
     } catch {
-      Alert.alert('Xato', 'Rasmni yuklab bo‘lmadi.');
+      Alert.alert(t('common.error'), t('chat.downloadFailed'));
     }
   };
 

@@ -1,0 +1,66 @@
+{
+  "common": {
+    "logout": "Chiqish",
+    "logoutSystem": "Tizimdan chiqish",
+    "language": "Til",
+    "theme": "Tema",
+    "themeDark": "Qorong'i",
+    "themeLight": "Yorug'",
+    "error": "Xato"
+  },
+  "language": {
+    "choose": "Tilni tanlang",
+    "uz": "O'zbekcha",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "menu": {
+    "home": "Asosiy",
+    "chat": "AI Chat",
+    "menyu": "Menyu",
+    "profile": "Profil",
+    "settings": "Sozlamalar",
+    "newChat": "Yangi chat",
+    "previousChats": "Oldingi suhbatlar"
+  },
+  "home": {
+    "emptyTitle": "Hali hech narsa yo'q",
+    "emptySubtitle": "Kinolar va tavsiyalar shu yerda paydo bo'ladi. Hozir AI Chat orqali qidirishni boshlang.",
+    "goToChat": "AI Chatga o'tish"
+  },
+  "profile": {
+    "savedMovies": "Saqlangan kinolar",
+    "savedMoviesSub": "Sevimli kinolaringiz ro'yxati",
+    "savedChats": "Saqlangan suhbatlar",
+    "savedChatsSub": "Oldingi AI suhbatlaringiz",
+    "settings": "Sozlamalar",
+    "settingsSub": "Ilovani sozlash",
+    "logoutSub": "Hisobingizdan chiqish"
+  },
+  "settings": {
+    "title": "Sozlamalar",
+    "subtitle": "Ilovangizni o'zingizga moslab sozlang",
+    "notifications": "Bildirishnomalar",
+    "notificationsSub": "Yangiliklar va eslatmalar",
+    "privacy": "Maxfiylik va xavfsizlik",
+    "data": "Ma'lumotlarni boshqarish",
+    "dataSub": "Kesh va saqlash",
+    "help": "Yordam va qo'llab-quvvatlash",
+    "about": "Ilova haqida",
+    "savedMovies": "Saqlangan kinolar",
+    "savedMoviesSub": "Sevimli filmlaringiz ro'yxati",
+    "savedChats": "Saqlangan suhbatlar",
+    "savedChatsSub": "Oldingi AI suhbatlaringiz"
+  },
+  "chat": {
+    "introTitle": "Qanday kino izlayapsiz?",
+    "introSubtitle": "Kino haqida yozing, rasm yuboring yoki video yuklang.",
+    "actionText": "Matn bilan so'rov",
+    "actionImage": "Rasm bilan topish",
+    "actionVideo": "Video orqali topish",
+    "actionRecommend": "Tavsiya olish qidirish",
+    "placeholder": "Xabar yozing...",
+    "downloadUnavailable": "Yuklab olish bu qurilmada mavjud emas.",
+    "downloadFailed": "Rasmni yuklab bo‘lmadi."
+  }
+}

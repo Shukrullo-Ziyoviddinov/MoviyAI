@@ -10,9 +10,11 @@ import { useChatStore } from '@/src/stores/useChatStore';
 import { useComposerStore } from '@/src/stores/useComposerStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 export function ChatComposer() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const sendMessage = useChatStore((state) => state.sendMessage);
   const selectedMedia = useComposerStore((state) => state.selectedMedia);
@@ -49,7 +51,7 @@ export function ChatComposer() {
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder="Xabar yozing..."
+          placeholder={t('chat.placeholder')}
           placeholderTextColor={colors.textMuted}
           style={[
             styles.input,

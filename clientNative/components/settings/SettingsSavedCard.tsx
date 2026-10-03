@@ -1,6 +1,7 @@
 import { BookmarkIcon, ChatBubbleIcon } from '@/components/icons';
 import { SettingsMenuRow } from '@/components/settings/SettingsMenuRow';
 import { useTheme } from '@/src/stores/useThemeStore';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 type SettingsSavedCardProps = {
@@ -16,6 +17,7 @@ export function SettingsSavedCard({
   onMovies,
   onChats,
 }: SettingsSavedCardProps) {
+  const { t } = useTranslation();
   const { colors } = useTheme();
 
   return (
@@ -26,16 +28,16 @@ export function SettingsSavedCard({
       ]}
     >
       <SettingsMenuRow
-        title="Saqlangan kinolar"
-        subtitle="Sevimli filmlaringiz ro'yxati"
+        title={t('settings.savedMovies')}
+        subtitle={t('settings.savedMoviesSub')}
         Icon={BookmarkIcon}
         value={String(moviesCount)}
         onPress={onMovies}
       />
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
-        title="Saqlangan suhbatlar"
-        subtitle="Oldingi AI suhbatlaringiz"
+        title={t('settings.savedChats')}
+        subtitle={t('settings.savedChatsSub')}
         Icon={ChatBubbleIcon}
         value={String(chatsCount)}
         onPress={onChats}

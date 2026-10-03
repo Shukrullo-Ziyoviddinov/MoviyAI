@@ -1,0 +1,66 @@
+{
+  "common": {
+    "logout": "Выйти",
+    "logoutSystem": "Выйти из аккаунта",
+    "language": "Язык",
+    "theme": "Тема",
+    "themeDark": "Тёмная",
+    "themeLight": "Светлая",
+    "error": "Ошибка"
+  },
+  "language": {
+    "choose": "Выберите язык",
+    "uz": "O'zbekcha",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "menu": {
+    "home": "Главная",
+    "chat": "AI Chat",
+    "menyu": "Меню",
+    "profile": "Профиль",
+    "settings": "Настройки",
+    "newChat": "Новый чат",
+    "previousChats": "Предыдущие чаты"
+  },
+  "home": {
+    "emptyTitle": "Пока здесь пусто",
+    "emptySubtitle": "Фильмы и рекомендации появятся здесь. Начните поиск через AI Chat.",
+    "goToChat": "Перейти в AI Chat"
+  },
+  "profile": {
+    "savedMovies": "Сохранённые фильмы",
+    "savedMoviesSub": "Список любимых фильмов",
+    "savedChats": "Сохранённые чаты",
+    "savedChatsSub": "Ваши предыдущие AI-чаты",
+    "settings": "Настройки",
+    "settingsSub": "Настройка приложения",
+    "logoutSub": "Выйти из аккаунта"
+  },
+  "settings": {
+    "title": "Настройки",
+    "subtitle": "Настройте приложение под себя",
+    "notifications": "Уведомления",
+    "notificationsSub": "Новости и напоминания",
+    "privacy": "Конфиденциальность и безопасность",
+    "data": "Управление данными",
+    "dataSub": "Кэш и хранилище",
+    "help": "Помощь и поддержка",
+    "about": "О приложении",
+    "savedMovies": "Сохранённые фильмы",
+    "savedMoviesSub": "Список любимых фильмов",
+    "savedChats": "Сохранённые чаты",
+    "savedChatsSub": "Ваши предыдущие AI-чаты"
+  },
+  "chat": {
+    "introTitle": "Какой фильм ищете?",
+    "introSubtitle": "Опишите фильм, отправьте фото или загрузите видео.",
+    "actionText": "Запрос текстом",
+    "actionImage": "Найти по фото",
+    "actionVideo": "Найти по видео",
+    "actionRecommend": "Получить рекомендации",
+    "placeholder": "Напишите сообщение...",
+    "downloadUnavailable": "Скачивание недоступно на этом устройстве.",
+    "downloadFailed": "Не удалось скачать изображение."
+  }
+}

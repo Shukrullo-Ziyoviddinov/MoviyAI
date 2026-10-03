@@ -6,29 +6,41 @@ import {
 } from '@/components/icons';
 import { useComposerStore } from '@/src/stores/useComposerStore';
 import { useTheme } from '@/src/stores/useThemeStore';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 const actions = [
-  { key: 'text', label: "Matn bilan so'rov", Icon: ChatBubbleIcon },
-  { key: 'image', label: 'Rasm bilan topish', Icon: GalleryIcon, media: 'image' as const },
-  { key: 'video', label: 'Video orqali topish', Icon: VideoIcon, media: 'video' as const },
-  { key: 'recommend', label: 'Tavsiya olish qidirish', Icon: StarIcon },
+  { key: 'text', labelKey: 'chat.actionText', Icon: ChatBubbleIcon },
+  {
+    key: 'image',
+    labelKey: 'chat.actionImage',
+    Icon: GalleryIcon,
+    media: 'image' as const,
+  },
+  {
+    key: 'video',
+    labelKey: 'chat.actionVideo',
+    Icon: VideoIcon,
+    media: 'video' as const,
+  },
+  { key: 'recommend', labelKey: 'chat.actionRecommend', Icon: StarIcon },
 ];
 
 export function ChatIntro() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const pickFromDevice = useComposerStore((state) => state.pickFromDevice);
   const picking = useComposerStore((state) => state.picking);
 
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.title, { color: colors.text }]}>Qanday kino izlayapsiz?</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('chat.introTitle')}</Text>
       <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-        Kino haqida yozing, rasm yuboring yoki video yuklang.
+        {t('chat.introSubtitle')}
       </Text>
 
       <View style={styles.grid}>
-        {actions.map(({ key, label, Icon, media }) => (
+        {actions.map(({ key, labelKey, Icon, media }) => (
           <Pressable
             key={key}
             style={[
@@ -42,7 +54,7 @@ export function ChatIntro() {
             disabled={picking && !!media}
           >
             <Icon size={22} color={colors.accentBright} />
-            <Text style={[styles.cardText, { color: colors.text }]}>{label}</Text>
+            <Text style={[styles.cardText, { color: colors.text }]}>{t(labelKey)}</Text>
           </Pressable>
         ))}
       </View>

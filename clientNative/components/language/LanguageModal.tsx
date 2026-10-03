@@ -1,7 +1,8 @@
 import { useLanguageStore, LANGUAGE_OPTIONS } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BackHandler,
   Pressable,
@@ -21,9 +22,10 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const OPEN_MS = 320;
-const CLOSE_MS = 260;
+const CLOSE_MS = 240;
 
 export function LanguageModal() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -32,11 +34,14 @@ export function LanguageModal() {
   const setLanguage = useLanguageStore((s) => s.setLanguage);
   const closeModal = useLanguageStore((s) => s.closeModal);
 
-  const sheetH = Math.max(height * 0.3, 220);
+  const bottomPad = Math.max(insets.bottom, 16);
+  // Safe-area pastga qo'shiladi — aks holda eng qatori tugma ostida qoladi
+  const sheetH = Math.max(height * 0.3, 236) + bottomPad;
   const progress = useSharedValue(0);
   const dragY = useSharedValue(0);
   const sheetHeightSV = useSharedValue(sheetH);
   const [mounted, setMounted] = useState(false);
+  const skipCloseAnim = useRef(false);
 
   useEffect(() => {
     sheetHeightSV.value = sheetH;
@@ -44,6 +49,7 @@ export function LanguageModal() {
 
   useEffect(() => {
     if (modalOpen) {
+      skipCloseAnim.current = false;
       setMounted(true);
       dragY.value = 0;
       progress.value = withTiming(1, {
@@ -53,16 +59,27 @@ export function LanguageModal() {
       return;
     }
 
-    if (!mounted) return;
+    if (!mounted || skipCloseAnim.current) {
+      skipCloseAnim.current = false;
+      return;
+    }
 
-    progress.value = withTiming(
-      0,
-      { duration: CLOSE_MS, easing: Easing.in(Easing.cubic) },
+    // Backdrop / back-button close: keep going down from current offset
+    const current = (1 - progress.value) * sheetHeightSV.value + dragY.value;
+    progress.value = 1;
+    dragY.value = current;
+    dragY.value = withTiming(
+      sheetHeightSV.value,
+      { duration: CLOSE_MS, easing: Easing.out(Easing.cubic) },
       (finished) => {
-        if (finished) runOnJS(setMounted)(false);
+        if (finished) {
+          progress.value = 0;
+          dragY.value = 0;
+          runOnJS(setMounted)(false);
+        }
       }
     );
-  }, [modalOpen, progress, dragY, mounted]);
+  }, [modalOpen, progress, dragY, mounted, sheetHeightSV]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -74,20 +91,28 @@ export function LanguageModal() {
   }, [modalOpen, closeModal]);
 
   const finishClose = () => {
+    progress.value = 0;
+    dragY.value = 0;
+    skipCloseAnim.current = true;
     closeModal();
     setMounted(false);
   };
 
   const snapClose = () => {
     'worklet';
-    progress.value = withTiming(
-      0,
-      { duration: CLOSE_MS, easing: Easing.in(Easing.cubic) },
+    // Continue the drag downward — don't reset dragY (that caused a hitch)
+    const remaining = Math.max(0, sheetHeightSV.value - dragY.value);
+    const duration = Math.max(
+      140,
+      Math.min(CLOSE_MS, (remaining / sheetHeightSV.value) * CLOSE_MS)
+    );
+    dragY.value = withTiming(
+      sheetHeightSV.value,
+      { duration, easing: Easing.out(Easing.cubic) },
       (finished) => {
         if (finished) runOnJS(finishClose)();
       }
     );
-    dragY.value = withTiming(0, { duration: CLOSE_MS });
   };
 
   const pan = Gesture.Pan()
@@ -135,7 +160,7 @@ export function LanguageModal() {
             styles.sheet,
             {
               height: sheetH,
-              paddingBottom: Math.max(insets.bottom, 12),
+              paddingBottom: bottomPad,
               backgroundColor: colors.panel,
               borderColor: colors.borderSoft,
             },
@@ -143,7 +168,7 @@ export function LanguageModal() {
           ]}
         >
           <View style={[styles.handle, { backgroundColor: colors.border }]} />
-          <Text style={[styles.title, { color: colors.text }]}>Tilni tanlang</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('language.choose')}</Text>
 
           <View style={styles.list}>
             {LANGUAGE_OPTIONS.map((opt) => {
@@ -164,7 +189,7 @@ export function LanguageModal() {
                   }}
                 >
                   <Image source={opt.flag} style={styles.flag} contentFit="cover" />
-                  <Text style={[styles.label, { color: colors.text }]}>{opt.label}</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>{t(opt.labelKey)}</Text>
                   {active ? (
                     <View style={[styles.dot, { backgroundColor: colors.accent }]} />
                   ) : (

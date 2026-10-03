@@ -13,6 +13,7 @@ import { NotificationToggle } from '@/components/settings/NotificationToggle';
 import { SettingsMenuRow } from '@/components/settings/SettingsMenuRow';
 import { useLanguageStore, LANGUAGE_OPTIONS } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 type SettingsGeneralCardProps = {
@@ -28,11 +29,12 @@ export function SettingsGeneralCard({
   onHelp,
   onAbout,
 }: SettingsGeneralCardProps) {
+  const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const language = useLanguageStore((s) => s.language);
   const openLanguageModal = useLanguageStore((s) => s.openModal);
   const langLabel =
-    LANGUAGE_OPTIONS.find((o) => o.code === language)?.label ?? "O'zbekcha";
+    t(LANGUAGE_OPTIONS.find((o) => o.code === language)?.labelKey ?? 'language.uz');
 
   return (
     <View
@@ -42,49 +44,49 @@ export function SettingsGeneralCard({
       ]}
     >
       <SettingsMenuRow
-        title="Bildirishnomalar"
-        subtitle="Yangiliklar va eslatmalar"
+        title={t('settings.notifications')}
+        subtitle={t('settings.notificationsSub')}
         Icon={BellIcon}
         showChevron={false}
         right={<NotificationToggle />}
       />
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
-        title="Til"
+        title={t('common.language')}
         subtitle={langLabel}
         Icon={GlobeIcon}
         onPress={openLanguageModal}
       />
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
-        title="Tema"
-        subtitle={isDark ? "Qorong'i" : "Yorug'"}
+        title={t('common.theme')}
+        subtitle={isDark ? t('common.themeDark') : t('common.themeLight')}
         Icon={isDark ? MoonIcon : SunIcon}
         showChevron={false}
         right={<ThemeToggle />}
       />
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
-        title="Maxfiylik va xavfsizlik"
+        title={t('settings.privacy')}
         Icon={ShieldIcon}
         onPress={onPrivacy}
       />
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
-        title="Ma'lumotlarni boshqarish"
-        subtitle="Kesh va saqlash"
+        title={t('settings.data')}
+        subtitle={t('settings.dataSub')}
         Icon={CloudIcon}
         onPress={onData}
       />
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
-        title="Yordam va qo'llab-quvvatlash"
+        title={t('settings.help')}
         Icon={HelpIcon}
         onPress={onHelp}
       />
       <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
-        title="Ilova haqida"
+        title={t('settings.about')}
         Icon={InfoIcon}
         onPress={onAbout}
       />

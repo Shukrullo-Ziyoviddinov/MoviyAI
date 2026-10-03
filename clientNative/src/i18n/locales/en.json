@@ -1,0 +1,66 @@
+{
+  "common": {
+    "logout": "Log out",
+    "logoutSystem": "Sign out",
+    "language": "Language",
+    "theme": "Theme",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "error": "Error"
+  },
+  "language": {
+    "choose": "Choose language",
+    "uz": "O'zbekcha",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "menu": {
+    "home": "Home",
+    "chat": "AI Chat",
+    "menyu": "Menu",
+    "profile": "Profile",
+    "settings": "Settings",
+    "newChat": "New chat",
+    "previousChats": "Previous chats"
+  },
+  "home": {
+    "emptyTitle": "Nothing here yet",
+    "emptySubtitle": "Movies and recommendations will show up here. Start searching with AI Chat.",
+    "goToChat": "Go to AI Chat"
+  },
+  "profile": {
+    "savedMovies": "Saved movies",
+    "savedMoviesSub": "Your favorite movies list",
+    "savedChats": "Saved chats",
+    "savedChatsSub": "Your previous AI chats",
+    "settings": "Settings",
+    "settingsSub": "Configure the app",
+    "logoutSub": "Sign out of your account"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize the app to your preference",
+    "notifications": "Notifications",
+    "notificationsSub": "News and reminders",
+    "privacy": "Privacy and security",
+    "data": "Manage data",
+    "dataSub": "Cache and storage",
+    "help": "Help and support",
+    "about": "About the app",
+    "savedMovies": "Saved movies",
+    "savedMoviesSub": "Your favorite movies list",
+    "savedChats": "Saved chats",
+    "savedChatsSub": "Your previous AI chats"
+  },
+  "chat": {
+    "introTitle": "What movie are you looking for?",
+    "introSubtitle": "Describe a movie, send a photo, or upload a video.",
+    "actionText": "Ask with text",
+    "actionImage": "Find by image",
+    "actionVideo": "Find by video",
+    "actionRecommend": "Get recommendations",
+    "placeholder": "Type a message...",
+    "downloadUnavailable": "Download is not available on this device.",
+    "downloadFailed": "Could not download the image."
+  }
+}
