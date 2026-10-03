@@ -1,6 +1,6 @@
-import { colors } from '@/constants/theme';
 import type { ChatMediaItem } from '@/src/types/chat';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import {
@@ -45,6 +45,7 @@ function MediaCell({
 }
 
 function SingleMedia({ item }: { item: ChatMediaItem }) {
+  const { colors } = useTheme();
   const { width: screenW } = useWindowDimensions();
   const maxW = screenW * 0.72;
   const maxH = 280;
@@ -75,13 +76,19 @@ function SingleMedia({ item }: { item: ChatMediaItem }) {
   }, [item.uri, maxH, maxW]);
 
   return (
-    <View style={[styles.singleWrap, { width: size.w, height: size.h }]}>
+    <View
+      style={[
+        styles.singleWrap,
+        { width: size.w, height: size.h, backgroundColor: colors.panelSoft },
+      ]}
+    >
       <MediaCell item={item} style={styles.flex} />
     </View>
   );
 }
 
 export function MediaGridBlock({ items }: MediaGridBlockProps) {
+  const { colors } = useTheme();
   const { width: screenW } = useWindowDimensions();
   const blockW = Math.min(screenW * 0.78, 320);
 
@@ -98,7 +105,12 @@ export function MediaGridBlock({ items }: MediaGridBlockProps) {
     const cellH = 168;
     return (
       <View style={styles.row}>
-        <View style={[styles.block, { width: blockW, height: cellH }]}>
+        <View
+          style={[
+            styles.block,
+            { width: blockW, height: cellH, backgroundColor: colors.panelSoft },
+          ]}
+        >
           <View style={styles.rowFlex}>
             <MediaCell item={items[0]} style={{ width: cellW, height: cellH }} />
             <View style={{ width: GAP }} />
@@ -112,7 +124,12 @@ export function MediaGridBlock({ items }: MediaGridBlockProps) {
   if (items.length === 3) {
     return (
       <View style={styles.row}>
-        <View style={[styles.block, { width: blockW, height: 220 }]}>
+        <View
+          style={[
+            styles.block,
+            { width: blockW, height: 220, backgroundColor: colors.panelSoft },
+          ]}
+        >
           <View style={styles.rowFlex}>
             <MediaCell item={items[0]} style={{ flex: 1.05 }} />
             <View style={{ width: GAP }} />
@@ -129,7 +146,16 @@ export function MediaGridBlock({ items }: MediaGridBlockProps) {
   const cell = (blockW - GAP) / 2;
   return (
     <View style={styles.row}>
-      <View style={[styles.block, { width: blockW, height: cell * 2 + GAP }]}>
+      <View
+        style={[
+          styles.block,
+          {
+            width: blockW,
+            height: cell * 2 + GAP,
+            backgroundColor: colors.panelSoft,
+          },
+        ]}
+      >
         <View style={styles.grid4}>
           <MediaCell item={items[0]} style={{ width: cell, height: cell }} />
           <MediaCell item={items[1]} style={{ width: cell, height: cell }} />
@@ -151,12 +177,10 @@ const styles = StyleSheet.create({
   block: {
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: colors.panelSoft,
   },
   singleWrap: {
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: colors.panelSoft,
   },
   rowFlex: {
     flex: 1,

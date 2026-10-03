@@ -4,8 +4,8 @@ import {
   StarIcon,
   VideoIcon,
 } from '@/components/icons';
-import { colors } from '@/constants/theme';
 import { useComposerStore } from '@/src/stores/useComposerStore';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 const actions = [
@@ -16,13 +16,14 @@ const actions = [
 ];
 
 export function ChatIntro() {
+  const { colors } = useTheme();
   const pickFromDevice = useComposerStore((state) => state.pickFromDevice);
   const picking = useComposerStore((state) => state.picking);
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>Qanday kino izlayapsiz?</Text>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.title, { color: colors.text }]}>Qanday kino izlayapsiz?</Text>
+      <Text style={[styles.subtitle, { color: colors.textMuted }]}>
         Kino haqida yozing, rasm yuboring yoki video yuklang.
       </Text>
 
@@ -30,14 +31,18 @@ export function ChatIntro() {
         {actions.map(({ key, label, Icon, media }) => (
           <Pressable
             key={key}
-            style={[styles.card, picking && media ? styles.cardDisabled : null]}
+            style={[
+              styles.card,
+              { backgroundColor: colors.panelSoft, borderColor: colors.borderSoft },
+              picking && media ? styles.cardDisabled : null,
+            ]}
             onPress={() => {
               if (media) pickFromDevice(media);
             }}
             disabled={picking && !!media}
           >
-            <Icon size={22} color="#A5B4FC" />
-            <Text style={styles.cardText}>{label}</Text>
+            <Icon size={22} color={colors.accentBright} />
+            <Text style={[styles.cardText, { color: colors.text }]}>{label}</Text>
           </Pressable>
         ))}
       </View>
@@ -52,14 +57,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   title: {
-    color: colors.text,
     fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
   },
   subtitle: {
     marginTop: 8,
-    color: colors.textMuted,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
@@ -80,15 +83,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 12,
     borderRadius: 16,
-    backgroundColor: colors.panelSoft,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
   },
   cardDisabled: {
     opacity: 0.5,
   },
   cardText: {
-    color: colors.text,
     fontSize: 10,
     fontWeight: '600',
     textAlign: 'center',

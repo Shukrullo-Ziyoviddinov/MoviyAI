@@ -1,4 +1,5 @@
 import { SplashScreen as AppSplashScreen } from '@/components/SplashScreen';
+import { useTheme } from '@/src/stores/useThemeStore';
 import {
   CardStyleInterpolators,
   Stack,
@@ -18,10 +19,39 @@ ExpoSplashScreen.preventAutoHideAsync().catch(() => undefined);
 const slideSpec = {
   animation: 'timing' as const,
   config: {
-    duration: 300,
+    duration: 380,
     easing: Easing.out(Easing.poly(4)),
   },
 };
+
+function AppNavigator() {
+  const { colors, isDark } = useTheme();
+
+  return (
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <GestureHandlerRootView style={[styles.root, { backgroundColor: colors.bg }]}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            cardStyle: { backgroundColor: colors.bg },
+            gestureEnabled: true,
+            gestureDirection: 'horizontal',
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            transitionSpec: {
+              open: slideSpec,
+              close: slideSpec,
+            },
+          }}
+        >
+          <Stack.Screen name="index" options={{ animationEnabled: false }} />
+          <Stack.Screen name="profile" />
+          <Stack.Screen name="settings" />
+        </Stack>
+      </GestureHandlerRootView>
+    </>
+  );
+}
 
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
@@ -36,35 +66,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <GestureHandlerRootView style={styles.root}>
-        <StatusBar style="light" hidden={showSplash} />
-        {showSplash ? (
+      {showSplash ? (
+        <>
+          <StatusBar style="light" hidden />
           <AppSplashScreen onFinish={handleSplashFinish} />
-        ) : (
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              cardStyle: { backgroundColor: '#030308' },
-              gestureEnabled: true,
-              gestureDirection: 'horizontal',
-              cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-              transitionSpec: {
-                open: slideSpec,
-                close: slideSpec,
-              },
-            }}
-          >
-            <Stack.Screen
-              name="index"
-              options={{
-                animationEnabled: false,
-              }}
-            />
-            <Stack.Screen name="profile" />
-            <Stack.Screen name="settings" />
-          </Stack>
-        )}
-      </GestureHandlerRootView>
+        </>
+      ) : (
+        <AppNavigator />
+      )}
     </SafeAreaProvider>
   );
 }
@@ -72,6 +81,5 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#030308',
   },
 });

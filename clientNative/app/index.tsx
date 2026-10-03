@@ -4,9 +4,9 @@ import { ChatIntro } from '@/components/chat/ChatIntro';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { MediaViewer } from '@/components/chat/MediaViewer';
 import { SideMenu } from '@/components/menu/SideMenu';
-import { colors } from '@/constants/theme';
 import { useChatStore } from '@/src/stores/useChatStore';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import {
@@ -22,6 +22,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 const AI_ROBOT = require('../assets/images/ai_preview_rev_1.png');
 
 export default function HomeScreen() {
+  const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const robotSize = Math.min(width * 0.42, 180);
@@ -48,14 +49,14 @@ export default function HomeScreen() {
 
   return (
     <SideMenu>
-      <View style={styles.root}>
+      <View style={[styles.root, { backgroundColor: colors.bg }]}>
         <SafeAreaView style={styles.safe} edges={['left', 'right']}>
           <KeyboardAvoidingView
             style={styles.flex}
             behavior="padding"
             keyboardVerticalOffset={0}
           >
-            <View style={styles.chatArea}>
+            <View style={[styles.chatArea, { backgroundColor: colors.bg }]}>
               {hasMessages ? (
                 <ChatMessageList
                   messages={messages}
@@ -107,7 +108,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
   },
   safe: {
     flex: 1,
@@ -118,7 +118,6 @@ const styles = StyleSheet.create({
   chatArea: {
     flex: 1,
     position: 'relative',
-    backgroundColor: colors.bg,
   },
   emptyState: {
     flex: 1,

@@ -1,15 +1,16 @@
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileMenuCard } from '@/components/profile/ProfileMenuCard';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -34,7 +35,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
   },
   scroll: {
     flex: 1,

@@ -1,4 +1,4 @@
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
@@ -7,18 +7,17 @@ type TextMessageBubbleProps = {
 };
 
 export function TextMessageBubble({ text }: TextMessageBubbleProps) {
+  const { colors } = useTheme();
+
   return (
     <View style={styles.row}>
       <View style={styles.wrap}>
-        <View style={styles.bubble}>
-          <Text style={styles.text}>{text}</Text>
+        <View style={[styles.bubble, { backgroundColor: colors.accent }]}>
+          <Text style={[styles.text, { color: colors.textOnAccent }]}>{text}</Text>
         </View>
         <View style={styles.tail}>
           <Svg width={12} height={16} viewBox="0 0 12 16">
-            <Path
-              d="M0 0 C2 6 4 12 12 16 L0 16 Z"
-              fill={colors.accent}
-            />
+            <Path d="M0 0 C2 6 4 12 12 16 L0 16 Z" fill={colors.accent} />
           </Svg>
         </View>
       </View>
@@ -38,7 +37,6 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   bubble: {
-    backgroundColor: colors.accent,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     borderBottomLeftRadius: 18,
@@ -47,7 +45,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   text: {
-    color: colors.text,
     fontSize: 15,
     lineHeight: 21,
   },

@@ -3,16 +3,17 @@ import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { SettingsLogoutButton } from '@/components/settings/SettingsLogoutButton';
 import { SettingsProfileCard } from '@/components/settings/SettingsProfileCard';
 import { SettingsSavedCard } from '@/components/settings/SettingsSavedCard';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -49,7 +50,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
   },
   scroll: {
     flex: 1,

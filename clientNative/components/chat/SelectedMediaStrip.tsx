@@ -1,4 +1,4 @@
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { Image } from 'expo-image';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
@@ -15,6 +15,8 @@ type SelectedMediaStripProps = {
 };
 
 export function SelectedMediaStrip({ items, onRemove }: SelectedMediaStripProps) {
+  const { colors } = useTheme();
+
   if (items.length === 0) {
     return null;
   }
@@ -27,7 +29,13 @@ export function SelectedMediaStrip({ items, onRemove }: SelectedMediaStripProps)
       contentContainerStyle={styles.content}
     >
       {items.map((item) => (
-        <View key={item.id} style={styles.card}>
+        <View
+          key={item.id}
+          style={[
+            styles.card,
+            { backgroundColor: colors.panelSoft, borderColor: colors.borderSoft },
+          ]}
+        >
           <Image source={{ uri: item.uri }} style={styles.thumb} contentFit="cover" />
           {item.type === 'video' ? (
             <View style={styles.videoBadge}>
@@ -40,24 +48,8 @@ export function SelectedMediaStrip({ items, onRemove }: SelectedMediaStripProps)
             hitSlop={8}
           >
             <Svg width={10} height={10} viewBox="0 0 10 10">
-              <Line
-                x1="1.5"
-                y1="1.5"
-                x2="8.5"
-                y2="8.5"
-                stroke="#fff"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-              <Line
-                x1="8.5"
-                y1="1.5"
-                x2="1.5"
-                y2="8.5"
-                stroke="#fff"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
+              <Line x1="1" y1="1" x2="9" y2="9" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+              <Line x1="9" y1="1" x2="1" y2="9" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
             </Svg>
           </Pressable>
         </View>
@@ -80,9 +72,7 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: colors.panelSoft,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
   },
   thumb: {
     width: '100%',

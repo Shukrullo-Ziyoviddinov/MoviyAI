@@ -1,6 +1,6 @@
 import { BookmarkIcon, ChatBubbleIcon } from '@/components/icons';
 import { SettingsMenuRow } from '@/components/settings/SettingsMenuRow';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { StyleSheet, View } from 'react-native';
 
 type SettingsSavedCardProps = {
@@ -16,8 +16,15 @@ export function SettingsSavedCard({
   onMovies,
   onChats,
 }: SettingsSavedCardProps) {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.panel, borderColor: colors.borderSoft },
+      ]}
+    >
       <SettingsMenuRow
         title="Saqlangan kinolar"
         subtitle="Sevimli filmlaringiz ro'yxati"
@@ -25,7 +32,7 @@ export function SettingsSavedCard({
         value={String(moviesCount)}
         onPress={onMovies}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
         title="Saqlangan suhbatlar"
         subtitle="Oldingi AI suhbatlaringiz"
@@ -41,14 +48,11 @@ const styles = StyleSheet.create({
   card: {
     marginHorizontal: 16,
     borderRadius: 18,
-    backgroundColor: colors.panel,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
     overflow: 'hidden',
   },
   divider: {
     height: 1,
-    backgroundColor: colors.borderSoft,
     marginLeft: 64,
   },
 });

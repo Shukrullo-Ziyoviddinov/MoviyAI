@@ -4,12 +4,14 @@ import {
   HelpIcon,
   InfoIcon,
   MoonIcon,
+  SunIcon,
   BellIcon,
   ShieldIcon,
 } from '@/components/icons';
+import { ThemeToggle } from '@/components/profile/ThemeToggle';
 import { NotificationToggle } from '@/components/settings/NotificationToggle';
 import { SettingsMenuRow } from '@/components/settings/SettingsMenuRow';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { StyleSheet, View } from 'react-native';
 
 type SettingsGeneralCardProps = {
@@ -23,14 +25,20 @@ type SettingsGeneralCardProps = {
 
 export function SettingsGeneralCard({
   onLanguage,
-  onTheme,
   onPrivacy,
   onData,
   onHelp,
   onAbout,
 }: SettingsGeneralCardProps) {
+  const { colors, isDark } = useTheme();
+
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.panel, borderColor: colors.borderSoft },
+      ]}
+    >
       <SettingsMenuRow
         title="Bildirishnomalar"
         subtitle="Yangiliklar va eslatmalar"
@@ -38,40 +46,41 @@ export function SettingsGeneralCard({
         showChevron={false}
         right={<NotificationToggle />}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
         title="Til"
         subtitle="O'zbekcha"
         Icon={GlobeIcon}
         onPress={onLanguage}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
         title="Tema"
-        subtitle="Qorong'i"
-        Icon={MoonIcon}
-        onPress={onTheme}
+        subtitle={isDark ? "Qorong'i" : "Yorug'"}
+        Icon={isDark ? MoonIcon : SunIcon}
+        showChevron={false}
+        right={<ThemeToggle />}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
         title="Maxfiylik va xavfsizlik"
         Icon={ShieldIcon}
         onPress={onPrivacy}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
         title="Ma'lumotlarni boshqarish"
         subtitle="Kesh va saqlash"
         Icon={CloudIcon}
         onPress={onData}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
         title="Yordam va qo'llab-quvvatlash"
         Icon={HelpIcon}
         onPress={onHelp}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
       <SettingsMenuRow
         title="Ilova haqida"
         Icon={InfoIcon}
@@ -85,14 +94,11 @@ const styles = StyleSheet.create({
   card: {
     marginHorizontal: 16,
     borderRadius: 18,
-    backgroundColor: colors.panel,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
     overflow: 'hidden',
   },
   divider: {
     height: 1,
-    backgroundColor: colors.borderSoft,
     marginLeft: 64,
   },
 });

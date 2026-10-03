@@ -5,10 +5,11 @@ import {
   LogoutIcon,
   MoonIcon,
   SettingsIcon,
+  SunIcon,
 } from '@/components/icons';
 import { ProfileMenuRow } from '@/components/profile/ProfileMenuRow';
 import { ThemeToggle } from '@/components/profile/ThemeToggle';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { StyleSheet, View } from 'react-native';
 
 type ProfileMenuCardProps = {
@@ -26,8 +27,15 @@ export function ProfileMenuCard({
   onLanguage,
   onLogout,
 }: ProfileMenuCardProps) {
+  const { colors, isDark } = useTheme();
+
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.panel, borderColor: colors.borderSoft },
+      ]}
+    >
       <ProfileMenuRow
         title="Saqlangan kinolar"
         subtitle="Sevimli kinolaringiz ro'yxati"
@@ -36,7 +44,7 @@ export function ProfileMenuCard({
         iconBg="rgba(37, 99, 235, 0.2)"
         onPress={onSavedMovies}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
       <ProfileMenuRow
         title="Saqlangan suhbatlar"
@@ -46,7 +54,7 @@ export function ProfileMenuCard({
         iconBg="rgba(109, 40, 217, 0.2)"
         onPress={onSavedChats}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
       <ProfileMenuRow
         title="Sozlamalar"
@@ -56,7 +64,7 @@ export function ProfileMenuCard({
         iconBg="rgba(59, 130, 246, 0.16)"
         onPress={onSettings}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
       <ProfileMenuRow
         title="Til"
@@ -66,18 +74,18 @@ export function ProfileMenuCard({
         iconBg="rgba(14, 165, 233, 0.16)"
         onPress={onLanguage}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
       <ProfileMenuRow
         title="Tema"
-        subtitle="Qorong'i"
-        Icon={MoonIcon}
+        subtitle={isDark ? "Qorong'i" : "Yorug'"}
+        Icon={isDark ? MoonIcon : SunIcon}
         iconColor="#C4B5FD"
         iconBg="rgba(124, 58, 237, 0.18)"
         showChevron={false}
         right={<ThemeToggle />}
       />
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
       <ProfileMenuRow
         title="Chiqish"
@@ -96,14 +104,11 @@ const styles = StyleSheet.create({
   card: {
     marginHorizontal: 16,
     borderRadius: 22,
-    backgroundColor: colors.panel,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
     overflow: 'hidden',
   },
   divider: {
     height: 1,
-    backgroundColor: colors.borderSoft,
     marginLeft: 66,
   },
 });

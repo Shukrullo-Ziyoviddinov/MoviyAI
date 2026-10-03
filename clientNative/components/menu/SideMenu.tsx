@@ -7,9 +7,9 @@ import {
   PlusIcon,
   SettingsIcon,
 } from '@/components/icons';
-import { colors } from '@/constants/theme';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
@@ -55,6 +55,7 @@ type SideMenuProps = {
 };
 
 export function SideMenu({ children }: SideMenuProps) {
+  const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const open = useSideMenuStore((state) => state.open);
@@ -214,17 +215,19 @@ export function SideMenu({ children }: SideMenuProps) {
                   width: menuW,
                   paddingTop: insets.top + 12,
                   paddingBottom: Math.max(insets.bottom, 14),
+                  backgroundColor: colors.panel,
+                  borderRightColor: colors.borderSoft,
                 },
                 panelStyle,
               ]}
             >
               <Pressable style={styles.profileRow} onPress={goProfile}>
-                <View style={styles.avatar}>
+                <View style={[styles.avatar, { backgroundColor: colors.panelSoft }]}>
                   <PersonIcon size={26} color={colors.icon} />
                 </View>
                 <View style={styles.profileText}>
-                  <Text style={styles.profileName}>Name:</Text>
-                  <Text style={styles.profileEmail}>Gmail:</Text>
+                  <Text style={[styles.profileName, { color: colors.text }]}>Name:</Text>
+                  <Text style={[styles.profileEmail, { color: colors.textMuted }]}>Gmail:</Text>
                 </View>
                 <ChevronRightIcon size={18} color={colors.textMuted} />
               </Pressable>
@@ -235,7 +238,7 @@ export function SideMenu({ children }: SideMenuProps) {
                 const content = (
                   <>
                     <Icon size={22} color={active ? colors.text : colors.icon} />
-                    <Text style={[styles.navLabel, active && styles.navLabelActive]}>
+                    <Text style={[styles.navLabel, { color: colors.text }, active && styles.navLabelActive]}>
                       {label}
                     </Text>
                   </>
@@ -245,7 +248,7 @@ export function SideMenu({ children }: SideMenuProps) {
                   return (
                     <Pressable key={key} onPress={() => handleNav(key)}>
                       <LinearGradient
-                        colors={['#121A2C', '#0A101C']}
+                        colors={[colors.panelSoft, colors.panel]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.navItemActive}
@@ -264,16 +267,16 @@ export function SideMenu({ children }: SideMenuProps) {
                 })}
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
               <View style={styles.history}>
-                <Text style={styles.historyTitle}>Oldingi suhbatlar</Text>
+                <Text style={[styles.historyTitle, { color: colors.text }]}>Oldingi suhbatlar</Text>
                 <View style={styles.historyEmpty} />
               </View>
 
               <Pressable style={styles.logout} onPress={closeMenu}>
                 <LogoutIcon size={22} color={colors.icon} />
-                <Text style={styles.logoutText}>Chiqish</Text>
+                <Text style={[styles.logoutText, { color: colors.text }]}>Chiqish</Text>
               </Pressable>
             </Animated.View>
           </GestureDetector>
@@ -298,9 +301,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     bottom: 0,
-    backgroundColor: '#05070F',
     borderRightWidth: 1,
-    borderRightColor: colors.borderSoft,
     paddingHorizontal: 12,
   },
   profileRow: {
@@ -317,7 +318,6 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.panelSoft,
     borderWidth: 1.5,
     borderColor: 'rgba(90, 140, 255, 0.55)',
   },
@@ -326,12 +326,10 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   profileName: {
-    color: colors.text,
     fontSize: 16,
     fontWeight: '700',
   },
   profileEmail: {
-    color: colors.textMuted,
     fontSize: 13,
   },
   nav: {
@@ -354,24 +352,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   navLabel: {
-    color: colors.text,
     fontSize: 15,
     fontWeight: '500',
   },
   navLabelActive: {
-    color: colors.text,
     fontWeight: '700',
   },
   divider: {
     height: 1,
-    backgroundColor: colors.borderSoft,
     marginVertical: 14,
   },
   history: {
     flex: 1,
   },
   historyTitle: {
-    color: colors.text,
     fontSize: 15,
     fontWeight: '500',
     marginBottom: 8,
@@ -388,7 +382,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   logoutText: {
-    color: colors.text,
     fontSize: 15,
     fontWeight: '500',
   },

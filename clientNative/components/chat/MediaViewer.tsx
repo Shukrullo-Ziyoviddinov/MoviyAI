@@ -1,5 +1,5 @@
-import { colors } from '@/constants/theme';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import {
@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HEADER_ROW_HEIGHT } from './ChatHeader';
 
 export function MediaViewer() {
+  const { colors } = useTheme();
   const item = useMediaViewerStore((state) => state.item);
   const close = useMediaViewerStore((state) => state.close);
   const { width: screenW, height: screenH } = useWindowDimensions();
@@ -57,7 +58,10 @@ export function MediaViewer() {
   if (!item) return null;
 
   return (
-    <View style={[StyleSheet.absoluteFill, styles.root]} pointerEvents="auto">
+    <View
+      style={[StyleSheet.absoluteFill, styles.root, { backgroundColor: colors.bgDeep }]}
+      pointerEvents="auto"
+    >
       <View style={styles.center}>
         <Image
           source={{ uri: item.uri }}
@@ -72,7 +76,6 @@ export function MediaViewer() {
 const styles = StyleSheet.create({
   root: {
     zIndex: 25,
-    backgroundColor: colors.bgDeep,
   },
   center: {
     flex: 1,

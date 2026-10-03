@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from '@/components/icons';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import type { ComponentType, ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -28,6 +28,8 @@ export function ProfileMenuRow({
   showChevron = true,
   danger = false,
 }: ProfileMenuRowProps) {
+  const { colors } = useTheme();
+
   return (
     <Pressable style={styles.row} onPress={onPress} disabled={!onPress && !right}>
       <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
@@ -35,8 +37,10 @@ export function ProfileMenuRow({
       </View>
 
       <View style={styles.textWrap}>
-        <Text style={[styles.title, danger && styles.titleDanger]}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={[styles.title, { color: danger ? '#FCA5A5' : colors.text }]}>
+          {title}
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>{subtitle}</Text>
       </View>
 
       {right ? right : showChevron ? (
@@ -66,15 +70,10 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
-  titleDanger: {
-    color: '#FCA5A5',
-  },
   subtitle: {
-    color: colors.textMuted,
     fontSize: 12,
   },
 });

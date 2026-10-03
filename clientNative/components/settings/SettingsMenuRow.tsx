@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from '@/components/icons';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import type { ComponentType, ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -28,6 +28,8 @@ export function SettingsMenuRow({
   showChevron = true,
   danger = false,
 }: SettingsMenuRowProps) {
+  const { colors } = useTheme();
+
   return (
     <Pressable
       style={styles.row}
@@ -39,11 +41,17 @@ export function SettingsMenuRow({
       </View>
 
       <View style={styles.textWrap}>
-        <Text style={[styles.title, danger && styles.titleDanger]}>{title}</Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        <Text style={[styles.title, { color: danger ? '#FCA5A5' : colors.text }]}>
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>{subtitle}</Text>
+        ) : null}
       </View>
 
-      {value ? <Text style={styles.value}>{value}</Text> : null}
+      {value ? (
+        <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
+      ) : null}
 
       {right ? right : showChevron ? (
         <ChevronRightIcon size={18} color={danger ? '#F87171' : colors.textMuted} />
@@ -75,19 +83,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
-  titleDanger: {
-    color: '#FCA5A5',
-  },
   subtitle: {
-    color: colors.textMuted,
     fontSize: 12,
   },
   value: {
-    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
     marginRight: 2,

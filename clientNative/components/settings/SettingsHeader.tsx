@@ -1,5 +1,5 @@
 import { ChevronLeftIcon } from '@/components/icons';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -8,17 +8,24 @@ type SettingsHeaderProps = {
 };
 
 export function SettingsHeader({ onBack }: SettingsHeaderProps) {
+  const { colors } = useTheme();
+
   return (
     <View style={styles.wrap}>
       <Pressable
-        style={styles.backBtn}
+        style={[
+          styles.backBtn,
+          { backgroundColor: colors.panelSoft, borderColor: colors.borderSoft },
+        ]}
         onPress={onBack ?? (() => router.back())}
       >
         <ChevronLeftIcon size={20} color={colors.icon} />
       </Pressable>
 
-      <Text style={styles.title}>Sozlamalar</Text>
-      <Text style={styles.subtitle}>Ilovangizni o'zingizga moslab sozlang</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Sozlamalar</Text>
+      <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+        Ilovangizni o'zingizga moslab sozlang
+      </Text>
     </View>
   );
 }
@@ -33,19 +40,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.panelSoft,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
     marginBottom: 16,
   },
   title: {
-    color: colors.text,
     fontSize: 28,
     fontWeight: '700',
   },
   subtitle: {
     marginTop: 6,
-    color: colors.textMuted,
     fontSize: 13,
     lineHeight: 18,
   },

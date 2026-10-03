@@ -1,59 +1,76 @@
 import { MoonIcon, SunIcon } from '@/components/icons';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useTheme } from '@/src/stores/useThemeStore';
+import { useEffect } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+import Animated, {
+  Easing,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
-type ThemeToggleProps = {
-  initialDark?: boolean;
-};
+const TRACK_W = 52;
+const THUMB = 24;
+const PAD = 3;
+const TRAVEL = TRACK_W - THUMB - PAD * 2;
 
-/** Faqat UI: oy <-> quyosh. Tema o'zgarishi keyin ulanadi. */
-export function ThemeToggle({ initialDark = true }: ThemeToggleProps) {
-  const [dark, setDark] = useState(initialDark);
+export function ThemeToggle() {
+  const { isDark, toggle } = useTheme();
+  const progress = useSharedValue(isDark ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(isDark ? 1 : 0, {
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [isDark, progress]);
+
+  const trackStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      ['rgba(245, 158, 11, 0.35)', 'rgba(91, 75, 255, 0.45)']
+    ),
+  }));
+
+  const thumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: progress.value * TRAVEL }],
+    backgroundColor: interpolateColor(
+      progress.value,
+      [0, 1],
+      ['#FEF3C7', '#3B2F8A']
+    ),
+  }));
 
   return (
-    <Pressable
-      style={[styles.track, dark ? styles.trackDark : styles.trackLight]}
-      onPress={() => setDark((v) => !v)}
-      hitSlop={6}
-    >
-      <View style={[styles.thumb, dark ? styles.thumbDark : styles.thumbLight]}>
-        {dark ? (
-          <MoonIcon size={14} color="#E8E4FF" />
-        ) : (
-          <SunIcon size={14} color="#F59E0B" />
-        )}
-      </View>
+    <Pressable onPress={toggle} hitSlop={6}>
+      <Animated.View style={[styles.track, trackStyle]}>
+        <Animated.View style={[styles.thumb, thumbStyle]}>
+          {isDark ? (
+            <MoonIcon size={14} color="#E8E4FF" />
+          ) : (
+            <SunIcon size={14} color="#F59E0B" />
+          )}
+        </Animated.View>
+      </Animated.View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   track: {
-    width: 52,
+    width: TRACK_W,
     height: 30,
     borderRadius: 15,
     justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  trackDark: {
-    backgroundColor: 'rgba(91, 75, 255, 0.45)',
-    alignItems: 'flex-end',
-  },
-  trackLight: {
-    backgroundColor: 'rgba(245, 158, 11, 0.28)',
-    alignItems: 'flex-start',
+    paddingHorizontal: PAD,
   },
   thumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: THUMB,
+    height: THUMB,
+    borderRadius: THUMB / 2,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  thumbDark: {
-    backgroundColor: '#3B2F8A',
-  },
-  thumbLight: {
-    backgroundColor: '#FEF3C7',
   },
 });

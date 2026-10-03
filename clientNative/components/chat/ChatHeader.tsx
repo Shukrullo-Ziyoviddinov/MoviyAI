@@ -1,7 +1,7 @@
 import { CloseIcon, DownloadIcon, MenuIcon, PersonIcon } from '@/components/icons';
-import { colors } from '@/constants/theme';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export const HEADER_ROW_HEIGHT = 62;
 
 export function ChatHeader() {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const item = useMediaViewerStore((state) => state.item);
   const close = useMediaViewerStore((state) => state.close);
@@ -35,7 +36,10 @@ export function ChatHeader() {
     <View style={[styles.overlay, { paddingTop: insets.top }]} pointerEvents="box-none">
       <View style={styles.row}>
         <Pressable
-          style={styles.circleBtn}
+          style={[
+            styles.circleBtn,
+            { backgroundColor: colors.panelSoft, borderColor: colors.border },
+          ]}
           onPress={viewing ? close : openMenu}
         >
           {viewing ? (
@@ -46,7 +50,10 @@ export function ChatHeader() {
         </Pressable>
 
         <Pressable
-          style={styles.circleBtn}
+          style={[
+            styles.circleBtn,
+            { backgroundColor: colors.panelSoft, borderColor: colors.border },
+          ]}
           onPress={viewing ? handleDownload : () => router.push('/profile')}
         >
           {viewing ? (
@@ -81,8 +88,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.panelSoft,
     borderWidth: 1.5,
-    borderColor: colors.border,
   },
 });

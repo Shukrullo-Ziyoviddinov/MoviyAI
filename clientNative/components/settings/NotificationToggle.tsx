@@ -1,4 +1,4 @@
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -8,6 +8,7 @@ type NotificationToggleProps = {
 
 /** Faqat UI toggle. Bildirishnoma logikasi keyin ulanadi. */
 export function NotificationToggle({ initialOn = true }: NotificationToggleProps) {
+  const { colors } = useTheme();
   const [on, setOn] = useState(initialOn);
 
   return (
@@ -16,7 +17,12 @@ export function NotificationToggle({ initialOn = true }: NotificationToggleProps
       onPress={() => setOn((v) => !v)}
       hitSlop={6}
     >
-      <View style={[styles.thumb, on ? styles.thumbOn : styles.thumbOff]} />
+      <View
+        style={[
+          styles.thumb,
+          on ? styles.thumbOn : { backgroundColor: colors.textMuted },
+        ]}
+      />
     </Pressable>
   );
 }
@@ -44,8 +50,5 @@ const styles = StyleSheet.create({
   },
   thumbOn: {
     backgroundColor: '#F3F0FF',
-  },
-  thumbOff: {
-    backgroundColor: colors.textMuted,
   },
 });

@@ -6,13 +6,14 @@ import {
   SendIcon,
   VideoIcon,
 } from '@/components/icons';
-import { colors } from '@/constants/theme';
 import { useChatStore } from '@/src/stores/useChatStore';
 import { useComposerStore } from '@/src/stores/useComposerStore';
+import { useTheme } from '@/src/stores/useThemeStore';
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 export function ChatComposer() {
+  const { colors } = useTheme();
   const sendMessage = useChatStore((state) => state.sendMessage);
   const selectedMedia = useComposerStore((state) => state.selectedMedia);
   const picking = useComposerStore((state) => state.picking);
@@ -36,7 +37,12 @@ export function ChatComposer() {
   };
 
   return (
-    <View style={styles.wrap}>
+    <View
+      style={[
+        styles.wrap,
+        { backgroundColor: colors.panel, borderColor: colors.borderSoft },
+      ]}
+    >
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
 
       <View style={styles.inputRow}>
@@ -45,35 +51,66 @@ export function ChatComposer() {
           onChangeText={setText}
           placeholder="Xabar yozing..."
           placeholderTextColor={colors.textMuted}
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.panelSoft,
+              borderColor: colors.borderSoft,
+              color: colors.text,
+            },
+          ]}
           multiline
         />
         <Pressable
-          style={[styles.sendBtn, !canSend && styles.sendBtnDisabled]}
+          style={[
+            styles.sendBtn,
+            { backgroundColor: colors.accent },
+            !canSend && styles.sendBtnDisabled,
+          ]}
           onPress={handleSend}
           disabled={!canSend}
         >
-          <SendIcon size={18} color={colors.text} />
+          <SendIcon size={18} color={colors.textOnAccent} />
         </Pressable>
       </View>
 
       <View style={styles.mediaRow}>
         <Pressable
-          style={[styles.mediaBtn, picking && styles.mediaBtnDisabled]}
+          style={[
+            styles.mediaBtn,
+            { backgroundColor: colors.panelSoft, borderColor: colors.borderSoft },
+            picking && styles.mediaBtnDisabled,
+          ]}
           onPress={() => pickFromDevice('image')}
         >
           <GalleryIcon size={18} color={colors.icon} />
         </Pressable>
         <Pressable
-          style={[styles.mediaBtn, picking && styles.mediaBtnDisabled]}
+          style={[
+            styles.mediaBtn,
+            { backgroundColor: colors.panelSoft, borderColor: colors.borderSoft },
+            picking && styles.mediaBtnDisabled,
+          ]}
           onPress={() => pickFromDevice('video')}
         >
           <VideoIcon size={18} color={colors.icon} />
         </Pressable>
-        <Pressable style={styles.mediaBtn} onPress={() => undefined}>
+        <Pressable
+          style={[
+            styles.mediaBtn,
+            { backgroundColor: colors.panelSoft, borderColor: colors.borderSoft },
+          ]}
+          onPress={() => undefined}
+        >
           <CameraIcon size={18} color={colors.icon} />
         </Pressable>
-        <Pressable style={styles.mediaBtn} onPress={() => undefined}>
+        <Pressable
+          style={[
+            styles.mediaBtn,
+            { backgroundColor: colors.panelSoft, borderColor: colors.borderSoft },
+          ]}
+          onPress={() => undefined}
+        >
           <MicIcon size={18} color={colors.icon} />
         </Pressable>
       </View>
@@ -88,9 +125,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 12,
     borderRadius: 28,
-    backgroundColor: colors.panel,
     borderWidth: 1.5,
-    borderColor: colors.borderSoft,
   },
   inputRow: {
     flexDirection: 'row',
@@ -104,10 +139,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingHorizontal: 18,
     paddingVertical: 12,
-    backgroundColor: colors.panelSoft,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
-    color: colors.text,
     fontSize: 15,
   },
   sendBtn: {
@@ -116,7 +148,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.accent,
   },
   sendBtnDisabled: {
     opacity: 0.45,
@@ -133,9 +164,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.panelSoft,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
   },
   mediaBtnDisabled: {
     opacity: 0.5,
