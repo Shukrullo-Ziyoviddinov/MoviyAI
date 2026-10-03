@@ -1,3 +1,4 @@
+import { SelectedMediaStrip } from '@/components/chat/SelectedMediaStrip';
 import {
   CameraIcon,
   GalleryIcon,
@@ -6,21 +7,38 @@ import {
   VideoIcon,
 } from '@/components/icons';
 import { colors } from '@/constants/theme';
+import { useChatStore } from '@/src/stores/useChatStore';
+import { useComposerStore } from '@/src/stores/useComposerStore';
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-const mediaActions = [
-  { key: 'gallery', Icon: GalleryIcon },
-  { key: 'video', Icon: VideoIcon },
-  { key: 'camera', Icon: CameraIcon },
-  { key: 'mic', Icon: MicIcon },
-];
-
 export function ChatComposer() {
+  const sendMessage = useChatStore((state) => state.sendMessage);
+  const selectedMedia = useComposerStore((state) => state.selectedMedia);
+  const picking = useComposerStore((state) => state.picking);
+  const pickFromDevice = useComposerStore((state) => state.pickFromDevice);
+  const removeMedia = useComposerStore((state) => state.removeMedia);
+  const clearMedia = useComposerStore((state) => state.clearMedia);
   const [text, setText] = useState('');
+
+  const canSend = text.trim().length > 0 || selectedMedia.length > 0;
+
+  const handleSend = () => {
+    if (!canSend) return;
+
+    sendMessage({
+      text,
+      media: selectedMedia,
+    });
+
+    setText('');
+    clearMedia();
+  };
 
   return (
     <View style={styles.wrap}>
+      <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
+
       <View style={styles.inputRow}>
         <TextInput
           value={text}
@@ -30,17 +48,34 @@ export function ChatComposer() {
           style={styles.input}
           multiline
         />
-        <Pressable style={styles.sendBtn} onPress={() => undefined}>
+        <Pressable
+          style={[styles.sendBtn, !canSend && styles.sendBtnDisabled]}
+          onPress={handleSend}
+          disabled={!canSend}
+        >
           <SendIcon size={18} color={colors.text} />
         </Pressable>
       </View>
 
       <View style={styles.mediaRow}>
-        {mediaActions.map(({ key, Icon }) => (
-          <Pressable key={key} style={styles.mediaBtn} onPress={() => undefined}>
-            <Icon size={18} color={colors.icon} />
-          </Pressable>
-        ))}
+        <Pressable
+          style={[styles.mediaBtn, picking && styles.mediaBtnDisabled]}
+          onPress={() => pickFromDevice('image')}
+        >
+          <GalleryIcon size={18} color={colors.icon} />
+        </Pressable>
+        <Pressable
+          style={[styles.mediaBtn, picking && styles.mediaBtnDisabled]}
+          onPress={() => pickFromDevice('video')}
+        >
+          <VideoIcon size={18} color={colors.icon} />
+        </Pressable>
+        <Pressable style={styles.mediaBtn} onPress={() => undefined}>
+          <CameraIcon size={18} color={colors.icon} />
+        </Pressable>
+        <Pressable style={styles.mediaBtn} onPress={() => undefined}>
+          <MicIcon size={18} color={colors.icon} />
+        </Pressable>
       </View>
     </View>
   );
@@ -83,6 +118,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.accent,
   },
+  sendBtnDisabled: {
+    opacity: 0.45,
+  },
   mediaRow: {
     marginTop: 12,
     flexDirection: 'row',
@@ -98,5 +136,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.panelSoft,
     borderWidth: 1,
     borderColor: colors.borderSoft,
+  },
+  mediaBtnDisabled: {
+    opacity: 0.5,
   },
 });

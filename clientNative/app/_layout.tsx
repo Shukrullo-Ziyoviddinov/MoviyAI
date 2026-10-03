@@ -1,9 +1,12 @@
 import { SplashScreen as AppSplashScreen } from '@/components/SplashScreen';
-import { Stack } from 'expo-router';
+import {
+  CardStyleInterpolators,
+  Stack,
+} from 'expo-router/js-stack';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Easing, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
@@ -11,6 +14,14 @@ import 'react-native-reanimated';
 export { ErrorBoundary } from 'expo-router';
 
 ExpoSplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+const slideSpec = {
+  animation: 'timing' as const,
+  config: {
+    duration: 300,
+    easing: Easing.out(Easing.poly(4)),
+  },
+};
 
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
@@ -30,8 +41,27 @@ export default function RootLayout() {
         {showSplash ? (
           <AppSplashScreen onFinish={handleSplashFinish} />
         ) : (
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#030308' } }}>
-            <Stack.Screen name="index" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              cardStyle: { backgroundColor: '#030308' },
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+              transitionSpec: {
+                open: slideSpec,
+                close: slideSpec,
+              },
+            }}
+          >
+            <Stack.Screen
+              name="index"
+              options={{
+                animationEnabled: false,
+              }}
+            />
+            <Stack.Screen name="profile" />
+            <Stack.Screen name="settings" />
           </Stack>
         )}
       </GestureHandlerRootView>

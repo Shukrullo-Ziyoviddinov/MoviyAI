@@ -41,7 +41,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow MoviyAI to access your photos."
+          "photosPermission": "MoviyAI kinolarni topish uchun galereyangizga ruxsat so‘raydi."
         }
       ],
       [
@@ -50,7 +50,8 @@
           "locationWhenInUsePermission": "Allow MoviyAI to use your location."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "expo-sharing"
     ],
     "extra": {
       "apiUrl": "https://api.example.com"

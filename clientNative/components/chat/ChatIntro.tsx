@@ -5,16 +5,20 @@ import {
   VideoIcon,
 } from '@/components/icons';
 import { colors } from '@/constants/theme';
+import { useComposerStore } from '@/src/stores/useComposerStore';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 const actions = [
   { key: 'text', label: "Matn bilan so'rov", Icon: ChatBubbleIcon },
-  { key: 'image', label: 'Rasm bilan topish', Icon: GalleryIcon },
-  { key: 'video', label: 'Video orqali topish', Icon: VideoIcon },
-  { key: 'recommend', label: 'Tavsiya olish', Icon: StarIcon },
+  { key: 'image', label: 'Rasm bilan topish', Icon: GalleryIcon, media: 'image' as const },
+  { key: 'video', label: 'Video orqali topish', Icon: VideoIcon, media: 'video' as const },
+  { key: 'recommend', label: 'Tavsiya olish qidirish', Icon: StarIcon },
 ];
 
 export function ChatIntro() {
+  const pickFromDevice = useComposerStore((state) => state.pickFromDevice);
+  const picking = useComposerStore((state) => state.picking);
+
   return (
     <View style={styles.wrap}>
       <Text style={styles.title}>Qanday kino izlayapsiz?</Text>
@@ -23,8 +27,15 @@ export function ChatIntro() {
       </Text>
 
       <View style={styles.grid}>
-        {actions.map(({ key, label, Icon }) => (
-          <Pressable key={key} style={styles.card} onPress={() => undefined}>
+        {actions.map(({ key, label, Icon, media }) => (
+          <Pressable
+            key={key}
+            style={[styles.card, picking && media ? styles.cardDisabled : null]}
+            onPress={() => {
+              if (media) pickFromDevice(media);
+            }}
+            disabled={picking && !!media}
+          >
             <Icon size={22} color="#A5B4FC" />
             <Text style={styles.cardText}>{label}</Text>
           </Pressable>
@@ -72,6 +83,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.panelSoft,
     borderWidth: 1,
     borderColor: colors.borderSoft,
+  },
+  cardDisabled: {
+    opacity: 0.5,
   },
   cardText: {
     color: colors.text,
