@@ -20,6 +20,8 @@ export async function upsertMovies(movies: Record<string, unknown>[]) {
           movieDetailPoster: 1,
           trailersVideo: 1,
           homeImgPosterRu: 1,
+          'description.uz.descriptionImg': 1,
+          'description.ru.descriptionImg': 1,
         },
       },
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }

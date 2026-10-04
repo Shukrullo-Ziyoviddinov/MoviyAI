@@ -5,7 +5,6 @@ export type LocalizedPair = {
 
 export type MovieDescriptionLocale = {
   text: string;
-  descriptionImg: string;
   year: number;
   country: string;
   duration: number;

@@ -11,7 +11,6 @@ const localizedPairSchema = new Schema(
 const descriptionLocaleSchema = new Schema(
   {
     text: { type: String, required: true },
-    descriptionImg: { type: String, required: true },
     year: { type: Number, required: true },
     country: { type: String, required: true },
     duration: { type: Number, required: true },

@@ -86,6 +86,22 @@ export function SendIcon({ size = 18, color = '#FFFFFF' }: IconProps) {
   );
 }
 
+export function ShareIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="18" cy="5" r="2.5" stroke={color} strokeWidth="2" />
+      <Circle cx="6" cy="12" r="2.5" stroke={color} strokeWidth="2" />
+      <Circle cx="18" cy="19" r="2.5" stroke={color} strokeWidth="2" />
+      <Path
+        d="M8.2 10.8L15.8 6.2M8.2 13.2L15.8 17.8"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 export function GalleryIcon({ size = 18, color = '#E5E7EB' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

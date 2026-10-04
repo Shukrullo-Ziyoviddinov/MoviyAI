@@ -48,7 +48,13 @@
   },
   "movie": {
     "watch": "Watch",
-    "trailer": "Trailer"
+    "trailer": "Trailer",
+    "aboutTitle": "About the movie",
+    "readMore": "Read more",
+    "year": "Year",
+    "country": "Country",
+    "duration": "Duration",
+    "director": "Director"
   },
   "profile": {
     "savedMovies": "Saved movies",

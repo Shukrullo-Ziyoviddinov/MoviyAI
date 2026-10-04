@@ -48,7 +48,13 @@
   },
   "movie": {
     "watch": "Tomosha",
-    "trailer": "Triller"
+    "trailer": "Triller",
+    "aboutTitle": "Film haqida",
+    "readMore": "Ko'proq o'qish",
+    "year": "Yil",
+    "country": "Davlat",
+    "duration": "Davomiylik",
+    "director": "Rejissyor"
   },
   "profile": {
     "savedMovies": "Saqlangan kinolar",

@@ -24,7 +24,6 @@
     "description": {
       "uz": {
         "text": "Sobiq K-9 ofitseri va uning sodiq iti shahar ko‘chalarida xavfli jinoiy guruhga qarshi kurashadi.",
-        "descriptionImg": "/img/movie1.jpg",
         "year": 2024,
         "country": "AQSh",
         "duration": 105,
@@ -32,7 +31,6 @@
       },
       "ru": {
         "text": "Бывший офицер К-9 и его верный пёс сражаются с опасной преступной группировкой.",
-        "descriptionImg": "/img/movie1.jpg",
         "year": 2024,
         "country": "США",
         "duration": 105,
@@ -86,7 +84,6 @@
     "description": {
       "uz": {
         "text": "Tegish yo‘q — faqat qalblarga tegish. Ikki yoshning issiq va samimiy hikoyasi.",
-        "descriptionImg": "/img/movie2.jpg",
         "year": 2024,
         "country": "Hindiston",
         "duration": 142,
@@ -94,7 +91,6 @@
       },
       "ru": {
         "text": "Никаких прикосновений — только трогание сердец. Тёплая история двух молодых людей.",
-        "descriptionImg": "/img/movie2.jpg",
         "year": 2024,
         "country": "Индия",
         "duration": 142,
@@ -149,7 +145,6 @@
     "description": {
       "uz": {
         "text": "Kichik echki katta orzular sari — hayvonlar olamidagi eng zo‘r basketbolchi bo‘lishni xohlaydi.",
-        "descriptionImg": "/img/movie4.jpg",
         "year": 2026,
         "country": "AQSh",
         "duration": 100,
@@ -157,7 +152,6 @@
       },
       "ru": {
         "text": "Маленький козлик с большими мечтами — он хочет стать лучшим баскетболистом.",
-        "descriptionImg": "/img/movie4.jpg",
         "year": 2026,
         "country": "США",
         "duration": 100,
@@ -213,7 +207,6 @@
     "description": {
       "uz": {
         "text": "Mario va Yoshi yulduzlar orasidagi yangi sarguzashtga otlanadi.",
-        "descriptionImg": "/img/movie5.jpg",
         "year": 2026,
         "country": "AQSh",
         "duration": 110,
@@ -221,7 +214,6 @@
       },
       "ru": {
         "text": "Марио и Йоши отправляются в новое космическое приключение.",
-        "descriptionImg": "/img/movie5.jpg",
         "year": 2026,
         "country": "США",
         "duration": 110,
@@ -277,7 +269,6 @@
     "description": {
       "uz": {
         "text": "Linda Liddle uzoq orolda omon qolish uchun kurashadi. Endi u xo‘jayin.",
-        "descriptionImg": "/img/movie8.jpg",
         "year": 2026,
         "country": "AQSh",
         "duration": 118,
@@ -285,7 +276,6 @@
       },
       "ru": {
         "text": "Линда Лиддл борется за выживание на далёком острове. Теперь она босс.",
-        "descriptionImg": "/img/movie8.jpg",
         "year": 2026,
         "country": "США",
         "duration": 118,
@@ -338,7 +328,6 @@
     "description": {
       "uz": {
         "text": "Uning xavfsizligi — uning vazifasi. Statham qizchani himoya qilish uchun hamma narsaga tayyor.",
-        "descriptionImg": "/img/movie9.jpg",
         "year": 2026,
         "country": "AQSh",
         "duration": 112,
@@ -346,7 +335,6 @@
       },
       "ru": {
         "text": "Её безопасность — его миссия. Стэйтем готов на всё, чтобы защитить девочку.",
-        "descriptionImg": "/img/movie9.jpg",
         "year": 2026,
         "country": "США",
         "duration": 112,
@@ -401,7 +389,6 @@
     "description": {
       "uz": {
         "text": "Aybsizligingizni AI sudyaga isbotlang — aks holda qatl.",
-        "descriptionImg": "/img/movie10.jpg",
         "year": 2026,
         "country": "AQSh",
         "duration": 108,
@@ -409,7 +396,6 @@
       },
       "ru": {
         "text": "Докажите невиновность ИИ-судье — иначе казнь.",
-        "descriptionImg": "/img/movie10.jpg",
         "year": 2026,
         "country": "США",
         "duration": 108,
@@ -465,7 +451,6 @@
     "description": {
       "uz": {
         "text": "Uy hayvonlari o‘rtasidagi maxfiy yuqori texnologiyali urush.",
-        "descriptionImg": "/img/movie14.jpg",
         "year": 2001,
         "country": "AQSh",
         "duration": 87,
@@ -473,7 +458,6 @@
       },
       "ru": {
         "text": "Тайная высокотехнологичная война между домашними животными.",
-        "descriptionImg": "/img/movie14.jpg",
         "year": 2001,
         "country": "США",
         "duration": 87,
@@ -527,7 +511,6 @@
     "description": {
       "uz": {
         "text": "Odamlar o‘g‘irlanib, sadistik clownlar bilan omon qolish o‘yiniga majbur qilinadi.",
-        "descriptionImg": "/img/movie17.jpg",
         "year": 2016,
         "country": "AQSh",
         "duration": 102,
@@ -535,7 +518,6 @@
       },
       "ru": {
         "text": "Людей похищают и заставляют играть в игру на выживание против садистских клоунов.",
-        "descriptionImg": "/img/movie17.jpg",
         "year": 2016,
         "country": "США",
         "duration": 102,
@@ -588,7 +570,6 @@
     "description": {
       "uz": {
         "text": "Shaharning ikki dunyosi orasidagi farq — bolalik, orzular va kurash.",
-        "descriptionImg": "/img/movie18.jpg",
         "year": 2024,
         "country": "AQSh",
         "duration": 115,
@@ -596,7 +577,6 @@
       },
       "ru": {
         "text": "Контраст двух миров города — детство, мечты и борьба.",
-        "descriptionImg": "/img/movie18.jpg",
         "year": 2024,
         "country": "США",
         "duration": 115,
@@ -649,7 +629,6 @@
     "description": {
       "uz": {
         "text": "John Wick High Tablega qarshi yakuniy jangda — Parij va Berlinda qon to‘kish.",
-        "descriptionImg": "/img/movie1.jpg",
         "year": 2023,
         "country": "AQSh",
         "duration": 169,
@@ -657,7 +636,6 @@
       },
       "ru": {
         "text": "Джон Уик в финальной битве против Высшего стола — кровь в Париже и Берлине.",
-        "descriptionImg": "/img/movie1.jpg",
         "year": 2023,
         "country": "США",
         "duration": 169,
@@ -714,7 +692,6 @@
     "description": {
       "uz": {
         "text": "Tyler Rake yangi xavfli missiyada oilani qutqarish uchun qaytadi.",
-        "descriptionImg": "/img/movie9.jpg",
         "year": 2023,
         "country": "AQSh",
         "duration": 122,
@@ -722,7 +699,6 @@
       },
       "ru": {
         "text": "Тайлер Рэйк возвращается, чтобы спасти семью в новой опасной миссии.",
-        "descriptionImg": "/img/movie9.jpg",
         "year": 2023,
         "country": "США",
         "duration": 122,
@@ -775,7 +751,6 @@
     "description": {
       "uz": {
         "text": "Sokin asalarichi o‘tmishdagi maxfiy tashkilot a’zosi ekanligi ma’lum bo‘ladi.",
-        "descriptionImg": "/img/movie10.jpg",
         "year": 2024,
         "country": "AQSh",
         "duration": 105,
@@ -783,7 +758,6 @@
       },
       "ru": {
         "text": "Скромный пчеловод оказывается членом тайной организации прошлого.",
-        "descriptionImg": "/img/movie10.jpg",
         "year": 2024,
         "country": "США",
         "duration": 105,
@@ -838,7 +812,6 @@
     "description": {
       "uz": {
         "text": "Paul Atreides Fremenlar bilan birlashib, Arrakis taqdiri uchun kurashadi.",
-        "descriptionImg": "/img/movie5.jpg",
         "year": 2024,
         "country": "AQSh",
         "duration": 166,
@@ -846,7 +819,6 @@
       },
       "ru": {
         "text": "Пол Атрейдес объединяется с фременами в борьбе за судьбу Арракиса.",
-        "descriptionImg": "/img/movie5.jpg",
         "year": 2024,
         "country": "США",
         "duration": 166,
@@ -902,7 +874,6 @@
     "description": {
       "uz": {
         "text": "Deadpool va Wolverine multiverse tartibini saqlash uchun birlashadi.",
-        "descriptionImg": "/img/movie4.jpg",
         "year": 2024,
         "country": "AQSh",
         "duration": 128,
@@ -910,7 +881,6 @@
       },
       "ru": {
         "text": "Дэдпул и Росомаха объединяются, чтобы спасти мультивселенную.",
-        "descriptionImg": "/img/movie4.jpg",
         "year": 2024,
         "country": "США",
         "duration": 128,
@@ -966,7 +936,6 @@
     "description": {
       "uz": {
         "text": "Yadro bombasi yaratuvchisi J. Robert Oppenheimer hayoti.",
-        "descriptionImg": "/img/movie18.jpg",
         "year": 2023,
         "country": "AQSh",
         "duration": 180,
@@ -974,7 +943,6 @@
       },
       "ru": {
         "text": "Жизнь создателя атомной бомбы Дж. Роберта Оппенгеймера.",
-        "descriptionImg": "/img/movie18.jpg",
         "year": 2023,
         "country": "США",
         "duration": 180,
@@ -1030,7 +998,6 @@
     "description": {
       "uz": {
         "text": "Mashhur qo‘shiqchi tabassum lanatiga duch keladi.",
-        "descriptionImg": "/img/movie17.jpg",
         "year": 2024,
         "country": "AQSh",
         "duration": 127,
@@ -1038,7 +1005,6 @@
       },
       "ru": {
         "text": "Популярная певица сталкивается с проклятием улыбки.",
-        "descriptionImg": "/img/movie17.jpg",
         "year": 2024,
         "country": "США",
         "duration": 127,
@@ -1092,7 +1058,6 @@
     "description": {
       "uz": {
         "text": "Ikki kishi o‘zaro munosabatni soxta munosabat bilan yashirishga urinadi.",
-        "descriptionImg": "/img/movie2.jpg",
         "year": 2023,
         "country": "AQSh",
         "duration": 103,
@@ -1100,7 +1065,6 @@
       },
       "ru": {
         "text": "Двое пытаются скрыть искру через притворные отношения.",
-        "descriptionImg": "/img/movie2.jpg",
         "year": 2023,
         "country": "США",
         "duration": 103,
@@ -1155,7 +1119,6 @@
     "description": {
       "uz": {
         "text": "Riley o‘smirlikka qadam qo‘yadi — yangi his-tuyg‘ular paydo bo‘ladi.",
-        "descriptionImg": "/img/movie14.jpg",
         "year": 2024,
         "country": "AQSh",
         "duration": 96,
@@ -1163,7 +1126,6 @@
       },
       "ru": {
         "text": "Райли становится подростком — появляются новые эмоции.",
-        "descriptionImg": "/img/movie14.jpg",
         "year": 2024,
         "country": "США",
         "duration": 96,
@@ -1219,7 +1181,6 @@
     "description": {
       "uz": {
         "text": "FBI agenti sirli qotil izidan ketadi — o‘tmishdagi dahshat ochiladi.",
-        "descriptionImg": "/img/movie8.jpg",
         "year": 2024,
         "country": "AQSh",
         "duration": 101,
@@ -1227,7 +1188,6 @@
       },
       "ru": {
         "text": "Агент ФБР идёт по следу загадочного убийцы — раскрывается ужас прошлого.",
-        "descriptionImg": "/img/movie8.jpg",
         "year": 2024,
         "country": "США",
         "duration": 101,

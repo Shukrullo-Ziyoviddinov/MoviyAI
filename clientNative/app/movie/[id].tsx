@@ -2,15 +2,18 @@ import {
   AgeRatingIcon,
   BookmarkIcon,
   CalendarIcon,
+  ChatBubbleIcon,
   ChevronLeftIcon,
   ClockIcon,
   DislikeIcon,
   GlobeIcon,
   LikeIcon,
   PlayIcon,
+  ShareIcon,
   VideoIcon,
 } from '@/components/icons';
 import { HorizontalScroll } from '@/components/common/HorizontalScroll';
+import { MovieDescriptionModal } from '@/components/movie/MovieDescriptionModal';
 import { fetchMovieById, toggleMovieReaction } from '@/src/api/movies';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -93,6 +96,7 @@ export default function MovieDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [reactionBusy, setReactionBusy] = useState(false);
+  const [descOpen, setDescOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -127,6 +131,16 @@ export default function MovieDetailScreen() {
   const title = movie ? movie.title[lang] ?? movie.title.uz : '';
   const poster = movie ? resolveMoviePoster(movie.homeImgPoster) : null;
   const posterH = Math.round(width * 1.15);
+  const description = movie
+    ? movie.description[lang] ?? movie.description.uz
+    : null;
+  const durationLabel = description
+    ? language === 'ru'
+      ? `${description.duration} мин`
+      : language === 'en'
+        ? `${description.duration} min`
+        : `${description.duration} daq`
+    : '';
 
   const fadeColors = useMemo(
     () =>
@@ -375,7 +389,7 @@ export default function MovieDetailScreen() {
                 disabled={reactionBusy}
               >
                 <LikeIcon
-                  size={16}
+                  size={18}
                   color={
                     movie.userReaction === 'like' ? LIKE_ACTIVE : colors.icon
                   }
@@ -408,7 +422,7 @@ export default function MovieDetailScreen() {
                 disabled={reactionBusy}
               >
                 <DislikeIcon
-                  size={16}
+                  size={18}
                   color={
                     movie.userReaction === 'dislike'
                       ? DISLIKE_ACTIVE
@@ -430,10 +444,73 @@ export default function MovieDetailScreen() {
                   {movie.dislike || '0'}
                 </Text>
               </Pressable>
+
+              <View
+                style={[
+                  styles.reactionItem,
+                  {
+                    backgroundColor: colors.panelSoft,
+                    borderColor: colors.borderSoft,
+                  },
+                ]}
+              >
+                <ChatBubbleIcon size={18} color={colors.icon} />
+                <Text style={[styles.reactionText, { color: colors.text }]}>
+                  0
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.reactionItem,
+                  {
+                    backgroundColor: colors.panelSoft,
+                    borderColor: colors.borderSoft,
+                  },
+                ]}
+              >
+                <ShareIcon size={18} color={colors.icon} />
+              </View>
             </View>
+
+            {description?.text ? (
+              <View style={styles.aboutSection}>
+                <Text style={[styles.aboutTitle, { color: colors.text }]}>
+                  {t('movie.aboutTitle')}
+                </Text>
+                <View
+                  style={[
+                    styles.aboutCard,
+                    {
+                      backgroundColor: colors.panelSoft,
+                      borderColor: colors.borderSoft,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.aboutText, { color: colors.text }]}
+                    numberOfLines={4}
+                  >
+                    {description.text}
+                  </Text>
+                  <Pressable onPress={() => setDescOpen(true)} hitSlop={6}>
+                    <Text style={[styles.readMore, { color: colors.accentBright }]}>
+                      {t('movie.readMore')}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : null}
           </View>
         </ScrollView>
       )}
+
+      <MovieDescriptionModal
+        visible={descOpen}
+        onClose={() => setDescOpen(false)}
+        description={description}
+        durationLabel={durationLabel}
+      />
 
       <View
         style={[styles.topBar, { paddingTop: insets.top + 8 }]}
@@ -582,14 +659,39 @@ const styles = StyleSheet.create({
   reactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
   },
   reactionText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
+  },
+  aboutSection: {
+    paddingHorizontal: 16,
+    gap: 10,
+    marginTop: 4,
+  },
+  aboutTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  aboutCard: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  aboutText: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '400',
+  },
+  readMore: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

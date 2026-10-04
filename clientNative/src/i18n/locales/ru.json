@@ -48,7 +48,13 @@
   },
   "movie": {
     "watch": "Смотреть",
-    "trailer": "Трейлер"
+    "trailer": "Трейлер",
+    "aboutTitle": "О фильме",
+    "readMore": "Читать далее",
+    "year": "Год",
+    "country": "Страна",
+    "duration": "Длительность",
+    "director": "Режиссёр"
   },
   "profile": {
     "savedMovies": "Сохранённые фильмы",
