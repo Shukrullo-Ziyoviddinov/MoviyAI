@@ -10,16 +10,22 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 const SAVE_ACTIVE = '#0D9488';
 
-type MovieCardProps = {
+type WishlistCardProps = {
   movie: Movie;
   language: AppLanguage;
   width: number;
   onPress?: (movie: Movie) => void;
+  onRemoved?: (movieId: number) => void;
 };
 
-export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
+export function WishlistCard({
+  movie,
+  language,
+  width,
+  onPress,
+  onRemoved,
+}: WishlistCardProps) {
   const { colors } = useTheme();
-  const isSaved = useWishlistStore((s) => s.isSaved(movie.id));
   const toggle = useWishlistStore((s) => s.toggle);
   const [busy, setBusy] = useState(false);
   const lang = language === 'en' ? 'uz' : language;
@@ -32,7 +38,8 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
     if (busy) return;
     setBusy(true);
     try {
-      await toggle(movie.id);
+      const saved = await toggle(movie.id);
+      if (!saved) onRemoved?.(movie.id);
     } finally {
       setBusy(false);
     }
@@ -64,11 +71,7 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
           hitSlop={8}
           disabled={busy}
         >
-          <BookmarkIcon
-            size={18}
-            color={isSaved ? SAVE_ACTIVE : '#FFFFFF'}
-            filled={isSaved}
-          />
+          <BookmarkIcon size={18} color={SAVE_ACTIVE} filled />
         </Pressable>
 
         <View style={styles.ratingBadge}>

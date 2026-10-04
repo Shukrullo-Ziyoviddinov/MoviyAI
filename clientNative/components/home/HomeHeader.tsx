@@ -23,13 +23,11 @@ export function HomeHeader({ onSearchPress }: HomeHeaderProps) {
         contentPosition="left"
       />
       <Pressable
-        style={[
-          styles.searchBtn,
-          { backgroundColor: colors.panelSoft, borderColor: colors.borderSoft },
-        ]}
+        style={styles.searchBtn}
         onPress={onSearchPress}
+        hitSlop={8}
       >
-        <SearchIcon size={20} color={colors.icon} />
+        <SearchIcon size={22} color={colors.icon} />
       </Pressable>
     </View>
   );
@@ -52,6 +50,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    backgroundColor: 'transparent',
   },
 });

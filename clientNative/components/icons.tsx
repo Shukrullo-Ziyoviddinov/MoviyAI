@@ -3,6 +3,7 @@ import Svg, { Circle, Line, Path, Polyline, Rect } from 'react-native-svg';
 type IconProps = {
   size?: number;
   color?: string;
+  filled?: boolean;
 };
 
 export function MenuIcon({ size = 22, color = '#E5E7EB' }: IconProps) {
@@ -322,7 +323,11 @@ export function PlusIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
   );
 }
 
-export function BookmarkIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
+export function BookmarkIcon({
+  size = 20,
+  color = '#E5E7EB',
+  filled = false,
+}: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
@@ -330,6 +335,7 @@ export function BookmarkIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
         stroke={color}
         strokeWidth="2"
         strokeLinejoin="round"
+        fill={filled ? color : 'none'}
       />
     </Svg>
   );
