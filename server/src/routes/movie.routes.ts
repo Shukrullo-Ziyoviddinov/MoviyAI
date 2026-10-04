@@ -6,6 +6,10 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 const router = Router();
 
 router.get('/', asyncHandler(movieController.listMovies));
+router.get(
+  '/:id/similar-trailers',
+  asyncHandler(movieController.listSimilarTrailers)
+);
 router.get('/:id', asyncHandler(movieController.getMovie));
 router.post(
   '/:id/reaction',

@@ -99,6 +99,15 @@ export function buildYoutubeEmbedUrl(input?: string | null): string | null {
   return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
 }
 
+export function buildYoutubeThumbnailUrl(
+  input?: string | null,
+  quality: 'hqdefault' | 'mqdefault' | 'sddefault' = 'hqdefault'
+): string | null {
+  const id = extractYoutubeVideoId(input);
+  if (!id) return null;
+  return `https://img.youtube.com/vi/${id}/${quality}.jpg`;
+}
+
 export function buildYoutubeEmbedHtml(input?: string | null): string | null {
   const embedUrl = buildYoutubeEmbedUrl(input);
   if (!embedUrl) return null;

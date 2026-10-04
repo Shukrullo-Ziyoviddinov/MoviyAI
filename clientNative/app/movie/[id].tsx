@@ -517,7 +517,11 @@ export default function MovieDetailScreen() {
       <TrailerModal
         visible={trailerOpen}
         onClose={() => setTrailerOpen(false)}
+        movieId={movie?.id}
         trailerUrl={movie?.trailers}
+        movieTitle={title}
+        description={description}
+        durationLabel={durationLabel}
       />
 
       <View

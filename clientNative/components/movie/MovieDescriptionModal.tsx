@@ -235,7 +235,7 @@ export function MovieDescriptionModal({
 
 const styles = StyleSheet.create({
   root: {
-    zIndex: 90,
+    zIndex: 110,
     justifyContent: 'flex-end',
   },
   backdrop: {

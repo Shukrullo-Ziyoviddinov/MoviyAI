@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import type { UserRequest } from '../middleware/requireUserId.js';
 import * as movieService from '../services/movie.service.js';
 import * as movieReactionService from '../services/movieReaction.service.js';
+import * as similarTrailersService from '../services/similarTrailers.service.js';
 
 export async function listMovies(_req: Request, res: Response) {
   const docs = await movieService.getAllMovies();
@@ -28,6 +29,24 @@ export async function getMovie(req: Request, res: Response) {
   }
 
   res.json({ ok: true, data: { ...doc, userReaction } });
+}
+
+export async function listSimilarTrailers(req: Request, res: Response) {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ ok: false, error: 'Invalid movie id' });
+    return;
+  }
+
+  const limitRaw = Number(req.query.limit ?? 12);
+  const limit = Number.isFinite(limitRaw) ? Math.min(30, Math.max(1, limitRaw)) : 12;
+  const docs = await similarTrailersService.getSimilarTrailers(id, limit);
+  if (!docs) {
+    res.status(404).json({ ok: false, error: 'Movie not found' });
+    return;
+  }
+
+  res.json({ ok: true, data: docs });
 }
 
 export async function toggleReaction(req: Request, res: Response) {
