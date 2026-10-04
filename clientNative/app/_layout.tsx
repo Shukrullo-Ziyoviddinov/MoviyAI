@@ -51,8 +51,12 @@ function AppNavigator() {
           >
             <Stack.Screen name="index" options={{ animationEnabled: false }} />
             <Stack.Screen name="home" />
+            <Stack.Screen name="favorites" />
             <Stack.Screen name="profile" />
             <Stack.Screen name="settings" />
+            <Stack.Screen name="about" />
+            <Stack.Screen name="privacy" />
+            <Stack.Screen name="data-manage" />
           </Stack>
         </SideMenu>
         <BottomNav />

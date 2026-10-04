@@ -36,7 +36,11 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.block}>
-          <SettingsGeneralCard />
+          <SettingsGeneralCard
+            onPrivacy={() => router.push('/privacy')}
+            onData={() => router.push('/data-manage')}
+            onAbout={() => router.push('/about')}
+          />
         </View>
 
         <View style={styles.block}>

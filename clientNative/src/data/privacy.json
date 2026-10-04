@@ -1,0 +1,216 @@
+{
+  "id": "privacy-policy",
+  "slug": "privacy",
+  "version": 1,
+  "page": {
+    "title": {
+      "uz": "Maxfiylik va xavfsizlik",
+      "ru": "Конфиденциальность и безопасность",
+      "en": "Privacy and security"
+    },
+    "subtitle": {
+      "uz": "MoviyAI qanday ma'lumotlardan foydalanishi",
+      "ru": "Какие данные использует MoviyAI",
+      "en": "What data MoviyAI uses"
+    }
+  },
+  "sections": [
+    {
+      "id": "data-usage",
+      "icon": "shield",
+      "iconColor": "#38BDF8",
+      "iconBg": "rgba(14, 165, 233, 0.16)",
+      "title": {
+        "uz": "MoviyAI qanday ma'lumotlardan foydalanadi",
+        "ru": "Какие данные использует MoviyAI",
+        "en": "What data MoviyAI uses"
+      },
+      "items": [
+        {
+          "id": "content-heading",
+          "type": "subheading",
+          "text": {
+            "uz": "1. Foydalanuvchi yuborgan kontent",
+            "ru": "1. Контент, который отправляет пользователь",
+            "en": "1. Content you send"
+          }
+        },
+        {
+          "id": "content-image",
+          "type": "bullet",
+          "text": {
+            "uz": "Rasm / screenshot — kino aniqlash uchun",
+            "ru": "Фото / скриншот — для определения фильма",
+            "en": "Image / screenshot — to identify movies"
+          }
+        },
+        {
+          "id": "content-video",
+          "type": "bullet",
+          "text": {
+            "uz": "Video — kino aniqlash uchun",
+            "ru": "Видео — для определения фильма",
+            "en": "Video — to identify movies"
+          }
+        },
+        {
+          "id": "content-text",
+          "type": "bullet",
+          "text": {
+            "uz": "Matnli xabarlar — AI bilan suhbat va kino qidirish uchun",
+            "ru": "Текстовые сообщения — для чата с AI и поиска фильмов",
+            "en": "Text messages — for AI chat and movie search"
+          }
+        },
+        {
+          "id": "account-heading",
+          "type": "subheading",
+          "text": {
+            "uz": "2. Akkaunt ma'lumotlari (agar akkaunt bo‘lsa)",
+            "ru": "2. Данные аккаунта (если есть аккаунт)",
+            "en": "2. Account details (if you have an account)"
+          }
+        },
+        {
+          "id": "account-name",
+          "type": "bullet",
+          "text": {
+            "uz": "Ism",
+            "ru": "Имя",
+            "en": "Name"
+          }
+        },
+        {
+          "id": "account-email",
+          "type": "bullet",
+          "text": {
+            "uz": "Email",
+            "ru": "Email",
+            "en": "Email"
+          }
+        },
+        {
+          "id": "account-avatar",
+          "type": "bullet",
+          "text": {
+            "uz": "Profil rasmi",
+            "ru": "Фото профиля",
+            "en": "Profile photo"
+          }
+        },
+        {
+          "id": "tech-heading",
+          "type": "subheading",
+          "text": {
+            "uz": "3. Texnik ma'lumotlar",
+            "ru": "3. Технические данные",
+            "en": "3. Technical data"
+          }
+        },
+        {
+          "id": "tech-device",
+          "type": "bullet",
+          "text": {
+            "uz": "Qurilma turi",
+            "ru": "Тип устройства",
+            "en": "Device type"
+          }
+        },
+        {
+          "id": "tech-os",
+          "type": "bullet",
+          "text": {
+            "uz": "Operatsion tizim",
+            "ru": "Операционная система",
+            "en": "Operating system"
+          }
+        },
+        {
+          "id": "tech-version",
+          "type": "bullet",
+          "text": {
+            "uz": "Ilova versiyasi",
+            "ru": "Версия приложения",
+            "en": "App version"
+          }
+        },
+        {
+          "id": "tech-logs",
+          "type": "bullet",
+          "text": {
+            "uz": "Xatoliklar/loglar",
+            "ru": "Ошибки/логи",
+            "en": "Errors/logs"
+          }
+        },
+        {
+          "id": "stored-heading",
+          "type": "subheading",
+          "text": {
+            "uz": "4. Saqlanadigan ma'lumotlar",
+            "ru": "4. Сохраняемые данные",
+            "en": "4. Stored data"
+          }
+        },
+        {
+          "id": "stored-favorites",
+          "type": "bullet",
+          "text": {
+            "uz": "Sevimli kinolar",
+            "ru": "Избранные фильмы",
+            "en": "Favorite movies"
+          }
+        },
+        {
+          "id": "stored-searches",
+          "type": "bullet",
+          "text": {
+            "uz": "Qidiruvlar",
+            "ru": "Поиски",
+            "en": "Searches"
+          }
+        },
+        {
+          "id": "stored-chats",
+          "type": "bullet",
+          "text": {
+            "uz": "AI suhbatlar tarixi (agar siz saqlasangiz)",
+            "ru": "История AI-чатов (если вы сохраняете)",
+            "en": "AI chat history (if you save it)"
+          }
+        },
+        {
+          "id": "stored-stats",
+          "type": "bullet",
+          "text": {
+            "uz": "Kino ko‘rish/qidirish statistikasi",
+            "ru": "Статистика просмотра/поиска фильмов",
+            "en": "Movie viewing/search statistics"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ai-info",
+      "icon": "info",
+      "iconColor": "#A78BFA",
+      "iconBg": "rgba(109, 40, 217, 0.18)",
+      "title": {
+        "uz": "AI haqida",
+        "ru": "Об AI",
+        "en": "About AI"
+      },
+      "items": [
+        {
+          "id": "ai-body",
+          "type": "paragraph",
+          "text": {
+            "uz": "MoviyAI foydalanuvchi yuborgan matn, rasm va video ma'lumotlarini AI orqali tahlil qilishi mumkin. AI tahlili uchun ma'lumotlar uchinchi tomon AI xizmatlariga yuborilishi mumkin.",
+            "ru": "MoviyAI может анализировать отправленные вами текст, изображения и видео с помощью AI. Для анализа данные могут передаваться сторонним AI-сервисам.",
+            "en": "MoviyAI may analyze text, images, and videos you send using AI. For AI analysis, data may be sent to third-party AI services."
+          }
+        }
+      ]
+    }
+  ]
+}

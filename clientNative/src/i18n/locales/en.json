@@ -6,7 +6,9 @@
     "theme": "Theme",
     "themeDark": "Dark",
     "themeLight": "Light",
-    "error": "Error"
+    "error": "Error",
+    "yes": "Yes",
+    "no": "No"
   },
   "language": {
     "choose": "Choose language",
@@ -16,6 +18,7 @@
   },
   "menu": {
     "home": "Home",
+    "favorites": "Favorites",
     "chat": "AI Chat",
     "menyu": "Menu",
     "profile": "Profile",
@@ -26,6 +29,11 @@
   "home": {
     "emptyTitle": "Nothing here yet",
     "emptySubtitle": "Movies and recommendations will show up here. Start searching with AI Chat.",
+    "goToChat": "Go to AI Chat"
+  },
+  "favorites": {
+    "emptyTitle": "Favorites is empty",
+    "emptySubtitle": "Find your favorite movies through AI Chat and save them to favorites.",
     "goToChat": "Go to AI Chat"
   },
   "profile": {
@@ -51,6 +59,26 @@
     "savedMoviesSub": "Your favorite movies list",
     "savedChats": "Saved chats",
     "savedChatsSub": "Your previous AI chats"
+  },
+  "dataManage": {
+    "title": "Manage data",
+    "subtitle": "Cache, history, and saved data",
+    "chatsTitle": "Chat history",
+    "chatsSub": "Delete all chats",
+    "chatsModalTitle": "Chat history",
+    "chatsModalBody": "All chats will be deleted. This cannot be undone. Continue?",
+    "searchesTitle": "Search history",
+    "searchesSub": "Clear search history",
+    "searchesModalTitle": "Search history",
+    "searchesModalBody": "Search history will be cleared. This cannot be undone. Continue?",
+    "mediaTitle": "Uploaded files",
+    "mediaSub": "Delete sent images and videos",
+    "mediaModalTitle": "Uploaded files",
+    "mediaModalBody": "Sent images and videos will be deleted. This cannot be undone. Continue?",
+    "favoritesTitle": "Saved movies",
+    "favoritesSub": "Delete saved/favorite movies",
+    "favoritesModalTitle": "Saved movies",
+    "favoritesModalBody": "Saved and favorite movies will be deleted. This cannot be undone. Continue?"
   },
   "chat": {
     "introTitle": "What movie are you looking for?",

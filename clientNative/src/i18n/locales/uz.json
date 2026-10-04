@@ -6,7 +6,9 @@
     "theme": "Tema",
     "themeDark": "Qorong'i",
     "themeLight": "Yorug'",
-    "error": "Xato"
+    "error": "Xato",
+    "yes": "Ha",
+    "no": "Yo'q"
   },
   "language": {
     "choose": "Tilni tanlang",
@@ -16,6 +18,7 @@
   },
   "menu": {
     "home": "Asosiy",
+    "favorites": "Sevimli",
     "chat": "AI Chat",
     "menyu": "Menyu",
     "profile": "Profil",
@@ -26,6 +29,11 @@
   "home": {
     "emptyTitle": "Hali hech narsa yo'q",
     "emptySubtitle": "Kinolar va tavsiyalar shu yerda paydo bo'ladi. Hozir AI Chat orqali qidirishni boshlang.",
+    "goToChat": "AI Chatga o'tish"
+  },
+  "favorites": {
+    "emptyTitle": "Sevimlilar bo'sh",
+    "emptySubtitle": "O'z sevimli kino filmlaringizni AI Chat orqali qidiring va sevimli kino filmlarni saqlang.",
     "goToChat": "AI Chatga o'tish"
   },
   "profile": {
@@ -51,6 +59,26 @@
     "savedMoviesSub": "Sevimli filmlaringiz ro'yxati",
     "savedChats": "Saqlangan suhbatlar",
     "savedChatsSub": "Oldingi AI suhbatlaringiz"
+  },
+  "dataManage": {
+    "title": "Ma'lumotlarni boshqarish",
+    "subtitle": "Kesh, tarix va saqlangan ma'lumotlar",
+    "chatsTitle": "Suhbatlar tarixi",
+    "chatsSub": "Barcha suhbatlarni o‘chirish",
+    "chatsModalTitle": "Suhbatlar tarixi",
+    "chatsModalBody": "Barcha suhbatlar o‘chiriladi. Bu amalni qaytarib bo‘lmaydi. Davom etasizmi?",
+    "searchesTitle": "Qidiruv tarixi",
+    "searchesSub": "Qidiruv tarixini tozalash",
+    "searchesModalTitle": "Qidiruv tarixi",
+    "searchesModalBody": "Qidiruv tarixi tozalanadi. Bu amalni qaytarib bo‘lmaydi. Davom etasizmi?",
+    "mediaTitle": "Yuklangan fayllar",
+    "mediaSub": "Yuborilgan rasm va videolarni o‘chirish",
+    "mediaModalTitle": "Yuklangan fayllar",
+    "mediaModalBody": "Yuborilgan rasm va videolar o‘chiriladi. Bu amalni qaytarib bo‘lmaydi. Davom etasizmi?",
+    "favoritesTitle": "Saqlangan kinolar",
+    "favoritesSub": "Saqlangan/sevimli kinolarni o‘chirish",
+    "favoritesModalTitle": "Saqlangan kinolar",
+    "favoritesModalBody": "Saqlangan va sevimli kinolar o‘chiriladi. Bu amalni qaytarib bo‘lmaydi. Davom etasizmi?"
   },
   "chat": {
     "introTitle": "Qanday kino izlayapsiz?",

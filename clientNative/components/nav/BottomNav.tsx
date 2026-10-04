@@ -1,4 +1,10 @@
-import { ChatBubbleIcon, HomeIcon, MenuIcon, PersonIcon } from '@/components/icons';
+import {
+  ChatBubbleIcon,
+  HeartIcon,
+  HomeIcon,
+  MenuIcon,
+  PersonIcon,
+} from '@/components/icons';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -26,11 +32,11 @@ export function useBottomNavOffset(enabled = true) {
   return BOTTOM_NAV_BAR + Math.max(insets.bottom, 0) + BOTTOM_NAV_LIFT;
 }
 
-type TabKey = 'home' | 'chat' | 'menu' | 'profile';
+type TabKey = 'home' | 'favorites' | 'chat' | 'menu' | 'profile';
 type IconComp = ComponentType<{ size?: number; color?: string }>;
 
 function shouldShowNav(pathname: string) {
-  return pathname === '/home';
+  return pathname === '/home' || pathname === '/favorites';
 }
 
 export function BottomNav() {
@@ -63,6 +69,11 @@ export function BottomNav() {
     router.push('/home');
   };
 
+  const goFavorites = () => {
+    if (pathname === '/favorites') return;
+    router.push('/favorites');
+  };
+
   const goChat = () => {
     router.push('/');
   };
@@ -84,6 +95,12 @@ export function BottomNav() {
       onPress: goHome,
     },
     {
+      key: 'favorites',
+      label: t('menu.favorites'),
+      Icon: HeartIcon,
+      onPress: goFavorites,
+    },
+    {
       key: 'chat',
       label: t('menu.chat'),
       Icon: ChatBubbleIcon,
@@ -103,6 +120,9 @@ export function BottomNav() {
     },
   ];
 
+  const active: TabKey | null =
+    pathname === '/favorites' ? 'favorites' : pathname === '/home' ? 'home' : null;
+
   return (
     <View
       style={[
@@ -116,33 +136,30 @@ export function BottomNav() {
       ]}
     >
       {tabs.map(({ key, label, Icon, onPress }) => {
-        const isActive = key === 'home';
+        const isActive = key === active;
         const color = isActive ? colors.accentBright : colors.icon;
 
         return (
           <Pressable key={key} style={styles.tab} onPress={onPress}>
             <View
               style={[
-                styles.iconWrap,
-                isActive && {
-                  backgroundColor: isDark
-                    ? 'rgba(30, 79, 214, 0.22)'
-                    : 'rgba(30, 79, 214, 0.1)',
-                },
+                styles.tabInner,
+                isActive &&
+                  (isDark ? styles.tabInnerActiveDark : styles.tabInnerActiveLight),
               ]}
             >
               <Icon size={20} color={color} />
+              <Text
+                style={[
+                  styles.label,
+                  { color: isActive ? colors.accentBright : colors.textMuted },
+                  isActive && styles.labelActive,
+                ]}
+                numberOfLines={1}
+              >
+                {label}
+              </Text>
             </View>
-            <Text
-              style={[
-                styles.label,
-                { color: isActive ? colors.accentBright : colors.textMuted },
-                isActive && styles.labelActive,
-              ]}
-              numberOfLines={1}
-            >
-              {label}
-            </Text>
           </Pressable>
         );
       })}
@@ -168,14 +185,28 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    paddingHorizontal: 3,
+    paddingVertical: 5,
   },
-  iconWrap: {
-    width: 40,
-    height: 26,
-    borderRadius: 13,
+  tabInner: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 2,
+    borderRadius: 18,
+    overflow: 'hidden',
+    paddingHorizontal: 4,
+  },
+  tabInnerActiveLight: {
+    backgroundColor: 'rgba(30, 79, 214, 0.1)',
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  tabInnerActiveDark: {
+    backgroundColor: 'rgba(30, 79, 214, 0.22)',
+    borderRadius: 18,
+    overflow: 'hidden',
   },
   label: {
     fontSize: 10,

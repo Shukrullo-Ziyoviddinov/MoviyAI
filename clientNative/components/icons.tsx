@@ -273,6 +273,20 @@ export function ChevronRightIcon({ size = 18, color = '#E5E7EB' }: IconProps) {
   );
 }
 
+export function ChevronDownIcon({ size = 18, color = '#E5E7EB' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M6 9L12 15L18 9"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 export function LogoutIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

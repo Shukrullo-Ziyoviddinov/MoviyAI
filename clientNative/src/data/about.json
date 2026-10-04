@@ -1,0 +1,121 @@
+{
+  "id": "about-app",
+  "slug": "about",
+  "version": 1,
+  "page": {
+    "title": {
+      "uz": "Ilova haqida",
+      "ru": "О приложении",
+      "en": "About the app"
+    },
+    "subtitle": {
+      "uz": "MoviyAI imkoniyatlari haqida batafsil",
+      "ru": "Подробнее о возможностях MoviyAI",
+      "en": "Learn more about what MoviyAI can do"
+    }
+  },
+  "sections": [
+    {
+      "id": "intro",
+      "icon": "film",
+      "iconColor": "#60A5FA",
+      "iconBg": "rgba(37, 99, 235, 0.18)",
+      "defaultOpen": true,
+      "title": {
+        "uz": "MoviyAI — sizning aqlli kino yordamchingiz",
+        "ru": "MoviyAI — ваш умный кино-помощник",
+        "en": "MoviyAI — your smart movie assistant"
+      },
+      "body": {
+        "uz": "Kino nomini eslay olmayapsizmi? Kinodan biror rasm yoki video bormi? Yoki shunchaki kayfiyatingizga mos film qidiryapsizmi?\n\nMoviyAI yordam beradi.",
+        "ru": "Не можете вспомнить название фильма? Есть фото или видео из кино? Или просто ищете фильм под настроение?\n\nMoviyAI поможет.",
+        "en": "Can't remember a movie title? Have a photo or video from a film? Or just looking for something that matches your mood?\n\nMoviyAI can help."
+      }
+    },
+    {
+      "id": "search",
+      "icon": "search",
+      "iconColor": "#38BDF8",
+      "iconBg": "rgba(14, 165, 233, 0.16)",
+      "defaultOpen": false,
+      "title": {
+        "uz": "Kino toping",
+        "ru": "Найдите фильм",
+        "en": "Find a movie"
+      },
+      "body": {
+        "uz": "Kino nomini yozing yoki syujetini tasvirlab bering. AI siz izlayotgan filmni aniqlashga yordam beradi.",
+        "ru": "Напишите название фильма или опишите сюжет. AI поможет определить, что вы ищете.",
+        "en": "Type a movie name or describe the plot. AI will help identify the film you're looking for."
+      }
+    },
+    {
+      "id": "image",
+      "icon": "gallery",
+      "iconColor": "#A78BFA",
+      "iconBg": "rgba(109, 40, 217, 0.18)",
+      "defaultOpen": false,
+      "title": {
+        "uz": "Rasm orqali kino aniqlang",
+        "ru": "Определите фильм по фото",
+        "en": "Identify a movie from an image"
+      },
+      "body": {
+        "uz": "Kino sahnasi, poster yoki screenshot yuboring — MoviyAI qaysi film ekanini aniqlashga harakat qiladi.",
+        "ru": "Отправьте кадр, постер или скриншот — MoviyAI постарается определить, какой это фильм.",
+        "en": "Send a scene, poster, or screenshot — MoviyAI will try to figure out which movie it is."
+      }
+    },
+    {
+      "id": "video",
+      "icon": "video",
+      "iconColor": "#F472B6",
+      "iconBg": "rgba(219, 39, 119, 0.16)",
+      "defaultOpen": false,
+      "title": {
+        "uz": "Video orqali kino aniqlang",
+        "ru": "Определите фильм по видео",
+        "en": "Identify a movie from a video"
+      },
+      "body": {
+        "uz": "Kino yoki film sahnasidan video yuboring va undagi filmni toping. Video iloji boricha tiniq va asosiy mashhur sahnalardan bo'lsa natija ham shuncha tez va ishonchli chiqadi.",
+        "ru": "Отправьте видео сцены из фильма и найдите картину. Чем четче видео и чем известнее сцена, тем быстрее и надежнее результат.",
+        "en": "Upload a video of a movie scene and find the film. The clearer the video and the more recognizable the scene, the faster and more reliable the result."
+      }
+    },
+    {
+      "id": "chat",
+      "icon": "chat",
+      "iconColor": "#34D399",
+      "iconBg": "rgba(16, 185, 129, 0.16)",
+      "defaultOpen": false,
+      "title": {
+        "uz": "AI bilan suhbatlashing",
+        "ru": "Общайтесь с AI",
+        "en": "Chat with AI"
+      },
+      "body": {
+        "uz": "\"Spider-Man'ga o‘xshash filmlar kerak\", \"Kayfiyatimga mos romantik kino top\", yoki \"Shu film haqida ma'lumot ber\" kabi savollar bering.",
+        "ru": "Задавайте вопросы вроде: «Нужны фильмы похожие на Spider-Man», «Подбери романтический фильм под настроение» или «Расскажи об этом фильме».",
+        "en": "Ask things like “Movies similar to Spider-Man”, “Find a romantic film for my mood”, or “Tell me about this movie”."
+      }
+    },
+    {
+      "id": "mood",
+      "icon": "star",
+      "iconColor": "#FBBF24",
+      "iconBg": "rgba(245, 158, 11, 0.16)",
+      "defaultOpen": false,
+      "title": {
+        "uz": "Kayfiyatingizga mos kino toping",
+        "ru": "Подберите фильм под настроение",
+        "en": "Find a movie for your mood"
+      },
+      "body": {
+        "uz": "Quvnoq, romantik, hayajonli, dramatik yoki shunchaki yengil film kerakmi? MoviyAI sizga mos variantlarni topishga yordam beradi.",
+        "ru": "Нужен весёлый, романтический, захватывающий, драматический или просто лёгкий фильм? MoviyAI поможет найти подходящие варианты.",
+        "en": "Need something fun, romantic, thrilling, dramatic, or just light? MoviyAI helps you find matching options."
+      }
+    }
+  ]
+}
