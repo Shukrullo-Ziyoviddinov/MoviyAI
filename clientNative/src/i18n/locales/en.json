@@ -31,7 +31,14 @@
     "emptySubtitle": "Movies and recommendations will show up here. Start searching with AI Chat.",
     "goToChat": "Go to AI Chat",
     "categories": {
-      "actionMovies": "Action movies"
+      "actionMovies": "Action movies",
+      "horrorMovies": "Horror movies",
+      "animationMovies": "Cartoons",
+      "romanceMovies": "Romance and love",
+      "dramaMovies": "Drama movies",
+      "comedyMovies": "Comedy movies & series",
+      "familyMovies": "Family movies & series",
+      "sciFiMovies": "Sci-Fi movies"
     }
   },
   "favorites": {

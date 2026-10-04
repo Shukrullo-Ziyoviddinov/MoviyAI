@@ -5,8 +5,17 @@ export type MovieCategoryGroup = {
   movies: Movie[];
 };
 
-/** Hozircha faqat jangari — qolgan bo'limlar keyin */
-const ACTIVE_CATEGORIES = ['actionMovies'] as const;
+/** Hozircha faqat shu bo'limlar */
+const ACTIVE_CATEGORIES = [
+  'actionMovies',
+  'horrorMovies',
+  'animationMovies',
+  'romanceMovies',
+  'dramaMovies',
+  'comedyMovies',
+  'familyMovies',
+  'sciFiMovies',
+] as const;
 
 export function groupMoviesByCategory(movies: Movie[]): MovieCategoryGroup[] {
   const groups: MovieCategoryGroup[] = [];

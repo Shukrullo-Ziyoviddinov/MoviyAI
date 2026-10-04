@@ -31,7 +31,14 @@
     "emptySubtitle": "Kinolar va tavsiyalar shu yerda paydo bo'ladi. Hozir AI Chat orqali qidirishni boshlang.",
     "goToChat": "AI Chatga o'tish",
     "categories": {
-      "actionMovies": "Jangari kinolar"
+      "actionMovies": "Jangari kinolar",
+      "horrorMovies": "Qo'rqinchli kinolar",
+      "animationMovies": "Multfilimlar",
+      "romanceMovies": "Romantika va muhabbat",
+      "dramaMovies": "Drama kino",
+      "comedyMovies": "Komediya kino seriallar",
+      "familyMovies": "Oilaviy kino seriallar",
+      "sciFiMovies": "Fantastika kinolar"
     }
   },
   "favorites": {
