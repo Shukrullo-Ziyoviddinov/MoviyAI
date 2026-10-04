@@ -4,21 +4,31 @@ import {
   CalendarIcon,
   ChevronLeftIcon,
   ClockIcon,
+  DislikeIcon,
   GlobeIcon,
+  HeartIcon,
+  PlayIcon,
+  VideoIcon,
 } from '@/components/icons';
 import { HorizontalScroll } from '@/components/common/HorizontalScroll';
-import { fetchMovieById } from '@/src/api/movies';
+import { fetchMovieById, toggleMovieReaction } from '@/src/api/movies';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import type { Movie } from '@/src/types/movie';
 import { resolveMoviePoster } from '@/src/utils/moviePosters';
+import {
+  Oswald_700Bold,
+  useFonts,
+} from '@expo-google-fonts/oswald';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -29,6 +39,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SAVE_ACTIVE = '#1E4FD6';
+const LIKE_ACTIVE = '#22C55E';
+const DISLIKE_ACTIVE = '#EF4444';
 
 type SpecIconProps = { size?: number; color?: string };
 type SpecItem = {
@@ -36,6 +48,16 @@ type SpecItem = {
   label: string;
   Icon: ComponentType<SpecIconProps>;
 };
+
+async function openExternalUrl(url?: string) {
+  const target = url?.trim();
+  if (!target) return;
+  try {
+    await Linking.openURL(target);
+  } catch {
+    // ignore invalid / unsupported urls
+  }
+}
 
 function hexToRgba(hex: string, alpha: number) {
   const raw = hex.replace('#', '');
@@ -56,16 +78,21 @@ function hexToRgba(hex: string, alpha: number) {
 export default function MovieDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const movieId = Number(id);
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const language = useLanguageStore((s) => s.language);
   const { width } = useWindowDimensions();
   const isSaved = useWishlistStore((s) => s.isSaved(movieId));
   const toggle = useWishlistStore((s) => s.toggle);
+  const [fontsLoaded] = useFonts({
+    Oswald_700Bold,
+  });
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reactionBusy, setReactionBusy] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -105,10 +132,10 @@ export default function MovieDetailScreen() {
     () =>
       [
         'transparent',
-        hexToRgba(colors.bg, 0.25),
-        hexToRgba(colors.bg, 0.58),
-        hexToRgba(colors.bg, 0.85),
-        hexToRgba(colors.bg, 0.96),
+        hexToRgba(colors.bg, 0.2),
+        hexToRgba(colors.bg, 0.5),
+        hexToRgba(colors.bg, 0.78),
+        hexToRgba(colors.bg, 0.94),
         colors.bg,
       ] as const,
     [colors.bg]
@@ -175,6 +202,26 @@ export default function MovieDetailScreen() {
     }
   };
 
+  const onToggleReaction = async (type: 'like' | 'dislike') => {
+    if (!movie || reactionBusy) return;
+    setReactionBusy(true);
+    try {
+      const result = await toggleMovieReaction(movie.id, type);
+      setMovie((prev) =>
+        prev
+          ? {
+              ...prev,
+              like: result.like,
+              dislike: result.dislike,
+              userReaction: result.userReaction,
+            }
+          : prev
+      );
+    } finally {
+      setReactionBusy(false);
+    }
+  };
+
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {loading ? (
@@ -205,74 +252,188 @@ export default function MovieDetailScreen() {
             )}
             <LinearGradient
               colors={[...fadeColors]}
-              locations={[0, 0.22, 0.45, 0.68, 0.86, 1]}
+              locations={[0, 0.18, 0.4, 0.62, 0.82, 1]}
               style={styles.fade}
               pointerEvents="none"
             />
-            <View style={styles.metaBlock}>
-              <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-              {specItems.length > 0 ? (
-                <HorizontalScroll contentContainerStyle={styles.specsRow}>
-                  {specItems.map(({ key, label, Icon }) => (
-                    <View
-                      key={key}
-                      style={[
-                        styles.specChip,
-                        {
-                          backgroundColor: colors.panelSoft,
-                          borderColor: colors.borderSoft,
-                        },
-                      ]}
-                    >
-                      <Icon size={14} color={colors.icon} />
-                      <Text style={[styles.specText, { color: colors.text }]}>
-                        {label}
-                      </Text>
-                    </View>
-                  ))}
-                </HorizontalScroll>
-              ) : null}
-              {ratingItems.length > 0 || genres.length > 0 ? (
-                <HorizontalScroll contentContainerStyle={styles.specsRow}>
-                  {ratingItems.map(({ key, icon, value }) => (
-                    <View
-                      key={key}
-                      style={[
-                        styles.specChip,
-                        {
-                          backgroundColor: colors.panelSoft,
-                          borderColor: colors.borderSoft,
-                        },
-                      ]}
-                    >
-                      <Image
-                        source={icon}
-                        style={styles.ratingIcon}
-                        contentFit="cover"
-                      />
-                      <Text style={[styles.specText, { color: colors.text }]}>
-                        {value}
-                      </Text>
-                    </View>
-                  ))}
-                  {genres.map((genre) => (
-                    <View
-                      key={genre}
-                      style={[
-                        styles.specChip,
-                        {
-                          backgroundColor: colors.panelSoft,
-                          borderColor: colors.borderSoft,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.specText, { color: colors.text }]}>
-                        {genre}
-                      </Text>
-                    </View>
-                  ))}
-                </HorizontalScroll>
-              ) : null}
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: colors.text,
+                  fontFamily: fontsLoaded ? 'Oswald_700Bold' : undefined,
+                },
+              ]}
+            >
+              {title}
+            </Text>
+          </View>
+
+          <View style={styles.infoBlock}>
+            {specItems.length > 0 ? (
+              <HorizontalScroll contentContainerStyle={styles.specsRow}>
+                {specItems.map(({ key, label, Icon }) => (
+                  <View
+                    key={key}
+                    style={[
+                      styles.specChip,
+                      {
+                        backgroundColor: colors.panelSoft,
+                        borderColor: colors.borderSoft,
+                      },
+                    ]}
+                  >
+                    <Icon size={14} color={colors.icon} />
+                    <Text style={[styles.specText, { color: colors.text }]}>
+                      {label}
+                    </Text>
+                  </View>
+                ))}
+              </HorizontalScroll>
+            ) : null}
+
+            {ratingItems.length > 0 || genres.length > 0 ? (
+              <HorizontalScroll contentContainerStyle={styles.specsRow}>
+                {ratingItems.map(({ key, icon, value }) => (
+                  <View
+                    key={key}
+                    style={[
+                      styles.specChip,
+                      {
+                        backgroundColor: colors.panelSoft,
+                        borderColor: colors.borderSoft,
+                      },
+                    ]}
+                  >
+                    <Image
+                      source={icon}
+                      style={styles.ratingIcon}
+                      contentFit="cover"
+                    />
+                    <Text style={[styles.specText, { color: colors.text }]}>
+                      {value}
+                    </Text>
+                  </View>
+                ))}
+                {genres.map((genre) => (
+                  <View
+                    key={genre}
+                    style={[
+                      styles.specChip,
+                      {
+                        backgroundColor: colors.panelSoft,
+                        borderColor: colors.borderSoft,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.specText, { color: colors.text }]}>
+                      {genre}
+                    </Text>
+                  </View>
+                ))}
+              </HorizontalScroll>
+            ) : null}
+
+            <View style={styles.actionRow}>
+              <Pressable
+                style={[styles.actionBtn, { backgroundColor: colors.accentBright }]}
+                onPress={() => openExternalUrl(movie.watchUrl)}
+              >
+                <PlayIcon size={16} color="#FFFFFF" />
+                <Text style={styles.actionBtnText}>{t('movie.watch')}</Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.actionBtn,
+                  {
+                    backgroundColor: colors.panelSoft,
+                    borderColor: colors.borderSoft,
+                    borderWidth: 1,
+                  },
+                ]}
+                onPress={() => openExternalUrl(movie.trailers)}
+              >
+                <VideoIcon size={16} color={colors.icon} />
+                <Text style={[styles.actionBtnText, { color: colors.text }]}>
+                  {t('movie.trailer')}
+                </Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.reactionRow}>
+              <Pressable
+                style={[
+                  styles.reactionBtn,
+                  {
+                    backgroundColor: colors.panelSoft,
+                    borderColor:
+                      movie.userReaction === 'like'
+                        ? LIKE_ACTIVE
+                        : colors.borderSoft,
+                  },
+                ]}
+                onPress={() => onToggleReaction('like')}
+                disabled={reactionBusy}
+              >
+                <HeartIcon
+                  size={18}
+                  color={
+                    movie.userReaction === 'like' ? LIKE_ACTIVE : colors.icon
+                  }
+                  filled={movie.userReaction === 'like'}
+                />
+                <Text
+                  style={[
+                    styles.reactionText,
+                    {
+                      color:
+                        movie.userReaction === 'like'
+                          ? LIKE_ACTIVE
+                          : colors.text,
+                    },
+                  ]}
+                >
+                  {movie.like || '0'}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.reactionBtn,
+                  {
+                    backgroundColor: colors.panelSoft,
+                    borderColor:
+                      movie.userReaction === 'dislike'
+                        ? DISLIKE_ACTIVE
+                        : colors.borderSoft,
+                  },
+                ]}
+                onPress={() => onToggleReaction('dislike')}
+                disabled={reactionBusy}
+              >
+                <DislikeIcon
+                  size={18}
+                  color={
+                    movie.userReaction === 'dislike'
+                      ? DISLIKE_ACTIVE
+                      : colors.icon
+                  }
+                  filled={movie.userReaction === 'dislike'}
+                />
+                <Text
+                  style={[
+                    styles.reactionText,
+                    {
+                      color:
+                        movie.userReaction === 'dislike'
+                          ? DISLIKE_ACTIVE
+                          : colors.text,
+                    },
+                  ]}
+                >
+                  {movie.dislike || '0'}
+                </Text>
+              </Pressable>
             </View>
           </View>
         </ScrollView>
@@ -356,21 +517,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: '72%',
-  },
-  metaBlock: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 12,
-    zIndex: 2,
-    gap: 8,
+    height: '70%',
   },
   title: {
-    paddingHorizontal: 16,
-    fontSize: 24,
-    fontWeight: '700',
-    lineHeight: 30,
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 14,
+    zIndex: 2,
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: 1,
+    transform: [{ skewX: '-14deg' }],
+  },
+  infoBlock: {
+    gap: 8,
+    paddingTop: 10,
   },
   specsRow: {
     paddingHorizontal: 16,
@@ -394,5 +556,44 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 3,
+  },
+  actionRow: {
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 2,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  actionBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  reactionRow: {
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  reactionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 11,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  reactionText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

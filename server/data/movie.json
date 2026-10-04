@@ -39,19 +39,8 @@
         "director": "Джон Нолт"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8001.mp4",
-          "ru": "/video/trailer-8001.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8001",
-      "ru": "/watch/8001"
-    },
+    "trailers": "/video/trailer-8001.mp4",
+    "watchUrl": "/watch/8001",
     "typeCategory": [
       "action",
       "thriller",
@@ -63,7 +52,7 @@
       "Triller"
     ],
     "like": "2100",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 105,
       "ageRating": "16+",
@@ -112,19 +101,8 @@
         "director": "Сай Мартанд"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8002.mp4",
-          "ru": "/video/trailer-8002.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8002",
-      "ru": "/watch/8002"
-    },
+    "trailers": "/video/trailer-8002.mp4",
+    "watchUrl": "/watch/8002",
     "typeCategory": [
       "romance",
       "drama"
@@ -135,7 +113,7 @@
       "Dramma"
     ],
     "like": "3400",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 142,
       "ageRating": "12+",
@@ -186,19 +164,8 @@
         "director": "Sony Pictures Animation"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8003.mp4",
-          "ru": "/video/trailer-8003.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8003",
-      "ru": "/watch/8003"
-    },
+    "trailers": "/video/trailer-8003.mp4",
+    "watchUrl": "/watch/8003",
     "typeCategory": [
       "animation",
       "sports",
@@ -210,7 +177,7 @@
       "Sport"
     ],
     "like": "5200",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 100,
       "ageRating": "6+",
@@ -261,19 +228,8 @@
         "director": "Illumination"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8004.mp4",
-          "ru": "/video/trailer-8004.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8004",
-      "ru": "/watch/8004"
-    },
+    "trailers": "/video/trailer-8004.mp4",
+    "watchUrl": "/watch/8004",
     "typeCategory": [
       "animation",
       "adventure",
@@ -285,7 +241,7 @@
       "Sarguzasht"
     ],
     "like": "8900",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 110,
       "ageRating": "6+",
@@ -336,19 +292,8 @@
         "director": "Сэм Рэйми"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8005.mp4",
-          "ru": "/video/trailer-8005.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8005",
-      "ru": "/watch/8005"
-    },
+    "trailers": "/video/trailer-8005.mp4",
+    "watchUrl": "/watch/8005",
     "typeCategory": [
       "horror",
       "thriller"
@@ -359,7 +304,7 @@
       "Triller"
     ],
     "like": "4100",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 118,
       "ageRating": "18+",
@@ -408,19 +353,8 @@
         "director": "Рик Роман Уо"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8006.mp4",
-          "ru": "/video/trailer-8006.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8006",
-      "ru": "/watch/8006"
-    },
+    "trailers": "/video/trailer-8006.mp4",
+    "watchUrl": "/watch/8006",
     "typeCategory": [
       "action",
       "thriller"
@@ -431,7 +365,7 @@
       "Triller"
     ],
     "like": "6700",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 112,
       "ageRating": "16+",
@@ -482,19 +416,8 @@
         "director": "Тимур Бекмамбетов"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8007.mp4",
-          "ru": "/video/trailer-8007.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8007",
-      "ru": "/watch/8007"
-    },
+    "trailers": "/video/trailer-8007.mp4",
+    "watchUrl": "/watch/8007",
     "typeCategory": [
       "action",
       "sci-fi",
@@ -506,7 +429,7 @@
       "Fantastika"
     ],
     "like": "5800",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 108,
       "ageRating": "16+",
@@ -557,19 +480,8 @@
         "director": "Лоуренс Гутерман"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8008.mp4",
-          "ru": "/video/trailer-8008.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8008",
-      "ru": "/watch/8008"
-    },
+    "trailers": "/video/trailer-8008.mp4",
+    "watchUrl": "/watch/8008",
     "typeCategory": [
       "comedy",
       "family",
@@ -581,7 +493,7 @@
       "Oilaviy"
     ],
     "like": "9200",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 87,
       "ageRating": "6+",
@@ -630,19 +542,8 @@
         "director": "Роб Зомби"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8009.mp4",
-          "ru": "/video/trailer-8009.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8009",
-      "ru": "/watch/8009"
-    },
+    "trailers": "/video/trailer-8009.mp4",
+    "watchUrl": "/watch/8009",
     "typeCategory": [
       "horror",
       "thriller"
@@ -653,7 +554,7 @@
       "Triller"
     ],
     "like": "1800",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 102,
       "ageRating": "18+",
@@ -702,19 +603,8 @@
         "director": "Шьям П. Мадираджу"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8010.mp4",
-          "ru": "/video/trailer-8010.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8010",
-      "ru": "/watch/8010"
-    },
+    "trailers": "/video/trailer-8010.mp4",
+    "watchUrl": "/watch/8010",
     "typeCategory": [
       "drama"
     ],
@@ -723,7 +613,7 @@
       "Dramma"
     ],
     "like": "1500",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 115,
       "ageRating": "12+",
@@ -774,19 +664,8 @@
         "director": "Чад Стахелски"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8011.mp4",
-          "ru": "/video/trailer-8011.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8011",
-      "ru": "/watch/8011"
-    },
+    "trailers": "/video/trailer-8011.mp4",
+    "watchUrl": "/watch/8011",
     "typeCategory": [
       "action",
       "thriller",
@@ -798,7 +677,7 @@
       "Triller"
     ],
     "like": "4500",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 169,
       "ageRating": "18+",
@@ -850,19 +729,8 @@
         "director": "Сэм Харгрейв"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8012.mp4",
-          "ru": "/video/trailer-8012.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8012",
-      "ru": "/watch/8012"
-    },
+    "trailers": "/video/trailer-8012.mp4",
+    "watchUrl": "/watch/8012",
     "typeCategory": [
       "action",
       "thriller"
@@ -873,7 +741,7 @@
       "Triller"
     ],
     "like": "7100",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 122,
       "ageRating": "18+",
@@ -922,19 +790,8 @@
         "director": "Дэвид Эйер"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8013.mp4",
-          "ru": "/video/trailer-8013.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8013",
-      "ru": "/watch/8013"
-    },
+    "trailers": "/video/trailer-8013.mp4",
+    "watchUrl": "/watch/8013",
     "typeCategory": [
       "action",
       "thriller"
@@ -945,7 +802,7 @@
       "Triller"
     ],
     "like": "6300",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 105,
       "ageRating": "16+",
@@ -996,19 +853,8 @@
         "director": "Дени Вильнёв"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8014.mp4",
-          "ru": "/video/trailer-8014.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8014",
-      "ru": "/watch/8014"
-    },
+    "trailers": "/video/trailer-8014.mp4",
+    "watchUrl": "/watch/8014",
     "typeCategory": [
       "sci-fi",
       "drama",
@@ -1020,7 +866,7 @@
       "Dramma"
     ],
     "like": "12000",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 166,
       "ageRating": "12+",
@@ -1071,19 +917,8 @@
         "director": "Шон Леви"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8015.mp4",
-          "ru": "/video/trailer-8015.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8015",
-      "ru": "/watch/8015"
-    },
+    "trailers": "/video/trailer-8015.mp4",
+    "watchUrl": "/watch/8015",
     "typeCategory": [
       "comedy",
       "action",
@@ -1095,7 +930,7 @@
       "Jangari"
     ],
     "like": "15000",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 128,
       "ageRating": "18+",
@@ -1146,19 +981,8 @@
         "director": "Кристофер Нолан"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8016.mp4",
-          "ru": "/video/trailer-8016.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8016",
-      "ru": "/watch/8016"
-    },
+    "trailers": "/video/trailer-8016.mp4",
+    "watchUrl": "/watch/8016",
     "typeCategory": [
       "drama",
       "history",
@@ -1170,7 +994,7 @@
       "Tarixiy"
     ],
     "like": "11000",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 180,
       "ageRating": "16+",
@@ -1221,19 +1045,8 @@
         "director": "Паркер Финн"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8017.mp4",
-          "ru": "/video/trailer-8017.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8017",
-      "ru": "/watch/8017"
-    },
+    "trailers": "/video/trailer-8017.mp4",
+    "watchUrl": "/watch/8017",
     "typeCategory": [
       "horror",
       "thriller",
@@ -1245,7 +1058,7 @@
       "Triller"
     ],
     "like": "3900",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 127,
       "ageRating": "18+",
@@ -1294,19 +1107,8 @@
         "director": "Уилл Глак"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8018.mp4",
-          "ru": "/video/trailer-8018.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8018",
-      "ru": "/watch/8018"
-    },
+    "trailers": "/video/trailer-8018.mp4",
+    "watchUrl": "/watch/8018",
     "typeCategory": [
       "romance",
       "comedy"
@@ -1317,7 +1119,7 @@
       "Melodrama"
     ],
     "like": "4800",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 103,
       "ageRating": "16+",
@@ -1368,19 +1170,8 @@
         "director": "Келси Манн"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8019.mp4",
-          "ru": "/video/trailer-8019.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8019",
-      "ru": "/watch/8019"
-    },
+    "trailers": "/video/trailer-8019.mp4",
+    "watchUrl": "/watch/8019",
     "typeCategory": [
       "animation",
       "comedy",
@@ -1392,7 +1183,7 @@
       "Komediya"
     ],
     "like": "14000",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 96,
       "ageRating": "6+",
@@ -1443,19 +1234,8 @@
         "director": "Осгуд Перкинс"
       }
     },
-    "trailersVideo": [
-      {
-        "id": 1,
-        "trailers": {
-          "uz": "/video/trailer-8020.mp4",
-          "ru": "/video/trailer-8020.mp4"
-        }
-      }
-    ],
-    "watchUrl": {
-      "uz": "/watch/8020",
-      "ru": "/watch/8020"
-    },
+    "trailers": "/video/trailer-8020.mp4",
+    "watchUrl": "/watch/8020",
     "typeCategory": [
       "horror",
       "thriller",
@@ -1467,7 +1247,7 @@
       "Triller"
     ],
     "like": "5600",
-    "dislike": "",
+    "dislike": "0",
     "specs": {
       "duration": 101,
       "ageRating": "18+",

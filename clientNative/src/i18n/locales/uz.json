@@ -46,6 +46,10 @@
     "emptySubtitle": "O'z sevimli kino filmlaringizni AI Chat orqali qidiring va sevimli kino filmlarni saqlang.",
     "goToChat": "AI Chatga o'tish"
   },
+  "movie": {
+    "watch": "Tomosha",
+    "trailer": "Triller"
+  },
   "profile": {
     "savedMovies": "Saqlangan kinolar",
     "savedMoviesSub": "Sevimli kinolaringiz ro'yxati",

@@ -1,10 +1,16 @@
 import { Router } from 'express';
 import * as movieController from '../controllers/movie.controller.js';
+import { requireUserId } from '../middleware/requireUserId.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = Router();
 
 router.get('/', asyncHandler(movieController.listMovies));
 router.get('/:id', asyncHandler(movieController.getMovie));
+router.post(
+  '/:id/reaction',
+  requireUserId,
+  asyncHandler(movieController.toggleReaction)
+);
 
 export default router;

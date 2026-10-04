@@ -20,14 +20,6 @@ const descriptionLocaleSchema = new Schema(
   { _id: false }
 );
 
-const trailerSchema = new Schema(
-  {
-    id: { type: Number, required: true },
-    trailers: { type: localizedPairSchema, required: true },
-  },
-  { _id: false }
-);
-
 const movieSchema = new Schema(
   {
     id: { type: Number, required: true, unique: true, index: true },
@@ -44,13 +36,13 @@ const movieSchema = new Schema(
       uz: { type: descriptionLocaleSchema, required: true },
       ru: { type: descriptionLocaleSchema, required: true },
     },
-    trailersVideo: { type: [trailerSchema], default: [] },
-    watchUrl: { type: localizedPairSchema, required: true },
+    trailers: { type: String, default: '' },
+    watchUrl: { type: String, required: true },
     typeCategory: { type: [String], default: [] },
     filterCountry: { type: String, default: '' },
     filterGenre: { type: [String], default: [] },
     like: { type: String, default: '0' },
-    dislike: { type: String, default: '' },
+    dislike: { type: String, default: '0' },
     specs: {
       duration: { type: Number, required: true },
       ageRating: { type: String, required: true },

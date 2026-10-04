@@ -46,6 +46,10 @@
     "emptySubtitle": "Найдите любимые фильмы через AI Chat и сохраните их в избранное.",
     "goToChat": "Перейти в AI Chat"
   },
+  "movie": {
+    "watch": "Смотреть",
+    "trailer": "Трейлер"
+  },
   "profile": {
     "savedMovies": "Сохранённые фильмы",
     "savedMoviesSub": "Список любимых фильмов",

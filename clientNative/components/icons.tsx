@@ -410,7 +410,11 @@ export function BellIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
   );
 }
 
-export function HeartIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
+export function HeartIcon({
+  size = 20,
+  color = '#E5E7EB',
+  filled = false,
+}: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
@@ -418,6 +422,35 @@ export function HeartIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
         stroke={color}
         strokeWidth="2"
         strokeLinejoin="round"
+        fill={filled ? color : 'none'}
+      />
+    </Svg>
+  );
+}
+
+export function DislikeIcon({
+  size = 20,
+  color = '#E5E7EB',
+  filled = false,
+}: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M17 20.5H9.8C8.9 20.5 8.1 20 7.8 19.2L5.5 12.8C5.3 12.3 5.6 11.7 6.1 11.5L7.5 11V7.5C7.5 6.4 8.4 5.5 9.5 5.5H12.2L17 3.5V20.5Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill={filled ? color : 'none'}
+      />
+      <Rect
+        x="17"
+        y="3.5"
+        width="3.5"
+        height="17"
+        rx="1"
+        stroke={color}
+        strokeWidth="2"
+        fill={filled ? color : 'none'}
       />
     </Svg>
   );

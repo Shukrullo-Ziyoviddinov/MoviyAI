@@ -27,16 +27,14 @@ export type Movie = {
     uz: MovieDescriptionLocale;
     ru: MovieDescriptionLocale;
   };
-  trailersVideo: Array<{
-    id: number;
-    trailers: LocalizedPair;
-  }>;
-  watchUrl: LocalizedPair;
+  trailers: string;
+  watchUrl: string;
   typeCategory: string[];
   filterCountry: string;
   filterGenre: string[];
   like: string;
   dislike: string;
+  userReaction?: 'like' | 'dislike' | null;
   specs: {
     duration: number;
     ageRating: string;

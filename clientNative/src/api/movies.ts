@@ -7,6 +7,13 @@ type ApiResponse<T> = {
   error?: string;
 };
 
+export type MovieReactionResult = {
+  movieId: number;
+  like: string;
+  dislike: string;
+  userReaction: 'like' | 'dislike' | null;
+};
+
 export async function fetchMovies(): Promise<Movie[]> {
   const { data } = await api.get<ApiResponse<Movie[]>>('/api/movies');
   if (!data.ok || !data.data) {
@@ -19,6 +26,20 @@ export async function fetchMovieById(id: number): Promise<Movie> {
   const { data } = await api.get<ApiResponse<Movie>>(`/api/movies/${id}`);
   if (!data.ok || !data.data) {
     throw new Error(data.error || 'Movie failed to load');
+  }
+  return data.data;
+}
+
+export async function toggleMovieReaction(
+  id: number,
+  type: 'like' | 'dislike'
+): Promise<MovieReactionResult> {
+  const { data } = await api.post<ApiResponse<MovieReactionResult>>(
+    `/api/movies/${id}/reaction`,
+    { type }
+  );
+  if (!data.ok || !data.data) {
+    throw new Error(data.error || 'Reaction failed');
   }
   return data.data;
 }
