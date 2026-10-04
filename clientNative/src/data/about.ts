@@ -1,5 +1,4 @@
 import type { LocalizedText } from '@/src/data/localize';
-import aboutJson from '@/src/data/about.json';
 
 export type AboutSectionData = {
   id: string;
@@ -21,5 +20,3 @@ export type AboutData = {
   };
   sections: AboutSectionData[];
 };
-
-export const aboutData = aboutJson as AboutData;

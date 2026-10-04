@@ -1,5 +1,4 @@
 import type { LocalizedText } from '@/src/data/localize';
-import privacyJson from '@/src/data/privacy.json';
 
 export type PrivacyItemType = 'subheading' | 'bullet' | 'paragraph';
 
@@ -28,5 +27,3 @@ export type PrivacyData = {
   };
   sections: PrivacySectionData[];
 };
-
-export const privacyData = privacyJson as PrivacyData;

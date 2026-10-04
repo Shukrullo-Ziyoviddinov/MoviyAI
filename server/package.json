@@ -2,14 +2,20 @@
   "name": "moviyai-server",
   "version": "1.0.0",
   "description": "MoviyAI Express API server",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx src/seed/seedContent.ts"
   },
-  "keywords": ["moviyai", "express", "api"],
+  "keywords": [
+    "moviyai",
+    "express",
+    "api"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {

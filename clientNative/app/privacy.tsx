@@ -9,13 +9,21 @@ import {
   PrivacySection,
   PrivacySubheading,
 } from '@/components/privacy/PrivacySection';
+import { fetchPrivacy } from '@/src/api/privacy';
 import { pickLocalized } from '@/src/data/localize';
-import { privacyData } from '@/src/data/privacy';
+import type { PrivacyData } from '@/src/data/privacy';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { router } from 'expo-router';
-import type { ComponentType } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState, type ComponentType } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ICONS: Record<string, ComponentType<{ size?: number; color?: string }>> = {
@@ -27,6 +35,30 @@ export default function PrivacyScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const language = useLanguageStore((s) => s.language);
+  const [data, setData] = useState<PrivacyData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    fetchPrivacy()
+      .then((doc) => {
+        if (!alive) return;
+        setData(doc);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (!alive) return;
+        setError(err instanceof Error ? err.message : 'Load failed');
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
@@ -52,38 +84,59 @@ export default function PrivacyScreen() {
             <ChevronLeftIcon size={20} color={colors.icon} />
           </Pressable>
           <Text style={[styles.title, { color: colors.text }]}>
-            {pickLocalized(privacyData.page.title, language)}
+            {data
+              ? pickLocalized(data.page.title, language)
+              : pickLocalized(
+                  {
+                    uz: 'Maxfiylik va xavfsizlik',
+                    ru: 'Конфиденциальность и безопасность',
+                    en: 'Privacy and security',
+                  },
+                  language
+                )}
           </Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            {pickLocalized(privacyData.page.subtitle, language)}
-          </Text>
+          {data ? (
+            <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+              {pickLocalized(data.page.subtitle, language)}
+            </Text>
+          ) : null}
         </View>
 
-        <View style={styles.list}>
-          {privacyData.sections.map((section) => {
-            const Icon = ICONS[section.icon] ?? ShieldIcon;
-            return (
-              <PrivacySection
-                key={section.id}
-                title={pickLocalized(section.title, language)}
-                Icon={Icon}
-                iconColor={section.iconColor}
-                iconBg={section.iconBg}
-              >
-                {section.items.map((item) => {
-                  const text = pickLocalized(item.text, language);
-                  if (item.type === 'subheading') {
-                    return <PrivacySubheading key={item.id} text={text} />;
-                  }
-                  if (item.type === 'bullet') {
-                    return <PrivacyBullet key={item.id} text={text} />;
-                  }
-                  return <PrivacyParagraph key={item.id} text={text} />;
-                })}
-              </PrivacySection>
-            );
-          })}
-        </View>
+        {loading ? (
+          <View style={styles.stateWrap}>
+            <ActivityIndicator color={colors.accentBright} />
+          </View>
+        ) : error ? (
+          <View style={styles.stateWrap}>
+            <Text style={[styles.stateText, { color: colors.textMuted }]}>{error}</Text>
+          </View>
+        ) : data ? (
+          <View style={styles.list}>
+            {data.sections.map((section) => {
+              const Icon = ICONS[section.icon] ?? ShieldIcon;
+              return (
+                <PrivacySection
+                  key={section.id}
+                  title={pickLocalized(section.title, language)}
+                  Icon={Icon}
+                  iconColor={section.iconColor}
+                  iconBg={section.iconBg}
+                >
+                  {section.items.map((item) => {
+                    const text = pickLocalized(item.text, language);
+                    if (item.type === 'subheading') {
+                      return <PrivacySubheading key={item.id} text={text} />;
+                    }
+                    if (item.type === 'bullet') {
+                      return <PrivacyBullet key={item.id} text={text} />;
+                    }
+                    return <PrivacyParagraph key={item.id} text={text} />;
+                  })}
+                </PrivacySection>
+              );
+            })}
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -124,5 +177,14 @@ const styles = StyleSheet.create({
   list: {
     gap: 10,
     paddingHorizontal: 16,
+  },
+  stateWrap: {
+    paddingHorizontal: 18,
+    paddingTop: 24,
+    alignItems: 'center',
+  },
+  stateText: {
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

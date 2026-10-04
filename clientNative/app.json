@@ -54,7 +54,7 @@
       "expo-sharing"
     ],
     "extra": {
-      "apiUrl": "https://api.example.com"
+      "apiUrl": "http://localhost:4000"
     },
     "experiments": {
       "typedRoutes": true
