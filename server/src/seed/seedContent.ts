@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { connectDb, disconnectDb } from '../db/connect.js';
 import * as aboutService from '../services/about.service.js';
+import * as movieService from '../services/movie.service.js';
 import * as privacyService from '../services/privacy.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,12 +20,15 @@ async function seed() {
 
   const about = await readJson<Record<string, unknown>>('about.json');
   const privacy = await readJson<Record<string, unknown>>('privacy.json');
+  const movies = await readJson<Record<string, unknown>[]>('movie.json');
 
   const aboutDoc = await aboutService.upsertAbout(about);
   const privacyDoc = await privacyService.upsertPrivacy(privacy);
+  const movieDocs = await movieService.upsertMovies(movies);
 
   console.log('Seeded about:', aboutDoc?.slug, 'v' + aboutDoc?.version);
   console.log('Seeded privacy:', privacyDoc?.slug, 'v' + privacyDoc?.version);
+  console.log('Seeded movies:', movieDocs.length);
 
   await disconnectDb();
 }

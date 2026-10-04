@@ -1,0 +1,53 @@
+export type LocalizedPair = {
+  uz: string;
+  ru: string;
+};
+
+export type MovieDescriptionLocale = {
+  text: string;
+  descriptionImg: string;
+  year: number;
+  country: string;
+  duration: number;
+  director: string;
+};
+
+export type Movie = {
+  id: number;
+  categoryName: string;
+  title: LocalizedPair;
+  homeImgPoster: LocalizedPair;
+  movieDetailPoster: {
+    img: {
+      type: 'image' | 'video';
+      src: string;
+    };
+  };
+  ratingImdb: number;
+  ratingKinopoisk: number;
+  genre: {
+    uz: string[];
+    ru: string[];
+  };
+  description: {
+    uz: MovieDescriptionLocale;
+    ru: MovieDescriptionLocale;
+  };
+  trailersVideo: Array<{
+    id: number;
+    trailers: LocalizedPair;
+  }>;
+  watchUrl: LocalizedPair;
+  typeCategory: string[];
+  filterCountry: string;
+  filterGenre: string[];
+  like: string;
+  dislike: string;
+  specs: {
+    duration: number;
+    ageRating: string;
+    year: number;
+    countries: string[];
+  };
+  franchiseMovieIds: number[];
+};

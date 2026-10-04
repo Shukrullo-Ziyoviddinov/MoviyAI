@@ -1,0 +1,1661 @@
+[
+  {
+    "id": 8001,
+    "categoryName": "actionMovies",
+    "title": {
+      "uz": "Muzzle 2: Bo‘rilar shahri",
+      "ru": "Muzzle 2: Город волков"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie1.jpg",
+      "ru": "/img/movie1.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie1.jpg"
+      }
+    },
+    "ratingImdb": 6.2,
+    "ratingKinopoisk": 6,
+    "genre": {
+      "uz": [
+        "Jangari",
+        "Triller",
+        "Kriminal"
+      ],
+      "ru": [
+        "Боевик",
+        "Триллер",
+        "Криминал"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Sobiq K-9 ofitseri va uning sodiq iti shahar ko‘chalarida xavfli jinoiy guruhga qarshi kurashadi.",
+        "descriptionImg": "/img/movie1.jpg",
+        "year": 2024,
+        "country": "AQSh",
+        "duration": 105,
+        "director": "John Nolte"
+      },
+      "ru": {
+        "text": "Бывший офицер К-9 и его верный пёс сражаются с опасной преступной группировкой.",
+        "descriptionImg": "/img/movie1.jpg",
+        "year": 2024,
+        "country": "США",
+        "duration": 105,
+        "director": "Джон Нолт"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8001.mp4",
+          "ru": "/video/trailer-8001.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8001",
+      "ru": "/watch/8001"
+    },
+    "typeCategory": [
+      "action",
+      "thriller",
+      "crime"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Jangari",
+      "Triller"
+    ],
+    "like": "2100",
+    "dislike": "",
+    "specs": {
+      "duration": 105,
+      "ageRating": "16+",
+      "year": 2024,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8002,
+    "categoryName": "romanceMovies",
+    "title": {
+      "uz": "Little Hearts",
+      "ru": "Little Hearts"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie2.jpg",
+      "ru": "/img/movie2.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie2.jpg"
+      }
+    },
+    "ratingImdb": 6.8,
+    "ratingKinopoisk": 6.5,
+    "genre": {
+      "uz": [
+        "Melodrama",
+        "Dramma"
+      ],
+      "ru": [
+        "Мелодрама",
+        "Драма"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Tegish yo‘q — faqat qalblarga tegish. Ikki yoshning issiq va samimiy hikoyasi.",
+        "descriptionImg": "/img/movie2.jpg",
+        "year": 2024,
+        "country": "Hindiston",
+        "duration": 142,
+        "director": "Sai Marthand"
+      },
+      "ru": {
+        "text": "Никаких прикосновений — только трогание сердец. Тёплая история двух молодых людей.",
+        "descriptionImg": "/img/movie2.jpg",
+        "year": 2024,
+        "country": "Индия",
+        "duration": 142,
+        "director": "Сай Мартанд"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8002.mp4",
+          "ru": "/video/trailer-8002.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8002",
+      "ru": "/watch/8002"
+    },
+    "typeCategory": [
+      "romance",
+      "drama"
+    ],
+    "filterCountry": "India",
+    "filterGenre": [
+      "Melodrama",
+      "Dramma"
+    ],
+    "like": "3400",
+    "dislike": "",
+    "specs": {
+      "duration": 142,
+      "ageRating": "12+",
+      "year": 2024,
+      "countries": [
+        "India"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8003,
+    "categoryName": "animationMovies",
+    "title": {
+      "uz": "GOAT",
+      "ru": "GOAT"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie4.jpg",
+      "ru": "/img/movie4.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie4.jpg"
+      }
+    },
+    "ratingImdb": 7.1,
+    "ratingKinopoisk": 7,
+    "genre": {
+      "uz": [
+        "Animatsiya",
+        "Sport",
+        "Komediya"
+      ],
+      "ru": [
+        "Анимация",
+        "Спорт",
+        "Комедия"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Kichik echki katta orzular sari — hayvonlar olamidagi eng zo‘r basketbolchi bo‘lishni xohlaydi.",
+        "descriptionImg": "/img/movie4.jpg",
+        "year": 2026,
+        "country": "AQSh",
+        "duration": 100,
+        "director": "Sony Pictures Animation"
+      },
+      "ru": {
+        "text": "Маленький козлик с большими мечтами — он хочет стать лучшим баскетболистом.",
+        "descriptionImg": "/img/movie4.jpg",
+        "year": 2026,
+        "country": "США",
+        "duration": 100,
+        "director": "Sony Pictures Animation"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8003.mp4",
+          "ru": "/video/trailer-8003.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8003",
+      "ru": "/watch/8003"
+    },
+    "typeCategory": [
+      "animation",
+      "sports",
+      "comedy"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Animatsiya",
+      "Sport"
+    ],
+    "like": "5200",
+    "dislike": "",
+    "specs": {
+      "duration": 100,
+      "ageRating": "6+",
+      "year": 2026,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8004,
+    "categoryName": "animationMovies",
+    "title": {
+      "uz": "Super Mario Galaxy",
+      "ru": "Супер Марио Галактика"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie5.jpg",
+      "ru": "/img/movie5.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie5.jpg"
+      }
+    },
+    "ratingImdb": 7.4,
+    "ratingKinopoisk": 7.2,
+    "genre": {
+      "uz": [
+        "Animatsiya",
+        "Sarguzasht",
+        "Oilaviy"
+      ],
+      "ru": [
+        "Анимация",
+        "Приключения",
+        "Семейный"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Mario va Yoshi yulduzlar orasidagi yangi sarguzashtga otlanadi.",
+        "descriptionImg": "/img/movie5.jpg",
+        "year": 2026,
+        "country": "AQSh",
+        "duration": 110,
+        "director": "Illumination"
+      },
+      "ru": {
+        "text": "Марио и Йоши отправляются в новое космическое приключение.",
+        "descriptionImg": "/img/movie5.jpg",
+        "year": 2026,
+        "country": "США",
+        "duration": 110,
+        "director": "Illumination"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8004.mp4",
+          "ru": "/video/trailer-8004.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8004",
+      "ru": "/watch/8004"
+    },
+    "typeCategory": [
+      "animation",
+      "adventure",
+      "family"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Animatsiya",
+      "Sarguzasht"
+    ],
+    "like": "8900",
+    "dislike": "",
+    "specs": {
+      "duration": 110,
+      "ageRating": "6+",
+      "year": 2026,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": [
+      8003
+    ]
+  },
+  {
+    "id": 8005,
+    "categoryName": "horrorMovies",
+    "title": {
+      "uz": "Send Help",
+      "ru": "Send Help"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie8.jpg",
+      "ru": "/img/movie8.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie8.jpg"
+      }
+    },
+    "ratingImdb": 6.9,
+    "ratingKinopoisk": 6.7,
+    "genre": {
+      "uz": [
+        "Qo‘rqinchli",
+        "Triller"
+      ],
+      "ru": [
+        "Ужасы",
+        "Триллер"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Linda Liddle uzoq orolda omon qolish uchun kurashadi. Endi u xo‘jayin.",
+        "descriptionImg": "/img/movie8.jpg",
+        "year": 2026,
+        "country": "AQSh",
+        "duration": 118,
+        "director": "Sam Raimi"
+      },
+      "ru": {
+        "text": "Линда Лиддл борется за выживание на далёком острове. Теперь она босс.",
+        "descriptionImg": "/img/movie8.jpg",
+        "year": 2026,
+        "country": "США",
+        "duration": 118,
+        "director": "Сэм Рэйми"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8005.mp4",
+          "ru": "/video/trailer-8005.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8005",
+      "ru": "/watch/8005"
+    },
+    "typeCategory": [
+      "horror",
+      "thriller"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Qo‘rqinchli",
+      "Triller"
+    ],
+    "like": "4100",
+    "dislike": "",
+    "specs": {
+      "duration": 118,
+      "ageRating": "18+",
+      "year": 2026,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8006,
+    "categoryName": "actionMovies",
+    "title": {
+      "uz": "Shelter",
+      "ru": "Укрытие"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie9.jpg",
+      "ru": "/img/movie9.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie9.jpg"
+      }
+    },
+    "ratingImdb": 6.6,
+    "ratingKinopoisk": 6.4,
+    "genre": {
+      "uz": [
+        "Jangari",
+        "Triller"
+      ],
+      "ru": [
+        "Боевик",
+        "Триллер"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Uning xavfsizligi — uning vazifasi. Statham qizchani himoya qilish uchun hamma narsaga tayyor.",
+        "descriptionImg": "/img/movie9.jpg",
+        "year": 2026,
+        "country": "AQSh",
+        "duration": 112,
+        "director": "Ric Roman Waugh"
+      },
+      "ru": {
+        "text": "Её безопасность — его миссия. Стэйтем готов на всё, чтобы защитить девочку.",
+        "descriptionImg": "/img/movie9.jpg",
+        "year": 2026,
+        "country": "США",
+        "duration": 112,
+        "director": "Рик Роман Уо"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8006.mp4",
+          "ru": "/video/trailer-8006.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8006",
+      "ru": "/watch/8006"
+    },
+    "typeCategory": [
+      "action",
+      "thriller"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Jangari",
+      "Triller"
+    ],
+    "like": "6700",
+    "dislike": "",
+    "specs": {
+      "duration": 112,
+      "ageRating": "16+",
+      "year": 2026,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8007,
+    "categoryName": "sciFiMovies",
+    "title": {
+      "uz": "Mercy",
+      "ru": "Mercy"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie10.jpg",
+      "ru": "/img/movie10.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie10.jpg"
+      }
+    },
+    "ratingImdb": 6.5,
+    "ratingKinopoisk": 6.3,
+    "genre": {
+      "uz": [
+        "Jangari",
+        "Fantastika",
+        "Triller"
+      ],
+      "ru": [
+        "Боевик",
+        "Фантастика",
+        "Триллер"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Aybsizligingizni AI sudyaga isbotlang — aks holda qatl.",
+        "descriptionImg": "/img/movie10.jpg",
+        "year": 2026,
+        "country": "AQSh",
+        "duration": 108,
+        "director": "Timur Bekmambetov"
+      },
+      "ru": {
+        "text": "Докажите невиновность ИИ-судье — иначе казнь.",
+        "descriptionImg": "/img/movie10.jpg",
+        "year": 2026,
+        "country": "США",
+        "duration": 108,
+        "director": "Тимур Бекмамбетов"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8007.mp4",
+          "ru": "/video/trailer-8007.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8007",
+      "ru": "/watch/8007"
+    },
+    "typeCategory": [
+      "action",
+      "sci-fi",
+      "thriller"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Jangari",
+      "Fantastika"
+    ],
+    "like": "5800",
+    "dislike": "",
+    "specs": {
+      "duration": 108,
+      "ageRating": "16+",
+      "year": 2026,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8008,
+    "categoryName": "familyMovies",
+    "title": {
+      "uz": "Mushuklar va Itlar",
+      "ru": "Кошки против собак"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie14.jpg",
+      "ru": "/img/movie14.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie14.jpg"
+      }
+    },
+    "ratingImdb": 5.1,
+    "ratingKinopoisk": 5.9,
+    "genre": {
+      "uz": [
+        "Komediya",
+        "Oilaviy",
+        "Sarguzasht"
+      ],
+      "ru": [
+        "Комедия",
+        "Семейный",
+        "Приключения"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Uy hayvonlari o‘rtasidagi maxfiy yuqori texnologiyali urush.",
+        "descriptionImg": "/img/movie14.jpg",
+        "year": 2001,
+        "country": "AQSh",
+        "duration": 87,
+        "director": "Lawrence Guterman"
+      },
+      "ru": {
+        "text": "Тайная высокотехнологичная война между домашними животными.",
+        "descriptionImg": "/img/movie14.jpg",
+        "year": 2001,
+        "country": "США",
+        "duration": 87,
+        "director": "Лоуренс Гутерман"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8008.mp4",
+          "ru": "/video/trailer-8008.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8008",
+      "ru": "/watch/8008"
+    },
+    "typeCategory": [
+      "comedy",
+      "family",
+      "adventure"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Komediya",
+      "Oilaviy"
+    ],
+    "like": "9200",
+    "dislike": "",
+    "specs": {
+      "duration": 87,
+      "ageRating": "6+",
+      "year": 2001,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8009,
+    "categoryName": "horrorMovies",
+    "title": {
+      "uz": "31",
+      "ru": "31"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie17.jpg",
+      "ru": "/img/movie17.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie17.jpg"
+      }
+    },
+    "ratingImdb": 5.1,
+    "ratingKinopoisk": 5,
+    "genre": {
+      "uz": [
+        "Qo‘rqinchli",
+        "Triller"
+      ],
+      "ru": [
+        "Ужасы",
+        "Триллер"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Odamlar o‘g‘irlanib, sadistik clownlar bilan omon qolish o‘yiniga majbur qilinadi.",
+        "descriptionImg": "/img/movie17.jpg",
+        "year": 2016,
+        "country": "AQSh",
+        "duration": 102,
+        "director": "Rob Zombie"
+      },
+      "ru": {
+        "text": "Людей похищают и заставляют играть в игру на выживание против садистских клоунов.",
+        "descriptionImg": "/img/movie17.jpg",
+        "year": 2016,
+        "country": "США",
+        "duration": 102,
+        "director": "Роб Зомби"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8009.mp4",
+          "ru": "/video/trailer-8009.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8009",
+      "ru": "/watch/8009"
+    },
+    "typeCategory": [
+      "horror",
+      "thriller"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Qo‘rqinchli",
+      "Triller"
+    ],
+    "like": "1800",
+    "dislike": "",
+    "specs": {
+      "duration": 102,
+      "ageRating": "18+",
+      "year": 2016,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8010,
+    "categoryName": "dramaMovies",
+    "title": {
+      "uz": "55",
+      "ru": "55"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie18.jpg",
+      "ru": "/img/movie18.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie18.jpg"
+      }
+    },
+    "ratingImdb": 6.4,
+    "ratingKinopoisk": 6.2,
+    "genre": {
+      "uz": [
+        "Dramma",
+        "Ijtimoiy"
+      ],
+      "ru": [
+        "Драма",
+        "Социальный"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Shaharning ikki dunyosi orasidagi farq — bolalik, orzular va kurash.",
+        "descriptionImg": "/img/movie18.jpg",
+        "year": 2024,
+        "country": "AQSh",
+        "duration": 115,
+        "director": "Shyam P. Madiraju"
+      },
+      "ru": {
+        "text": "Контраст двух миров города — детство, мечты и борьба.",
+        "descriptionImg": "/img/movie18.jpg",
+        "year": 2024,
+        "country": "США",
+        "duration": 115,
+        "director": "Шьям П. Мадираджу"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8010.mp4",
+          "ru": "/video/trailer-8010.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8010",
+      "ru": "/watch/8010"
+    },
+    "typeCategory": [
+      "drama"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Dramma"
+    ],
+    "like": "1500",
+    "dislike": "",
+    "specs": {
+      "duration": 115,
+      "ageRating": "12+",
+      "year": 2024,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8011,
+    "categoryName": "actionMovies",
+    "title": {
+      "uz": "John Wick 4",
+      "ru": "Джон Уик 4"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie1.jpg",
+      "ru": "/img/movie1.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie1.jpg"
+      }
+    },
+    "ratingImdb": 7.7,
+    "ratingKinopoisk": 7.5,
+    "genre": {
+      "uz": [
+        "Jangari",
+        "Triller",
+        "Kriminal"
+      ],
+      "ru": [
+        "Боевик",
+        "Триллер",
+        "Криминал"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "John Wick High Tablega qarshi yakuniy jangda — Parij va Berlinda qon to‘kish.",
+        "descriptionImg": "/img/movie1.jpg",
+        "year": 2023,
+        "country": "AQSh",
+        "duration": 169,
+        "director": "Chad Stahelski"
+      },
+      "ru": {
+        "text": "Джон Уик в финальной битве против Высшего стола — кровь в Париже и Берлине.",
+        "descriptionImg": "/img/movie1.jpg",
+        "year": 2023,
+        "country": "США",
+        "duration": 169,
+        "director": "Чад Стахелски"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8011.mp4",
+          "ru": "/video/trailer-8011.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8011",
+      "ru": "/watch/8011"
+    },
+    "typeCategory": [
+      "action",
+      "thriller",
+      "actionMovies"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Jangari",
+      "Triller"
+    ],
+    "like": "4500",
+    "dislike": "",
+    "specs": {
+      "duration": 169,
+      "ageRating": "18+",
+      "year": 2023,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": [
+      8012,
+      8013
+    ]
+  },
+  {
+    "id": 8012,
+    "categoryName": "actionMovies",
+    "title": {
+      "uz": "Extraction 2",
+      "ru": "Эвакуация 2"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie9.jpg",
+      "ru": "/img/movie9.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie9.jpg"
+      }
+    },
+    "ratingImdb": 7,
+    "ratingKinopoisk": 6.8,
+    "genre": {
+      "uz": [
+        "Jangari",
+        "Triller"
+      ],
+      "ru": [
+        "Боевик",
+        "Триллер"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Tyler Rake yangi xavfli missiyada oilani qutqarish uchun qaytadi.",
+        "descriptionImg": "/img/movie9.jpg",
+        "year": 2023,
+        "country": "AQSh",
+        "duration": 122,
+        "director": "Sam Hargrave"
+      },
+      "ru": {
+        "text": "Тайлер Рэйк возвращается, чтобы спасти семью в новой опасной миссии.",
+        "descriptionImg": "/img/movie9.jpg",
+        "year": 2023,
+        "country": "США",
+        "duration": 122,
+        "director": "Сэм Харгрейв"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8012.mp4",
+          "ru": "/video/trailer-8012.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8012",
+      "ru": "/watch/8012"
+    },
+    "typeCategory": [
+      "action",
+      "thriller"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Jangari",
+      "Triller"
+    ],
+    "like": "7100",
+    "dislike": "",
+    "specs": {
+      "duration": 122,
+      "ageRating": "18+",
+      "year": 2023,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8013,
+    "categoryName": "actionMovies",
+    "title": {
+      "uz": "The Beekeeper",
+      "ru": "Пчеловод"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie10.jpg",
+      "ru": "/img/movie10.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie10.jpg"
+      }
+    },
+    "ratingImdb": 6.4,
+    "ratingKinopoisk": 6.3,
+    "genre": {
+      "uz": [
+        "Jangari",
+        "Triller"
+      ],
+      "ru": [
+        "Боевик",
+        "Триллер"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Sokin asalarichi o‘tmishdagi maxfiy tashkilot a’zosi ekanligi ma’lum bo‘ladi.",
+        "descriptionImg": "/img/movie10.jpg",
+        "year": 2024,
+        "country": "AQSh",
+        "duration": 105,
+        "director": "David Ayer"
+      },
+      "ru": {
+        "text": "Скромный пчеловод оказывается членом тайной организации прошлого.",
+        "descriptionImg": "/img/movie10.jpg",
+        "year": 2024,
+        "country": "США",
+        "duration": 105,
+        "director": "Дэвид Эйер"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8013.mp4",
+          "ru": "/video/trailer-8013.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8013",
+      "ru": "/watch/8013"
+    },
+    "typeCategory": [
+      "action",
+      "thriller"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Jangari",
+      "Triller"
+    ],
+    "like": "6300",
+    "dislike": "",
+    "specs": {
+      "duration": 105,
+      "ageRating": "16+",
+      "year": 2024,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8014,
+    "categoryName": "sciFiMovies",
+    "title": {
+      "uz": "Dune: Part Two",
+      "ru": "Дюна: Часть вторая"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie5.jpg",
+      "ru": "/img/movie5.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie5.jpg"
+      }
+    },
+    "ratingImdb": 8.5,
+    "ratingKinopoisk": 8.2,
+    "genre": {
+      "uz": [
+        "Fantastika",
+        "Dramma",
+        "Sarguzasht"
+      ],
+      "ru": [
+        "Фантастика",
+        "Драма",
+        "Приключения"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Paul Atreides Fremenlar bilan birlashib, Arrakis taqdiri uchun kurashadi.",
+        "descriptionImg": "/img/movie5.jpg",
+        "year": 2024,
+        "country": "AQSh",
+        "duration": 166,
+        "director": "Denis Villeneuve"
+      },
+      "ru": {
+        "text": "Пол Атрейдес объединяется с фременами в борьбе за судьбу Арракиса.",
+        "descriptionImg": "/img/movie5.jpg",
+        "year": 2024,
+        "country": "США",
+        "duration": 166,
+        "director": "Дени Вильнёв"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8014.mp4",
+          "ru": "/video/trailer-8014.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8014",
+      "ru": "/watch/8014"
+    },
+    "typeCategory": [
+      "sci-fi",
+      "drama",
+      "adventure"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Fantastika",
+      "Dramma"
+    ],
+    "like": "12000",
+    "dislike": "",
+    "specs": {
+      "duration": 166,
+      "ageRating": "12+",
+      "year": 2024,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8015,
+    "categoryName": "comedyMovies",
+    "title": {
+      "uz": "Deadpool & Wolverine",
+      "ru": "Дэдпул и Росомаха"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie4.jpg",
+      "ru": "/img/movie4.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie4.jpg"
+      }
+    },
+    "ratingImdb": 7.8,
+    "ratingKinopoisk": 7.6,
+    "genre": {
+      "uz": [
+        "Komediya",
+        "Jangari",
+        "Fantastika"
+      ],
+      "ru": [
+        "Комедия",
+        "Боевик",
+        "Фантастика"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Deadpool va Wolverine multiverse tartibini saqlash uchun birlashadi.",
+        "descriptionImg": "/img/movie4.jpg",
+        "year": 2024,
+        "country": "AQSh",
+        "duration": 128,
+        "director": "Shawn Levy"
+      },
+      "ru": {
+        "text": "Дэдпул и Росомаха объединяются, чтобы спасти мультивселенную.",
+        "descriptionImg": "/img/movie4.jpg",
+        "year": 2024,
+        "country": "США",
+        "duration": 128,
+        "director": "Шон Леви"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8015.mp4",
+          "ru": "/video/trailer-8015.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8015",
+      "ru": "/watch/8015"
+    },
+    "typeCategory": [
+      "comedy",
+      "action",
+      "sci-fi"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Komediya",
+      "Jangari"
+    ],
+    "like": "15000",
+    "dislike": "",
+    "specs": {
+      "duration": 128,
+      "ageRating": "18+",
+      "year": 2024,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8016,
+    "categoryName": "dramaMovies",
+    "title": {
+      "uz": "Oppenheimer",
+      "ru": "Оппенгеймер"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie18.jpg",
+      "ru": "/img/movie18.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie18.jpg"
+      }
+    },
+    "ratingImdb": 8.3,
+    "ratingKinopoisk": 8.1,
+    "genre": {
+      "uz": [
+        "Dramma",
+        "Tarixiy",
+        "Biografiya"
+      ],
+      "ru": [
+        "Драма",
+        "История",
+        "Биография"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Yadro bombasi yaratuvchisi J. Robert Oppenheimer hayoti.",
+        "descriptionImg": "/img/movie18.jpg",
+        "year": 2023,
+        "country": "AQSh",
+        "duration": 180,
+        "director": "Christopher Nolan"
+      },
+      "ru": {
+        "text": "Жизнь создателя атомной бомбы Дж. Роберта Оппенгеймера.",
+        "descriptionImg": "/img/movie18.jpg",
+        "year": 2023,
+        "country": "США",
+        "duration": 180,
+        "director": "Кристофер Нолан"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8016.mp4",
+          "ru": "/video/trailer-8016.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8016",
+      "ru": "/watch/8016"
+    },
+    "typeCategory": [
+      "drama",
+      "history",
+      "biography"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Dramma",
+      "Tarixiy"
+    ],
+    "like": "11000",
+    "dislike": "",
+    "specs": {
+      "duration": 180,
+      "ageRating": "16+",
+      "year": 2023,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8017,
+    "categoryName": "horrorMovies",
+    "title": {
+      "uz": "Smile 2",
+      "ru": "Улыбка 2"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie17.jpg",
+      "ru": "/img/movie17.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie17.jpg"
+      }
+    },
+    "ratingImdb": 6.7,
+    "ratingKinopoisk": 6.5,
+    "genre": {
+      "uz": [
+        "Qo‘rqinchli",
+        "Triller",
+        "Sirli"
+      ],
+      "ru": [
+        "Ужасы",
+        "Триллер",
+        "Детектив"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Mashhur qo‘shiqchi tabassum lanatiga duch keladi.",
+        "descriptionImg": "/img/movie17.jpg",
+        "year": 2024,
+        "country": "AQSh",
+        "duration": 127,
+        "director": "Parker Finn"
+      },
+      "ru": {
+        "text": "Популярная певица сталкивается с проклятием улыбки.",
+        "descriptionImg": "/img/movie17.jpg",
+        "year": 2024,
+        "country": "США",
+        "duration": 127,
+        "director": "Паркер Финн"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8017.mp4",
+          "ru": "/video/trailer-8017.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8017",
+      "ru": "/watch/8017"
+    },
+    "typeCategory": [
+      "horror",
+      "thriller",
+      "mystery"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Qo‘rqinchli",
+      "Triller"
+    ],
+    "like": "3900",
+    "dislike": "",
+    "specs": {
+      "duration": 127,
+      "ageRating": "18+",
+      "year": 2024,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8018,
+    "categoryName": "romanceMovies",
+    "title": {
+      "uz": "Anyone But You",
+      "ru": "Кто угодно, кроме тебя"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie2.jpg",
+      "ru": "/img/movie2.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie2.jpg"
+      }
+    },
+    "ratingImdb": 6.1,
+    "ratingKinopoisk": 6,
+    "genre": {
+      "uz": [
+        "Komediya",
+        "Melodrama"
+      ],
+      "ru": [
+        "Комедия",
+        "Мелодрама"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Ikki kishi o‘zaro munosabatni soxta munosabat bilan yashirishga urinadi.",
+        "descriptionImg": "/img/movie2.jpg",
+        "year": 2023,
+        "country": "AQSh",
+        "duration": 103,
+        "director": "Will Gluck"
+      },
+      "ru": {
+        "text": "Двое пытаются скрыть искру через притворные отношения.",
+        "descriptionImg": "/img/movie2.jpg",
+        "year": 2023,
+        "country": "США",
+        "duration": 103,
+        "director": "Уилл Глак"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8018.mp4",
+          "ru": "/video/trailer-8018.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8018",
+      "ru": "/watch/8018"
+    },
+    "typeCategory": [
+      "romance",
+      "comedy"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Komediya",
+      "Melodrama"
+    ],
+    "like": "4800",
+    "dislike": "",
+    "specs": {
+      "duration": 103,
+      "ageRating": "16+",
+      "year": 2023,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8019,
+    "categoryName": "animationMovies",
+    "title": {
+      "uz": "Inside Out 2",
+      "ru": "Головоломка 2"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie14.jpg",
+      "ru": "/img/movie14.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie14.jpg"
+      }
+    },
+    "ratingImdb": 7.6,
+    "ratingKinopoisk": 7.5,
+    "genre": {
+      "uz": [
+        "Animatsiya",
+        "Komediya",
+        "Oilaviy"
+      ],
+      "ru": [
+        "Анимация",
+        "Комедия",
+        "Семейный"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "Riley o‘smirlikka qadam qo‘yadi — yangi his-tuyg‘ular paydo bo‘ladi.",
+        "descriptionImg": "/img/movie14.jpg",
+        "year": 2024,
+        "country": "AQSh",
+        "duration": 96,
+        "director": "Kelsey Mann"
+      },
+      "ru": {
+        "text": "Райли становится подростком — появляются новые эмоции.",
+        "descriptionImg": "/img/movie14.jpg",
+        "year": 2024,
+        "country": "США",
+        "duration": 96,
+        "director": "Келси Манн"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8019.mp4",
+          "ru": "/video/trailer-8019.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8019",
+      "ru": "/watch/8019"
+    },
+    "typeCategory": [
+      "animation",
+      "comedy",
+      "family"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Animatsiya",
+      "Komediya"
+    ],
+    "like": "14000",
+    "dislike": "",
+    "specs": {
+      "duration": 96,
+      "ageRating": "6+",
+      "year": 2024,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  },
+  {
+    "id": 8020,
+    "categoryName": "thrillerMovies",
+    "title": {
+      "uz": "Longlegs",
+      "ru": "Лонглегс"
+    },
+    "homeImgPoster": {
+      "uz": "/img/movie8.jpg",
+      "ru": "/img/movie8.jpg"
+    },
+    "movieDetailPoster": {
+      "img": {
+        "type": "image",
+        "src": "/img/movie8.jpg"
+      }
+    },
+    "ratingImdb": 6.6,
+    "ratingKinopoisk": 6.4,
+    "genre": {
+      "uz": [
+        "Qo‘rqinchli",
+        "Triller",
+        "Kriminal"
+      ],
+      "ru": [
+        "Ужасы",
+        "Триллер",
+        "Криминал"
+      ]
+    },
+    "description": {
+      "uz": {
+        "text": "FBI agenti sirli qotil izidan ketadi — o‘tmishdagi dahshat ochiladi.",
+        "descriptionImg": "/img/movie8.jpg",
+        "year": 2024,
+        "country": "AQSh",
+        "duration": 101,
+        "director": "Osgood Perkins"
+      },
+      "ru": {
+        "text": "Агент ФБР идёт по следу загадочного убийцы — раскрывается ужас прошлого.",
+        "descriptionImg": "/img/movie8.jpg",
+        "year": 2024,
+        "country": "США",
+        "duration": 101,
+        "director": "Осгуд Перкинс"
+      }
+    },
+    "trailersVideo": [
+      {
+        "id": 1,
+        "trailers": {
+          "uz": "/video/trailer-8020.mp4",
+          "ru": "/video/trailer-8020.mp4"
+        }
+      }
+    ],
+    "watchUrl": {
+      "uz": "/watch/8020",
+      "ru": "/watch/8020"
+    },
+    "typeCategory": [
+      "horror",
+      "thriller",
+      "crime"
+    ],
+    "filterCountry": "USA",
+    "filterGenre": [
+      "Qo‘rqinchli",
+      "Triller"
+    ],
+    "like": "5600",
+    "dislike": "",
+    "specs": {
+      "duration": 101,
+      "ageRating": "18+",
+      "year": 2024,
+      "countries": [
+        "USA"
+      ]
+    },
+    "franchiseMovieIds": []
+  }
+]
