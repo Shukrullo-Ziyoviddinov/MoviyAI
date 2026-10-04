@@ -1,6 +1,7 @@
 import { FloatingAiButton } from '@/components/home/FloatingAiButton';
 import { HomeEmptyState } from '@/components/home/HomeEmptyState';
 import { HomeHeader } from '@/components/home/HomeHeader';
+import { HorizontalScroll } from '@/components/common/HorizontalScroll';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { useBottomNavOffset } from '@/components/nav/BottomNav';
 import { fetchMovies } from '@/src/api/movies';
@@ -12,7 +13,7 @@ import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
+  ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
@@ -35,10 +36,7 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const headerH = insets.top + 10 + HEADER_ROW;
-  const cardWidth = useMemo(
-    () => (width - CONTENT_PAD * 2 - GAP) / 2,
-    [width]
-  );
+  const cardWidth = useMemo(() => Math.round(width * 0.42), [width]);
 
   useEffect(() => {
     let alive = true;
@@ -86,24 +84,30 @@ export default function HomeScreen() {
           <HomeEmptyState onGoToChat={goToChat} />
         </View>
       ) : (
-        <FlatList
-          data={movies}
-          keyExtractor={(item) => String(item.id)}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
+        <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.list,
-            {
-              paddingTop: headerH + 10,
-              paddingBottom: navOffset + 12,
-              paddingHorizontal: CONTENT_PAD,
-            },
-          ]}
-          renderItem={({ item }) => (
-            <MovieCard movie={item} language={language} width={cardWidth} />
-          )}
-        />
+          contentContainerStyle={{
+            paddingTop: headerH + 12,
+            paddingBottom: navOffset + 12,
+          }}
+        >
+          <HorizontalScroll
+            contentContainerStyle={[
+              styles.row,
+              { paddingHorizontal: CONTENT_PAD },
+            ]}
+          >
+            {movies.map((movie) => (
+              <View key={movie.id} style={{ width: cardWidth, marginRight: GAP }}>
+                <MovieCard
+                  movie={movie}
+                  language={language}
+                  width={cardWidth}
+                />
+              </View>
+            ))}
+          </HorizontalScroll>
+        </ScrollView>
       )}
 
       <View
@@ -132,11 +136,8 @@ const styles = StyleSheet.create({
   emptyWrap: {
     flex: 1,
   },
-  list: {
-    flexGrow: 1,
-  },
   row: {
-    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
   headerOverlay: {
     position: 'absolute',

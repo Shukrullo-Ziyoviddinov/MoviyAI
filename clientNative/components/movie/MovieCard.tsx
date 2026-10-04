@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-const SAVE_ACTIVE = '#0D9488';
+const SAVE_ACTIVE = '#1E4FD6';
 
 type MovieCardProps = {
   movie: Movie;
@@ -65,7 +65,7 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
           disabled={busy}
         >
           <BookmarkIcon
-            size={18}
+            size={20}
             color={isSaved ? SAVE_ACTIVE : '#FFFFFF'}
             filled={isSaved}
           />
@@ -102,9 +102,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.55)',
