@@ -1,6 +1,6 @@
 import { useTheme } from '@/src/stores/useThemeStore';
-import { buildYoutubeEmbedHtml } from '@/src/utils/youtubeEmbed';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { extractYoutubeVideoId } from '@/src/utils/youtubeEmbed';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -20,7 +20,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
+import YoutubePlayer, { PLAYER_STATES } from 'react-native-youtube-iframe';
 
 const OPEN_MS = 320;
 const CLOSE_MS = 240;
@@ -52,11 +52,12 @@ export function TrailerModal({
   const dragY = useSharedValue(0);
   const sheetHeightSV = useSharedValue(sheetH);
   const [mounted, setMounted] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [playing, setPlaying] = useState(false);
+  const [ready, setReady] = useState(false);
   const skipCloseAnim = useRef(false);
 
-  const html = useMemo(
-    () => buildYoutubeEmbedHtml(trailerUrl),
+  const videoId = useMemo(
+    () => extractYoutubeVideoId(trailerUrl),
     [trailerUrl]
   );
 
@@ -68,7 +69,8 @@ export function TrailerModal({
     if (visible) {
       skipCloseAnim.current = false;
       setMounted(true);
-      setLoading(true);
+      setReady(false);
+      setPlaying(false);
       dragY.value = 0;
       progress.value = withTiming(1, {
         duration: OPEN_MS,
@@ -76,6 +78,8 @@ export function TrailerModal({
       });
       return;
     }
+
+    setPlaying(false);
 
     if (!mounted || skipCloseAnim.current) {
       skipCloseAnim.current = false;
@@ -111,6 +115,7 @@ export function TrailerModal({
     progress.value = 0;
     dragY.value = 0;
     skipCloseAnim.current = true;
+    setPlaying(false);
     onClose();
     setMounted(false);
   };
@@ -132,6 +137,8 @@ export function TrailerModal({
   };
 
   const pan = Gesture.Pan()
+    .activeOffsetY(12)
+    .failOffsetX([-24, 24])
     .onUpdate((e) => {
       dragY.value = Math.max(0, e.translationY);
     })
@@ -146,6 +153,10 @@ export function TrailerModal({
         });
       }
     });
+
+  const onStateChange = useCallback((state: PLAYER_STATES) => {
+    if (state === PLAYER_STATES.ENDED) setPlaying(false);
+  }, []);
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity:
@@ -191,22 +202,33 @@ export function TrailerModal({
         </GestureDetector>
 
         <View style={[styles.videoWrap, { height: videoH }]}>
-          {html ? (
+          {videoId ? (
             <>
-              <WebView
-                key={trailerUrl ?? 'trailer'}
-                originWhitelist={['*']}
-                source={{ html }}
-                style={styles.webview}
-                allowsFullscreenVideo
-                allowsInlineMediaPlayback
-                mediaPlaybackRequiresUserAction={false}
-                javaScriptEnabled
-                domStorageEnabled
-                onLoadEnd={() => setLoading(false)}
+              <YoutubePlayer
+                key={videoId}
+                height={videoH}
+                width={width - 32}
+                play={playing}
+                videoId={videoId}
+                webViewProps={{
+                  allowsInlineMediaPlayback: true,
+                  mediaPlaybackRequiresUserAction: false,
+                  androidLayerType: 'hardware',
+                }}
+                initialPlayerParams={{
+                  controls: true,
+                  modestbranding: true,
+                  rel: false,
+                  preventFullScreen: false,
+                }}
+                onReady={() => {
+                  setReady(true);
+                  setPlaying(true);
+                }}
+                onChangeState={onStateChange}
               />
-              {loading ? (
-                <View style={styles.loader}>
+              {!ready ? (
+                <View style={styles.loader} pointerEvents="none">
                   <ActivityIndicator color={colors.accentBright} />
                 </View>
               ) : null}
@@ -262,10 +284,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: '#000',
-  },
-  webview: {
-    flex: 1,
     backgroundColor: '#000',
   },
   loader: {

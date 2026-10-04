@@ -87,12 +87,16 @@ export function buildYoutubeEmbedUrl(input?: string | null): string | null {
   const id = extractYoutubeVideoId(input);
   if (!id) return null;
   const params = new URLSearchParams({
-    autoplay: '1',
     playsinline: '1',
     rel: '0',
     modestbranding: '1',
+    controls: '1',
+    fs: '1',
+    enablejsapi: '0',
   });
-  return `https://www.youtube.com/embed/${id}?${params.toString()}`;
+  // nocookie + explicit origin helps WebView play in-app instead of
+  // pushing "Watch on YouTube" interstitial.
+  return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
 }
 
 export function buildYoutubeEmbedHtml(input?: string | null): string | null {
@@ -105,7 +109,7 @@ export function buildYoutubeEmbedHtml(input?: string | null): string | null {
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
     />
     <style>
       html, body {
@@ -116,15 +120,12 @@ export function buildYoutubeEmbedHtml(input?: string | null): string | null {
         background: #000;
         overflow: hidden;
       }
-      .wrap {
+      .wrap, iframe {
         position: absolute;
         inset: 0;
-      }
-      iframe {
         width: 100%;
         height: 100%;
         border: 0;
-        display: block;
       }
     </style>
   </head>
@@ -133,9 +134,10 @@ export function buildYoutubeEmbedHtml(input?: string | null): string | null {
       <iframe
         src="${embedUrl}"
         title="YouTube trailer"
+        frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowfullscreen
-        referrerpolicy="strict-origin-when-cross-origin"
+        referrerpolicy="origin"
       ></iframe>
     </div>
   </body>
