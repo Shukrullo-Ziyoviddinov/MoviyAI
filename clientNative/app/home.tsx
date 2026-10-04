@@ -1,16 +1,16 @@
 import { FloatingAiButton } from '@/components/home/FloatingAiButton';
 import { HomeEmptyState } from '@/components/home/HomeEmptyState';
 import { HomeHeader } from '@/components/home/HomeHeader';
-import { HorizontalScroll } from '@/components/common/HorizontalScroll';
-import { MovieCard } from '@/components/movie/MovieCard';
+import { MovieCategoryRow } from '@/components/movie/MovieCategoryRow';
 import { useBottomNavOffset } from '@/components/nav/BottomNav';
-import { fetchMovies } from '@/src/api/movies';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
+import { useMoviesStore } from '@/src/stores/useMoviesStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
-import type { Movie } from '@/src/types/movie';
+import { groupMoviesByCategory } from '@/src/utils/groupMovies';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   ScrollView,
@@ -21,44 +21,31 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CONTENT_PAD = 16;
-const GAP = 12;
 const HEADER_ROW = 44;
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const navOffset = useBottomNavOffset(true);
   const language = useLanguageStore((s) => s.language);
+  const movies = useMoviesStore((s) => s.movies);
+  const loading = useMoviesStore((s) => s.loading);
+  const loaded = useMoviesStore((s) => s.loaded);
+  const error = useMoviesStore((s) => s.error);
+  const loadMovies = useMoviesStore((s) => s.loadMovies);
   const loadWishlistIds = useWishlistStore((s) => s.loadIds);
   const { width } = useWindowDimensions();
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const headerH = insets.top + 10 + HEADER_ROW;
-  const cardWidth = useMemo(() => Math.round(width * 0.42), [width]);
+  const cardWidth = useMemo(() => Math.round(width * 0.39), [width]);
+  const showLoader = !loaded && loading;
+  const categories = useMemo(() => groupMoviesByCategory(movies), [movies]);
 
   useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    Promise.all([fetchMovies(), loadWishlistIds()])
-      .then(([list]) => {
-        if (!alive) return;
-        setMovies(list);
-        setError(null);
-      })
-      .catch((err: unknown) => {
-        if (!alive) return;
-        setError(err instanceof Error ? err.message : 'Load failed');
-        setMovies([]);
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [loadWishlistIds]);
+    void loadMovies();
+    void loadWishlistIds();
+  }, [loadMovies, loadWishlistIds]);
 
   const goToChat = () => {
     router.push('/');
@@ -66,11 +53,11 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      {loading ? (
+      {showLoader ? (
         <View style={[styles.center, { paddingTop: headerH }]}>
           <ActivityIndicator color={colors.accentBright} />
         </View>
-      ) : error || movies.length === 0 ? (
+      ) : error || categories.length === 0 ? (
         <View
           style={[
             styles.emptyWrap,
@@ -91,22 +78,16 @@ export default function HomeScreen() {
             paddingBottom: navOffset + 12,
           }}
         >
-          <HorizontalScroll
-            contentContainerStyle={[
-              styles.row,
-              { paddingHorizontal: CONTENT_PAD },
-            ]}
-          >
-            {movies.map((movie) => (
-              <View key={movie.id} style={{ width: cardWidth, marginRight: GAP }}>
-                <MovieCard
-                  movie={movie}
-                  language={language}
-                  width={cardWidth}
-                />
-              </View>
-            ))}
-          </HorizontalScroll>
+          {categories.map((group) => (
+            <MovieCategoryRow
+              key={group.categoryName}
+              title={t(`home.categories.${group.categoryName}`)}
+              movies={group.movies}
+              language={language}
+              cardWidth={cardWidth}
+              contentPad={CONTENT_PAD}
+            />
+          ))}
         </ScrollView>
       )}
 
@@ -135,9 +116,6 @@ const styles = StyleSheet.create({
   },
   emptyWrap: {
     flex: 1,
-  },
-  row: {
-    alignItems: 'flex-start',
   },
   headerOverlay: {
     position: 'absolute',

@@ -3,13 +3,11 @@ import { FloatingAiButton } from '@/components/home/FloatingAiButton';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { useBottomNavOffset } from '@/components/nav/BottomNav';
 import { WishlistCard } from '@/components/wishlist/WishlistCard';
-import { fetchWishlistMovies } from '@/src/api/wishlist';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
-import type { Movie } from '@/src/types/movie';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -28,33 +26,23 @@ export default function FavoritesScreen() {
   const insets = useSafeAreaInsets();
   const navOffset = useBottomNavOffset(true);
   const language = useLanguageStore((s) => s.language);
-  const loadWishlistIds = useWishlistStore((s) => s.loadIds);
+  const movies = useWishlistStore((s) => s.movies);
+  const loading = useWishlistStore((s) => s.loading);
+  const loaded = useWishlistStore((s) => s.loaded);
+  const loadMovies = useWishlistStore((s) => s.loadMovies);
   const { width } = useWindowDimensions();
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const headerH = insets.top + 10 + HEADER_ROW;
   const cardWidth = useMemo(
     () => (width - CONTENT_PAD * 2 - GAP) / 2,
     [width]
   );
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [list] = await Promise.all([fetchWishlistMovies(), loadWishlistIds()]);
-      setMovies(list);
-    } catch {
-      setMovies([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [loadWishlistIds]);
+  const showLoader = !loaded && loading;
 
   useFocusEffect(
     useCallback(() => {
-      void load();
-    }, [load])
+      void loadMovies(true);
+    }, [loadMovies])
   );
 
   const goToChat = () => {
@@ -63,7 +51,7 @@ export default function FavoritesScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      {loading ? (
+      {showLoader ? (
         <View style={[styles.center, { paddingTop: headerH }]}>
           <ActivityIndicator color={colors.accentBright} />
         </View>
@@ -87,6 +75,9 @@ export default function FavoritesScreen() {
           numColumns={2}
           columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews
+          initialNumToRender={6}
+          windowSize={5}
           contentContainerStyle={[
             styles.list,
             {
@@ -100,9 +91,6 @@ export default function FavoritesScreen() {
               movie={item}
               language={language}
               width={cardWidth}
-              onRemoved={(movieId) =>
-                setMovies((prev) => prev.filter((m) => m.id !== movieId))
-              }
             />
           )}
         />

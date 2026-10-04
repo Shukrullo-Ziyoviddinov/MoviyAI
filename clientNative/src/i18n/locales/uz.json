@@ -29,7 +29,10 @@
   "home": {
     "emptyTitle": "Hali hech narsa yo'q",
     "emptySubtitle": "Kinolar va tavsiyalar shu yerda paydo bo'ladi. Hozir AI Chat orqali qidirishni boshlang.",
-    "goToChat": "AI Chatga o'tish"
+    "goToChat": "AI Chatga o'tish",
+    "categories": {
+      "actionMovies": "Jangari kinolar"
+    }
   },
   "favorites": {
     "emptyTitle": "Sevimlilar bo'sh",

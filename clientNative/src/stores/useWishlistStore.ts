@@ -1,27 +1,34 @@
 import {
   fetchWishlistIds,
+  fetchWishlistMovies,
   toggleWishlistMovie,
 } from '@/src/api/wishlist';
+import type { Movie } from '@/src/types/movie';
 import { create } from 'zustand';
 
 type WishlistState = {
   movieIds: number[];
+  movies: Movie[];
   loaded: boolean;
   loading: boolean;
-  loadIds: () => Promise<void>;
+  loadIds: (force?: boolean) => Promise<void>;
+  loadMovies: (force?: boolean) => Promise<void>;
   toggle: (movieId: number) => Promise<boolean>;
   isSaved: (movieId: number) => boolean;
 };
 
 export const useWishlistStore = create<WishlistState>((set, get) => ({
   movieIds: [],
+  movies: [],
   loaded: false,
   loading: false,
 
   isSaved: (movieId) => get().movieIds.includes(movieId),
 
-  loadIds: async () => {
+  loadIds: async (force = false) => {
     if (get().loading) return;
+    if (get().loaded && !force) return;
+
     set({ loading: true });
     try {
       const ids = await fetchWishlistIds();
@@ -31,17 +38,35 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     }
   },
 
+  loadMovies: async (force = false) => {
+    if (get().loading && !force) return;
+    set({ loading: true });
+    try {
+      const [movies, ids] = await Promise.all([
+        fetchWishlistMovies(),
+        fetchWishlistIds(),
+      ]);
+      set({ movies, movieIds: ids, loaded: true });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
   toggle: async (movieId) => {
     const result = await toggleWishlistMovie(movieId);
     set((state) => {
       const exists = state.movieIds.includes(movieId);
+      let movieIds = state.movieIds;
+      let movies = state.movies;
+
       if (result.saved && !exists) {
-        return { movieIds: [movieId, ...state.movieIds] };
+        movieIds = [movieId, ...state.movieIds];
+      } else if (!result.saved && exists) {
+        movieIds = state.movieIds.filter((id) => id !== movieId);
+        movies = state.movies.filter((m) => m.id !== movieId);
       }
-      if (!result.saved && exists) {
-        return { movieIds: state.movieIds.filter((id) => id !== movieId) };
-      }
-      return state;
+
+      return { movieIds, movies };
     });
     return result.saved;
   },

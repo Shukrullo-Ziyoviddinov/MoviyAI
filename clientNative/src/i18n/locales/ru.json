@@ -29,7 +29,10 @@
   "home": {
     "emptyTitle": "Пока здесь пусто",
     "emptySubtitle": "Фильмы и рекомендации появятся здесь. Начните поиск через AI Chat.",
-    "goToChat": "Перейти в AI Chat"
+    "goToChat": "Перейти в AI Chat",
+    "categories": {
+      "actionMovies": "Боевики"
+    }
   },
   "favorites": {
     "emptyTitle": "Избранное пусто",

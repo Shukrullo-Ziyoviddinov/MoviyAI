@@ -50,8 +50,24 @@ function AppNavigator() {
             }}
           >
             <Stack.Screen name="index" options={{ animationEnabled: false }} />
-            <Stack.Screen name="home" />
-            <Stack.Screen name="favorites" />
+            <Stack.Screen
+              name="home"
+              options={{
+                transitionSpec: {
+                  open: { animation: 'timing', config: { duration: 140 } },
+                  close: { animation: 'timing', config: { duration: 140 } },
+                },
+              }}
+            />
+            <Stack.Screen
+              name="favorites"
+              options={{
+                transitionSpec: {
+                  open: { animation: 'timing', config: { duration: 140 } },
+                  close: { animation: 'timing', config: { duration: 140 } },
+                },
+              }}
+            />
             <Stack.Screen name="profile" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="about" />

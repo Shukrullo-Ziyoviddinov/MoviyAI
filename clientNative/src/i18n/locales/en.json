@@ -29,7 +29,10 @@
   "home": {
     "emptyTitle": "Nothing here yet",
     "emptySubtitle": "Movies and recommendations will show up here. Start searching with AI Chat.",
-    "goToChat": "Go to AI Chat"
+    "goToChat": "Go to AI Chat",
+    "categories": {
+      "actionMovies": "Action movies"
+    }
   },
   "favorites": {
     "emptyTitle": "Favorites is empty",

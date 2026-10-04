@@ -66,12 +66,12 @@ export function BottomNav() {
 
   const goHome = () => {
     if (pathname === '/home') return;
-    router.push('/home');
+    router.replace('/home');
   };
 
   const goFavorites = () => {
     if (pathname === '/favorites') return;
-    router.push('/favorites');
+    router.replace('/favorites');
   };
 
   const goChat = () => {

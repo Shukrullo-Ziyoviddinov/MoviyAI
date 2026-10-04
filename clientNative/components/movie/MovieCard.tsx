@@ -26,7 +26,7 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
   const title = movie.title[lang] ?? movie.title.uz;
   const posterPath = movie.homeImgPoster[lang] ?? movie.homeImgPoster.uz;
   const poster = resolveMoviePoster(posterPath);
-  const posterH = Math.round(width * 1.35);
+  const posterH = Math.round(width * 1.3);
 
   const onToggleSave = async () => {
     if (busy) return;
@@ -50,7 +50,6 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
             width,
             height: posterH,
             backgroundColor: colors.panelSoft,
-            borderColor: colors.borderSoft,
           },
         ]}
       >
@@ -92,7 +91,6 @@ const styles = StyleSheet.create({
   posterWrap: {
     borderRadius: 14,
     overflow: 'hidden',
-    borderWidth: 1,
   },
   poster: {
     width: '100%',
