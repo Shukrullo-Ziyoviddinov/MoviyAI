@@ -428,6 +428,31 @@ export function HeartIcon({
   );
 }
 
+export function LikeIcon({
+  size = 20,
+  color = '#E5E7EB',
+  filled = false,
+}: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M7 10.5V20.5H4.5C3.7 20.5 3 19.8 3 19V12C3 11.2 3.7 10.5 4.5 10.5H7Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill={filled ? color : 'none'}
+      />
+      <Path
+        d="M7 10.5L10.2 4.8C10.5 4.2 11.2 3.8 12 3.9L12.5 4C13.4 4.1 14 4.9 14 5.8V8.5H18.2C19.4 8.5 20.3 9.6 20 10.8L18.5 17.3C18.3 18.3 17.4 19 16.4 19H7"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill={filled ? color : 'none'}
+      />
+    </Svg>
+  );
+}
+
 export function DislikeIcon({
   size = 20,
   color = '#E5E7EB',
@@ -436,20 +461,17 @@ export function DislikeIcon({
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
-        d="M17 20.5H9.8C8.9 20.5 8.1 20 7.8 19.2L5.5 12.8C5.3 12.3 5.6 11.7 6.1 11.5L7.5 11V7.5C7.5 6.4 8.4 5.5 9.5 5.5H12.2L17 3.5V20.5Z"
+        d="M7 13.5V3.5H4.5C3.7 3.5 3 4.2 3 5V12C3 12.8 3.7 13.5 4.5 13.5H7Z"
         stroke={color}
         strokeWidth="2"
         strokeLinejoin="round"
         fill={filled ? color : 'none'}
       />
-      <Rect
-        x="17"
-        y="3.5"
-        width="3.5"
-        height="17"
-        rx="1"
+      <Path
+        d="M7 13.5L10.2 19.2C10.5 19.8 11.2 20.2 12 20.1L12.5 20C13.4 19.9 14 19.1 14 18.2V15.5H18.2C19.4 15.5 20.3 14.4 20 13.2L18.5 6.7C18.3 5.7 17.4 5 16.4 5H7"
         stroke={color}
         strokeWidth="2"
+        strokeLinejoin="round"
         fill={filled ? color : 'none'}
       />
     </Svg>

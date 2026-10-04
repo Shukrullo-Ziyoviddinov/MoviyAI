@@ -5,7 +5,7 @@ export type ReactionType = 'like' | 'dislike';
 
 function parseCount(value: unknown) {
   const n = Number(String(value ?? '0').trim() || '0');
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
 }
 
 function toCountString(n: number) {
@@ -22,7 +22,7 @@ export async function toggleMovieReaction(
   movieId: number,
   nextType: ReactionType
 ) {
-  const movie = await Movie.findOne({ id: movieId });
+  const movie = await Movie.findOne({ id: movieId }).lean();
   if (!movie) {
     return null;
   }
@@ -54,14 +54,21 @@ export async function toggleMovieReaction(
     await existing.save();
   }
 
-  movie.like = toCountString(likeCount);
-  movie.dislike = toCountString(dislikeCount);
-  await movie.save();
+  const like = toCountString(likeCount);
+  const dislike = toCountString(dislikeCount);
+
+  await Movie.updateOne(
+    { id: movieId },
+    {
+      $set: { like, dislike },
+      $unset: { movieDetailPoster: 1 },
+    }
+  );
 
   return {
     movieId,
-    like: movie.like,
-    dislike: movie.dislike,
+    like,
+    dislike,
     userReaction,
   };
 }

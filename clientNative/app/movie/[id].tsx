@@ -6,7 +6,7 @@ import {
   ClockIcon,
   DislikeIcon,
   GlobeIcon,
-  HeartIcon,
+  LikeIcon,
   PlayIcon,
   VideoIcon,
 } from '@/components/icons';
@@ -217,6 +217,8 @@ export default function MovieDetailScreen() {
             }
           : prev
       );
+    } catch (err) {
+      console.warn('Reaction failed', err);
     } finally {
       setReactionBusy(false);
     }
@@ -363,20 +365,17 @@ export default function MovieDetailScreen() {
             <View style={styles.reactionRow}>
               <Pressable
                 style={[
-                  styles.reactionBtn,
+                  styles.reactionItem,
                   {
                     backgroundColor: colors.panelSoft,
-                    borderColor:
-                      movie.userReaction === 'like'
-                        ? LIKE_ACTIVE
-                        : colors.borderSoft,
+                    borderColor: colors.borderSoft,
                   },
                 ]}
                 onPress={() => onToggleReaction('like')}
                 disabled={reactionBusy}
               >
-                <HeartIcon
-                  size={18}
+                <LikeIcon
+                  size={16}
                   color={
                     movie.userReaction === 'like' ? LIKE_ACTIVE : colors.icon
                   }
@@ -399,20 +398,17 @@ export default function MovieDetailScreen() {
 
               <Pressable
                 style={[
-                  styles.reactionBtn,
+                  styles.reactionItem,
                   {
                     backgroundColor: colors.panelSoft,
-                    borderColor:
-                      movie.userReaction === 'dislike'
-                        ? DISLIKE_ACTIVE
-                        : colors.borderSoft,
+                    borderColor: colors.borderSoft,
                   },
                 ]}
                 onPress={() => onToggleReaction('dislike')}
                 disabled={reactionBusy}
               >
                 <DislikeIcon
-                  size={18}
+                  size={16}
                   color={
                     movie.userReaction === 'dislike'
                       ? DISLIKE_ACTIVE
@@ -580,20 +576,20 @@ const styles = StyleSheet.create({
   reactionRow: {
     paddingHorizontal: 16,
     flexDirection: 'row',
-    gap: 10,
+    alignItems: 'center',
+    gap: 8,
   },
-  reactionBtn: {
-    flex: 1,
+  reactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 11,
-    borderRadius: 12,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
     borderWidth: 1,
   },
   reactionText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
