@@ -54,7 +54,7 @@
       "expo-sharing"
     ],
     "extra": {
-      "apiUrl": "http://localhost:4000"
+      "apiUrl": "https://moviyai.onrender.com"
     },
     "experiments": {
       "typedRoutes": true
