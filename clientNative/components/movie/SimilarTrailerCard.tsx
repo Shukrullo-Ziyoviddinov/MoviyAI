@@ -67,8 +67,8 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   thumbWrap: {
-    width: 112,
-    height: 64,
+    width: 158,
+    height: 86,
     borderRadius: 10,
     overflow: 'hidden',
   },
@@ -82,12 +82,12 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   title: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
   },
   desc: {
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: '400',
   },
 });

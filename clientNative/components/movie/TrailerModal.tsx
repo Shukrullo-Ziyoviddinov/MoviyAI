@@ -1,10 +1,13 @@
+import { BookmarkIcon, PlayIcon } from '@/components/icons';
 import { MovieDescriptionModal } from '@/components/movie/MovieDescriptionModal';
 import { SimilarTrailerCard } from '@/components/movie/SimilarTrailerCard';
 import { fetchSimilarTrailers } from '@/src/api/movies';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
+import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import type { Movie, MovieDescriptionLocale } from '@/src/types/movie';
 import { extractYoutubeVideoId } from '@/src/utils/youtubeEmbed';
+import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -30,6 +33,7 @@ import YoutubePlayer, { PLAYER_STATES } from 'react-native-youtube-iframe';
 
 const OPEN_MS = 320;
 const CLOSE_MS = 240;
+const SAVE_ACTIVE = '#1E4FD6';
 
 type TrailerModalProps = {
   visible: boolean;
@@ -64,15 +68,14 @@ export function TrailerModal({
   const { colors } = useTheme();
   const language = useLanguageStore((s) => s.language);
   const lang = language === 'en' ? 'uz' : language;
+  const toggleSave = useWishlistStore((s) => s.toggle);
+  const savedIds = useWishlistStore((s) => s.movieIds);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
   const bottomPad = Math.max(insets.bottom, 16);
   const videoH = Math.round((width - 32) * (9 / 16));
-  const sheetH = Math.min(
-    Math.max(height * 0.92, videoH + 320 + bottomPad),
-    height - insets.top - 4
-  );
+  const sheetH = height;
 
   const progress = useSharedValue(0);
   const dragY = useSharedValue(0);
@@ -81,6 +84,7 @@ export function TrailerModal({
   const [playing, setPlaying] = useState(false);
   const [ready, setReady] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
   const [similar, setSimilar] = useState<Movie[]>([]);
   const [similarLoading, setSimilarLoading] = useState(false);
   const [activeId, setActiveId] = useState<number | null>(movieId ?? null);
@@ -90,6 +94,8 @@ export function TrailerModal({
     useState<MovieDescriptionLocale | null>(description);
   const [activeDurationLabel, setActiveDurationLabel] = useState(durationLabel);
   const skipCloseAnim = useRef(false);
+
+  const isSaved = activeId != null && savedIds.includes(activeId);
 
   const videoId = useMemo(
     () => extractYoutubeVideoId(activeTrailerUrl),
@@ -241,6 +247,23 @@ export function TrailerModal({
     setDescOpen(true);
   };
 
+  const onWatch = () => {
+    if (activeId == null) return;
+    setPlaying(false);
+    onClose();
+    router.replace(`/movie/${activeId}`);
+  };
+
+  const onToggleSave = async () => {
+    if (activeId == null || saveBusy) return;
+    setSaveBusy(true);
+    try {
+      await toggleSave(activeId);
+    } finally {
+      setSaveBusy(false);
+    }
+  };
+
   const selectSimilar = (movie: Movie) => {
     const nextDesc = movie.description?.[lang] ?? movie.description?.uz ?? null;
     setActiveId(movie.id);
@@ -372,6 +395,38 @@ export function TrailerModal({
                 </Pressable>
               </View>
             ) : null}
+
+            <View style={styles.actionRow}>
+              <Pressable
+                style={[styles.actionBtn, { backgroundColor: colors.accentBright }]}
+                onPress={onWatch}
+                disabled={activeId == null}
+              >
+                <PlayIcon size={16} color="#FFFFFF" />
+                <Text style={styles.actionBtnTextPrimary}>{t('movie.watch')}</Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.actionBtn,
+                  {
+                    backgroundColor: colors.panelSoft,
+                    borderColor: colors.borderSoft,
+                    borderWidth: 1,
+                  },
+                ]}
+                onPress={onToggleSave}
+                disabled={activeId == null || saveBusy}
+              >
+                <BookmarkIcon
+                  size={16}
+                  color={isSaved ? SAVE_ACTIVE : colors.icon}
+                  filled={isSaved}
+                />
+                <Text style={[styles.actionBtnText, { color: colors.text }]}>
+                  {t('movie.save')}
+                </Text>
+              </Pressable>
+            </View>
           </View>
 
           {similarLoading || similar.length > 0 ? (
@@ -441,18 +496,41 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    fontSize: 17,
+    fontSize: 20,
     fontWeight: '700',
   },
   descBlock: {
     gap: 4,
   },
   descText: {
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 15,
+    lineHeight: 21,
     fontWeight: '400',
   },
   moreInfo: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  actionBtnTextPrimary: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  actionBtnText: {
     fontSize: 13,
     fontWeight: '700',
   },
@@ -461,7 +539,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   similarTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     paddingHorizontal: 4,
   },
