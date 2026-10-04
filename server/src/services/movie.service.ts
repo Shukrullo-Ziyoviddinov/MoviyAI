@@ -16,7 +16,11 @@ export async function upsertMovies(movies: Record<string, unknown>[]) {
       { id },
       {
         $set: movie,
-        $unset: { movieDetailPoster: 1 },
+        $unset: {
+          movieDetailPoster: 1,
+          trailersVideo: 1,
+          homeImgPosterRu: 1,
+        },
       },
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     ).lean();

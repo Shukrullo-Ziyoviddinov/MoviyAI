@@ -37,7 +37,7 @@ const movieSchema = new Schema(
       ru: { type: descriptionLocaleSchema, required: true },
     },
     trailers: { type: String, default: '' },
-    watchUrl: { type: String, required: true },
+    watchUrl: { type: String, default: '' },
     typeCategory: { type: [String], default: [] },
     filterCountry: { type: String, default: '' },
     filterGenre: { type: [String], default: [] },

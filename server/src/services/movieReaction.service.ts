@@ -22,7 +22,7 @@ export async function toggleMovieReaction(
   movieId: number,
   nextType: ReactionType
 ) {
-  const movie = await Movie.findOne({ id: movieId }).lean();
+  const movie = await Movie.collection.findOne({ id: movieId });
   if (!movie) {
     return null;
   }
@@ -57,11 +57,10 @@ export async function toggleMovieReaction(
   const like = toCountString(likeCount);
   const dislike = toCountString(dislikeCount);
 
-  await Movie.updateOne(
+  await Movie.collection.updateOne(
     { id: movieId },
     {
-      $set: { like, dislike },
-      $unset: { movieDetailPoster: 1 },
+      $set: { like, dislike, updatedAt: new Date() },
     }
   );
 
