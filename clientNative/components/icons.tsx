@@ -473,3 +473,45 @@ export function InfoIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
     </Svg>
   );
 }
+
+export function CalendarIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke={color} strokeWidth="2" />
+      <Path d="M3.5 10H20.5" stroke={color} strokeWidth="2" />
+      <Path d="M8 3.5V7" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <Path d="M16 3.5V7" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function ClockIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="8.5" stroke={color} strokeWidth="2" />
+      <Path
+        d="M12 7.5V12L15 14.5"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function AgeRatingIcon({ size = 20, color = '#E5E7EB' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="4" y="4" width="16" height="16" rx="3" stroke={color} strokeWidth="2" />
+      <Path
+        d="M9 15.5V10.2C9 9.4 9.6 8.8 10.4 8.8H11.8C13.1 8.8 14.1 9.8 14.1 11.1C14.1 12.4 13.1 13.4 11.8 13.4H9"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path d="M9 15.5H15" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
