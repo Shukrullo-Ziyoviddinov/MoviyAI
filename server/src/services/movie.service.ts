@@ -14,7 +14,10 @@ export async function upsertMovies(movies: Record<string, unknown>[]) {
     const id = Number(movie.id);
     const doc = await Movie.findOneAndUpdate(
       { id },
-      { $set: movie },
+      {
+        $set: movie,
+        $unset: { movieDetailPoster: 1 },
+      },
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     ).lean();
     results.push(doc);

@@ -33,13 +33,7 @@ const movieSchema = new Schema(
     id: { type: Number, required: true, unique: true, index: true },
     categoryName: { type: String, required: true, index: true },
     title: { type: localizedPairSchema, required: true },
-    homeImgPoster: { type: localizedPairSchema, required: true },
-    movieDetailPoster: {
-      img: {
-        type: { type: String, enum: ['image', 'video'], required: true },
-        src: { type: String, required: true },
-      },
-    },
+    homeImgPoster: { type: String, required: true },
     ratingImdb: { type: Number, default: 0 },
     ratingKinopoisk: { type: Number, default: 0 },
     genre: {

@@ -5,6 +5,7 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import type { AppLanguage } from '@/src/stores/useLanguageStore';
 import type { Movie } from '@/src/types/movie';
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -24,8 +25,7 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
   const [busy, setBusy] = useState(false);
   const lang = language === 'en' ? 'uz' : language;
   const title = movie.title[lang] ?? movie.title.uz;
-  const posterPath = movie.homeImgPoster[lang] ?? movie.homeImgPoster.uz;
-  const poster = resolveMoviePoster(posterPath);
+  const poster = resolveMoviePoster(movie.homeImgPoster);
   const posterH = Math.round(width * 1.3);
 
   const onToggleSave = async () => {
@@ -41,7 +41,10 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
   return (
     <Pressable
       style={[styles.card, { width }]}
-      onPress={() => onPress?.(movie)}
+      onPress={() => {
+        if (onPress) onPress(movie);
+        else router.push(`/movie/${movie.id}`);
+      }}
     >
       <View
         style={[

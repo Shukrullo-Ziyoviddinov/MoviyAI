@@ -16,13 +16,7 @@ export type Movie = {
   id: number;
   categoryName: string;
   title: LocalizedPair;
-  homeImgPoster: LocalizedPair;
-  movieDetailPoster: {
-    img: {
-      type: 'image' | 'video';
-      src: string;
-    };
-  };
+  homeImgPoster: string;
   ratingImdb: number;
   ratingKinopoisk: number;
   genre: {

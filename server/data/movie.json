@@ -6,16 +6,7 @@
       "uz": "Muzzle 2: Bo‘rilar shahri",
       "ru": "Muzzle 2: Город волков"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie1.jpg",
-      "ru": "/img/movie1.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie1.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie1.jpg",
     "ratingImdb": 6.2,
     "ratingKinopoisk": 6,
     "genre": {
@@ -90,16 +81,7 @@
       "uz": "Little Hearts",
       "ru": "Little Hearts"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie2.jpg",
-      "ru": "/img/movie2.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie2.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie2.jpg",
     "ratingImdb": 6.8,
     "ratingKinopoisk": 6.5,
     "genre": {
@@ -171,16 +153,7 @@
       "uz": "GOAT",
       "ru": "GOAT"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie4.jpg",
-      "ru": "/img/movie4.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie4.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie4.jpg",
     "ratingImdb": 7.1,
     "ratingKinopoisk": 7,
     "genre": {
@@ -255,16 +228,7 @@
       "uz": "Super Mario Galaxy",
       "ru": "Супер Марио Галактика"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie5.jpg",
-      "ru": "/img/movie5.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie5.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie5.jpg",
     "ratingImdb": 7.4,
     "ratingKinopoisk": 7.2,
     "genre": {
@@ -341,16 +305,7 @@
       "uz": "Send Help",
       "ru": "Send Help"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie8.jpg",
-      "ru": "/img/movie8.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie8.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie8.jpg",
     "ratingImdb": 6.9,
     "ratingKinopoisk": 6.7,
     "genre": {
@@ -422,16 +377,7 @@
       "uz": "Shelter",
       "ru": "Укрытие"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie9.jpg",
-      "ru": "/img/movie9.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie9.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie9.jpg",
     "ratingImdb": 6.6,
     "ratingKinopoisk": 6.4,
     "genre": {
@@ -503,16 +449,7 @@
       "uz": "Mercy",
       "ru": "Mercy"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie10.jpg",
-      "ru": "/img/movie10.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie10.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie10.jpg",
     "ratingImdb": 6.5,
     "ratingKinopoisk": 6.3,
     "genre": {
@@ -587,16 +524,7 @@
       "uz": "Mushuklar va Itlar",
       "ru": "Кошки против собак"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie14.jpg",
-      "ru": "/img/movie14.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie14.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie14.jpg",
     "ratingImdb": 5.1,
     "ratingKinopoisk": 5.9,
     "genre": {
@@ -671,16 +599,7 @@
       "uz": "31",
       "ru": "31"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie17.jpg",
-      "ru": "/img/movie17.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie17.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie17.jpg",
     "ratingImdb": 5.1,
     "ratingKinopoisk": 5,
     "genre": {
@@ -752,16 +671,7 @@
       "uz": "55",
       "ru": "55"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie18.jpg",
-      "ru": "/img/movie18.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie18.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie18.jpg",
     "ratingImdb": 6.4,
     "ratingKinopoisk": 6.2,
     "genre": {
@@ -831,16 +741,7 @@
       "uz": "John Wick 4",
       "ru": "Джон Уик 4"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie1.jpg",
-      "ru": "/img/movie1.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie1.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie1.jpg",
     "ratingImdb": 7.7,
     "ratingKinopoisk": 7.5,
     "genre": {
@@ -918,16 +819,7 @@
       "uz": "Extraction 2",
       "ru": "Эвакуация 2"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie9.jpg",
-      "ru": "/img/movie9.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie9.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie9.jpg",
     "ratingImdb": 7,
     "ratingKinopoisk": 6.8,
     "genre": {
@@ -999,16 +891,7 @@
       "uz": "The Beekeeper",
       "ru": "Пчеловод"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie10.jpg",
-      "ru": "/img/movie10.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie10.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie10.jpg",
     "ratingImdb": 6.4,
     "ratingKinopoisk": 6.3,
     "genre": {
@@ -1080,16 +963,7 @@
       "uz": "Dune: Part Two",
       "ru": "Дюна: Часть вторая"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie5.jpg",
-      "ru": "/img/movie5.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie5.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie5.jpg",
     "ratingImdb": 8.5,
     "ratingKinopoisk": 8.2,
     "genre": {
@@ -1164,16 +1038,7 @@
       "uz": "Deadpool & Wolverine",
       "ru": "Дэдпул и Росомаха"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie4.jpg",
-      "ru": "/img/movie4.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie4.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie4.jpg",
     "ratingImdb": 7.8,
     "ratingKinopoisk": 7.6,
     "genre": {
@@ -1248,16 +1113,7 @@
       "uz": "Oppenheimer",
       "ru": "Оппенгеймер"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie18.jpg",
-      "ru": "/img/movie18.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie18.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie18.jpg",
     "ratingImdb": 8.3,
     "ratingKinopoisk": 8.1,
     "genre": {
@@ -1332,16 +1188,7 @@
       "uz": "Smile 2",
       "ru": "Улыбка 2"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie17.jpg",
-      "ru": "/img/movie17.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie17.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie17.jpg",
     "ratingImdb": 6.7,
     "ratingKinopoisk": 6.5,
     "genre": {
@@ -1416,16 +1263,7 @@
       "uz": "Anyone But You",
       "ru": "Кто угодно, кроме тебя"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie2.jpg",
-      "ru": "/img/movie2.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie2.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie2.jpg",
     "ratingImdb": 6.1,
     "ratingKinopoisk": 6,
     "genre": {
@@ -1497,16 +1335,7 @@
       "uz": "Inside Out 2",
       "ru": "Головоломка 2"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie14.jpg",
-      "ru": "/img/movie14.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie14.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie14.jpg",
     "ratingImdb": 7.6,
     "ratingKinopoisk": 7.5,
     "genre": {
@@ -1581,16 +1410,7 @@
       "uz": "Longlegs",
       "ru": "Лонглегс"
     },
-    "homeImgPoster": {
-      "uz": "/img/movie8.jpg",
-      "ru": "/img/movie8.jpg"
-    },
-    "movieDetailPoster": {
-      "img": {
-        "type": "image",
-        "src": "/img/movie8.jpg"
-      }
-    },
+    "homeImgPoster": "/img/movie8.jpg",
     "ratingImdb": 6.6,
     "ratingKinopoisk": 6.4,
     "genre": {

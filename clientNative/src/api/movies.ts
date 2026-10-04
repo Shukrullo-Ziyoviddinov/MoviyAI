@@ -14,3 +14,11 @@ export async function fetchMovies(): Promise<Movie[]> {
   }
   return data.data;
 }
+
+export async function fetchMovieById(id: number): Promise<Movie> {
+  const { data } = await api.get<ApiResponse<Movie>>(`/api/movies/${id}`);
+  if (!data.ok || !data.data) {
+    throw new Error(data.error || 'Movie failed to load');
+  }
+  return data.data;
+}
