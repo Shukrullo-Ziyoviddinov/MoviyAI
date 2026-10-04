@@ -49,6 +49,7 @@
   "movie": {
     "watch": "Watch",
     "trailer": "Trailer",
+    "trailerUnavailable": "Trailer unavailable",
     "aboutTitle": "About the movie",
     "readMore": "Read more",
     "year": "Year",

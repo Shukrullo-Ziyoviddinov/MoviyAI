@@ -14,6 +14,7 @@ import {
 } from '@/components/icons';
 import { HorizontalScroll } from '@/components/common/HorizontalScroll';
 import { MovieDescriptionModal } from '@/components/movie/MovieDescriptionModal';
+import { TrailerModal } from '@/components/movie/TrailerModal';
 import { fetchMovieById, toggleMovieReaction } from '@/src/api/movies';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -97,6 +98,7 @@ export default function MovieDetailScreen() {
   const [busy, setBusy] = useState(false);
   const [reactionBusy, setReactionBusy] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
+  const [trailerOpen, setTrailerOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -367,7 +369,7 @@ export default function MovieDetailScreen() {
                     borderWidth: 1,
                   },
                 ]}
-                onPress={() => openExternalUrl(movie.trailers)}
+                onPress={() => setTrailerOpen(true)}
               >
                 <VideoIcon size={16} color={colors.icon} />
                 <Text style={[styles.actionBtnText, { color: colors.text }]}>
@@ -475,9 +477,6 @@ export default function MovieDetailScreen() {
 
             {description?.text ? (
               <View style={styles.aboutSection}>
-                <Text style={[styles.aboutTitle, { color: colors.text }]}>
-                  {t('movie.aboutTitle')}
-                </Text>
                 <View
                   style={[
                     styles.aboutCard,
@@ -487,6 +486,9 @@ export default function MovieDetailScreen() {
                     },
                   ]}
                 >
+                  <Text style={[styles.aboutTitle, { color: colors.text }]}>
+                    {t('movie.aboutTitle')}
+                  </Text>
                   <Text
                     style={[styles.aboutText, { color: colors.text }]}
                     numberOfLines={4}
@@ -510,6 +512,12 @@ export default function MovieDetailScreen() {
         onClose={() => setDescOpen(false)}
         description={description}
         durationLabel={durationLabel}
+      />
+
+      <TrailerModal
+        visible={trailerOpen}
+        onClose={() => setTrailerOpen(false)}
+        trailerUrl={movie?.trailers}
       />
 
       <View
@@ -671,11 +679,10 @@ const styles = StyleSheet.create({
   },
   aboutSection: {
     paddingHorizontal: 16,
-    gap: 10,
     marginTop: 4,
   },
   aboutTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
   },
   aboutCard: {

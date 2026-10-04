@@ -49,6 +49,7 @@
   "movie": {
     "watch": "Tomosha",
     "trailer": "Triller",
+    "trailerUnavailable": "Triller mavjud emas",
     "aboutTitle": "Film haqida",
     "readMore": "Ko'proq o'qish",
     "year": "Yil",

@@ -49,6 +49,7 @@
   "movie": {
     "watch": "Смотреть",
     "trailer": "Трейлер",
+    "trailerUnavailable": "Трейлер недоступен",
     "aboutTitle": "О фильме",
     "readMore": "Читать далее",
     "year": "Год",
