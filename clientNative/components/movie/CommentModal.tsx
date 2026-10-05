@@ -7,7 +7,9 @@ import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   BackHandler,
-  KeyboardAvoidingView,
+  Dimensions,
+  Keyboard,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -17,7 +19,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   runOnJS,
@@ -29,6 +31,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const OPEN_MS = 320;
 const CLOSE_MS = 240;
+const SNAP_MS = 280;
+const BOTTOM_EXTRA = 18;
+/** Extra gap so input clears keyboard fully. */
+const KEYBOARD_EXTRA = 24;
+
+/** Open (no keyboard). */
+const OPEN_RATIO = 0.58;
+/** Keyboard open — leaves a gap at the top. */
+const KEYBOARD_RATIO = 0.85;
 
 type CommentModalProps = {
   visible: boolean;
@@ -54,6 +65,10 @@ function userLabel(userId: string) {
   return tail ? `User ${tail}` : 'User';
 }
 
+function getScreenHeight() {
+  return Dimensions.get('screen').height;
+}
+
 export function CommentModal({
   visible,
   onClose,
@@ -63,34 +78,61 @@ export function CommentModal({
 }: CommentModalProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { height } = useWindowDimensions();
+  const { height: windowH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
 
-  const bottomPad = Math.max(insets.bottom, 12);
-  const sheetH = Math.min(height * 0.86, height - insets.top - 24);
+  const safeBottom = Math.max(insets.bottom + BOTTOM_EXTRA, 28);
+  // True device screen — covers status bar / cutout gap that window height misses.
+  const screenH = Math.max(windowH, getScreenHeight());
+
+  const openH = Math.round(windowH * OPEN_RATIO);
+  const keyboardHSheet = Math.round(windowH * KEYBOARD_RATIO);
+  const fullH = screenH;
+
   const progress = useSharedValue(0);
+  const expanded = useSharedValue(0);
   const dragY = useSharedValue(0);
-  const sheetHeightSV = useSharedValue(sheetH);
+  const sheetH = useSharedValue(openH);
+  const collapsedHSV = useSharedValue(openH);
+  const fullHSV = useSharedValue(fullH);
+  const composerPadSV = useSharedValue(safeBottom);
+
   const [mounted, setMounted] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const skipCloseAnim = useRef(false);
+  const keyboardClosing = useRef(false);
+  const keyboardOpening = useRef(false);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [keyboardH, setKeyboardH] = useState(0);
+
+  const collapsedH = keyboardOpen ? keyboardHSheet : openH;
 
   useEffect(() => {
-    sheetHeightSV.value = sheetH;
-  }, [sheetH, sheetHeightSV]);
+    collapsedHSV.value = collapsedH;
+    fullHSV.value = fullH;
+  }, [collapsedH, fullH, collapsedHSV, fullHSV]);
 
   useEffect(() => {
     if (visible) {
       skipCloseAnim.current = false;
+      keyboardClosing.current = false;
+      keyboardOpening.current = false;
       setMounted(true);
+      setIsExpanded(false);
+      setKeyboardOpen(false);
+      setKeyboardH(0);
+      composerPadSV.value = safeBottom;
+      expanded.value = 0;
       dragY.value = 0;
+      sheetH.value = openH;
       progress.value = withTiming(1, {
         duration: OPEN_MS,
         easing: Easing.out(Easing.cubic),
       });
-      const timer = setTimeout(() => inputRef.current?.focus(), 360);
+      const timer = setTimeout(() => inputRef.current?.focus(), 450);
       return () => clearTimeout(timer);
     }
 
@@ -99,28 +141,119 @@ export function CommentModal({
       return;
     }
 
-    const current = (1 - progress.value) * sheetHeightSV.value + dragY.value;
+    const current = (1 - progress.value) * sheetH.value + dragY.value;
     progress.value = 1;
     dragY.value = current;
     dragY.value = withTiming(
-      sheetHeightSV.value,
+      sheetH.value,
       { duration: CLOSE_MS, easing: Easing.out(Easing.cubic) },
       (finished) => {
         if (finished) {
           progress.value = 0;
           dragY.value = 0;
+          expanded.value = 0;
           runOnJS(setMounted)(false);
+          runOnJS(setIsExpanded)(false);
         }
       }
     );
-  }, [visible, progress, dragY, mounted, sheetHeightSV]);
+  }, [visible, progress, dragY, mounted, sheetH, expanded, openH, composerPadSV, safeBottom]);
 
   useEffect(() => {
     if (!visible) {
       setText('');
       setSending(false);
+      setKeyboardOpen(false);
+      setKeyboardH(0);
+      composerPadSV.value = safeBottom;
+      setIsExpanded(false);
+      keyboardClosing.current = false;
+      keyboardOpening.current = false;
     }
-  }, [visible]);
+  }, [visible, composerPadSV, safeBottom]);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    const kbDuration = (e: { duration?: number }) => {
+      const d = e.duration;
+      if (typeof d === 'number' && d > 0) return d;
+      return Platform.OS === 'ios' ? 250 : 180;
+    };
+
+    const onShow = (e: {
+      duration?: number;
+      endCoordinates: { height: number; screenY: number };
+    }) => {
+      if (keyboardOpening.current) return;
+      keyboardOpening.current = true;
+      keyboardClosing.current = false;
+      const fromBottom = Math.max(
+        0,
+        screenH - e.endCoordinates.screenY,
+        e.endCoordinates.height
+      );
+      const duration = kbDuration(e);
+      setKeyboardOpen(true);
+      setKeyboardH(fromBottom);
+      composerPadSV.value = withTiming(fromBottom + KEYBOARD_EXTRA, {
+        duration,
+        easing: Easing.out(Easing.cubic),
+      });
+      collapsedHSV.value = keyboardHSheet;
+      if (expanded.value < 0.5) {
+        sheetH.value = withTiming(keyboardHSheet, {
+          duration,
+          easing: Easing.out(Easing.cubic),
+        });
+      }
+    };
+
+    const onHide = (e: { duration?: number }) => {
+      if (keyboardClosing.current) return;
+      keyboardClosing.current = true;
+      keyboardOpening.current = false;
+      const duration = kbDuration(e);
+      setKeyboardOpen(false);
+      setKeyboardH(0);
+      // Fall together with the keyboard (same duration).
+      composerPadSV.value = withTiming(safeBottom, {
+        duration,
+        easing: Easing.out(Easing.cubic),
+      });
+      collapsedHSV.value = openH;
+      if (expanded.value < 0.5) {
+        sheetH.value = withTiming(openH, {
+          duration,
+          easing: Easing.out(Easing.cubic),
+        });
+      }
+    };
+
+    const showSubs = [
+      Keyboard.addListener('keyboardWillShow', onShow),
+      Keyboard.addListener('keyboardDidShow', onShow),
+    ];
+    const hideSubs = [
+      Keyboard.addListener('keyboardWillHide', onHide),
+      Keyboard.addListener('keyboardDidHide', onHide),
+    ];
+
+    return () => {
+      showSubs.forEach((s) => s.remove());
+      hideSubs.forEach((s) => s.remove());
+    };
+  }, [
+    visible,
+    screenH,
+    keyboardHSheet,
+    openH,
+    safeBottom,
+    composerPadSV,
+    collapsedHSV,
+    sheetH,
+    expanded,
+  ]);
 
   useEffect(() => {
     if (!visible) return;
@@ -134,20 +267,56 @@ export function CommentModal({
   const finishClose = () => {
     progress.value = 0;
     dragY.value = 0;
+    expanded.value = 0;
     skipCloseAnim.current = true;
     onClose();
     setMounted(false);
+    setIsExpanded(false);
+  };
+
+  const snapToCollapsed = () => {
+    'worklet';
+    expanded.value = withTiming(0, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    sheetH.value = withTiming(collapsedHSV.value, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    dragY.value = withTiming(0, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    runOnJS(setIsExpanded)(false);
+  };
+
+  const snapToFull = () => {
+    'worklet';
+    expanded.value = withTiming(1, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    sheetH.value = withTiming(fullHSV.value, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    dragY.value = withTiming(0, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    runOnJS(setIsExpanded)(true);
   };
 
   const snapClose = () => {
     'worklet';
-    const remaining = Math.max(0, sheetHeightSV.value - dragY.value);
+    const remaining = Math.max(0, sheetH.value - dragY.value);
     const duration = Math.max(
       140,
-      Math.min(CLOSE_MS, (remaining / sheetHeightSV.value) * CLOSE_MS)
+      Math.min(CLOSE_MS, (remaining / Math.max(sheetH.value, 1)) * CLOSE_MS)
     );
     dragY.value = withTiming(
-      sheetHeightSV.value,
+      sheetH.value,
       { duration, easing: Easing.out(Easing.cubic) },
       (finished) => {
         if (finished) runOnJS(finishClose)();
@@ -156,36 +325,79 @@ export function CommentModal({
   };
 
   const pan = Gesture.Pan()
-    .activeOffsetY(12)
+    .activeOffsetY([-8, 8])
     .failOffsetX([-24, 24])
     .onUpdate((e) => {
-      dragY.value = Math.max(0, e.translationY);
+      const isFull = expanded.value > 0.5;
+      const collapsed = collapsedHSV.value;
+      const full = fullHSV.value;
+
+      if (isFull) {
+        sheetH.value = Math.min(
+          full,
+          Math.max(collapsed, full - Math.max(0, e.translationY))
+        );
+        dragY.value = 0;
+        return;
+      }
+
+      if (e.translationY < 0) {
+        const travel = full - collapsed;
+        sheetH.value = Math.min(
+          full,
+          collapsed + Math.min(travel, -e.translationY * 1.35)
+        );
+        dragY.value = 0;
+      } else {
+        sheetH.value = collapsed;
+        dragY.value = Math.max(0, e.translationY);
+      }
     })
     .onEnd((e) => {
-      const threshold = sheetHeightSV.value * 0.2;
-      if (dragY.value > threshold || e.velocityY > 800) {
-        snapClose();
-      } else {
-        dragY.value = withTiming(0, {
-          duration: 200,
-          easing: Easing.out(Easing.cubic),
-        });
+      const isFull = expanded.value > 0.5;
+      const collapsed = collapsedHSV.value;
+      const full = fullHSV.value;
+      const travel = Math.max(1, full - collapsed);
+
+      if (isFull) {
+        if (sheetH.value < collapsed + travel * 0.55 || e.velocityY > 700) {
+          snapToCollapsed();
+        } else {
+          snapToFull();
+        }
+        return;
       }
+
+      // Easier expand: small upward drag snaps to full screen.
+      if (sheetH.value > collapsed + travel * 0.18 || e.velocityY < -500) {
+        snapToFull();
+        return;
+      }
+      if (dragY.value > collapsed * 0.16 || e.velocityY > 800) {
+        snapClose();
+        return;
+      }
+      snapToCollapsed();
     });
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity:
       progress.value *
       0.55 *
-      Math.max(0, 1 - dragY.value / (sheetHeightSV.value + 1)),
+      Math.max(0, 1 - dragY.value / (sheetH.value + 1)),
   }));
 
   const sheetStyle = useAnimatedStyle(() => ({
+    height: sheetH.value,
     transform: [
       {
-        translateY: (1 - progress.value) * sheetHeightSV.value + dragY.value,
+        translateY: (1 - progress.value) * sheetH.value + dragY.value,
       },
     ],
+  }));
+
+  const composerAnimStyle = useAnimatedStyle(() => ({
+    paddingBottom: composerPadSV.value,
   }));
 
   const canSend = text.trim().length > 0 && !sending;
@@ -211,42 +423,49 @@ export function CommentModal({
   if (!mounted) return null;
 
   return (
-    <View style={[StyleSheet.absoluteFill, styles.root]} pointerEvents="box-none">
-      <Animated.View
-        style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}
-      >
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-      </Animated.View>
+    <Modal
+      visible={mounted}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      presentationStyle="overFullScreen"
+      onRequestClose={onClose}
+    >
+      <GestureHandlerRootView style={styles.root}>
+        <View style={[StyleSheet.absoluteFill, styles.root]} pointerEvents="box-none">
+          <Animated.View
+            style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}
+          >
+            <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+          </Animated.View>
 
-      <Animated.View
-        style={[
-          styles.sheet,
-          {
-            height: sheetH,
-            backgroundColor: colors.panel,
-            borderColor: colors.borderSoft,
-          },
-          sheetStyle,
-        ]}
-      >
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={0}
-        >
-          <GestureDetector gesture={pan}>
-            <View style={styles.dragZone}>
-              <View style={[styles.handle, { backgroundColor: colors.border }]} />
-              <Text style={[styles.title, { color: colors.text }]}>
-                {t('movie.commentsTitle')}
-              </Text>
-            </View>
-          </GestureDetector>
+          <Animated.View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: colors.panel,
+                borderColor: colors.borderSoft,
+                borderTopLeftRadius: isExpanded ? 0 : 22,
+                borderTopRightRadius: isExpanded ? 0 : 22,
+                borderTopWidth: isExpanded ? 0 : 1,
+              },
+              sheetStyle,
+            ]}
+          >
+            <GestureDetector gesture={pan}>
+              <Animated.View style={styles.dragZone}>
+                <View style={[styles.handle, { backgroundColor: colors.border }]} />
+                <Text style={[styles.title, { color: colors.text }]}>
+                  {t('movie.commentsTitle')}
+                </Text>
+              </Animated.View>
+            </GestureDetector>
 
           <ScrollView
             style={styles.flex}
             contentContainerStyle={styles.listContent}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
             showsVerticalScrollIndicator={false}
           >
             {comments.length === 0 ? (
@@ -271,7 +490,7 @@ export function CommentModal({
                       },
                     ]}
                   >
-                    <PersonIcon size={16} color={colors.icon} />
+                    <PersonIcon size={22} color={colors.icon} />
                   </View>
                   <View style={styles.commentBody}>
                     <View style={styles.commentMeta}>
@@ -291,14 +510,14 @@ export function CommentModal({
             )}
           </ScrollView>
 
-          <View
+          <Animated.View
             style={[
               styles.composer,
               {
-                paddingBottom: bottomPad,
                 borderTopColor: colors.borderSoft,
                 backgroundColor: colors.panel,
               },
+              composerAnimStyle,
             ]}
           >
             <TextInput
@@ -333,15 +552,17 @@ export function CommentModal({
                 <SendIcon size={18} color={colors.textOnAccent} />
               )}
             </Pressable>
-          </View>
-        </KeyboardAvoidingView>
-      </Animated.View>
-    </View>
+          </Animated.View>
+          </Animated.View>
+        </View>
+      </GestureHandlerRootView>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
+    flex: 1,
     zIndex: 120,
     justifyContent: 'flex-end',
   },
@@ -352,15 +573,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   sheet: {
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    borderTopWidth: 1,
     overflow: 'hidden',
+    width: '100%',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   dragZone: {
     paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 8,
+    paddingTop: 12,
+    paddingBottom: 14,
   },
   handle: {
     alignSelf: 'center',
@@ -372,6 +595,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: '700',
+    textAlign: 'center',
     paddingHorizontal: 4,
   },
   listContent: {
@@ -392,9 +616,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',

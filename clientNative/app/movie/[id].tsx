@@ -580,7 +580,7 @@ export default function MovieDetailScreen() {
                     { backgroundColor: colors.accent },
                   ]}
                 >
-                  <SendIcon size={18} color={colors.textOnAccent} />
+                  <SendIcon size={15} color={colors.textOnAccent} />
                 </View>
               </Pressable>
 
@@ -606,7 +606,7 @@ export default function MovieDetailScreen() {
                         },
                       ]}
                     >
-                      <PersonIcon size={14} color={colors.icon} />
+                      <PersonIcon size={22} color={colors.icon} />
                     </View>
                     <View style={styles.commentPreviewBody}>
                       <View style={styles.commentPreviewMeta}>
@@ -882,7 +882,7 @@ const styles = StyleSheet.create({
   commentInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   commentInputFake: {
     flex: 1,
@@ -897,9 +897,9 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   commentSendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -915,9 +915,9 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   commentAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
