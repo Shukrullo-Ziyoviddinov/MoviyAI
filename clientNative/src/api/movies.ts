@@ -1,5 +1,5 @@
 import { api } from '@/src/api/client';
-import type { Movie } from '@/src/types/movie';
+import type { Movie, MovieComment } from '@/src/types/movie';
 
 type ApiResponse<T> = {
   ok: boolean;
@@ -12,6 +12,16 @@ export type MovieReactionResult = {
   like: string;
   dislike: string;
   userReaction: 'like' | 'dislike' | null;
+};
+
+export type MovieCommentsResult = {
+  comments: MovieComment[];
+  commentCount: number;
+};
+
+export type CreateCommentResult = {
+  comment: MovieComment;
+  commentCount: number;
 };
 
 export async function fetchMovies(): Promise<Movie[]> {
@@ -54,6 +64,34 @@ export async function toggleMovieReaction(
   );
   if (!data.ok || !data.data) {
     throw new Error(data.error || 'Reaction failed');
+  }
+  return data.data;
+}
+
+export async function fetchMovieComments(
+  id: number,
+  limit = 50
+): Promise<MovieCommentsResult> {
+  const { data } = await api.get<ApiResponse<MovieCommentsResult>>(
+    `/api/movies/${id}/comments`,
+    { params: { limit } }
+  );
+  if (!data.ok || !data.data) {
+    throw new Error(data.error || 'Comments failed to load');
+  }
+  return data.data;
+}
+
+export async function createMovieComment(
+  id: number,
+  text: string
+): Promise<CreateCommentResult> {
+  const { data } = await api.post<ApiResponse<CreateCommentResult>>(
+    `/api/movies/${id}/comments`,
+    { text }
+  );
+  if (!data.ok || !data.data) {
+    throw new Error(data.error || 'Comment failed');
   }
   return data.data;
 }

@@ -58,7 +58,11 @@
     "year": "Год",
     "country": "Страна",
     "duration": "Длительность",
-    "director": "Режиссёр"
+    "director": "Режиссёр",
+    "commentsTitle": "Комментарии",
+    "commentPlaceholder": "Напишите комментарий...",
+    "moreComments": "Больше результатов",
+    "noComments": "Пока нет комментариев"
   },
   "profile": {
     "savedMovies": "Сохранённые фильмы",

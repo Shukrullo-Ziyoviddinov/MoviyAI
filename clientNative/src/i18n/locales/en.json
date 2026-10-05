@@ -58,7 +58,11 @@
     "year": "Year",
     "country": "Country",
     "duration": "Duration",
-    "director": "Director"
+    "director": "Director",
+    "commentsTitle": "Comments",
+    "commentPlaceholder": "Write a comment...",
+    "moreComments": "More results",
+    "noComments": "No comments yet"
   },
   "profile": {
     "savedMovies": "Saved movies",

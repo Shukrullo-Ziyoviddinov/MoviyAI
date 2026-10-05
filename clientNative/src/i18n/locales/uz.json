@@ -58,7 +58,11 @@
     "year": "Yil",
     "country": "Davlat",
     "duration": "Davomiylik",
-    "director": "Rejissyor"
+    "director": "Rejissyor",
+    "commentsTitle": "Koment",
+    "commentPlaceholder": "Koment yozing...",
+    "moreComments": "Ko'proq natija",
+    "noComments": "Hali koment yo'q"
   },
   "profile": {
     "savedMovies": "Saqlangan kinolar",

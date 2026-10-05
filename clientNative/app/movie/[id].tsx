@@ -8,18 +8,25 @@ import {
   DislikeIcon,
   GlobeIcon,
   LikeIcon,
+  PersonIcon,
   PlayIcon,
+  SendIcon,
   ShareIcon,
   VideoIcon,
 } from '@/components/icons';
 import { HorizontalScroll } from '@/components/common/HorizontalScroll';
+import { CommentModal } from '@/components/movie/CommentModal';
 import { MovieDescriptionModal } from '@/components/movie/MovieDescriptionModal';
 import { TrailerModal } from '@/components/movie/TrailerModal';
-import { fetchMovieById, toggleMovieReaction } from '@/src/api/movies';
+import {
+  fetchMovieById,
+  fetchMovieComments,
+  toggleMovieReaction,
+} from '@/src/api/movies';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
-import type { Movie } from '@/src/types/movie';
+import type { Movie, MovieComment } from '@/src/types/movie';
 import { resolveMoviePoster } from '@/src/utils/moviePosters';
 import {
   Oswald_700Bold,
@@ -41,6 +48,24 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const PREVIEW_COMMENTS = 5;
+
+function formatCommentTime(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString(undefined, {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function userLabel(userId: string) {
+  const tail = userId.replace(/^user_/, '').slice(-4);
+  return tail ? `User ${tail}` : 'User';
+}
 
 const SAVE_ACTIVE = '#1E4FD6';
 const LIKE_ACTIVE = '#22C55E';
@@ -99,6 +124,8 @@ export default function MovieDetailScreen() {
   const [reactionBusy, setReactionBusy] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [comments, setComments] = useState<MovieComment[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -109,16 +136,21 @@ export default function MovieDetailScreen() {
     }
 
     setLoading(true);
-    fetchMovieById(movieId)
-      .then((doc) => {
+    Promise.all([fetchMovieById(movieId), fetchMovieComments(movieId, 50)])
+      .then(([doc, commentsResult]) => {
         if (!alive) return;
-        setMovie(doc);
+        setMovie({
+          ...doc,
+          commentCount: commentsResult.commentCount,
+        });
+        setComments(commentsResult.comments);
         setError(null);
       })
       .catch((err: unknown) => {
         if (!alive) return;
         setError(err instanceof Error ? err.message : 'Load failed');
         setMovie(null);
+        setComments([]);
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -447,7 +479,7 @@ export default function MovieDetailScreen() {
                 </Text>
               </Pressable>
 
-              <View
+              <Pressable
                 style={[
                   styles.reactionItem,
                   {
@@ -455,12 +487,13 @@ export default function MovieDetailScreen() {
                     borderColor: colors.borderSoft,
                   },
                 ]}
+                onPress={() => setCommentsOpen(true)}
               >
                 <ChatBubbleIcon size={18} color={colors.icon} />
                 <Text style={[styles.reactionText, { color: colors.text }]}>
-                  0
+                  {movie.commentCount ?? comments.length}
                 </Text>
-              </View>
+              </Pressable>
 
               <View
                 style={[
@@ -504,6 +537,119 @@ export default function MovieDetailScreen() {
               </View>
             ) : null}
           </View>
+
+          <View style={styles.commentsSection}>
+            <View
+              style={[
+                styles.commentsCard,
+                {
+                  backgroundColor: colors.panelSoft,
+                  borderColor: colors.borderSoft,
+                },
+              ]}
+            >
+              <Text style={[styles.commentsTitle, { color: colors.text }]}>
+                {t('movie.commentsTitle')}
+              </Text>
+
+              <Pressable
+                style={styles.commentInputRow}
+                onPress={() => setCommentsOpen(true)}
+              >
+                <View
+                  style={[
+                    styles.commentInputFake,
+                    {
+                      backgroundColor: colors.panel,
+                      borderColor: colors.borderSoft,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.commentInputPlaceholder,
+                      { color: colors.textMuted },
+                    ]}
+                  >
+                    {t('movie.commentPlaceholder')}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.commentSendBtn,
+                    { backgroundColor: colors.accent },
+                  ]}
+                >
+                  <SendIcon size={18} color={colors.textOnAccent} />
+                </View>
+              </Pressable>
+
+              {comments.length === 0 ? (
+                <Text style={[styles.commentsEmpty, { color: colors.textMuted }]}>
+                  {t('movie.noComments')}
+                </Text>
+              ) : (
+                comments.slice(0, PREVIEW_COMMENTS).map((item) => (
+                  <View
+                    key={item.id}
+                    style={[
+                      styles.commentPreviewRow,
+                      { borderTopColor: colors.borderSoft },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.commentAvatar,
+                        {
+                          backgroundColor: colors.panel,
+                          borderColor: colors.borderSoft,
+                        },
+                      ]}
+                    >
+                      <PersonIcon size={14} color={colors.icon} />
+                    </View>
+                    <View style={styles.commentPreviewBody}>
+                      <View style={styles.commentPreviewMeta}>
+                        <Text
+                          style={[styles.commentUser, { color: colors.text }]}
+                        >
+                          {userLabel(item.userId)}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.commentTime,
+                            { color: colors.textMuted },
+                          ]}
+                        >
+                          {formatCommentTime(item.createdAt)}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[styles.commentPreviewText, { color: colors.text }]}
+                        numberOfLines={3}
+                      >
+                        {item.text}
+                      </Text>
+                    </View>
+                  </View>
+                ))
+              )}
+
+              {comments.length > PREVIEW_COMMENTS ? (
+                <Pressable
+                  onPress={() => setCommentsOpen(true)}
+                  hitSlop={6}
+                  style={styles.moreCommentsBtn}
+                >
+                  <Text
+                    style={[styles.moreComments, { color: colors.accentBright }]}
+                  >
+                    {t('movie.moreComments')}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
         </ScrollView>
       )}
 
@@ -519,9 +665,21 @@ export default function MovieDetailScreen() {
         onClose={() => setTrailerOpen(false)}
         movieId={movie?.id}
         trailerUrl={movie?.trailers}
+        watchUrl={movie?.watchUrl}
         movieTitle={title}
         description={description}
         durationLabel={durationLabel}
+      />
+
+      <CommentModal
+        visible={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        movieId={movieId}
+        comments={comments}
+        onCommentsChange={(nextComments, commentCount) => {
+          setComments(nextComments);
+          setMovie((prev) => (prev ? { ...prev, commentCount } : prev));
+        }}
       />
 
       <View
@@ -702,6 +860,96 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   readMore: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  commentsSection: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 24,
+  },
+  commentsCard: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  commentsTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  commentInputFake: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+  },
+  commentInputPlaceholder: {
+    fontSize: 15,
+    fontWeight: '400',
+  },
+  commentSendBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  commentsEmpty: {
+    fontSize: 13,
+    fontWeight: '500',
+    paddingVertical: 4,
+  },
+  commentPreviewRow: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingTop: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  commentAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  commentPreviewBody: {
+    flex: 1,
+    gap: 3,
+  },
+  commentPreviewMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  commentUser: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  commentTime: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  commentPreviewText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '400',
+  },
+  moreCommentsBtn: {
+    paddingTop: 2,
+  },
+  moreComments: {
     fontSize: 14,
     fontWeight: '700',
   },

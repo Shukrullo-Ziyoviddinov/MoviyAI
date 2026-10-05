@@ -7,12 +7,12 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import type { Movie, MovieDescriptionLocale } from '@/src/types/movie';
 import { extractYoutubeVideoId } from '@/src/utils/youtubeEmbed';
-import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   BackHandler,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -40,6 +40,7 @@ type TrailerModalProps = {
   onClose: () => void;
   movieId?: number | null;
   trailerUrl?: string | null;
+  watchUrl?: string | null;
   movieTitle?: string;
   description?: MovieDescriptionLocale | null;
   durationLabel?: string;
@@ -60,6 +61,7 @@ export function TrailerModal({
   onClose,
   movieId,
   trailerUrl,
+  watchUrl,
   movieTitle,
   description = null,
   durationLabel = '',
@@ -89,6 +91,7 @@ export function TrailerModal({
   const [similarLoading, setSimilarLoading] = useState(false);
   const [activeId, setActiveId] = useState<number | null>(movieId ?? null);
   const [activeTrailerUrl, setActiveTrailerUrl] = useState(trailerUrl ?? '');
+  const [activeWatchUrl, setActiveWatchUrl] = useState(watchUrl ?? '');
   const [activeTitle, setActiveTitle] = useState(movieTitle ?? '');
   const [activeDescription, setActiveDescription] =
     useState<MovieDescriptionLocale | null>(description);
@@ -110,10 +113,11 @@ export function TrailerModal({
     if (!visible) return;
     setActiveId(movieId ?? null);
     setActiveTrailerUrl(trailerUrl ?? '');
+    setActiveWatchUrl(watchUrl ?? '');
     setActiveTitle(movieTitle ?? '');
     setActiveDescription(description);
     setActiveDurationLabel(durationLabel);
-  }, [visible, movieId, trailerUrl, movieTitle, description, durationLabel]);
+  }, [visible, movieId, trailerUrl, watchUrl, movieTitle, description, durationLabel]);
 
   useEffect(() => {
     if (!visible || !activeId) {
@@ -247,11 +251,15 @@ export function TrailerModal({
     setDescOpen(true);
   };
 
-  const onWatch = () => {
-    if (activeId == null) return;
+  const onWatch = async () => {
+    const target = activeWatchUrl?.trim();
+    if (!target) return;
     setPlaying(false);
-    onClose();
-    router.replace(`/movie/${activeId}`);
+    try {
+      await Linking.openURL(target);
+    } catch {
+      // ignore invalid / unsupported urls
+    }
   };
 
   const onToggleSave = async () => {
@@ -268,6 +276,7 @@ export function TrailerModal({
     const nextDesc = movie.description?.[lang] ?? movie.description?.uz ?? null;
     setActiveId(movie.id);
     setActiveTrailerUrl(movie.trailers ?? '');
+    setActiveWatchUrl(movie.watchUrl ?? '');
     setActiveTitle(movie.title[lang] ?? movie.title.uz);
     setActiveDescription(nextDesc);
     setActiveDurationLabel(durationLabelFor(nextDesc, language));
@@ -400,7 +409,7 @@ export function TrailerModal({
               <Pressable
                 style={[styles.actionBtn, { backgroundColor: colors.accentBright }]}
                 onPress={onWatch}
-                disabled={activeId == null}
+                disabled={!activeWatchUrl?.trim()}
               >
                 <PlayIcon size={16} color="#FFFFFF" />
                 <Text style={styles.actionBtnTextPrimary}>{t('movie.watch')}</Text>

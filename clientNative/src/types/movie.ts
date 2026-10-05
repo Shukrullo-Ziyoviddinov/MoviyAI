@@ -34,6 +34,7 @@ export type Movie = {
   like: string;
   dislike: string;
   userReaction?: 'like' | 'dislike' | null;
+  commentCount?: number;
   specs: {
     duration: number;
     ageRating: string;
@@ -41,4 +42,12 @@ export type Movie = {
     countries: string[];
   };
   franchiseMovieIds: number[];
+};
+
+export type MovieComment = {
+  id: string;
+  movieId: number;
+  userId: string;
+  text: string;
+  createdAt: string;
 };
