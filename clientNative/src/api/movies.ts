@@ -62,6 +62,20 @@ export async function fetchSimilarTrailers(
   return data.data;
 }
 
+export async function fetchSimilarMovies(
+  id: number,
+  limit = 16
+): Promise<Movie[]> {
+  const { data } = await api.get<ApiResponse<Movie[]>>(
+    `/api/movies/${id}/similar-movies`,
+    { params: { limit } }
+  );
+  if (!data.ok || !data.data) {
+    throw new Error(data.error || 'Similar movies failed to load');
+  }
+  return data.data;
+}
+
 export async function toggleMovieReaction(
   id: number,
   type: 'like' | 'dislike'

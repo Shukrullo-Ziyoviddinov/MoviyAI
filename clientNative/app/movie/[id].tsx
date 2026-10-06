@@ -17,11 +17,13 @@ import {
 import { HorizontalScroll } from '@/components/common/HorizontalScroll';
 import { CommentModal } from '@/components/movie/CommentModal';
 import { MovieDescriptionModal } from '@/components/movie/MovieDescriptionModal';
+import { SimilarMovieCard } from '@/components/movie/SimilarMovieCard';
 import { TrailerModal } from '@/components/movie/TrailerModal';
 import {
   fetchCommentReplies,
   fetchMovieById,
   fetchMovieComments,
+  fetchSimilarMovies,
   toggleMovieReaction,
 } from '@/src/api/movies';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
@@ -134,6 +136,7 @@ export default function MovieDetailScreen() {
   const [comments, setComments] = useState<MovieComment[]>([]);
   const [replyToId, setReplyToId] = useState<string | null>(null);
   const [loadingMoreId, setLoadingMoreId] = useState<string | null>(null);
+  const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -144,14 +147,19 @@ export default function MovieDetailScreen() {
     }
 
     setLoading(true);
-    Promise.all([fetchMovieById(movieId), fetchMovieComments(movieId, 50)])
-      .then(([doc, commentsResult]) => {
+    Promise.all([
+      fetchMovieById(movieId),
+      fetchMovieComments(movieId, 50),
+      fetchSimilarMovies(movieId, 16).catch(() => [] as Movie[]),
+    ])
+      .then(([doc, commentsResult, similar]) => {
         if (!alive) return;
         setMovie({
           ...doc,
           commentCount: commentsResult.commentCount,
         });
         setComments(commentsResult.comments);
+        setSimilarMovies(similar);
         setError(null);
       })
       .catch((err: unknown) => {
@@ -159,6 +167,7 @@ export default function MovieDetailScreen() {
         setError(err instanceof Error ? err.message : 'Load failed');
         setMovie(null);
         setComments([]);
+        setSimilarMovies([]);
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -593,7 +602,12 @@ export default function MovieDetailScreen() {
                     <Pressable
                       key={actor.id}
                       style={styles.actorItem}
-                      onPress={() => router.push(`/actor/${actor.id}`)}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/actor/[id]',
+                          params: { id: String(actor.id) },
+                        })
+                      }
                     >
                       <View
                         style={[
@@ -861,6 +875,24 @@ export default function MovieDetailScreen() {
               ) : null}
             </View>
           </View>
+
+          {similarMovies.length > 0 ? (
+            <View style={styles.similarSection}>
+              <Text style={[styles.similarTitle, { color: colors.text }]}>
+                {t('movie.similarMovies')}
+              </Text>
+              <HorizontalScroll contentContainerStyle={styles.similarRow}>
+                {similarMovies.map((item) => (
+                  <SimilarMovieCard
+                    key={item.id}
+                    movie={item}
+                    language={language}
+                    width={Math.round(width * 0.36)}
+                  />
+                ))}
+              </HorizontalScroll>
+            </View>
+          ) : null}
         </ScrollView>
       )}
 
@@ -1120,7 +1152,21 @@ const styles = StyleSheet.create({
   commentsSection: {
     paddingHorizontal: 16,
     paddingTop: 10,
+    paddingBottom: 8,
+  },
+  similarSection: {
+    paddingTop: 8,
     paddingBottom: 24,
+    gap: 12,
+  },
+  similarTitle: {
+    paddingHorizontal: 16,
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  similarRow: {
+    paddingHorizontal: 16,
+    alignItems: 'flex-start',
   },
   commentsCard: {
     borderWidth: 1,
