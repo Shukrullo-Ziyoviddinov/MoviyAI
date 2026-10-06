@@ -68,6 +68,10 @@ function userLabel(userId: string) {
   return tail ? `User ${tail}` : 'User';
 }
 
+function mentionLabel(userId: string) {
+  return `@${userLabel(userId)}`;
+}
+
 function getScreenHeight() {
   return Dimensions.get('screen').height;
 }
@@ -578,21 +582,23 @@ export function CommentModal({
                           {formatCommentTime(item.createdAt)}
                         </Text>
                       </View>
-                      <Text style={[styles.commentText, { color: colors.text }]}>
-                        {item.text}
-                      </Text>
-
-                      <Pressable
-                        onPress={() => startReply(item)}
-                        hitSlop={6}
-                        style={styles.replyBtn}
-                      >
-                        <Text
-                          style={[styles.replyText, { color: colors.accentBright }]}
-                        >
-                          {t('movie.reply')}
+                      <View style={styles.commentTextBlock}>
+                        <Text style={[styles.commentText, { color: colors.text }]}>
+                          {item.text}
                         </Text>
-                      </Pressable>
+
+                        <Pressable
+                          onPress={() => startReply(item)}
+                          hitSlop={6}
+                          style={styles.replyBtn}
+                        >
+                          <Text
+                            style={[styles.replyText, { color: colors.accentBright }]}
+                          >
+                            {t('movie.reply')}
+                          </Text>
+                        </Pressable>
+                      </View>
 
                       {replies.length > 0 ? (
                         <View style={styles.repliesBlock}>
@@ -634,8 +640,36 @@ export function CommentModal({
                                     { color: colors.text },
                                   ]}
                                 >
-                                  {reply.text}
+                                  {reply.replyToUserId ? (
+                                    <>
+                                      <Text
+                                        style={{
+                                          color: colors.accentBright,
+                                          fontWeight: '700',
+                                        }}
+                                      >
+                                        {mentionLabel(reply.replyToUserId)}{' '}
+                                      </Text>
+                                      {reply.text}
+                                    </>
+                                  ) : (
+                                    reply.text
+                                  )}
                                 </Text>
+                                <Pressable
+                                  onPress={() => startReply(reply)}
+                                  hitSlop={6}
+                                  style={styles.replyBtn}
+                                >
+                                  <Text
+                                    style={[
+                                      styles.replyText,
+                                      { color: colors.accentBright },
+                                    ]}
+                                  >
+                                    {t('movie.reply')}
+                                  </Text>
+                                </Pressable>
                               </View>
                             </View>
                           ))}
@@ -829,6 +863,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: '400',
   },
+  commentTextBlock: {
+    gap: 2,
+    width: '100%',
+  },
   composer: {
     paddingHorizontal: 14,
     paddingTop: 10,
@@ -873,14 +911,14 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   replyBtn: {
-    alignSelf: 'center',
-    marginTop: 6,
-    paddingVertical: 2,
+    alignSelf: 'flex-start',
+    marginTop: 0,
+    paddingVertical: 0,
   },
   replyText: {
     fontSize: 13,
     fontWeight: '700',
-    textAlign: 'center',
+    textAlign: 'left',
   },
   repliesBlock: {
     marginTop: 10,

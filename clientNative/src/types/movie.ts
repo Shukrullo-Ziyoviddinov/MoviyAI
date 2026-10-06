@@ -51,6 +51,7 @@ export type MovieComment = {
   text: string;
   createdAt: string;
   parentId?: string | null;
+  replyToUserId?: string | null;
   replyCount?: number;
   replies?: MovieComment[];
 };

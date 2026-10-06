@@ -11,6 +11,7 @@ export type CommentDto = {
   text: string;
   createdAt: string;
   parentId: string | null;
+  replyToUserId: string | null;
   replyCount?: number;
   replies?: CommentDto[];
 };
@@ -21,6 +22,7 @@ function toDto(doc: {
   userId: string;
   text: string;
   parentId?: string | null;
+  replyToUserId?: string | null;
   createdAt?: Date;
 }): CommentDto {
   return {
@@ -29,6 +31,7 @@ function toDto(doc: {
     userId: doc.userId,
     text: doc.text,
     parentId: doc.parentId ?? null,
+    replyToUserId: doc.replyToUserId ?? null,
     createdAt: (doc.createdAt ?? new Date()).toISOString(),
   };
 }
@@ -114,6 +117,7 @@ export async function createComment(
   }
 
   let parentId: string | null = null;
+  let replyToUserId: string | null = null;
   const parentRaw = String(rawParentId ?? '').trim();
   if (parentRaw) {
     const parent = await MovieComment.findById(parentRaw).lean();
@@ -122,6 +126,8 @@ export async function createComment(
     }
     // Always attach to top-level thread root.
     parentId = parent.parentId ? parent.parentId : parent._id.toString();
+    // Mention the user of the comment being answered.
+    replyToUserId = parent.userId;
   }
 
   const doc = await MovieComment.create({
@@ -129,6 +135,7 @@ export async function createComment(
     movieId,
     text,
     parentId,
+    replyToUserId,
   });
   return toDto(doc);
 }

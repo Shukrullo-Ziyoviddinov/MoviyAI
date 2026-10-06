@@ -65,7 +65,7 @@
     "noComments": "No comments yet",
     "reply": "Reply",
     "moreReplies": "More",
-    "replyingTo": "Replying to {{user}}"
+    "replyingTo": "Reply: {{user}}"
   },
   "profile": {
     "savedMovies": "Saved movies",

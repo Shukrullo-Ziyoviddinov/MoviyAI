@@ -7,6 +7,8 @@ const movieCommentSchema = new Schema(
     text: { type: String, required: true, trim: true, maxlength: 500 },
     /** null = top-level comment; string = reply to that comment id */
     parentId: { type: String, default: null, index: true },
+    /** userId of the person being replied to (for @mention display) */
+    replyToUserId: { type: String, default: null },
   },
   {
     timestamps: true,

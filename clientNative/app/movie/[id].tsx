@@ -67,6 +67,10 @@ function userLabel(userId: string) {
   return tail ? `User ${tail}` : 'User';
 }
 
+function mentionLabel(userId: string) {
+  return `@${userLabel(userId)}`;
+}
+
 const SAVE_ACTIVE = '#1E4FD6';
 const LIKE_ACTIVE = '#22C55E';
 const DISLIKE_ACTIVE = '#EF4444';
@@ -628,32 +632,34 @@ export default function MovieDetailScreen() {
                             {formatCommentTime(item.createdAt)}
                           </Text>
                         </View>
-                        <Text
-                          style={[
-                            styles.commentPreviewText,
-                            { color: colors.text },
-                          ]}
-                          numberOfLines={3}
-                        >
-                          {item.text}
-                        </Text>
-                        <Pressable
-                          onPress={() => {
-                            setReplyToId(item.id);
-                            setCommentsOpen(true);
-                          }}
-                          hitSlop={6}
-                          style={styles.previewReplyBtn}
-                        >
+                        <View style={styles.previewTextBlock}>
                           <Text
                             style={[
-                              styles.previewReply,
-                              { color: colors.accentBright },
+                              styles.commentPreviewText,
+                              { color: colors.text },
                             ]}
+                            numberOfLines={3}
                           >
-                            {t('movie.reply')}
+                            {item.text}
                           </Text>
-                        </Pressable>
+                          <Pressable
+                            onPress={() => {
+                              setReplyToId(item.id);
+                              setCommentsOpen(true);
+                            }}
+                            hitSlop={6}
+                            style={styles.previewReplyBtn}
+                          >
+                            <Text
+                              style={[
+                                styles.previewReply,
+                                { color: colors.accentBright },
+                              ]}
+                            >
+                              {t('movie.reply')}
+                            </Text>
+                          </Pressable>
+                        </View>
 
                         {replies.length > 0 ? (
                           <View style={styles.previewReplies}>
@@ -674,7 +680,21 @@ export default function MovieDetailScreen() {
                                   ]}
                                   numberOfLines={2}
                                 >
-                                  {reply.text}
+                                  {reply.replyToUserId ? (
+                                    <>
+                                      <Text
+                                        style={{
+                                          color: colors.accentBright,
+                                          fontWeight: '700',
+                                        }}
+                                      >
+                                        {mentionLabel(reply.replyToUserId)}{' '}
+                                      </Text>
+                                      {reply.text}
+                                    </>
+                                  ) : (
+                                    reply.text
+                                  )}
                                 </Text>
                               </View>
                             ))}
@@ -1019,14 +1039,18 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: '400',
   },
+  previewTextBlock: {
+    gap: 2,
+    width: '100%',
+  },
   previewReplyBtn: {
-    alignSelf: 'center',
-    marginTop: 4,
+    alignSelf: 'flex-start',
+    marginTop: 0,
   },
   previewReply: {
     fontSize: 13,
     fontWeight: '700',
-    textAlign: 'center',
+    textAlign: 'left',
   },
   previewReplies: {
     marginTop: 8,
