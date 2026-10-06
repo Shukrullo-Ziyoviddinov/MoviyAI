@@ -704,37 +704,60 @@ export default function MovieDetailScreen() {
                           <View style={styles.previewReplies}>
                             {replies.map((reply) => (
                               <View key={reply.id} style={styles.previewReplyRow}>
-                                <Text
+                                <View
                                   style={[
-                                    styles.previewReplyUser,
-                                    { color: colors.text },
+                                    styles.previewReplyAvatar,
+                                    {
+                                      backgroundColor: colors.panel,
+                                      borderColor: colors.borderSoft,
+                                    },
                                   ]}
                                 >
-                                  {userLabel(reply.userId)}
-                                </Text>
-                                <Text
-                                  style={[
-                                    styles.previewReplyText,
-                                    { color: colors.text },
-                                  ]}
-                                  numberOfLines={2}
-                                >
-                                  {reply.replyToUserId ? (
-                                    <>
-                                      <Text
-                                        style={{
-                                          color: colors.accentBright,
-                                          fontWeight: '700',
-                                        }}
-                                      >
-                                        {mentionLabel(reply.replyToUserId)}{' '}
-                                      </Text>
-                                      {reply.text}
-                                    </>
-                                  ) : (
-                                    reply.text
-                                  )}
-                                </Text>
+                                  <PersonIcon size={22} color={colors.icon} />
+                                </View>
+                                <View style={styles.previewReplyBody}>
+                                  <View style={styles.previewReplyMeta}>
+                                    <Text
+                                      style={[
+                                        styles.previewReplyUser,
+                                        { color: colors.text },
+                                      ]}
+                                    >
+                                      {userLabel(reply.userId)}
+                                    </Text>
+                                    <Text
+                                      style={[
+                                        styles.previewReplyTime,
+                                        { color: colors.textMuted },
+                                      ]}
+                                    >
+                                      {formatCommentTime(reply.createdAt)}
+                                    </Text>
+                                  </View>
+                                  <Text
+                                    style={[
+                                      styles.previewReplyText,
+                                      { color: colors.text },
+                                    ]}
+                                    numberOfLines={2}
+                                  >
+                                    {reply.replyToUserId ? (
+                                      <>
+                                        <Text
+                                          style={{
+                                            color: colors.accentBright,
+                                            fontWeight: '700',
+                                          }}
+                                        >
+                                          {mentionLabel(reply.replyToUserId)}{' '}
+                                        </Text>
+                                        {reply.text}
+                                      </>
+                                    ) : (
+                                      reply.text
+                                    )}
+                                  </Text>
+                                </View>
                               </View>
                             ))}
                             {hasMore || canCollapse ? (
@@ -761,7 +784,7 @@ export default function MovieDetailScreen() {
                                     ]}
                                   >
                                     {hasMore
-                                      ? t('movie.moreReplies')
+                                      ? `${t('movie.moreReplies')} (${replyCount - replies.length})`
                                       : t('movie.lessReplies')}
                                   </Text>
                                 )}
@@ -784,7 +807,10 @@ export default function MovieDetailScreen() {
                   <Text
                     style={[styles.moreComments, { color: colors.accentBright }]}
                   >
-                    {t('movie.moreComments')}
+                    {`${t('movie.moreComments')} (${Math.max(
+                      0,
+                      (movie?.commentCount ?? comments.length) - PREVIEW_COMMENTS
+                    )})`}
                   </Text>
                 </Pressable>
               ) : null}
@@ -1112,11 +1138,36 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   previewReplyRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  previewReplyAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  previewReplyBody: {
+    flex: 1,
     gap: 2,
+  },
+  previewReplyMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
   },
   previewReplyUser: {
     fontSize: 12,
     fontWeight: '700',
+  },
+  previewReplyTime: {
+    fontSize: 11,
+    fontWeight: '500',
   },
   previewReplyText: {
     fontSize: 12,

@@ -624,7 +624,7 @@ export function CommentModal({
                                   },
                                 ]}
                               >
-                                <PersonIcon size={16} color={colors.icon} />
+                                <PersonIcon size={22} color={colors.icon} />
                               </View>
                               <View style={styles.replyBody}>
                                 <View style={styles.commentMeta}>
@@ -709,7 +709,7 @@ export function CommentModal({
                                   ]}
                                 >
                                   {hasMore
-                                    ? t('movie.moreReplies')
+                                    ? `${t('movie.moreReplies')} (${replyCount - replies.length})`
                                     : t('movie.lessReplies')}
                                 </Text>
                               )}
@@ -948,9 +948,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   replyAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -961,12 +961,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   replyUser: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
   },
   replyTextBody: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: '400',
   },
   moreRepliesBtn: {
