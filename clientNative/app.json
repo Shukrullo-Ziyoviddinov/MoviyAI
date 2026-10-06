@@ -55,8 +55,8 @@
     ],
     "extra": {
       "apiUrl": "https://moviyai.onrender.com",
-      "googleWebClientId": "",
-      "googleAndroidClientId": "",
+      "googleWebClientId": "513548633161-lo14vsek9h5j0nlrdomoq0536pepj0i9.apps.googleusercontent.com",
+      "googleAndroidClientId": "513548633161-esovmdcvb2lej3t9bl4tjo0v0vf4t9l6.apps.googleusercontent.com",
       "googleIosClientId": ""
     },
     "experiments": {

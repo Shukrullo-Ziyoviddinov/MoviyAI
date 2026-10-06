@@ -78,12 +78,13 @@
   },
   "auth": {
     "title": "Вход через Google",
-    "subtitle": "Войдите через Google для избранного и комментариев. Пароль не нужен.",
+    "subtitle": "Не забудьте войти в аккаунт Google, чтобы пользоваться приложением.",
     "continueGoogle": "Продолжить с Google",
     "hint": "После входа имя и аватар сохранятся в профиле.",
     "later": "Позже",
     "errors": {
       "missingClientId": "Google Client ID не настроен",
+      "missingNativeClientId": "Для Android/iOS нужен отдельный Google Client ID (Web ID недостаточно)",
       "noToken": "Токен Google не получен",
       "loginFailed": "Не удалось войти",
       "cancelled": "Вход отменён"

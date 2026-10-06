@@ -78,12 +78,13 @@
   },
   "auth": {
     "title": "Sign in with Google",
-    "subtitle": "Sign in with your Google account for wishlist and comments. No password needed.",
+    "subtitle": "Don't forget to sign in to your Google account to use the app.",
     "continueGoogle": "Continue with Google",
     "hint": "Your name and avatar will be saved to your profile after sign-in.",
     "later": "Later",
     "errors": {
       "missingClientId": "Google Client ID is not configured",
+      "missingNativeClientId": "A separate Android/iOS Google Client ID is required (Web ID is not enough)",
       "noToken": "Google token was not received",
       "loginFailed": "Sign-in failed",
       "cancelled": "Sign-in was cancelled"

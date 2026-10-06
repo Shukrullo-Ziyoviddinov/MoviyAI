@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import Constants from 'expo-constants';
+import { Image } from 'expo-image';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -27,6 +28,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 WebBrowser.maybeCompleteAuthSession();
 
+const GOOGLE_LOGO = require('../../assets/images/google-logo.png');
+
 const OPEN_MS = 320;
 const CLOSE_MS = 240;
 /** Hook crash qilmasligi uchun placeholder (tugma disabled qoladi). */
@@ -50,7 +53,7 @@ export function GoogleAuthModal() {
   const loginWithIdToken = useAuthStore((s) => s.loginWithIdToken);
 
   const bottomPad = Math.max(insets.bottom, 16);
-  const sheetH = Math.min(height * 0.52, 420) + bottomPad;
+  const sheetH = Math.min(height * 0.38, 320) + bottomPad;
   const progress = useSharedValue(0);
   const dragY = useSharedValue(0);
   const sheetHeightSV = useSharedValue(sheetH);
@@ -63,11 +66,21 @@ export function GoogleAuthModal() {
     const android = extra.googleAndroidClientId?.trim() || '';
     const ios = extra.googleIosClientId?.trim() || '';
     const configured = Boolean(web || android || ios);
+    // Web Client ID ni android/ios o'rniga ishlatish Google "invalid_request" beradi.
     return {
       configured,
+      web,
+      android,
+      ios,
       webClientId: web || PLACEHOLDER_CLIENT_ID,
-      androidClientId: android || web || PLACEHOLDER_CLIENT_ID,
-      iosClientId: ios || web || PLACEHOLDER_CLIENT_ID,
+      androidClientId: android || PLACEHOLDER_CLIENT_ID,
+      iosClientId: ios || PLACEHOLDER_CLIENT_ID,
+      canPromptNative:
+        Platform.OS === 'android'
+          ? Boolean(android)
+          : Platform.OS === 'ios'
+            ? Boolean(ios)
+            : Boolean(web),
     };
   }, []);
 
@@ -89,6 +102,8 @@ export function GoogleAuthModal() {
       setError(null);
       if (!clientIds.configured) {
         setError(t('auth.errors.missingClientId'));
+      } else if (!clientIds.canPromptNative) {
+        setError(t('auth.errors.missingNativeClientId'));
       }
       dragY.value = 0;
       progress.value = withTiming(1, {
@@ -117,7 +132,7 @@ export function GoogleAuthModal() {
         }
       }
     );
-  }, [modalOpen, progress, dragY, mounted, sheetHeightSV, clientIds.configured, t]);
+  }, [modalOpen, progress, dragY, mounted, sheetHeightSV, clientIds.configured, clientIds.canPromptNative, t]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -212,6 +227,10 @@ export function GoogleAuthModal() {
       setError(t('auth.errors.missingClientId'));
       return;
     }
+    if (!clientIds.canPromptNative) {
+      setError(t('auth.errors.missingNativeClientId'));
+      return;
+    }
     try {
       await promptAsync();
     } catch (err) {
@@ -219,7 +238,7 @@ export function GoogleAuthModal() {
         err instanceof Error ? err.message : t('auth.errors.cancelled');
       setError(
         Platform.OS === 'android' && message.includes('androidClientId')
-          ? t('auth.errors.missingClientId')
+          ? t('auth.errors.missingNativeClientId')
           : message
       );
     }
@@ -256,7 +275,11 @@ export function GoogleAuthModal() {
         <View style={styles.content}>
           <View style={styles.brandRow}>
             <View style={styles.googleMark}>
-              <Text style={styles.googleG}>G</Text>
+              <Image
+                source={GOOGLE_LOGO}
+                style={styles.googleLogoLg}
+                contentFit="contain"
+              />
             </View>
             <Text style={[styles.title, { color: colors.text }]}>
               {t('auth.title')}
@@ -273,18 +296,23 @@ export function GoogleAuthModal() {
               {
                 backgroundColor: colors.bg,
                 borderColor: colors.borderSoft,
-                opacity: busy || !request || !clientIds.configured ? 0.7 : 1,
+                opacity:
+                  busy || !request || !clientIds.canPromptNative ? 0.7 : 1,
               },
             ]}
             onPress={onGooglePress}
-            disabled={busy || !request || !clientIds.configured}
+            disabled={busy || !request || !clientIds.canPromptNative}
           >
             {busy ? (
               <ActivityIndicator color={colors.accentBright} />
             ) : (
               <>
                 <View style={styles.googleBtnIcon}>
-                  <Text style={styles.googleBtnG}>G</Text>
+                  <Image
+                    source={GOOGLE_LOGO}
+                    style={styles.googleLogoSm}
+                    contentFit="contain"
+                  />
                 </View>
                 <Text style={[styles.googleBtnText, { color: colors.text }]}>
                   {t('auth.continueGoogle')}
@@ -347,19 +375,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   googleMark: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.08)',
   },
-  googleG: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#4285F4',
+  googleLogoLg: {
+    width: 26,
+    height: 26,
   },
   title: {
     flex: 1,
@@ -373,27 +400,28 @@ const styles = StyleSheet.create({
   },
   googleBtn: {
     marginTop: 8,
-    minHeight: 52,
+    minHeight: 54,
     borderRadius: 14,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 12,
     paddingHorizontal: 16,
   },
   googleBtnIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
   },
-  googleBtnG: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#EA4335',
+  googleLogoSm: {
+    width: 18,
+    height: 18,
   },
   googleBtnText: {
     fontSize: 16,

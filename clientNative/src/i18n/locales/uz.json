@@ -78,12 +78,13 @@
   },
   "auth": {
     "title": "Google orqali kirish",
-    "subtitle": "Wishlist va kommentlar uchun Google hisobingiz bilan kiring. Parol yozish shart emas.",
+    "subtitle": "Qurilmadan foydalanish uchun Google hisobingizga kirishni unutmang.",
     "continueGoogle": "Google bilan davom etish",
     "hint": "Kirishdan keyin ismingiz va avatar profilga saqlanadi.",
     "later": "Keyinroq",
     "errors": {
       "missingClientId": "Google Client ID sozlanmagan",
+      "missingNativeClientId": "Android/iOS uchun alohida Google Client ID kerak (Web ID yetmaydi)",
       "noToken": "Google token olinmadi",
       "loginFailed": "Kirish muvaffaqiyatsiz",
       "cancelled": "Kirish bekor qilindi"
