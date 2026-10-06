@@ -2,7 +2,7 @@ import { Movie } from '../models/Movie.js';
 import { MovieComment } from '../models/MovieComment.js';
 
 const MAX_TEXT = 500;
-const PREVIEW_REPLIES = 2;
+const PREVIEW_REPLIES = 1;
 
 export type CommentDto = {
   id: string;

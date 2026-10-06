@@ -65,6 +65,7 @@
     "noComments": "Пока нет комментариев",
     "reply": "Ответ",
     "moreReplies": "Ещё",
+    "lessReplies": "Меньше",
     "replyingTo": "Ответ: {{user}}"
   },
   "profile": {

@@ -65,6 +65,7 @@
     "noComments": "No comments yet",
     "reply": "Reply",
     "moreReplies": "More",
+    "lessReplies": "Less",
     "replyingTo": "Reply: {{user}}"
   },
   "profile": {

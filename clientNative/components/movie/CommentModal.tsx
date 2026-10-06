@@ -457,6 +457,16 @@ export function CommentModal({
     }
   };
 
+  const collapseReplies = (parent: MovieComment) => {
+    onCommentsChange(
+      comments.map((c) =>
+        c.id === parent.id
+          ? { ...c, replies: (c.replies ?? []).slice(0, 1) }
+          : c
+      )
+    );
+  };
+
   const handleSend = async () => {
     const value = text.trim();
     if (!value || sending || !Number.isFinite(movieId)) return;
@@ -553,6 +563,7 @@ export function CommentModal({
                 const replies = item.replies ?? [];
                 const replyCount = item.replyCount ?? replies.length;
                 const hasMore = replies.length < replyCount;
+                const canCollapse = replies.length > 1;
 
                 return (
                   <View
@@ -674,9 +685,13 @@ export function CommentModal({
                             </View>
                           ))}
 
-                          {hasMore ? (
+                          {hasMore || canCollapse ? (
                             <Pressable
-                              onPress={() => loadMoreReplies(item)}
+                              onPress={() =>
+                                hasMore
+                                  ? loadMoreReplies(item)
+                                  : collapseReplies(item)
+                              }
                               hitSlop={6}
                               disabled={loadingMoreId === item.id}
                               style={styles.moreRepliesBtn}
@@ -693,7 +708,9 @@ export function CommentModal({
                                     { color: colors.accentBright },
                                   ]}
                                 >
-                                  {t('movie.moreReplies')}
+                                  {hasMore
+                                    ? t('movie.moreReplies')
+                                    : t('movie.lessReplies')}
                                 </Text>
                               )}
                             </Pressable>
@@ -921,9 +938,10 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   repliesBlock: {
-    marginTop: 10,
-    gap: 10,
+    marginTop: 4,
+    gap: 6,
     paddingLeft: 4,
+    width: '100%',
   },
   replyRow: {
     flexDirection: 'row',
@@ -952,13 +970,15 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   moreRepliesBtn: {
-    alignSelf: 'flex-start',
-    paddingVertical: 2,
-    minHeight: 22,
+    alignSelf: 'center',
+    paddingVertical: 0,
+    marginTop: 2,
+    minHeight: 18,
     justifyContent: 'center',
   },
   moreReplies: {
     fontSize: 13,
     fontWeight: '700',
+    textAlign: 'center',
   },
 });

@@ -19,6 +19,7 @@ import { CommentModal } from '@/components/movie/CommentModal';
 import { MovieDescriptionModal } from '@/components/movie/MovieDescriptionModal';
 import { TrailerModal } from '@/components/movie/TrailerModal';
 import {
+  fetchCommentReplies,
   fetchMovieById,
   fetchMovieComments,
   toggleMovieReaction,
@@ -131,6 +132,7 @@ export default function MovieDetailScreen() {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<MovieComment[]>([]);
   const [replyToId, setReplyToId] = useState<string | null>(null);
+  const [loadingMoreId, setLoadingMoreId] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -244,6 +246,41 @@ export default function MovieDetailScreen() {
     }
     return items;
   }, [movie]);
+
+  const loadMoreReplies = async (parent: MovieComment) => {
+    if (loadingMoreId || !Number.isFinite(movieId)) return;
+    setLoadingMoreId(parent.id);
+    try {
+      const skip = parent.replies?.length ?? 0;
+      const result = await fetchCommentReplies(movieId, parent.id, skip, 5);
+      const existing = parent.replies ?? [];
+      const merged = [
+        ...existing,
+        ...result.replies.filter((r) => !existing.some((e) => e.id === r.id)),
+      ];
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === parent.id
+            ? { ...c, replies: merged, replyCount: result.replyCount }
+            : c
+        )
+      );
+    } catch {
+      // ignore
+    } finally {
+      setLoadingMoreId(null);
+    }
+  };
+
+  const collapseReplies = (parent: MovieComment) => {
+    setComments((prev) =>
+      prev.map((c) =>
+        c.id === parent.id
+          ? { ...c, replies: (c.replies ?? []).slice(0, 1) }
+          : c
+      )
+    );
+  };
 
   const onToggleSave = async () => {
     if (!movie || busy) return;
@@ -595,8 +632,10 @@ export default function MovieDetailScreen() {
                 </Text>
               ) : (
                 comments.slice(0, PREVIEW_COMMENTS).map((item) => {
-                  const replies = (item.replies ?? []).slice(0, 2);
-                  const replyCount = item.replyCount ?? 0;
+                  const replies = item.replies ?? [];
+                  const replyCount = item.replyCount ?? replies.length;
+                  const hasMore = replies.length < replyCount;
+                  const canCollapse = replies.length > 1;
                   return (
                     <View
                       key={item.id}
@@ -698,19 +737,34 @@ export default function MovieDetailScreen() {
                                 </Text>
                               </View>
                             ))}
-                            {replyCount > replies.length ? (
+                            {hasMore || canCollapse ? (
                               <Pressable
-                                onPress={() => setCommentsOpen(true)}
+                                onPress={() =>
+                                  hasMore
+                                    ? loadMoreReplies(item)
+                                    : collapseReplies(item)
+                                }
                                 hitSlop={6}
+                                disabled={loadingMoreId === item.id}
+                                style={styles.previewMoreRepliesBtn}
                               >
-                                <Text
-                                  style={[
-                                    styles.previewReply,
-                                    { color: colors.accentBright },
-                                  ]}
-                                >
-                                  {t('movie.moreReplies')}
-                                </Text>
+                                {loadingMoreId === item.id ? (
+                                  <ActivityIndicator
+                                    size="small"
+                                    color={colors.accentBright}
+                                  />
+                                ) : (
+                                  <Text
+                                    style={[
+                                      styles.previewMoreReplies,
+                                      { color: colors.accentBright },
+                                    ]}
+                                  >
+                                    {hasMore
+                                      ? t('movie.moreReplies')
+                                      : t('movie.lessReplies')}
+                                  </Text>
+                                )}
                               </Pressable>
                             ) : null}
                           </View>
@@ -1053,8 +1107,9 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   previewReplies: {
-    marginTop: 8,
-    gap: 6,
+    marginTop: 4,
+    gap: 4,
+    width: '100%',
   },
   previewReplyRow: {
     gap: 2,
@@ -1067,6 +1122,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     fontWeight: '400',
+  },
+  previewMoreRepliesBtn: {
+    alignSelf: 'center',
+    marginTop: 2,
+    minHeight: 18,
+    justifyContent: 'center',
+  },
+  previewMoreReplies: {
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   moreCommentsBtn: {
     paddingTop: 2,

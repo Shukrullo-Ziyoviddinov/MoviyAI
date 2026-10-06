@@ -65,6 +65,7 @@
     "noComments": "Hali koment yo'q",
     "reply": "Javob",
     "moreReplies": "Ko'proq",
+    "lessReplies": "Kamroq",
     "replyingTo": "Javob: {{user}}"
   },
   "profile": {
