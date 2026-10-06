@@ -1,6 +1,6 @@
 import { ChevronLeftIcon } from '@/components/icons';
 import { ActorInfoModal } from '@/components/actor/ActorInfoModal';
-import { MovieCategoryRow } from '@/components/movie/MovieCategoryRow';
+import { MovieCard } from '@/components/movie/MovieCard';
 import { fetchActorById } from '@/src/api/actors';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -8,7 +8,7 @@ import type { Actor } from '@/src/types/actor';
 import { resolveActorImage } from '@/src/utils/actorImages';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -21,6 +21,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+const CONTENT_PAD = 16;
+const GAP = 12;
+
 export default function ActorPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const actorId = Number(id);
@@ -30,7 +33,10 @@ export default function ActorPage() {
   const { width } = useWindowDimensions();
   const language = useLanguageStore((s) => s.language);
   const lang = language === 'en' ? 'uz' : language;
-  const cardWidth = Math.round(width * 0.39);
+  const cardWidth = useMemo(
+    () => (width - CONTENT_PAD * 2 - GAP) / 2,
+    [width]
+  );
 
   const [actor, setActor] = useState<Actor | null>(null);
   const [loading, setLoading] = useState(true);
@@ -153,13 +159,20 @@ export default function ActorPage() {
 
           {movies.length > 0 ? (
             <View style={styles.moviesBlock}>
-              <MovieCategoryRow
-                title={t('actor.moviesTitle')}
-                movies={movies}
-                language={language}
-                cardWidth={cardWidth}
-                contentPad={0}
-              />
+              <Text style={[styles.moviesTitle, { color: colors.text }]}>
+                {t('actor.moviesTitle')}
+              </Text>
+              <View style={styles.moviesGrid}>
+                {movies.map((movie) => (
+                  <View key={movie.id} style={{ width: cardWidth }}>
+                    <MovieCard
+                      movie={movie}
+                      language={language}
+                      width={cardWidth}
+                    />
+                  </View>
+                ))}
+              </View>
             </View>
           ) : null}
         </ScrollView>
@@ -203,7 +216,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   content: {
-    paddingHorizontal: 16,
+    paddingHorizontal: CONTENT_PAD,
   },
   heroRow: {
     flexDirection: 'row',
@@ -241,5 +254,16 @@ const styles = StyleSheet.create({
   },
   moviesBlock: {
     marginTop: 22,
+  },
+  moviesTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  moviesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: GAP,
   },
 });

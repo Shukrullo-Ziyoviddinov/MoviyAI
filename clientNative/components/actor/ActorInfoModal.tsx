@@ -230,8 +230,8 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 4,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
     paddingHorizontal: 4,
   },
   content: {
@@ -239,8 +239,8 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   body: {
-    fontSize: 17,
-    lineHeight: 26,
+    fontSize: 15,
+    lineHeight: 22,
     fontWeight: '400',
   },
 });
