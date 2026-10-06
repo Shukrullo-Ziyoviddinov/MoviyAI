@@ -1,0 +1,47 @@
+[
+  {
+    "id": 9001,
+    "actorName": "Tobey Maguire",
+    "actorImg": "/img/actor1.png",
+    "actorAbout": {
+      "uz": "Tobey Maguire — amerikalik aktyor va produserser. U Sam Raimi rejissyorligidagi Spider-Man trilogiyasidagi (2002–2007) Peter Parker roli bilan dunyoga tanilgan. Shuningdek, The Cider House Rules, Seabiscuit va The Great Gatsby filmlaridagi ijrolari bilan mashhur.",
+      "ru": "Тоби Магуайр — американский актёр и продюсер. Он получил мировую известность благодаря роли Питера Паркера в трилогии «Человек-паук» (2002–2007) Сэма Рэйми. Также известен ролями в фильмах «Правила виноделов», «Фаворит» и «Великий Гэтсби»."
+    }
+  },
+  {
+    "id": 9002,
+    "actorName": "Leonardo DiCaprio",
+    "actorImg": "/img/actor2.png",
+    "actorAbout": {
+      "uz": "Leonardo DiCaprio — amerikalik aktyor va produserser. Titanic, Inception, The Wolf of Wall Street va The Revenant kabi filmlardagi rollari bilan tanilgan. The Revenant uchun Eng yaxshi aktyor Oscar mukofotiga sazovor bo‘lgan. Shuningdek, atrof-muhit himoyasi bo‘yicha faoliyat yuritadi.",
+      "ru": "Леонардо ДиКаприо — американский актёр и продюсер. Известен ролями в фильмах «Титаник», «Начало», «Волк с Уолл-стрит» и «Выживший». За роль в «Выжившем» получил «Оскар» за лучшую мужскую роль. Также активно занимается экологической деятельностью."
+    }
+  },
+  {
+    "id": 9003,
+    "actorName": "Lana Del Rey",
+    "actorImg": "/img/actor3.png",
+    "actorAbout": {
+      "uz": "Lana Del Rey — amerikalik qo‘shiqchi va qo‘shiqlar muallifi. Uning kinematografik musiqasi fojiali romantika, glamur va melanxoliya mavzularini qamrab oladi. Asosan musiqachi sifatida tanilsa-da, qisqa metrajli filmlar va klip lavhalarida dramatik ijrochi sifatida ham ko‘rinadi.",
+      "ru": "Лана Дель Рей — американская певица и автор песен. Её кинематографический стиль часто затрагивает темы трагической романтики, гламура и меланхолии. Хотя она прежде всего музыкант, она также снималась в короткометражных фильмах и клипах, демонстрируя драматическую игру."
+    }
+  },
+  {
+    "id": 9004,
+    "actorName": "Zooey Deschanel",
+    "actorImg": "/img/actor4.png",
+    "actorAbout": {
+      "uz": "Zooey Deschanel — amerikalik aktrisa va qo‘shiqchi. U Almost Famous, Elf, (500) Days of Summer filmlari hamda New Girl serialidagi Jess Day roli bilan tanilgan. O‘ziga xos uslubi va komediya-drama janridagi ijrolari bilan mashhur.",
+      "ru": "Зоуи Дешанель — американская актриса и певица. Она известна ролями в фильмах «Почти знаменит», «Эльф», «500 дней лета», а также ролью Джесс Дэй в сериале «Новенькая». Популярна благодаря самобытному стилю и работам в комедийно-драматическом жанре."
+    }
+  },
+  {
+    "id": 9005,
+    "actorName": "Jeon Jungkook",
+    "actorImg": "/img/actor5.png",
+    "actorAbout": {
+      "uz": "Jeon Jungkook — janubiy koreyalik qo‘shiqchi, qo‘shiqlar muallifi va BTS guruhi a’zosi. Solo faoliyati, sahna ijrolari va brend hamkorliklari bilan dunyoga tanilgan. Musiqiy ko‘rsatuvlar va vizual loyihalarda kuchli ijrochilik qobiliyatini namoyish etadi.",
+      "ru": "Чон Чонгук — южнокорейский певец, автор песен и участник группы BTS. Он известен по всему миру своей сольной карьерой, сценическими выступлениями и бренд-сотрудничествами. Также демонстрирует сильные актёрские навыки в музыкальных шоу и визуальных проектах."
+    }
+  }
+]
