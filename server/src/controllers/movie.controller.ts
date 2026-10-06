@@ -98,6 +98,28 @@ export async function listComments(req: Request, res: Response) {
   res.json({ ok: true, data: { comments, commentCount } });
 }
 
+export async function listCommentReplies(req: Request, res: Response) {
+  const id = Number(req.params.id);
+  const commentId = String(req.params.commentId ?? '').trim();
+  if (!Number.isFinite(id) || !commentId) {
+    res.status(400).json({ ok: false, error: 'Invalid params' });
+    return;
+  }
+
+  const skipRaw = Number(req.query.skip ?? 0);
+  const limitRaw = Number(req.query.limit ?? 5);
+  const skip = Number.isFinite(skipRaw) ? skipRaw : 0;
+  const limit = Number.isFinite(limitRaw) ? limitRaw : 5;
+
+  const result = await movieCommentService.listReplies(id, commentId, skip, limit);
+  if (!result) {
+    res.status(404).json({ ok: false, error: 'Comment not found' });
+    return;
+  }
+
+  res.json({ ok: true, data: result });
+}
+
 export async function createComment(req: Request, res: Response) {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) {
@@ -110,7 +132,8 @@ export async function createComment(req: Request, res: Response) {
     const comment = await movieCommentService.createComment(
       userId,
       id,
-      String(req.body?.text ?? '')
+      String(req.body?.text ?? ''),
+      req.body?.parentId ?? null
     );
     if (!comment) {
       res.status(404).json({ ok: false, error: 'Movie not found' });
@@ -126,6 +149,10 @@ export async function createComment(req: Request, res: Response) {
     }
     if (code === 'TEXT_TOO_LONG') {
       res.status(400).json({ ok: false, error: 'Comment is too long' });
+      return;
+    }
+    if (code === 'INVALID_PARENT') {
+      res.status(400).json({ ok: false, error: 'Invalid parent comment' });
       return;
     }
     throw err;

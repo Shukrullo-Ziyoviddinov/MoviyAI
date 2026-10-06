@@ -11,6 +11,10 @@ router.get(
   asyncHandler(movieController.listSimilarTrailers)
 );
 router.get('/:id/comments', asyncHandler(movieController.listComments));
+router.get(
+  '/:id/comments/:commentId/replies',
+  asyncHandler(movieController.listCommentReplies)
+);
 router.post(
   '/:id/comments',
   requireUserId,

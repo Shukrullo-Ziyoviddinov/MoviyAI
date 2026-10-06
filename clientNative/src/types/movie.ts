@@ -50,4 +50,7 @@ export type MovieComment = {
   userId: string;
   text: string;
   createdAt: string;
+  parentId?: string | null;
+  replyCount?: number;
+  replies?: MovieComment[];
 };

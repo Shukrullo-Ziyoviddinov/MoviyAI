@@ -62,7 +62,10 @@
     "commentsTitle": "Koment",
     "commentPlaceholder": "Koment yozing...",
     "moreComments": "Ko'proq natija",
-    "noComments": "Hali koment yo'q"
+    "noComments": "Hali koment yo'q",
+    "reply": "Javob berish",
+    "moreReplies": "Ko'proq",
+    "replyingTo": "Javob: {{user}}"
   },
   "profile": {
     "savedMovies": "Saqlangan kinolar",

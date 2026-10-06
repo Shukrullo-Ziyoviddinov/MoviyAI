@@ -126,6 +126,7 @@ export default function MovieDetailScreen() {
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<MovieComment[]>([]);
+  const [replyToId, setReplyToId] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -580,7 +581,7 @@ export default function MovieDetailScreen() {
                     { backgroundColor: colors.accent },
                   ]}
                 >
-                  <SendIcon size={15} color={colors.textOnAccent} />
+                  <SendIcon size={16} color={colors.textOnAccent} />
                 </View>
               </Pressable>
 
@@ -589,50 +590,115 @@ export default function MovieDetailScreen() {
                   {t('movie.noComments')}
                 </Text>
               ) : (
-                comments.slice(0, PREVIEW_COMMENTS).map((item) => (
-                  <View
-                    key={item.id}
-                    style={[
-                      styles.commentPreviewRow,
-                      { borderTopColor: colors.borderSoft },
-                    ]}
-                  >
+                comments.slice(0, PREVIEW_COMMENTS).map((item) => {
+                  const replies = (item.replies ?? []).slice(0, 2);
+                  const replyCount = item.replyCount ?? 0;
+                  return (
                     <View
+                      key={item.id}
                       style={[
-                        styles.commentAvatar,
-                        {
-                          backgroundColor: colors.panel,
-                          borderColor: colors.borderSoft,
-                        },
+                        styles.commentPreviewRow,
+                        { borderTopColor: colors.borderSoft },
                       ]}
                     >
-                      <PersonIcon size={22} color={colors.icon} />
-                    </View>
-                    <View style={styles.commentPreviewBody}>
-                      <View style={styles.commentPreviewMeta}>
-                        <Text
-                          style={[styles.commentUser, { color: colors.text }]}
-                        >
-                          {userLabel(item.userId)}
-                        </Text>
+                      <View
+                        style={[
+                          styles.commentAvatar,
+                          {
+                            backgroundColor: colors.panel,
+                            borderColor: colors.borderSoft,
+                          },
+                        ]}
+                      >
+                        <PersonIcon size={22} color={colors.icon} />
+                      </View>
+                      <View style={styles.commentPreviewBody}>
+                        <View style={styles.commentPreviewMeta}>
+                          <Text
+                            style={[styles.commentUser, { color: colors.text }]}
+                          >
+                            {userLabel(item.userId)}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.commentTime,
+                              { color: colors.textMuted },
+                            ]}
+                          >
+                            {formatCommentTime(item.createdAt)}
+                          </Text>
+                        </View>
                         <Text
                           style={[
-                            styles.commentTime,
-                            { color: colors.textMuted },
+                            styles.commentPreviewText,
+                            { color: colors.text },
                           ]}
+                          numberOfLines={3}
                         >
-                          {formatCommentTime(item.createdAt)}
+                          {item.text}
                         </Text>
+                        <Pressable
+                          onPress={() => {
+                            setReplyToId(item.id);
+                            setCommentsOpen(true);
+                          }}
+                          hitSlop={6}
+                          style={styles.previewReplyBtn}
+                        >
+                          <Text
+                            style={[
+                              styles.previewReply,
+                              { color: colors.accentBright },
+                            ]}
+                          >
+                            {t('movie.reply')}
+                          </Text>
+                        </Pressable>
+
+                        {replies.length > 0 ? (
+                          <View style={styles.previewReplies}>
+                            {replies.map((reply) => (
+                              <View key={reply.id} style={styles.previewReplyRow}>
+                                <Text
+                                  style={[
+                                    styles.previewReplyUser,
+                                    { color: colors.text },
+                                  ]}
+                                >
+                                  {userLabel(reply.userId)}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.previewReplyText,
+                                    { color: colors.text },
+                                  ]}
+                                  numberOfLines={2}
+                                >
+                                  {reply.text}
+                                </Text>
+                              </View>
+                            ))}
+                            {replyCount > replies.length ? (
+                              <Pressable
+                                onPress={() => setCommentsOpen(true)}
+                                hitSlop={6}
+                              >
+                                <Text
+                                  style={[
+                                    styles.previewReply,
+                                    { color: colors.accentBright },
+                                  ]}
+                                >
+                                  {t('movie.moreReplies')}
+                                </Text>
+                              </Pressable>
+                            ) : null}
+                          </View>
+                        ) : null}
                       </View>
-                      <Text
-                        style={[styles.commentPreviewText, { color: colors.text }]}
-                        numberOfLines={3}
-                      >
-                        {item.text}
-                      </Text>
                     </View>
-                  </View>
-                ))
+                  );
+                })
               )}
 
               {comments.length > PREVIEW_COMMENTS ? (
@@ -673,12 +739,19 @@ export default function MovieDetailScreen() {
 
       <CommentModal
         visible={commentsOpen}
-        onClose={() => setCommentsOpen(false)}
+        onClose={() => {
+          setCommentsOpen(false);
+          setReplyToId(null);
+        }}
         movieId={movieId}
         comments={comments}
+        replyToId={replyToId}
+        onReplyToIdConsumed={() => setReplyToId(null)}
         onCommentsChange={(nextComments, commentCount) => {
           setComments(nextComments);
-          setMovie((prev) => (prev ? { ...prev, commentCount } : prev));
+          if (commentCount != null) {
+            setMovie((prev) => (prev ? { ...prev, commentCount } : prev));
+          }
         }}
       />
 
@@ -897,9 +970,9 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   commentSendBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -944,6 +1017,31 @@ const styles = StyleSheet.create({
   commentPreviewText: {
     fontSize: 13,
     lineHeight: 18,
+    fontWeight: '400',
+  },
+  previewReplyBtn: {
+    alignSelf: 'center',
+    marginTop: 4,
+  },
+  previewReply: {
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  previewReplies: {
+    marginTop: 8,
+    gap: 6,
+  },
+  previewReplyRow: {
+    gap: 2,
+  },
+  previewReplyUser: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  previewReplyText: {
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: '400',
   },
   moreCommentsBtn: {

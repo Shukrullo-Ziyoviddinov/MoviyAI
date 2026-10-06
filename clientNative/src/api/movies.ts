@@ -24,6 +24,14 @@ export type CreateCommentResult = {
   commentCount: number;
 };
 
+export type CommentRepliesResult = {
+  replies: MovieComment[];
+  replyCount: number;
+  skip: number;
+  limit: number;
+  hasMore: boolean;
+};
+
 export async function fetchMovies(): Promise<Movie[]> {
   const { data } = await api.get<ApiResponse<Movie[]>>('/api/movies');
   if (!data.ok || !data.data) {
@@ -82,13 +90,30 @@ export async function fetchMovieComments(
   return data.data;
 }
 
+export async function fetchCommentReplies(
+  movieId: number,
+  commentId: string,
+  skip = 0,
+  limit = 5
+): Promise<CommentRepliesResult> {
+  const { data } = await api.get<ApiResponse<CommentRepliesResult>>(
+    `/api/movies/${movieId}/comments/${commentId}/replies`,
+    { params: { skip, limit } }
+  );
+  if (!data.ok || !data.data) {
+    throw new Error(data.error || 'Replies failed to load');
+  }
+  return data.data;
+}
+
 export async function createMovieComment(
   id: number,
-  text: string
+  text: string,
+  parentId?: string | null
 ): Promise<CreateCommentResult> {
   const { data } = await api.post<ApiResponse<CreateCommentResult>>(
     `/api/movies/${id}/comments`,
-    { text }
+    { text, parentId: parentId ?? null }
   );
   if (!data.ok || !data.data) {
     throw new Error(data.error || 'Comment failed');

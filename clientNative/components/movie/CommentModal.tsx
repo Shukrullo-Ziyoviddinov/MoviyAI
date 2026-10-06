@@ -1,5 +1,5 @@
-import { PersonIcon, SendIcon } from '@/components/icons';
-import { createMovieComment } from '@/src/api/movies';
+import { CloseIcon, PersonIcon, SendIcon } from '@/components/icons';
+import { createMovieComment, fetchCommentReplies } from '@/src/api/movies';
 import { useTheme } from '@/src/stores/useThemeStore';
 import type { MovieComment } from '@/src/types/movie';
 import { useEffect, useRef, useState } from 'react';
@@ -46,7 +46,10 @@ type CommentModalProps = {
   onClose: () => void;
   movieId: number;
   comments: MovieComment[];
-  onCommentsChange: (comments: MovieComment[], commentCount: number) => void;
+  onCommentsChange: (comments: MovieComment[], commentCount?: number) => void;
+  /** Open modal already targeting this top-level comment for reply. */
+  replyToId?: string | null;
+  onReplyToIdConsumed?: () => void;
 };
 
 function formatCommentTime(iso: string) {
@@ -75,6 +78,8 @@ export function CommentModal({
   movieId,
   comments,
   onCommentsChange,
+  replyToId = null,
+  onReplyToIdConsumed,
 }: CommentModalProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -107,6 +112,8 @@ export function CommentModal({
   const [sending, setSending] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [keyboardH, setKeyboardH] = useState(0);
+  const [replyTo, setReplyTo] = useState<MovieComment | null>(null);
+  const [loadingMoreId, setLoadingMoreId] = useState<string | null>(null);
 
   const collapsedH = keyboardOpen ? keyboardHSheet : openH;
 
@@ -167,10 +174,24 @@ export function CommentModal({
       setKeyboardH(0);
       composerPadSV.value = safeBottom;
       setIsExpanded(false);
+      setReplyTo(null);
+      setLoadingMoreId(null);
       keyboardClosing.current = false;
       keyboardOpening.current = false;
     }
   }, [visible, composerPadSV, safeBottom]);
+
+  useEffect(() => {
+    if (!visible || !replyToId) return;
+    const target = comments.find((c) => c.id === replyToId) ?? null;
+    if (target) {
+      setReplyTo(target);
+      const timer = setTimeout(() => inputRef.current?.focus(), 420);
+      onReplyToIdConsumed?.();
+      return () => clearTimeout(timer);
+    }
+    onReplyToIdConsumed?.();
+  }, [visible, replyToId, comments, onReplyToIdConsumed]);
 
   useEffect(() => {
     if (!visible) return;
@@ -402,17 +423,68 @@ export function CommentModal({
 
   const canSend = text.trim().length > 0 && !sending;
 
+  const startReply = (item: MovieComment) => {
+    setReplyTo(item);
+    setTimeout(() => inputRef.current?.focus(), 80);
+  };
+
+  const loadMoreReplies = async (parent: MovieComment) => {
+    if (loadingMoreId || !Number.isFinite(movieId)) return;
+    setLoadingMoreId(parent.id);
+    try {
+      const skip = parent.replies?.length ?? 0;
+      const result = await fetchCommentReplies(movieId, parent.id, skip, 5);
+      const existing = parent.replies ?? [];
+      const merged = [
+        ...existing,
+        ...result.replies.filter((r) => !existing.some((e) => e.id === r.id)),
+      ];
+      onCommentsChange(
+        comments.map((c) =>
+          c.id === parent.id
+            ? { ...c, replies: merged, replyCount: result.replyCount }
+            : c
+        )
+      );
+    } catch {
+      // ignore
+    } finally {
+      setLoadingMoreId(null);
+    }
+  };
+
   const handleSend = async () => {
     const value = text.trim();
     if (!value || sending || !Number.isFinite(movieId)) return;
     setSending(true);
     try {
-      const result = await createMovieComment(movieId, value);
-      onCommentsChange(
-        [result.comment, ...comments.filter((c) => c.id !== result.comment.id)],
-        result.commentCount
-      );
+      const parentId = replyTo?.id ?? null;
+      const result = await createMovieComment(movieId, value, parentId);
+      if (result.comment.parentId) {
+        const pid = result.comment.parentId;
+        onCommentsChange(
+          comments.map((c) => {
+            if (c.id !== pid) return c;
+            const replies = [...(c.replies ?? []), result.comment];
+            return {
+              ...c,
+              replies,
+              replyCount: Math.max(c.replyCount ?? 0, replies.length),
+            };
+          }),
+          result.commentCount
+        );
+      } else {
+        onCommentsChange(
+          [
+            { ...result.comment, replyCount: 0, replies: [] },
+            ...comments.filter((c) => c.id !== result.comment.id),
+          ],
+          result.commentCount
+        );
+      }
       setText('');
+      setReplyTo(null);
     } catch {
       // keep draft text on failure
     } finally {
@@ -473,40 +545,131 @@ export function CommentModal({
                 {t('movie.noComments')}
               </Text>
             ) : (
-              comments.map((item) => (
-                <View
-                  key={item.id}
-                  style={[
-                    styles.commentRow,
-                    { borderBottomColor: colors.borderSoft },
-                  ]}
-                >
+              comments.map((item) => {
+                const replies = item.replies ?? [];
+                const replyCount = item.replyCount ?? replies.length;
+                const hasMore = replies.length < replyCount;
+
+                return (
                   <View
+                    key={item.id}
                     style={[
-                      styles.avatar,
-                      {
-                        backgroundColor: colors.panelSoft,
-                        borderColor: colors.borderSoft,
-                      },
+                      styles.commentRow,
+                      { borderBottomColor: colors.borderSoft },
                     ]}
                   >
-                    <PersonIcon size={22} color={colors.icon} />
-                  </View>
-                  <View style={styles.commentBody}>
-                    <View style={styles.commentMeta}>
-                      <Text style={[styles.userName, { color: colors.text }]}>
-                        {userLabel(item.userId)}
-                      </Text>
-                      <Text style={[styles.time, { color: colors.textMuted }]}>
-                        {formatCommentTime(item.createdAt)}
-                      </Text>
+                    <View
+                      style={[
+                        styles.avatar,
+                        {
+                          backgroundColor: colors.panelSoft,
+                          borderColor: colors.borderSoft,
+                        },
+                      ]}
+                    >
+                      <PersonIcon size={22} color={colors.icon} />
                     </View>
-                    <Text style={[styles.commentText, { color: colors.text }]}>
-                      {item.text}
-                    </Text>
+                    <View style={styles.commentBody}>
+                      <View style={styles.commentMeta}>
+                        <Text style={[styles.userName, { color: colors.text }]}>
+                          {userLabel(item.userId)}
+                        </Text>
+                        <Text style={[styles.time, { color: colors.textMuted }]}>
+                          {formatCommentTime(item.createdAt)}
+                        </Text>
+                      </View>
+                      <Text style={[styles.commentText, { color: colors.text }]}>
+                        {item.text}
+                      </Text>
+
+                      <Pressable
+                        onPress={() => startReply(item)}
+                        hitSlop={6}
+                        style={styles.replyBtn}
+                      >
+                        <Text
+                          style={[styles.replyText, { color: colors.accentBright }]}
+                        >
+                          {t('movie.reply')}
+                        </Text>
+                      </Pressable>
+
+                      {replies.length > 0 ? (
+                        <View style={styles.repliesBlock}>
+                          {replies.map((reply) => (
+                            <View key={reply.id} style={styles.replyRow}>
+                              <View
+                                style={[
+                                  styles.replyAvatar,
+                                  {
+                                    backgroundColor: colors.panelSoft,
+                                    borderColor: colors.borderSoft,
+                                  },
+                                ]}
+                              >
+                                <PersonIcon size={16} color={colors.icon} />
+                              </View>
+                              <View style={styles.replyBody}>
+                                <View style={styles.commentMeta}>
+                                  <Text
+                                    style={[
+                                      styles.replyUser,
+                                      { color: colors.text },
+                                    ]}
+                                  >
+                                    {userLabel(reply.userId)}
+                                  </Text>
+                                  <Text
+                                    style={[
+                                      styles.time,
+                                      { color: colors.textMuted },
+                                    ]}
+                                  >
+                                    {formatCommentTime(reply.createdAt)}
+                                  </Text>
+                                </View>
+                                <Text
+                                  style={[
+                                    styles.replyTextBody,
+                                    { color: colors.text },
+                                  ]}
+                                >
+                                  {reply.text}
+                                </Text>
+                              </View>
+                            </View>
+                          ))}
+
+                          {hasMore ? (
+                            <Pressable
+                              onPress={() => loadMoreReplies(item)}
+                              hitSlop={6}
+                              disabled={loadingMoreId === item.id}
+                              style={styles.moreRepliesBtn}
+                            >
+                              {loadingMoreId === item.id ? (
+                                <ActivityIndicator
+                                  size="small"
+                                  color={colors.accentBright}
+                                />
+                              ) : (
+                                <Text
+                                  style={[
+                                    styles.moreReplies,
+                                    { color: colors.accentBright },
+                                  ]}
+                                >
+                                  {t('movie.moreReplies')}
+                                </Text>
+                              )}
+                            </Pressable>
+                          ) : null}
+                        </View>
+                      ) : null}
+                    </View>
                   </View>
-                </View>
-              ))
+                );
+              })
             )}
           </ScrollView>
 
@@ -520,38 +683,57 @@ export function CommentModal({
               composerAnimStyle,
             ]}
           >
-            <TextInput
-              ref={inputRef}
-              value={text}
-              onChangeText={setText}
-              placeholder={t('movie.commentPlaceholder')}
-              placeholderTextColor={colors.textMuted}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.panelSoft,
-                  borderColor: colors.borderSoft,
-                  color: colors.text,
-                },
-              ]}
-              multiline
-              maxLength={500}
-            />
-            <Pressable
-              style={[
-                styles.sendBtn,
-                { backgroundColor: colors.accent },
-                !canSend && styles.sendBtnDisabled,
-              ]}
-              onPress={handleSend}
-              disabled={!canSend}
-            >
-              {sending ? (
-                <ActivityIndicator size="small" color={colors.textOnAccent} />
-              ) : (
-                <SendIcon size={18} color={colors.textOnAccent} />
-              )}
-            </Pressable>
+            {replyTo ? (
+              <View style={styles.replyBar}>
+                <Text
+                  style={[styles.replyBarText, { color: colors.textMuted }]}
+                  numberOfLines={1}
+                >
+                  {t('movie.replyingTo', { user: userLabel(replyTo.userId) })}
+                </Text>
+                <Pressable onPress={() => setReplyTo(null)} hitSlop={8}>
+                  <CloseIcon size={16} color={colors.icon} />
+                </Pressable>
+              </View>
+            ) : null}
+            <View style={styles.composerRow}>
+              <TextInput
+                ref={inputRef}
+                value={text}
+                onChangeText={setText}
+                placeholder={
+                  replyTo
+                    ? t('movie.reply')
+                    : t('movie.commentPlaceholder')
+                }
+                placeholderTextColor={colors.textMuted}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: colors.panelSoft,
+                    borderColor: colors.borderSoft,
+                    color: colors.text,
+                  },
+                ]}
+                multiline
+                maxLength={500}
+              />
+              <Pressable
+                style={[
+                  styles.sendBtn,
+                  { backgroundColor: colors.accent },
+                  !canSend && styles.sendBtnDisabled,
+                ]}
+                onPress={handleSend}
+                disabled={!canSend}
+              >
+                {sending ? (
+                  <ActivityIndicator size="small" color={colors.textOnAccent} />
+                ) : (
+                  <SendIcon size={18} color={colors.textOnAccent} />
+                )}
+              </Pressable>
+            </View>
           </Animated.View>
           </Animated.View>
         </View>
@@ -648,12 +830,27 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   composer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 10,
     paddingHorizontal: 14,
     paddingTop: 10,
     borderTopWidth: 1,
+    gap: 8,
+  },
+  replyBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 4,
+  },
+  replyBarText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  composerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
   },
   input: {
     flex: 1,
@@ -674,5 +871,56 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: {
     opacity: 0.45,
+  },
+  replyBtn: {
+    alignSelf: 'center',
+    marginTop: 6,
+    paddingVertical: 2,
+  },
+  replyText: {
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  repliesBlock: {
+    marginTop: 10,
+    gap: 10,
+    paddingLeft: 4,
+  },
+  replyRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  replyAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  replyBody: {
+    flex: 1,
+    gap: 2,
+  },
+  replyUser: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  replyTextBody: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '400',
+  },
+  moreRepliesBtn: {
+    alignSelf: 'flex-start',
+    paddingVertical: 2,
+    minHeight: 22,
+    justifyContent: 'center',
+  },
+  moreReplies: {
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

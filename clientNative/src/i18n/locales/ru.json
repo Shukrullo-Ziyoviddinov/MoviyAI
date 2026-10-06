@@ -62,7 +62,10 @@
     "commentsTitle": "Комментарии",
     "commentPlaceholder": "Напишите комментарий...",
     "moreComments": "Больше результатов",
-    "noComments": "Пока нет комментариев"
+    "noComments": "Пока нет комментариев",
+    "reply": "Ответить",
+    "moreReplies": "Ещё",
+    "replyingTo": "Ответ: {{user}}"
   },
   "profile": {
     "savedMovies": "Сохранённые фильмы",
