@@ -4,7 +4,8 @@ import type { AppLanguage } from '@/src/stores/useLanguageStore';
 import type { Movie } from '@/src/types/movie';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 
 type SimilarMovieCardProps = {
   movie: Movie;

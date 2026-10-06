@@ -13,11 +13,11 @@ import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
-  ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CONTENT_PAD = 16;
@@ -73,6 +73,7 @@ export default function HomeScreen() {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
           contentContainerStyle={{
             paddingTop: headerH + 12,
             paddingBottom: navOffset + 12,

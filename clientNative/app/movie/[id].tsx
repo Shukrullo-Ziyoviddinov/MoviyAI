@@ -45,12 +45,12 @@ import {
   ActivityIndicator,
   Linking,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PREVIEW_COMMENTS = 5;
@@ -182,6 +182,7 @@ export default function MovieDetailScreen() {
   const title = movie ? movie.title[lang] ?? movie.title.uz : '';
   const poster = movie ? resolveMoviePoster(movie.homeImgPoster) : null;
   const posterH = Math.round(width * 1.15);
+  const fadeH = Math.round(posterH * 0.42);
   const description = movie
     ? movie.description[lang] ?? movie.description.uz
     : null;
@@ -337,11 +338,11 @@ export default function MovieDetailScreen() {
           </Text>
         </View>
       ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) }}
-        >
-          <View style={[styles.posterWrap, { height: posterH }]}>
+        <View style={styles.detailBody}>
+          <View
+            style={[styles.posterFixed, { height: posterH }]}
+            pointerEvents="none"
+          >
             {poster ? (
               <Image
                 source={poster}
@@ -350,28 +351,45 @@ export default function MovieDetailScreen() {
                 contentPosition="top"
               />
             ) : (
-              <View style={[styles.poster, { backgroundColor: colors.panelSoft }]} />
+              <View
+                style={[styles.poster, { backgroundColor: colors.panelSoft }]}
+              />
             )}
-            <LinearGradient
-              colors={[...fadeColors]}
-              locations={[0, 0.18, 0.4, 0.62, 0.82, 1]}
-              style={styles.fade}
-              pointerEvents="none"
-            />
-            <Text
-              style={[
-                styles.title,
-                {
-                  color: colors.text,
-                  fontFamily: fontsLoaded ? 'Oswald_700Bold' : undefined,
-                },
-              ]}
-            >
-              {title}
-            </Text>
           </View>
 
-          <View style={styles.infoBlock}>
+          <ScrollView
+            style={styles.scrollLayer}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled
+            contentContainerStyle={{
+              paddingBottom: Math.max(insets.bottom, 24),
+            }}
+          >
+            <View style={{ height: posterH }} collapsable={false} />
+
+            <View
+              style={[styles.contentSheet, { backgroundColor: colors.bg }]}
+            >
+              <LinearGradient
+                colors={[...fadeColors]}
+                locations={[0, 0.18, 0.4, 0.62, 0.82, 1]}
+                style={[styles.scrollFade, { height: fadeH, top: -fadeH }]}
+                pointerEvents="none"
+              />
+              <Text
+                style={[
+                  styles.title,
+                  {
+                    color: colors.text,
+                    fontFamily: fontsLoaded ? 'Oswald_700Bold' : undefined,
+                    marginTop: -Math.round(fadeH * 0.28),
+                  },
+                ]}
+              >
+                {title}
+              </Text>
+
+              <View style={styles.infoBlock}>
             {specItems.length > 0 ? (
               <HorizontalScroll contentContainerStyle={styles.specsRow}>
                 {specItems.map(({ key, label, Icon }) => (
@@ -893,7 +911,9 @@ export default function MovieDetailScreen() {
               </HorizontalScroll>
             </View>
           ) : null}
-        </ScrollView>
+            </View>
+          </ScrollView>
+        </View>
       )}
 
       <MovieDescriptionModal
@@ -997,26 +1017,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
   },
-  posterWrap: {
-    width: '100%',
+  posterFixed: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 0,
     overflow: 'hidden',
+  },
+  scrollLayer: {
+    flex: 1,
+    zIndex: 1,
+    backgroundColor: 'transparent',
+  },
+  detailBody: {
+    flex: 1,
   },
   poster: {
     width: '100%',
     height: '100%',
   },
-  fade: {
+  contentSheet: {
+    position: 'relative',
+    paddingTop: 4,
+  },
+  scrollFade: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
-    height: '70%',
   },
   title: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 14,
+    paddingHorizontal: 16,
+    marginBottom: 6,
     zIndex: 2,
     fontSize: 28,
     lineHeight: 34,

@@ -9,7 +9,8 @@ type HorizontalScrollProps = {
 };
 
 /**
- * Global horizontal scroll — qo'l tezligiga qarab native inersiya bilan silliq.
+ * Horizontal row for movie cards.
+ * gesture-handler ScrollView — Pressable (GH) bilan birga scroll ishlaydi.
  */
 export function HorizontalScroll({
   children,

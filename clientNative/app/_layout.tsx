@@ -40,7 +40,7 @@ function AppNavigator() {
             screenOptions={{
               headerShown: false,
               cardStyle: { backgroundColor: colors.bg },
-              gestureEnabled: true,
+              gestureEnabled: false,
               gestureDirection: 'horizontal',
               cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
               transitionSpec: {
