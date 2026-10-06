@@ -3,11 +3,12 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import Constants from 'expo-constants';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   BackHandler,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -28,6 +29,8 @@ WebBrowser.maybeCompleteAuthSession();
 
 const OPEN_MS = 320;
 const CLOSE_MS = 240;
+/** Hook crash qilmasligi uchun placeholder (tugma disabled qoladi). */
+const PLACEHOLDER_CLIENT_ID = 'missing.apps.googleusercontent.com';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as {
   googleWebClientId?: string;
@@ -55,15 +58,24 @@ export function GoogleAuthModal() {
   const [error, setError] = useState<string | null>(null);
   const skipCloseAnim = useRef(false);
 
-  const webClientId = extra.googleWebClientId?.trim() || undefined;
-  const androidClientId = extra.googleAndroidClientId?.trim() || undefined;
-  const iosClientId = extra.googleIosClientId?.trim() || undefined;
+  const clientIds = useMemo(() => {
+    const web = extra.googleWebClientId?.trim() || '';
+    const android = extra.googleAndroidClientId?.trim() || '';
+    const ios = extra.googleIosClientId?.trim() || '';
+    const configured = Boolean(web || android || ios);
+    return {
+      configured,
+      webClientId: web || PLACEHOLDER_CLIENT_ID,
+      androidClientId: android || web || PLACEHOLDER_CLIENT_ID,
+      iosClientId: ios || web || PLACEHOLDER_CLIENT_ID,
+    };
+  }, []);
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: webClientId,
-    androidClientId,
-    iosClientId,
-    webClientId,
+    clientId: clientIds.webClientId,
+    webClientId: clientIds.webClientId,
+    androidClientId: clientIds.androidClientId,
+    iosClientId: clientIds.iosClientId,
   });
 
   useEffect(() => {
@@ -75,6 +87,9 @@ export function GoogleAuthModal() {
       skipCloseAnim.current = false;
       setMounted(true);
       setError(null);
+      if (!clientIds.configured) {
+        setError(t('auth.errors.missingClientId'));
+      }
       dragY.value = 0;
       progress.value = withTiming(1, {
         duration: OPEN_MS,
@@ -102,7 +117,7 @@ export function GoogleAuthModal() {
         }
       }
     );
-  }, [modalOpen, progress, dragY, mounted, sheetHeightSV]);
+  }, [modalOpen, progress, dragY, mounted, sheetHeightSV, clientIds.configured, t]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -193,14 +208,20 @@ export function GoogleAuthModal() {
 
   const onGooglePress = async () => {
     setError(null);
-    if (!webClientId && !androidClientId && !iosClientId) {
+    if (!clientIds.configured) {
       setError(t('auth.errors.missingClientId'));
       return;
     }
     try {
       await promptAsync();
-    } catch {
-      setError(t('auth.errors.cancelled'));
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : t('auth.errors.cancelled');
+      setError(
+        Platform.OS === 'android' && message.includes('androidClientId')
+          ? t('auth.errors.missingClientId')
+          : message
+      );
     }
   };
 
@@ -252,11 +273,11 @@ export function GoogleAuthModal() {
               {
                 backgroundColor: colors.bg,
                 borderColor: colors.borderSoft,
-                opacity: busy || !request ? 0.7 : 1,
+                opacity: busy || !request || !clientIds.configured ? 0.7 : 1,
               },
             ]}
             onPress={onGooglePress}
-            disabled={busy || !request}
+            disabled={busy || !request || !clientIds.configured}
           >
             {busy ? (
               <ActivityIndicator color={colors.accentBright} />

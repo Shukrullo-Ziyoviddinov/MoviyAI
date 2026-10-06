@@ -914,7 +914,7 @@ export default function MovieDetailScreen() {
               </HorizontalScroll>
             </View>
           ) : null}
-            </View>
+          </View>
           </ScrollView>
         </View>
       )}

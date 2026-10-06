@@ -3,11 +3,13 @@ import {
   getSecureItem,
   setSecureItem,
 } from '@/src/utils/storage';
+import {
+  getAuthTokenKey,
+  setAuthTokenSync,
+} from '@/src/utils/authToken';
 import type { AuthProfile } from '@/src/types/auth';
 import { fetchAuthMe, loginWithGoogleIdToken } from '@/src/api/auth';
 import { create } from 'zustand';
-
-const TOKEN_KEY = 'moviy.authToken';
 
 type AuthModalReason = 'splash' | 'wishlist' | 'comment' | 'profile' | null;
 
@@ -27,12 +29,6 @@ type AuthState = {
   requireAuth: (reason?: AuthModalReason) => boolean;
 };
 
-let memoryToken: string | null = null;
-
-export function getAuthTokenSync() {
-  return memoryToken;
-}
-
 export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   profile: null,
@@ -44,8 +40,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hydrate: async () => {
     if (get().hydrated) return;
     try {
-      const token = await getSecureItem(TOKEN_KEY);
-      memoryToken = token;
+      const token = await getSecureItem(getAuthTokenKey());
+      setAuthTokenSync(token);
       if (!token) {
         set({ token: null, profile: null, hydrated: true });
         return;
@@ -54,15 +50,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const profile = await fetchAuthMe();
       set({ profile, hydrated: true, busy: false });
     } catch {
-      memoryToken = null;
-      await deleteSecureItem(TOKEN_KEY);
+      setAuthTokenSync(null);
+      await deleteSecureItem(getAuthTokenKey());
       set({ token: null, profile: null, hydrated: true, busy: false });
     }
   },
 
   setSession: async (token, profile) => {
-    memoryToken = token;
-    await setSecureItem(TOKEN_KEY, token);
+    setAuthTokenSync(token);
+    await setSecureItem(getAuthTokenKey(), token);
     set({ token, profile, modalOpen: false, modalReason: null });
   },
 
@@ -77,8 +73,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    memoryToken = null;
-    await deleteSecureItem(TOKEN_KEY);
+    setAuthTokenSync(null);
+    await deleteSecureItem(getAuthTokenKey());
     set({ token: null, profile: null, modalOpen: false, modalReason: null });
   },
 

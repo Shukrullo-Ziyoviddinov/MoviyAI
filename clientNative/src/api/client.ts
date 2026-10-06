@@ -1,9 +1,11 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
-import { getAuthTokenSync } from '@/src/stores/useAuthStore';
+import {
+  getAuthTokenKey,
+  getAuthTokenSync,
+  setAuthTokenSync,
+} from '@/src/utils/authToken';
 import { getSecureItem } from '@/src/utils/storage';
-
-const TOKEN_KEY = 'moviy.authToken';
 
 const baseURL =
   (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ??
@@ -21,7 +23,8 @@ export const api = axios.create({
 api.interceptors.request.use(async (config) => {
   let token = getAuthTokenSync();
   if (!token) {
-    token = await getSecureItem(TOKEN_KEY);
+    token = await getSecureItem(getAuthTokenKey());
+    if (token) setAuthTokenSync(token);
   }
   if (token) {
     config.headers.set('Authorization', `Bearer ${token}`);
