@@ -71,6 +71,7 @@
   },
   "actor": {
     "aboutTitle": "Об актёре",
+    "moviesTitle": "Фильмы",
     "readMore": "Ещё",
     "notFound": "Актёр не найден"
   },

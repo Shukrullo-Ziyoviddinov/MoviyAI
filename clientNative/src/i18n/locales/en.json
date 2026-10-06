@@ -71,6 +71,7 @@
   },
   "actor": {
     "aboutTitle": "About the actor",
+    "moviesTitle": "Movies",
     "readMore": "More",
     "notFound": "Actor not found"
   },

@@ -1,5 +1,6 @@
 import { ChevronLeftIcon } from '@/components/icons';
 import { ActorInfoModal } from '@/components/actor/ActorInfoModal';
+import { MovieCategoryRow } from '@/components/movie/MovieCategoryRow';
 import { fetchActorById } from '@/src/api/actors';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -15,6 +16,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,8 +27,10 @@ export default function ActorPage() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const language = useLanguageStore((s) => s.language);
   const lang = language === 'en' ? 'uz' : language;
+  const cardWidth = Math.round(width * 0.39);
 
   const [actor, setActor] = useState<Actor | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,6 +70,7 @@ export default function ActorPage() {
     ? actor.actorAbout[lang] ?? actor.actorAbout.uz
     : '';
   const photo = actor ? resolveActorImage(actor.actorImg) : null;
+  const movies = actor?.movies ?? [];
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
@@ -145,6 +150,18 @@ export default function ActorPage() {
               ) : null}
             </View>
           </View>
+
+          {movies.length > 0 ? (
+            <View style={styles.moviesBlock}>
+              <MovieCategoryRow
+                title={t('actor.moviesTitle')}
+                movies={movies}
+                language={language}
+                cardWidth={cardWidth}
+                contentPad={0}
+              />
+            </View>
+          ) : null}
         </ScrollView>
       )}
 
@@ -221,5 +238,8 @@ const styles = StyleSheet.create({
   readMore: {
     fontSize: 14,
     fontWeight: '700',
+  },
+  moviesBlock: {
+    marginTop: 22,
   },
 });

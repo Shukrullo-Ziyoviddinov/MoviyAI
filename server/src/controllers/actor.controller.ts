@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import * as actorService from '../services/actor.service.js';
+import * as movieService from '../services/movie.service.js';
 
 export async function listActors(_req: Request, res: Response) {
   const docs = await actorService.getAllActors();
@@ -19,5 +20,6 @@ export async function getActor(req: Request, res: Response) {
     return;
   }
 
-  res.json({ ok: true, data: doc });
+  const movies = await movieService.getMoviesByActorId(id);
+  res.json({ ok: true, data: { ...doc, movies } });
 }

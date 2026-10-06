@@ -8,4 +8,5 @@ export type Actor = {
   actorName: string;
   actorImg: string;
   actorAbout: LocalizedPair;
+  movies?: import('./movie').Movie[];
 };

@@ -239,8 +239,8 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   body: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 17,
+    lineHeight: 26,
     fontWeight: '400',
   },
 });

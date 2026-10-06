@@ -8,6 +8,10 @@ export async function getMovieById(id: number) {
   return Movie.findOne({ id }).lean();
 }
 
+export async function getMoviesByActorId(actorId: number) {
+  return Movie.find({ actorIds: actorId }).sort({ id: 1 }).lean();
+}
+
 export async function upsertMovies(movies: Record<string, unknown>[]) {
   const results = [];
   for (const movie of movies) {
