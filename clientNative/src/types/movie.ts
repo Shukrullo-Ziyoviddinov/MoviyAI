@@ -42,6 +42,8 @@ export type Movie = {
     countries: string[];
   };
   franchiseMovieIds: number[];
+  actorIds?: number[];
+  actors?: import('./actor').Actor[];
 };
 
 export type MovieComment = {

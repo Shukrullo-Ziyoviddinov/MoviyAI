@@ -49,6 +49,7 @@ const movieSchema = new Schema(
       countries: { type: [String], default: [] },
     },
     franchiseMovieIds: { type: [Number], default: [] },
+    actorIds: { type: [Number], default: [] },
   },
   {
     timestamps: true,

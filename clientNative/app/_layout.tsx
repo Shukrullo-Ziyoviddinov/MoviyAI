@@ -70,6 +70,7 @@ function AppNavigator() {
             />
             <Stack.Screen name="profile" />
             <Stack.Screen name="movie/[id]" />
+            <Stack.Screen name="actor/[id]" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="about" />
             <Stack.Screen name="privacy" />

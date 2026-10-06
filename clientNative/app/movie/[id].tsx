@@ -28,6 +28,7 @@ import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import type { Movie, MovieComment } from '@/src/types/movie';
+import { resolveActorImage } from '@/src/utils/actorImages';
 import { resolveMoviePoster } from '@/src/utils/moviePosters';
 import {
   Oswald_700Bold,
@@ -580,6 +581,50 @@ export default function MovieDetailScreen() {
             ) : null}
           </View>
 
+          {movie.actors && movie.actors.length > 0 ? (
+            <View style={styles.actorsSection}>
+              <Text style={[styles.actorsTitle, { color: colors.text }]}>
+                {t('movie.actorsTitle')}
+              </Text>
+              <HorizontalScroll contentContainerStyle={styles.actorsRow}>
+                {movie.actors.map((actor) => {
+                  const photo = resolveActorImage(actor.actorImg);
+                  return (
+                    <Pressable
+                      key={actor.id}
+                      style={styles.actorItem}
+                      onPress={() => router.push(`/actor/${actor.id}`)}
+                    >
+                      <View
+                        style={[
+                          styles.actorAvatar,
+                          {
+                            backgroundColor: colors.panelSoft,
+                            borderColor: colors.borderSoft,
+                          },
+                        ]}
+                      >
+                        {photo ? (
+                          <Image
+                            source={photo}
+                            style={styles.actorAvatarImg}
+                            contentFit="cover"
+                          />
+                        ) : null}
+                      </View>
+                      <Text
+                        style={[styles.actorName, { color: colors.text }]}
+                        numberOfLines={2}
+                      >
+                        {actor.actorName}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </HorizontalScroll>
+            </View>
+          ) : null}
+
           <View style={styles.commentsSection}>
             <View
               style={[
@@ -1035,6 +1080,42 @@ const styles = StyleSheet.create({
   readMore: {
     fontSize: 14,
     fontWeight: '700',
+  },
+  actorsSection: {
+    paddingTop: 12,
+    gap: 10,
+  },
+  actorsTitle: {
+    paddingHorizontal: 16,
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  actorsRow: {
+    paddingHorizontal: 16,
+    alignItems: 'flex-start',
+  },
+  actorItem: {
+    width: 72,
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  actorAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  actorAvatarImg: {
+    width: '100%',
+    height: '100%',
+  },
+  actorName: {
+    marginTop: 6,
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 14,
   },
   commentsSection: {
     paddingHorizontal: 16,

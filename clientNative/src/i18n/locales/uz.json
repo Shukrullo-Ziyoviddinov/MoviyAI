@@ -51,6 +51,7 @@
     "trailer": "Triller",
     "trailerUnavailable": "Triller mavjud emas",
     "aboutTitle": "Film haqida",
+    "actorsTitle": "Aktyorlar",
     "readMore": "Ko'proq o'qish",
     "moreInfo": "Ko'proq ma'lumot",
     "similarTrailers": "O'xshash trillerlar",
@@ -67,6 +68,11 @@
     "moreReplies": "Ko'proq",
     "lessReplies": "Kamroq",
     "replyingTo": "Javob: {{user}}"
+  },
+  "actor": {
+    "aboutTitle": "Aktor haqida",
+    "readMore": "Ko'proq",
+    "notFound": "Aktor topilmadi"
   },
   "profile": {
     "savedMovies": "Saqlangan kinolar",

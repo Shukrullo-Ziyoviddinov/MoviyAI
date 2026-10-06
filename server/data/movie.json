@@ -59,7 +59,11 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9001,
+      9002
+    ]
   },
   {
     "id": 8002,
@@ -118,7 +122,12 @@
         "India"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9002,
+      9003,
+      9004
+    ]
   },
   {
     "id": 8003,
@@ -180,7 +189,13 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9003,
+      9004,
+      9005,
+      9001
+    ]
   },
   {
     "id": 8004,
@@ -244,6 +259,13 @@
     },
     "franchiseMovieIds": [
       8003
+    ],
+    "actorIds": [
+      9004,
+      9005,
+      9001,
+      9002,
+      9003
     ]
   },
   {
@@ -303,7 +325,11 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9005,
+      9001
+    ]
   },
   {
     "id": 8006,
@@ -362,7 +388,12 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9001,
+      9002,
+      9003
+    ]
   },
   {
     "id": 8007,
@@ -424,7 +455,13 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9002,
+      9003,
+      9004,
+      9005
+    ]
   },
   {
     "id": 8008,
@@ -486,7 +523,14 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9003,
+      9004,
+      9005,
+      9001,
+      9002
+    ]
   },
   {
     "id": 8009,
@@ -545,7 +589,11 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9004,
+      9005
+    ]
   },
   {
     "id": 8010,
@@ -602,7 +650,12 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9005,
+      9001,
+      9002
+    ]
   },
   {
     "id": 8011,
@@ -667,6 +720,12 @@
     "franchiseMovieIds": [
       8012,
       8013
+    ],
+    "actorIds": [
+      9001,
+      9002,
+      9003,
+      9004
     ]
   },
   {
@@ -726,7 +785,14 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9002,
+      9003,
+      9004,
+      9005,
+      9001
+    ]
   },
   {
     "id": 8013,
@@ -785,7 +851,11 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9003,
+      9004
+    ]
   },
   {
     "id": 8014,
@@ -847,7 +917,12 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9004,
+      9005,
+      9001
+    ]
   },
   {
     "id": 8015,
@@ -909,7 +984,13 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9005,
+      9001,
+      9002,
+      9003
+    ]
   },
   {
     "id": 8016,
@@ -971,7 +1052,14 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9001,
+      9002,
+      9003,
+      9004,
+      9005
+    ]
   },
   {
     "id": 8017,
@@ -1033,7 +1121,11 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9002,
+      9003
+    ]
   },
   {
     "id": 8018,
@@ -1092,7 +1184,12 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9003,
+      9004,
+      9005
+    ]
   },
   {
     "id": 8019,
@@ -1154,7 +1251,13 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9004,
+      9005,
+      9001,
+      9002
+    ]
   },
   {
     "id": 8020,
@@ -1216,6 +1319,13 @@
         "USA"
       ]
     },
-    "franchiseMovieIds": []
+    "franchiseMovieIds": [],
+    "actorIds": [
+      9005,
+      9001,
+      9002,
+      9003,
+      9004
+    ]
   }
 ]

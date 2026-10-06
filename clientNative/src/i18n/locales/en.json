@@ -51,6 +51,7 @@
     "trailer": "Trailer",
     "trailerUnavailable": "Trailer unavailable",
     "aboutTitle": "About the movie",
+    "actorsTitle": "Actors",
     "readMore": "Read more",
     "moreInfo": "More info",
     "similarTrailers": "Similar trailers",
@@ -67,6 +68,11 @@
     "moreReplies": "More",
     "lessReplies": "Less",
     "replyingTo": "Reply: {{user}}"
+  },
+  "actor": {
+    "aboutTitle": "About the actor",
+    "readMore": "More",
+    "notFound": "Actor not found"
   },
   "profile": {
     "savedMovies": "Saved movies",

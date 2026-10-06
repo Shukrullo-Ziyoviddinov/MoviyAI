@@ -8,6 +8,15 @@ export async function getActorById(id: number) {
   return Actor.findOne({ id }).lean();
 }
 
+export async function getActorsByIds(ids: number[]) {
+  if (!ids.length) return [];
+  const docs = await Actor.find({ id: { $in: ids } }).lean();
+  const byId = new Map(docs.map((doc) => [doc.id, doc]));
+  return ids
+    .map((id) => byId.get(id))
+    .filter((doc): doc is NonNullable<typeof doc> => Boolean(doc));
+}
+
 export async function upsertActors(actors: Record<string, unknown>[]) {
   const results = [];
   for (const actor of actors) {

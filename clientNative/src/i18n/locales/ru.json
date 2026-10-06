@@ -51,6 +51,7 @@
     "trailer": "Трейлер",
     "trailerUnavailable": "Трейлер недоступен",
     "aboutTitle": "О фильме",
+    "actorsTitle": "Актёры",
     "readMore": "Читать далее",
     "moreInfo": "Подробнее",
     "similarTrailers": "Похожие трейлеры",
@@ -67,6 +68,11 @@
     "moreReplies": "Ещё",
     "lessReplies": "Меньше",
     "replyingTo": "Ответ: {{user}}"
+  },
+  "actor": {
+    "aboutTitle": "Об актёре",
+    "readMore": "Ещё",
+    "notFound": "Актёр не найден"
   },
   "profile": {
     "savedMovies": "Сохранённые фильмы",
