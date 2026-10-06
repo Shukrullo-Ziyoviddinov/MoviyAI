@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as movieController from '../controllers/movie.controller.js';
-import { requireUserId } from '../middleware/requireUserId.js';
+import { optionalAuth, requireAuth } from '../middleware/requireAuth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = Router();
@@ -21,13 +21,13 @@ router.get(
 );
 router.post(
   '/:id/comments',
-  requireUserId,
+  requireAuth,
   asyncHandler(movieController.createComment)
 );
-router.get('/:id', asyncHandler(movieController.getMovie));
+router.get('/:id', optionalAuth, asyncHandler(movieController.getMovie));
 router.post(
   '/:id/reaction',
-  requireUserId,
+  requireAuth,
   asyncHandler(movieController.toggleReaction)
 );
 

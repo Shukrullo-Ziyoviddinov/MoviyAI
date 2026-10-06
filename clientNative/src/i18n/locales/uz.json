@@ -76,6 +76,20 @@
     "readMore": "Ko'proq",
     "notFound": "Aktor topilmadi"
   },
+  "auth": {
+    "title": "Google orqali kirish",
+    "subtitle": "Wishlist va kommentlar uchun Google hisobingiz bilan kiring. Parol yozish shart emas.",
+    "continueGoogle": "Google bilan davom etish",
+    "hint": "Kirishdan keyin ismingiz va avatar profilga saqlanadi.",
+    "later": "Keyinroq",
+    "errors": {
+      "missingClientId": "Google Client ID sozlanmagan",
+      "noToken": "Google token olinmadi",
+      "loginFailed": "Kirish muvaffaqiyatsiz",
+      "cancelled": "Kirish bekor qilindi"
+    },
+    "loginRequired": "Davom etish uchun Google orqali kiring"
+  },
   "profile": {
     "savedMovies": "Saqlangan kinolar",
     "savedMoviesSub": "Sevimli kinolaringiz ro'yxati",

@@ -54,7 +54,10 @@
       "expo-sharing"
     ],
     "extra": {
-      "apiUrl": "https://moviyai.onrender.com"
+      "apiUrl": "https://moviyai.onrender.com",
+      "googleWebClientId": "",
+      "googleAndroidClientId": "",
+      "googleIosClientId": ""
     },
     "experiments": {
       "typedRoutes": true

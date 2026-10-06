@@ -1,9 +1,12 @@
 import { SplashScreen as AppSplashScreen } from '@/components/SplashScreen';
+import { GoogleAuthModal } from '@/components/auth/GoogleAuthModal';
 import { LanguageModal } from '@/components/language/LanguageModal';
 import { SideMenu } from '@/components/menu/SideMenu';
 import { BottomNav } from '@/components/nav/BottomNav';
 import '@/src/i18n';
+import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
+import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import {
   CardStyleInterpolators,
   Stack,
@@ -30,6 +33,24 @@ const slideSpec = {
 
 function AppNavigator() {
   const { colors, isDark } = useTheme();
+  const hydrate = useAuthStore((s) => s.hydrate);
+  const hydrated = useAuthStore((s) => s.hydrated);
+  const profile = useAuthStore((s) => s.profile);
+  const openAuthModal = useAuthStore((s) => s.openAuthModal);
+  const loadWishlistIds = useWishlistStore((s) => s.loadIds);
+
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!profile) {
+      openAuthModal('splash');
+      return;
+    }
+    void loadWishlistIds(true);
+  }, [hydrated, profile, openAuthModal, loadWishlistIds]);
 
   return (
     <>
@@ -79,6 +100,7 @@ function AppNavigator() {
         </SideMenu>
         <BottomNav />
         <LanguageModal />
+        <GoogleAuthModal />
       </GestureHandlerRootView>
     </>
   );

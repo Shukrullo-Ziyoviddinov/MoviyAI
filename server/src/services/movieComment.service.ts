@@ -12,6 +12,8 @@ export type CommentDto = {
   createdAt: string;
   parentId: string | null;
   replyToUserId: string | null;
+  authorName?: string;
+  authorPicture?: string;
   replyCount?: number;
   replies?: CommentDto[];
 };
@@ -23,6 +25,8 @@ function toDto(doc: {
   text: string;
   parentId?: string | null;
   replyToUserId?: string | null;
+  authorName?: string | null;
+  authorPicture?: string | null;
   createdAt?: Date;
 }): CommentDto {
   return {
@@ -32,6 +36,8 @@ function toDto(doc: {
     text: doc.text,
     parentId: doc.parentId ?? null,
     replyToUserId: doc.replyToUserId ?? null,
+    authorName: doc.authorName ?? '',
+    authorPicture: doc.authorPicture ?? '',
     createdAt: (doc.createdAt ?? new Date()).toISOString(),
   };
 }
@@ -103,7 +109,8 @@ export async function createComment(
   userId: string,
   movieId: number,
   rawText: string,
-  rawParentId?: string | null
+  rawParentId?: string | null,
+  author?: { authorName?: string; authorPicture?: string }
 ) {
   const movie = await Movie.collection.findOne({ id: movieId });
   if (!movie) return null;
@@ -136,6 +143,8 @@ export async function createComment(
     text,
     parentId,
     replyToUserId,
+    authorName: String(author?.authorName ?? '').trim(),
+    authorPicture: String(author?.authorPicture ?? '').trim(),
   });
   return toDto(doc);
 }

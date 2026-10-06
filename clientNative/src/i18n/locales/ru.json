@@ -76,6 +76,20 @@
     "readMore": "Ещё",
     "notFound": "Актёр не найден"
   },
+  "auth": {
+    "title": "Вход через Google",
+    "subtitle": "Войдите через Google для избранного и комментариев. Пароль не нужен.",
+    "continueGoogle": "Продолжить с Google",
+    "hint": "После входа имя и аватар сохранятся в профиле.",
+    "later": "Позже",
+    "errors": {
+      "missingClientId": "Google Client ID не настроен",
+      "noToken": "Токен Google не получен",
+      "loginFailed": "Не удалось войти",
+      "cancelled": "Вход отменён"
+    },
+    "loginRequired": "Войдите через Google, чтобы продолжить"
+  },
   "profile": {
     "savedMovies": "Сохранённые фильмы",
     "savedMoviesSub": "Список любимых фильмов",

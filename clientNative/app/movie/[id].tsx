@@ -8,7 +8,6 @@ import {
   DislikeIcon,
   GlobeIcon,
   LikeIcon,
-  PersonIcon,
   PlayIcon,
   SendIcon,
   ShareIcon,
@@ -27,11 +26,13 @@ import {
   toggleMovieReaction,
 } from '@/src/api/movies';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
+import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import type { Movie, MovieComment } from '@/src/types/movie';
 import { resolveActorImage } from '@/src/utils/actorImages';
 import { resolveMoviePoster } from '@/src/utils/moviePosters';
+import { UserAvatar } from '@/components/common/UserAvatar';
 import {
   Oswald_700Bold,
   useFonts,
@@ -69,6 +70,11 @@ function formatCommentTime(iso: string) {
 function userLabel(userId: string) {
   const tail = userId.replace(/^user_/, '').slice(-4);
   return tail ? `User ${tail}` : 'User';
+}
+
+function authorName(comment: { authorName?: string; userId: string }) {
+  const name = String(comment.authorName ?? '').trim();
+  return name || userLabel(comment.userId);
 }
 
 function mentionLabel(userId: string) {
@@ -122,6 +128,7 @@ export default function MovieDetailScreen() {
   const { width } = useWindowDimensions();
   const isSaved = useWishlistStore((s) => s.isSaved(movieId));
   const toggle = useWishlistStore((s) => s.toggle);
+  const requireAuth = useAuthStore((s) => s.requireAuth);
   const [fontsLoaded] = useFonts({
     Oswald_700Bold,
   });
@@ -295,6 +302,7 @@ export default function MovieDetailScreen() {
 
   const onToggleSave = async () => {
     if (!movie || busy) return;
+    if (!requireAuth('wishlist')) return;
     setBusy(true);
     try {
       await toggle(movie.id);
@@ -303,8 +311,14 @@ export default function MovieDetailScreen() {
     }
   };
 
+  const openComments = () => {
+    if (!requireAuth('comment')) return;
+    setCommentsOpen(true);
+  };
+
   const onToggleReaction = async (type: 'like' | 'dislike') => {
     if (!movie || reactionBusy) return;
+    if (!requireAuth('comment')) return;
     setReactionBusy(true);
     try {
       const result = await toggleMovieReaction(movie.id, type);
@@ -557,7 +571,7 @@ export default function MovieDetailScreen() {
                     borderColor: colors.borderSoft,
                   },
                 ]}
-                onPress={() => setCommentsOpen(true)}
+                onPress={openComments}
               >
                 <ChatBubbleIcon size={18} color={colors.icon} />
                 <Text style={[styles.reactionText, { color: colors.text }]}>
@@ -673,7 +687,7 @@ export default function MovieDetailScreen() {
 
               <Pressable
                 style={styles.commentInputRow}
-                onPress={() => setCommentsOpen(true)}
+                onPress={openComments}
               >
                 <View
                   style={[
@@ -721,23 +735,17 @@ export default function MovieDetailScreen() {
                         { borderTopColor: colors.borderSoft },
                       ]}
                     >
-                      <View
-                        style={[
-                          styles.commentAvatar,
-                          {
-                            backgroundColor: colors.panel,
-                            borderColor: colors.borderSoft,
-                          },
-                        ]}
-                      >
-                        <PersonIcon size={22} color={colors.icon} />
-                      </View>
+                      <UserAvatar
+                        name={authorName(item)}
+                        picture={item.authorPicture}
+                        size={40}
+                      />
                       <View style={styles.commentPreviewBody}>
                         <View style={styles.commentPreviewMeta}>
                           <Text
                             style={[styles.commentUser, { color: colors.text }]}
                           >
-                            {userLabel(item.userId)}
+                            {authorName(item)}
                           </Text>
                           <Text
                             style={[
@@ -760,6 +768,7 @@ export default function MovieDetailScreen() {
                           </Text>
                           <Pressable
                             onPress={() => {
+                              if (!requireAuth('comment')) return;
                               setReplyToId(item.id);
                               setCommentsOpen(true);
                             }}
@@ -781,17 +790,11 @@ export default function MovieDetailScreen() {
                           <View style={styles.previewReplies}>
                             {replies.map((reply) => (
                               <View key={reply.id} style={styles.previewReplyRow}>
-                                <View
-                                  style={[
-                                    styles.previewReplyAvatar,
-                                    {
-                                      backgroundColor: colors.panel,
-                                      borderColor: colors.borderSoft,
-                                    },
-                                  ]}
-                                >
-                                  <PersonIcon size={22} color={colors.icon} />
-                                </View>
+                                <UserAvatar
+                                  name={authorName(reply)}
+                                  picture={reply.authorPicture}
+                                  size={32}
+                                />
                                 <View style={styles.previewReplyBody}>
                                   <View style={styles.previewReplyMeta}>
                                     <Text
@@ -800,7 +803,7 @@ export default function MovieDetailScreen() {
                                         { color: colors.text },
                                       ]}
                                     >
-                                      {userLabel(reply.userId)}
+                                      {authorName(reply)}
                                     </Text>
                                     <Text
                                       style={[
@@ -877,7 +880,7 @@ export default function MovieDetailScreen() {
 
               {comments.length > PREVIEW_COMMENTS ? (
                 <Pressable
-                  onPress={() => setCommentsOpen(true)}
+                  onPress={openComments}
                   hitSlop={6}
                   style={styles.moreCommentsBtn}
                 >

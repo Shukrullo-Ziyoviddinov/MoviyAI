@@ -9,6 +9,8 @@ const movieCommentSchema = new Schema(
     parentId: { type: String, default: null, index: true },
     /** userId of the person being replied to (for @mention display) */
     replyToUserId: { type: String, default: null },
+    authorName: { type: String, default: '' },
+    authorPicture: { type: String, default: '' },
   },
   {
     timestamps: true,

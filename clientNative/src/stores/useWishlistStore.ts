@@ -15,6 +15,7 @@ type WishlistState = {
   loadMovies: (force?: boolean) => Promise<void>;
   toggle: (movieId: number) => Promise<boolean>;
   isSaved: (movieId: number) => boolean;
+  clear: () => void;
 };
 
 export const useWishlistStore = create<WishlistState>((set, get) => ({
@@ -25,6 +26,8 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
 
   isSaved: (movieId) => get().movieIds.includes(movieId),
 
+  clear: () => set({ movieIds: [], movies: [], loaded: false, loading: false }),
+
   loadIds: async (force = false) => {
     if (get().loading) return;
     if (get().loaded && !force) return;
@@ -33,6 +36,8 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     try {
       const ids = await fetchWishlistIds();
       set({ movieIds: ids, loaded: true });
+    } catch {
+      set({ movieIds: [], loaded: true });
     } finally {
       set({ loading: false });
     }
@@ -47,6 +52,8 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         fetchWishlistIds(),
       ]);
       set({ movies, movieIds: ids, loaded: true });
+    } catch {
+      set({ movies: [], movieIds: [], loaded: true });
     } finally {
       set({ loading: false });
     }

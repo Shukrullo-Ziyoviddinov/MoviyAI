@@ -19,4 +19,7 @@ export const env = {
   ),
   jwtSecret: required('JWT_SECRET', 'dev-secret-change-me'),
   clientOrigin: process.env.CLIENT_ORIGIN || '*',
+  googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID || '',
+  googleAndroidClientId: process.env.GOOGLE_ANDROID_CLIENT_ID || '',
+  googleIosClientId: process.env.GOOGLE_IOS_CLIENT_ID || '',
 };

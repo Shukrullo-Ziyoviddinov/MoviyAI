@@ -1,5 +1,7 @@
-import { CloseIcon, PersonIcon, SendIcon } from '@/components/icons';
+import { CloseIcon, SendIcon } from '@/components/icons';
+import { UserAvatar } from '@/components/common/UserAvatar';
 import { createMovieComment, fetchCommentReplies } from '@/src/api/movies';
+import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import type { MovieComment } from '@/src/types/movie';
 import { useEffect, useRef, useState } from 'react';
@@ -68,8 +70,14 @@ function userLabel(userId: string) {
   return tail ? `User ${tail}` : 'User';
 }
 
-function mentionLabel(userId: string) {
-  return `@${userLabel(userId)}`;
+function authorName(comment: { authorName?: string; userId: string }) {
+  const name = String(comment.authorName ?? '').trim();
+  return name || userLabel(comment.userId);
+}
+
+function mentionLabel(userId: string, name?: string) {
+  const label = String(name ?? '').trim() || userLabel(userId);
+  return `@${label}`;
 }
 
 function getScreenHeight() {
@@ -87,6 +95,7 @@ export function CommentModal({
 }: CommentModalProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const requireAuth = useAuthStore((s) => s.requireAuth);
   const { height: windowH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
@@ -470,6 +479,7 @@ export function CommentModal({
   const handleSend = async () => {
     const value = text.trim();
     if (!value || sending || !Number.isFinite(movieId)) return;
+    if (!requireAuth('comment')) return;
     setSending(true);
     try {
       const parentId = replyTo?.id ?? null;
@@ -573,21 +583,15 @@ export function CommentModal({
                       { borderBottomColor: colors.borderSoft },
                     ]}
                   >
-                    <View
-                      style={[
-                        styles.avatar,
-                        {
-                          backgroundColor: colors.panelSoft,
-                          borderColor: colors.borderSoft,
-                        },
-                      ]}
-                    >
-                      <PersonIcon size={22} color={colors.icon} />
-                    </View>
+                    <UserAvatar
+                      name={authorName(item)}
+                      picture={item.authorPicture}
+                      size={40}
+                    />
                     <View style={styles.commentBody}>
                       <View style={styles.commentMeta}>
                         <Text style={[styles.userName, { color: colors.text }]}>
-                          {userLabel(item.userId)}
+                          {authorName(item)}
                         </Text>
                         <Text style={[styles.time, { color: colors.textMuted }]}>
                           {formatCommentTime(item.createdAt)}
@@ -615,17 +619,11 @@ export function CommentModal({
                         <View style={styles.repliesBlock}>
                           {replies.map((reply) => (
                             <View key={reply.id} style={styles.replyRow}>
-                              <View
-                                style={[
-                                  styles.replyAvatar,
-                                  {
-                                    backgroundColor: colors.panelSoft,
-                                    borderColor: colors.borderSoft,
-                                  },
-                                ]}
-                              >
-                                <PersonIcon size={22} color={colors.icon} />
-                              </View>
+                              <UserAvatar
+                                name={authorName(reply)}
+                                picture={reply.authorPicture}
+                                size={32}
+                              />
                               <View style={styles.replyBody}>
                                 <View style={styles.commentMeta}>
                                   <Text
@@ -634,7 +632,7 @@ export function CommentModal({
                                       { color: colors.text },
                                     ]}
                                   >
-                                    {userLabel(reply.userId)}
+                                    {authorName(reply)}
                                   </Text>
                                   <Text
                                     style={[
@@ -659,7 +657,11 @@ export function CommentModal({
                                           fontWeight: '700',
                                         }}
                                       >
-                                        {mentionLabel(reply.replyToUserId)}{' '}
+                                        {mentionLabel(
+                                          reply.replyToUserId,
+                                          comments.find((c) => c.userId === reply.replyToUserId)
+                                            ?.authorName
+                                        )}{' '}
                                       </Text>
                                       {reply.text}
                                     </>
@@ -740,7 +742,7 @@ export function CommentModal({
                   style={[styles.replyBarText, { color: colors.textMuted }]}
                   numberOfLines={1}
                 >
-                  {t('movie.replyingTo', { user: userLabel(replyTo.userId) })}
+                  {t('movie.replyingTo', { user: authorName(replyTo) })}
                 </Text>
                 <Pressable onPress={() => setReplyTo(null)} hitSlop={8}>
                   <CloseIcon size={16} color={colors.icon} />

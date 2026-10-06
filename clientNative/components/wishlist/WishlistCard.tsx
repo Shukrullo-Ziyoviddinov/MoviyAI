@@ -1,5 +1,6 @@
 import { BookmarkIcon } from '@/components/icons';
 import { resolveMoviePoster } from '@/src/utils/moviePosters';
+import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import type { AppLanguage } from '@/src/stores/useLanguageStore';
@@ -28,6 +29,7 @@ export function WishlistCard({
 }: WishlistCardProps) {
   const { colors } = useTheme();
   const toggle = useWishlistStore((s) => s.toggle);
+  const requireAuth = useAuthStore((s) => s.requireAuth);
   const [busy, setBusy] = useState(false);
   const lang = language === 'en' ? 'uz' : language;
   const title = movie.title[lang] ?? movie.title.uz;
@@ -36,6 +38,7 @@ export function WishlistCard({
 
   const onToggleSave = async () => {
     if (busy) return;
+    if (!requireAuth('wishlist')) return;
     setBusy(true);
     try {
       const saved = await toggle(movie.id);

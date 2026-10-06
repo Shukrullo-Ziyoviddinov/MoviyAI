@@ -1,11 +1,17 @@
+import { BookmarkIcon } from '@/components/icons';
 import { resolveMoviePoster } from '@/src/utils/moviePosters';
+import { useAuthStore } from '@/src/stores/useAuthStore';
+import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import type { AppLanguage } from '@/src/stores/useLanguageStore';
 import type { Movie } from '@/src/types/movie';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+
+const SAVE_ACTIVE = '#1E4FD6';
 
 type SimilarMovieCardProps = {
   movie: Movie;
@@ -19,10 +25,25 @@ export function SimilarMovieCard({
   width,
 }: SimilarMovieCardProps) {
   const { colors } = useTheme();
+  const isSaved = useWishlistStore((s) => s.isSaved(movie.id));
+  const toggle = useWishlistStore((s) => s.toggle);
+  const requireAuth = useAuthStore((s) => s.requireAuth);
+  const [busy, setBusy] = useState(false);
   const lang = language === 'en' ? 'uz' : language;
   const title = movie.title[lang] ?? movie.title.uz;
   const poster = resolveMoviePoster(movie.homeImgPoster);
   const posterH = Math.round(width * 1.35);
+
+  const onToggleSave = async () => {
+    if (busy) return;
+    if (!requireAuth('wishlist')) return;
+    setBusy(true);
+    try {
+      await toggle(movie.id);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <Pressable
@@ -43,6 +64,20 @@ export function SimilarMovieCard({
         {poster ? (
           <Image source={poster} style={styles.poster} contentFit="cover" />
         ) : null}
+
+        <Pressable
+          style={styles.saveBtn}
+          onPress={onToggleSave}
+          hitSlop={8}
+          disabled={busy}
+        >
+          <BookmarkIcon
+            size={20}
+            color={isSaved ? SAVE_ACTIVE : '#FFFFFF'}
+            filled={isSaved}
+          />
+        </Pressable>
+
         <View style={styles.ratingBadge}>
           <Text style={styles.ratingLabel}>IMDb</Text>
           <Text style={styles.ratingValue}>
@@ -69,6 +104,17 @@ const styles = StyleSheet.create({
   poster: {
     width: '100%',
     height: '100%',
+  },
+  saveBtn: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
   },
   ratingBadge: {
     position: 'absolute',

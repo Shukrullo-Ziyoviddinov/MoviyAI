@@ -76,6 +76,20 @@
     "readMore": "More",
     "notFound": "Actor not found"
   },
+  "auth": {
+    "title": "Sign in with Google",
+    "subtitle": "Sign in with your Google account for wishlist and comments. No password needed.",
+    "continueGoogle": "Continue with Google",
+    "hint": "Your name and avatar will be saved to your profile after sign-in.",
+    "later": "Later",
+    "errors": {
+      "missingClientId": "Google Client ID is not configured",
+      "noToken": "Google token was not received",
+      "loginFailed": "Sign-in failed",
+      "cancelled": "Sign-in was cancelled"
+    },
+    "loginRequired": "Sign in with Google to continue"
+  },
   "profile": {
     "savedMovies": "Saved movies",
     "savedMoviesSub": "Your favorite movies list",

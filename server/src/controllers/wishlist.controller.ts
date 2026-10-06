@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express';
-import type { UserRequest } from '../middleware/requireUserId.js';
+import type { AuthRequest } from '../middleware/requireAuth.js';
 import * as wishlistService from '../services/wishlist.service.js';
 
 function userIdOf(req: Request) {
-  return (req as UserRequest).userId;
+  return (req as AuthRequest).userId;
 }
 
 export async function listWishlist(req: Request, res: Response) {

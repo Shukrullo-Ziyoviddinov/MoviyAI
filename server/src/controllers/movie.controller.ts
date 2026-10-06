@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { UserRequest } from '../middleware/requireUserId.js';
+import type { AuthRequest } from '../middleware/requireAuth.js';
 import * as actorService from '../services/actor.service.js';
 import * as movieService from '../services/movie.service.js';
 import * as movieCommentService from '../services/movieComment.service.js';
@@ -25,7 +25,7 @@ export async function getMovie(req: Request, res: Response) {
     return;
   }
 
-  const userId = String(req.header('x-user-id') ?? '').trim();
+  const userId = (req as AuthRequest).userId;
   let userReaction: 'like' | 'dislike' | null = null;
   if (userId) {
     userReaction = await movieReactionService.getUserReaction(userId, id);
@@ -90,7 +90,7 @@ export async function toggleReaction(req: Request, res: Response) {
     return;
   }
 
-  const userId = (req as UserRequest).userId;
+  const userId = (req as AuthRequest).userId;
   const result = await movieReactionService.toggleMovieReaction(
     userId,
     id,
@@ -154,13 +154,18 @@ export async function createComment(req: Request, res: Response) {
     return;
   }
 
-  const userId = (req as UserRequest).userId;
+  const userId = (req as AuthRequest).userId;
+  const profile = (req as AuthRequest).profile;
   try {
     const comment = await movieCommentService.createComment(
       userId,
       id,
       String(req.body?.text ?? ''),
-      req.body?.parentId ?? null
+      req.body?.parentId ?? null,
+      {
+        authorName: profile.name,
+        authorPicture: profile.picture,
+      }
     );
     if (!comment) {
       res.status(404).json({ ok: false, error: 'Movie not found' });
