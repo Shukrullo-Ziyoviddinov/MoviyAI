@@ -1,3 +1,4 @@
+import { PageLoader } from '@/components/common/PageLoader';
 import { FloatingAiButton } from '@/components/home/FloatingAiButton';
 import { HomeEmptyState } from '@/components/home/HomeEmptyState';
 import { HomeHeader } from '@/components/home/HomeHeader';
@@ -11,12 +12,7 @@ import { groupMoviesByCategory } from '@/src/utils/groupMovies';
 import { router } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ActivityIndicator,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -54,9 +50,7 @@ export default function HomeScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {showLoader ? (
-        <View style={[styles.center, { paddingTop: headerH }]}>
-          <ActivityIndicator color={colors.accentBright} />
-        </View>
+        <PageLoader />
       ) : error || categories.length === 0 ? (
         <View
           style={[
@@ -109,11 +103,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyWrap: {
     flex: 1,

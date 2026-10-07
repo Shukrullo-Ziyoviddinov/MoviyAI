@@ -2,6 +2,7 @@ import {
   AboutAccordionItem,
   AboutAccordionList,
 } from '@/components/about/AboutAccordionItem';
+import { PageLoader } from '@/components/common/PageLoader';
 import {
   ChatBubbleIcon,
   ChevronLeftIcon,
@@ -18,14 +19,7 @@ import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { router } from 'expo-router';
 import { useEffect, useState, type ComponentType } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ICONS: Record<string, ComponentType<{ size?: number; color?: string }>> = {
@@ -105,9 +99,7 @@ export default function AboutScreen() {
         </View>
 
         {loading ? (
-          <View style={styles.stateWrap}>
-            <ActivityIndicator color={colors.accentBright} />
-          </View>
+          <PageLoader style={styles.stateWrap} />
         ) : error ? (
           <View style={styles.stateWrap}>
             <Text style={[styles.stateText, { color: colors.textMuted }]}>{error}</Text>
@@ -168,9 +160,10 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   stateWrap: {
+    flex: 1,
     paddingHorizontal: 18,
-    paddingTop: 24,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   stateText: {
     fontSize: 14,

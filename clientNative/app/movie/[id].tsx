@@ -14,6 +14,7 @@ import {
   VideoIcon,
 } from '@/components/icons';
 import { HorizontalScroll } from '@/components/common/HorizontalScroll';
+import { PageLoader } from '@/components/common/PageLoader';
 import { CommentModal } from '@/components/movie/CommentModal';
 import { MovieDescriptionModal } from '@/components/movie/MovieDescriptionModal';
 import { SimilarMovieCard } from '@/components/movie/SimilarMovieCard';
@@ -345,9 +346,7 @@ export default function MovieDetailScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.accentBright} />
-        </View>
+        <PageLoader />
       ) : error || !movie ? (
         <View style={[styles.center, { paddingHorizontal: 24 }]}>
           <Text style={{ color: colors.textMuted, textAlign: 'center' }}>

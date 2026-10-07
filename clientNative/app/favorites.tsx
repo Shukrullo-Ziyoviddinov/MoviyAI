@@ -1,3 +1,4 @@
+import { PageLoader } from '@/components/common/PageLoader';
 import { FavoritesEmptyState } from '@/components/favorites/FavoritesEmptyState';
 import { FloatingAiButton } from '@/components/home/FloatingAiButton';
 import { HomeHeader } from '@/components/home/HomeHeader';
@@ -8,13 +9,7 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CONTENT_PAD = 16;
@@ -52,9 +47,7 @@ export default function FavoritesScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {showLoader ? (
-        <View style={[styles.center, { paddingTop: headerH }]}>
-          <ActivityIndicator color={colors.accentBright} />
-        </View>
+        <PageLoader />
       ) : movies.length === 0 ? (
         <View
           style={[
@@ -113,11 +106,6 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyWrap: {
     flex: 1,

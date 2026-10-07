@@ -1,5 +1,6 @@
-import { ChevronLeftIcon } from '@/components/icons';
 import { ActorInfoModal } from '@/components/actor/ActorInfoModal';
+import { PageLoader } from '@/components/common/PageLoader';
+import { ChevronLeftIcon } from '@/components/icons';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { fetchActorById } from '@/src/api/actors';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
@@ -11,7 +12,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -99,9 +99,7 @@ export default function ActorPage() {
       </View>
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.accentBright} />
-        </View>
+        <PageLoader />
       ) : error || !actor ? (
         <View style={styles.center}>
           <Text style={{ color: colors.textMuted }}>
