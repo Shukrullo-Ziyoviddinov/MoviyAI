@@ -85,6 +85,8 @@
     "errors": {
       "missingClientId": "Google Client ID is not configured",
       "missingNativeClientId": "A separate Android/iOS Google Client ID is required (Web ID is not enough)",
+      "needsDevBuild": "Google sign-in needs a development build (Expo Go is not enough)",
+      "playServices": "Google Play Services is missing or outdated",
       "noToken": "Google token was not received",
       "loginFailed": "Sign-in failed",
       "cancelled": "Sign-in was cancelled"

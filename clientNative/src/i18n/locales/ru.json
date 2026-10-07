@@ -85,6 +85,8 @@
     "errors": {
       "missingClientId": "Google Client ID не настроен",
       "missingNativeClientId": "Для Android/iOS нужен отдельный Google Client ID (Web ID недостаточно)",
+      "needsDevBuild": "Для входа через Google нужен development build (Expo Go недостаточно)",
+      "playServices": "Google Play Services отсутствует или устарел",
       "noToken": "Токен Google не получен",
       "loginFailed": "Не удалось войти",
       "cancelled": "Вход отменён"

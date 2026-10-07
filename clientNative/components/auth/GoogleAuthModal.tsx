@@ -2,14 +2,11 @@ import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import Constants from 'expo-constants';
 import { Image } from 'expo-image';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   BackHandler,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -26,20 +23,48 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-WebBrowser.maybeCompleteAuthSession();
-
 const GOOGLE_LOGO = require('../../assets/images/google-logo.png');
 
 const OPEN_MS = 320;
 const CLOSE_MS = 240;
-/** Hook crash qilmasligi uchun placeholder (tugma disabled qoladi). */
-const PLACEHOLDER_CLIENT_ID = 'missing.apps.googleusercontent.com';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as {
   googleWebClientId?: string;
   googleAndroidClientId?: string;
   googleIosClientId?: string;
 };
+
+const isExpoGo = Constants.appOwnership === 'expo';
+
+type GoogleModule = typeof import('@react-native-google-signin/google-signin');
+
+let googleModule: GoogleModule | null = null;
+let googleConfigured = false;
+
+function getGoogleModule(): GoogleModule | null {
+  if (isExpoGo) return null;
+  if (googleModule) return googleModule;
+  try {
+    // Native modul faqat development build da bor.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    googleModule = require('@react-native-google-signin/google-signin') as GoogleModule;
+    return googleModule;
+  } catch {
+    return null;
+  }
+}
+
+function ensureGoogleConfigured(webClientId: string, iosClientId: string) {
+  if (googleConfigured || !webClientId) return;
+  const mod = getGoogleModule();
+  if (!mod) return;
+  mod.GoogleSignin.configure({
+    webClientId,
+    iosClientId: iosClientId || undefined,
+    offlineAccess: false,
+  });
+  googleConfigured = true;
+}
 
 export function GoogleAuthModal() {
   const { t } = useTranslation();
@@ -63,33 +88,21 @@ export function GoogleAuthModal() {
 
   const clientIds = useMemo(() => {
     const web = extra.googleWebClientId?.trim() || '';
-    const android = extra.googleAndroidClientId?.trim() || '';
     const ios = extra.googleIosClientId?.trim() || '';
-    const configured = Boolean(web || android || ios);
-    // Web Client ID ni android/ios o'rniga ishlatish Google "invalid_request" beradi.
+    const hasNative = Boolean(getGoogleModule());
     return {
-      configured,
       web,
-      android,
       ios,
-      webClientId: web || PLACEHOLDER_CLIENT_ID,
-      androidClientId: android || PLACEHOLDER_CLIENT_ID,
-      iosClientId: ios || PLACEHOLDER_CLIENT_ID,
-      canPromptNative:
-        Platform.OS === 'android'
-          ? Boolean(android)
-          : Platform.OS === 'ios'
-            ? Boolean(ios)
-            : Boolean(web),
+      configured: Boolean(web),
+      canPrompt: Boolean(web) && hasNative && !isExpoGo,
     };
   }, []);
 
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: clientIds.webClientId,
-    webClientId: clientIds.webClientId,
-    androidClientId: clientIds.androidClientId,
-    iosClientId: clientIds.iosClientId,
-  });
+  useEffect(() => {
+    if (clientIds.web) {
+      ensureGoogleConfigured(clientIds.web, clientIds.ios);
+    }
+  }, [clientIds.web, clientIds.ios]);
 
   useEffect(() => {
     sheetHeightSV.value = sheetH;
@@ -102,8 +115,8 @@ export function GoogleAuthModal() {
       setError(null);
       if (!clientIds.configured) {
         setError(t('auth.errors.missingClientId'));
-      } else if (!clientIds.canPromptNative) {
-        setError(t('auth.errors.missingNativeClientId'));
+      } else if (isExpoGo || !getGoogleModule()) {
+        setError(t('auth.errors.needsDevBuild'));
       }
       dragY.value = 0;
       progress.value = withTiming(1, {
@@ -132,7 +145,15 @@ export function GoogleAuthModal() {
         }
       }
     );
-  }, [modalOpen, progress, dragY, mounted, sheetHeightSV, clientIds.configured, clientIds.canPromptNative, t]);
+  }, [
+    modalOpen,
+    progress,
+    dragY,
+    mounted,
+    sheetHeightSV,
+    clientIds.configured,
+    t,
+  ]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -142,29 +163,6 @@ export function GoogleAuthModal() {
     });
     return () => sub.remove();
   }, [modalOpen, closeAuthModal]);
-
-  useEffect(() => {
-    if (!response) return;
-    if (response.type === 'success') {
-      const idToken =
-        response.params.id_token ||
-        (response as { authentication?: { idToken?: string } }).authentication
-          ?.idToken;
-      if (!idToken) {
-        setError(t('auth.errors.noToken'));
-        return;
-      }
-      loginWithIdToken(idToken).catch((err: unknown) => {
-        setError(
-          err instanceof Error ? err.message : t('auth.errors.loginFailed')
-        );
-      });
-      return;
-    }
-    if (response.type === 'error') {
-      setError(t('auth.errors.cancelled'));
-    }
-  }, [response, loginWithIdToken, t]);
 
   const finishClose = () => {
     progress.value = 0;
@@ -227,19 +225,45 @@ export function GoogleAuthModal() {
       setError(t('auth.errors.missingClientId'));
       return;
     }
-    if (!clientIds.canPromptNative) {
-      setError(t('auth.errors.missingNativeClientId'));
+
+    const mod = getGoogleModule();
+    if (!mod || isExpoGo) {
+      setError(t('auth.errors.needsDevBuild'));
       return;
     }
+
     try {
-      await promptAsync();
+      ensureGoogleConfigured(clientIds.web, clientIds.ios);
+      await mod.GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+      const response = await mod.GoogleSignin.signIn();
+      if (!mod.isSuccessResponse(response)) {
+        setError(t('auth.errors.cancelled'));
+        return;
+      }
+      const idToken = response.data.idToken;
+      if (!idToken) {
+        setError(t('auth.errors.noToken'));
+        return;
+      }
+      await loginWithIdToken(idToken);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : t('auth.errors.cancelled');
+      if (mod.isErrorWithCode(err)) {
+        if (err.code === mod.statusCodes.SIGN_IN_CANCELLED) {
+          setError(t('auth.errors.cancelled'));
+          return;
+        }
+        if (err.code === mod.statusCodes.IN_PROGRESS) {
+          return;
+        }
+        if (err.code === mod.statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+          setError(t('auth.errors.playServices'));
+          return;
+        }
+      }
       setError(
-        Platform.OS === 'android' && message.includes('androidClientId')
-          ? t('auth.errors.missingNativeClientId')
-          : message
+        err instanceof Error ? err.message : t('auth.errors.loginFailed')
       );
     }
   };
@@ -296,12 +320,11 @@ export function GoogleAuthModal() {
               {
                 backgroundColor: colors.bg,
                 borderColor: colors.borderSoft,
-                opacity:
-                  busy || !request || !clientIds.canPromptNative ? 0.7 : 1,
+                opacity: busy || !clientIds.canPrompt ? 0.7 : 1,
               },
             ]}
             onPress={onGooglePress}
-            disabled={busy || !request || !clientIds.canPromptNative}
+            disabled={busy || !clientIds.canPrompt}
           >
             {busy ? (
               <ActivityIndicator color={colors.accentBright} />

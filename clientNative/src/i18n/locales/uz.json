@@ -85,6 +85,8 @@
     "errors": {
       "missingClientId": "Google Client ID sozlanmagan",
       "missingNativeClientId": "Android/iOS uchun alohida Google Client ID kerak (Web ID yetmaydi)",
+      "needsDevBuild": "Google login uchun development build kerak (Expo Go yetarli emas)",
+      "playServices": "Google Play Services mavjud emas yoki eski",
       "noToken": "Google token olinmadi",
       "loginFailed": "Kirish muvaffaqiyatsiz",
       "cancelled": "Kirish bekor qilindi"

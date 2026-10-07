@@ -1,36 +1,48 @@
 {
   "expo": {
-    "name": "clientNative",
+    "name": "MoviyAI",
     "slug": "clientNative",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "clientnative",
+    "icon": "./assets/images/qoralogo_preview_rev_1.png",
+    "scheme": "moviyai",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.moviyai.app"
     },
     "android": {
+      "package": "com.moviyai.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#020817",
+        "foregroundImage": "./assets/images/qoralogo_preview_rev_1.png"
       },
       "predictiveBackGestureEnabled": false,
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/qoralogo_preview_rev_1.png"
     },
     "plugins": [
       "expo-router",
+      "expo-dev-client",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.513548633161-ianr75nq46ujfos74h59oua9ssohgpf3"
+        }
+      ],
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/MY_preview_rev_1.png",
+          "image": "./assets/images/qoralogo_preview_rev_1.png",
           "resizeMode": "contain",
           "backgroundColor": "#020817",
           "imageWidth": 200
@@ -56,11 +68,16 @@
     "extra": {
       "apiUrl": "https://moviyai.onrender.com",
       "googleWebClientId": "513548633161-lo14vsek9h5j0nlrdomoq0536pepj0i9.apps.googleusercontent.com",
-      "googleAndroidClientId": "513548633161-esovmdcvb2lej3t9bl4tjo0v0vf4t9l6.apps.googleusercontent.com",
-      "googleIosClientId": ""
+      "googleAndroidClientId": "513548633161-gdiut6lnbu4o09mel5cjdacs76mc0qar.apps.googleusercontent.com",
+      "googleIosClientId": "513548633161-ianr75nq46ujfos74h59oua9ssohgpf3.apps.googleusercontent.com",
+      "router": {},
+      "eas": {
+        "projectId": "b04fd015-a357-4ddb-8b38-839c83829f1b"
+      }
     },
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "owner": "shokhruzvl"
   }
 }
