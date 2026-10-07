@@ -94,7 +94,7 @@ export default function FavoritesScreen() {
         pointerEvents="box-none"
       >
         <View style={styles.headerInner} pointerEvents="box-none">
-          <HomeHeader />
+          <HomeHeader onSearchPress={() => router.push('/search')} />
         </View>
       </View>
 

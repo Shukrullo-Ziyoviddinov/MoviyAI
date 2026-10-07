@@ -132,16 +132,20 @@ export function VideoIcon({ size = 18, color = '#E5E7EB' }: IconProps) {
   );
 }
 
-export function CameraIcon({ size = 18, color = '#E5E7EB' }: IconProps) {
+export function CameraIcon({
+  size = 18,
+  color = '#E5E7EB',
+  strokeWidth = 2,
+}: IconProps & { strokeWidth?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
         d="M4 8.5H7L8.5 6.5H15.5L17 8.5H20C20.8 8.5 21.5 9.2 21.5 10V17C21.5 17.8 20.8 18.5 20 18.5H4C3.2 18.5 2.5 17.8 2.5 17V10C2.5 9.2 3.2 8.5 4 8.5Z"
         stroke={color}
-        strokeWidth="2"
+        strokeWidth={strokeWidth}
         strokeLinejoin="round"
       />
-      <Circle cx="12" cy="13" r="3" stroke={color} strokeWidth="2" />
+      <Circle cx="12" cy="13" r="3" stroke={color} strokeWidth={strokeWidth} />
     </Svg>
   );
 }

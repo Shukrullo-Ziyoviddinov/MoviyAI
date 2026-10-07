@@ -26,6 +26,12 @@
     "newChat": "New chat",
     "previousChats": "Previous chats"
   },
+  "search": {
+    "placeholder": "Search movies, actors...",
+    "hint": "Type a movie title",
+    "empty": "Nothing found",
+    "error": "Search failed"
+  },
   "home": {
     "emptyTitle": "Nothing here yet",
     "emptySubtitle": "Movies and recommendations will show up here. Start searching with AI Chat.",

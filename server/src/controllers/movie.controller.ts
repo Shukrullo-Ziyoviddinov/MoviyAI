@@ -6,9 +6,18 @@ import * as movieCommentService from '../services/movieComment.service.js';
 import * as movieReactionService from '../services/movieReaction.service.js';
 import * as similarTrailersService from '../services/similarTrailers.service.js';
 import * as similarMoviesService from '../services/similarMovies.service.js';
+import * as searchMoviesService from '../services/searchMovies.service.js';
 
 export async function listMovies(_req: Request, res: Response) {
   const docs = await movieService.getAllMovies();
+  res.json({ ok: true, data: docs });
+}
+
+export async function searchMovies(req: Request, res: Response) {
+  const q = String(req.query.q ?? '').trim();
+  const limitRaw = Number(req.query.limit ?? 20);
+  const limit = Number.isFinite(limitRaw) ? Math.min(40, Math.max(1, limitRaw)) : 20;
+  const docs = await searchMoviesService.searchMoviesByTitle(q, limit);
   res.json({ ok: true, data: docs });
 }
 

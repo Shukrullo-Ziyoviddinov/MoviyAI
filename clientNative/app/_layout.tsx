@@ -89,6 +89,7 @@ function AppNavigator() {
                 },
               }}
             />
+            <Stack.Screen name="search" />
             <Stack.Screen name="profile" />
             <Stack.Screen name="movie/[id]" />
             <Stack.Screen name="actor/[id]" />

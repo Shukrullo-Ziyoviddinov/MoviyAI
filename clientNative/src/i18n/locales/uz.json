@@ -26,6 +26,12 @@
     "newChat": "Yangi chat",
     "previousChats": "Oldingi suhbatlar"
   },
+  "search": {
+    "placeholder": "Kino, aktyor qidirish...",
+    "hint": "Kino nomini yozing",
+    "empty": "Hech narsa topilmadi",
+    "error": "Qidiruvda xatolik"
+  },
   "home": {
     "emptyTitle": "Hali hech narsa yo'q",
     "emptySubtitle": "Kinolar va tavsiyalar shu yerda paydo bo'ladi. Hozir AI Chat orqali qidirishni boshlang.",
