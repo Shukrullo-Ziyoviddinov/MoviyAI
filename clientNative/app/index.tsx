@@ -3,6 +3,7 @@ import { ChatHeader, HEADER_ROW_HEIGHT } from '@/components/chat/ChatHeader';
 import { ChatIntro } from '@/components/chat/ChatIntro';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { MediaViewer } from '@/components/chat/MediaViewer';
+import { GuideSmsBubble } from '@/components/common/GuideSmsBubble';
 import { dismissChatGuide } from '@/src/api/auth';
 import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useChatStore } from '@/src/stores/useChatStore';
@@ -16,9 +17,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
 } from 'react-native';
@@ -144,53 +143,21 @@ export default function ChatScreen() {
               </View>
             ) : null}
 
-            {!viewing && guideReady && showGuide ? (
-              <View
+            {!viewing && guideReady ? (
+              <GuideSmsBubble
+                visible={showGuide}
+                text={t('chat.guideText')}
+                gotItLabel={t('chat.guideGotIt')}
+                onGotIt={() => void onGotIt()}
+                dismissing={dismissing}
+                tail="down"
+                accent={colors.accent}
+                textOnAccent={colors.textOnAccent}
                 style={[
                   styles.guideWrap,
                   { bottom: composerH + (keyboardOpen ? 8 : 0) },
                 ]}
-                pointerEvents="box-none"
-              >
-                <View
-                  style={[
-                    styles.guideBubble,
-                    { backgroundColor: colors.accent },
-                  ]}
-                >
-                  <Text
-                    style={[styles.guideText, { color: colors.textOnAccent }]}
-                  >
-                    {t('chat.guideText')}
-                  </Text>
-                  <Pressable
-                    style={[
-                      styles.guideBtn,
-                      { backgroundColor: 'rgba(255,255,255,0.18)' },
-                    ]}
-                    onPress={() => void onGotIt()}
-                    disabled={dismissing}
-                    hitSlop={6}
-                  >
-                    <Text
-                      style={[
-                        styles.guideBtnText,
-                        { color: colors.textOnAccent },
-                      ]}
-                    >
-                      {t('chat.guideGotIt')}
-                    </Text>
-                  </Pressable>
-                </View>
-                <View style={styles.guideTailRow}>
-                  <View
-                    style={[
-                      styles.guideTail,
-                      { borderTopColor: colors.accent },
-                    ]}
-                  />
-                </View>
-              </View>
+              />
             ) : null}
           </View>
         </KeyboardAvoidingView>
@@ -234,43 +201,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 14,
     right: 14,
-    zIndex: 30,
-    elevation: 30,
-  },
-  guideBubble: {
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 12,
-    gap: 12,
-  },
-  guideText: {
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 20,
-  },
-  guideBtn: {
-    alignSelf: 'flex-end',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 14,
-  },
-  guideBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  guideTailRow: {
-    alignItems: 'flex-start',
-    paddingLeft: 28,
-    marginTop: -1,
-  },
-  guideTail: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 9,
-    borderRightWidth: 9,
-    borderTopWidth: 10,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
   },
 });

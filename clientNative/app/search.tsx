@@ -1,3 +1,4 @@
+import { GuideSmsBubble } from '@/components/common/GuideSmsBubble';
 import { CameraIcon, ChevronLeftIcon } from '@/components/icons';
 import { dismissSearchGuide } from '@/src/api/auth';
 import { useAuthStore } from '@/src/stores/useAuthStore';
@@ -29,7 +30,6 @@ export default function SearchScreen() {
   const [guideReady, setGuideReady] = useState(false);
   const [dismissing, setDismissing] = useState(false);
 
-  const token = useAuthStore((s) => s.token);
   const profile = useAuthStore((s) => s.profile);
   const setSession = useAuthStore((s) => s.setSession);
   const requireAuth = useAuthStore((s) => s.requireAuth);
@@ -140,52 +140,18 @@ export default function SearchScreen() {
         </Text>
       </View>
 
-      {guideReady && showGuide ? (
-        <View
-          style={[
-            styles.guideWrap,
-            { top: insets.top + 64 },
-          ]}
-          pointerEvents="box-none"
-        >
-          <View style={styles.guideTailRow}>
-            <View
-              style={[
-                styles.guideTail,
-                {
-                  borderBottomColor: colors.accent,
-                },
-              ]}
-            />
-          </View>
-          <View
-            style={[
-              styles.guideBubble,
-              {
-                backgroundColor: colors.accent,
-              },
-            ]}
-          >
-            <Text style={[styles.guideText, { color: colors.textOnAccent }]}>
-              {t('search.guideText')}
-            </Text>
-            <Pressable
-              style={[
-                styles.guideBtn,
-                { backgroundColor: 'rgba(255,255,255,0.18)' },
-              ]}
-              onPress={() => void onGotIt()}
-              disabled={dismissing}
-              hitSlop={6}
-            >
-              <Text
-                style={[styles.guideBtnText, { color: colors.textOnAccent }]}
-              >
-                {t('search.guideGotIt')}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
+      {guideReady ? (
+        <GuideSmsBubble
+          visible={showGuide}
+          text={t('search.guideText')}
+          gotItLabel={t('search.guideGotIt')}
+          onGotIt={() => void onGotIt()}
+          dismissing={dismissing}
+          tail="up"
+          accent={colors.accent}
+          textOnAccent={colors.textOnAccent}
+          style={[styles.guideWrap, { top: insets.top + 64 }]}
+        />
       ) : null}
     </View>
   );
@@ -240,45 +206,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    zIndex: 20,
-    elevation: 20,
     paddingHorizontal: 14,
     paddingLeft: 66,
-  },
-  guideTailRow: {
-    paddingLeft: 28,
-    marginBottom: -1,
-  },
-  guideTail: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 9,
-    borderRightWidth: 9,
-    borderBottomWidth: 10,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-  },
-  guideBubble: {
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 12,
-    gap: 12,
-  },
-  guideText: {
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 20,
-  },
-  guideBtn: {
-    alignSelf: 'flex-end',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 14,
-  },
-  guideBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
   },
   hero: {
     flex: 1,
