@@ -32,3 +32,13 @@ export async function fetchAuthMe(): Promise<AuthProfile> {
   }
   return data.data;
 }
+
+export async function dismissSearchGuide(): Promise<AuthProfile> {
+  const { data } = await api.post<ApiResponse<AuthProfile>>(
+    '/api/auth/search-guide/dismiss'
+  );
+  if (!data.ok || !data.data) {
+    throw new Error(data.error || 'Dismiss failed');
+  }
+  return data.data;
+}

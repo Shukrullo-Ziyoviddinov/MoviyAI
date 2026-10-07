@@ -9,6 +9,7 @@ export type AuthProfile = {
   email: string;
   name: string;
   picture: string;
+  searchGuideUnderstood: boolean;
 };
 
 type GoogleTokenInfo = {
@@ -62,6 +63,7 @@ export function toAuthProfile(doc: {
   email: string;
   name: string;
   picture?: string | null;
+  searchGuideUnderstood?: boolean | null;
 }): AuthProfile {
   return {
     id: doc._id.toString(),
@@ -69,6 +71,7 @@ export function toAuthProfile(doc: {
     email: doc.email,
     name: doc.name,
     picture: doc.picture ?? '',
+    searchGuideUnderstood: Boolean(doc.searchGuideUnderstood),
   };
 }
 
@@ -125,6 +128,7 @@ export function verifyAccessToken(token: string): AuthProfile | null {
       email: String(payload.email ?? ''),
       name: '',
       picture: '',
+      searchGuideUnderstood: false,
     };
   } catch {
     return null;
@@ -133,6 +137,21 @@ export function verifyAccessToken(token: string): AuthProfile | null {
 
 export async function getProfileById(id: string) {
   const doc = await Profile.findById(id).lean();
+  return doc ? toAuthProfile(doc) : null;
+}
+
+export async function dismissSearchGuide(userId: string) {
+  const doc = await Profile.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        searchGuideVisited: true,
+        searchGuideUnderstood: true,
+        searchGuideUnderstoodAt: new Date(),
+      },
+    },
+    { returnDocument: 'after' }
+  ).lean();
   return doc ? toAuthProfile(doc) : null;
 }
 

@@ -6,6 +6,9 @@ const profileSchema = new Schema(
     email: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true, trim: true },
     picture: { type: String, default: '' },
+    searchGuideVisited: { type: Boolean, default: false },
+    searchGuideUnderstood: { type: Boolean, default: false },
+    searchGuideUnderstoodAt: { type: Date, default: null },
   },
   {
     timestamps: true,

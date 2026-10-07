@@ -4,4 +4,5 @@ export type AuthProfile = {
   email: string;
   name: string;
   picture: string;
+  searchGuideUnderstood?: boolean;
 };

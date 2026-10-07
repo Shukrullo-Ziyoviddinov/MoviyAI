@@ -27,7 +27,12 @@
     "previousChats": "Previous chats"
   },
   "search": {
-    "placeholder": "Search movies, actors..."
+    "placeholder": "Search movies, actors...",
+    "aiHelper": "AI search assistant",
+    "heroTitle": "Find your favorite movies even easier",
+    "heroSubtitle": "Discover them easily via photo or video",
+    "guideText": "Type a movie title or describe your mood, favorite genres, and interests. Or find movies you can’t locate via photo and video — fast and easy.",
+    "guideGotIt": "Got it"
   },
   "home": {
     "emptyTitle": "Nothing here yet",

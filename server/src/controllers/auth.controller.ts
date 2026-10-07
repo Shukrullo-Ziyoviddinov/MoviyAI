@@ -22,3 +22,13 @@ export async function me(req: Request, res: Response) {
   const profile = (req as AuthRequest).profile;
   res.json({ ok: true, data: profile });
 }
+
+export async function dismissSearchGuide(req: Request, res: Response) {
+  const userId = (req as AuthRequest).userId;
+  const profile = await authService.dismissSearchGuide(userId);
+  if (!profile) {
+    res.status(404).json({ ok: false, error: 'Profile not found' });
+    return;
+  }
+  res.json({ ok: true, data: profile });
+}

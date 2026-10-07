@@ -27,7 +27,12 @@
     "previousChats": "Oldingi suhbatlar"
   },
   "search": {
-    "placeholder": "Kino, aktyor qidirish..."
+    "placeholder": "Kino, aktyor qidirish...",
+    "aiHelper": "AI qidiruv yordamchi",
+    "heroTitle": "Sevimli kinolaringizni yanada oson qidiring",
+    "heroSubtitle": "Surat yoki video orqali oson toping",
+    "guideText": "Kino nomi yoki his-tuyg‘ularingizni ta’riflab, sizga yoqadigan janr va qiziqarli yo‘nalishni yozing. Yoki topa olmayotgan kinolarni rasm va video orqali tez va oson toping.",
+    "guideGotIt": "Tushundim"
   },
   "home": {
     "emptyTitle": "Hali hech narsa yo'q",
