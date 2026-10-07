@@ -43,22 +43,38 @@ function toDto(doc: {
   };
 }
 
+function isObjectIdString(id: string) {
+  return /^[a-fA-F0-9]{24}$/.test(id);
+}
+
 async function authorMapForUserIds(userIds: string[]) {
-  const ids = [...new Set(userIds.map((id) => String(id ?? '').trim()).filter(Boolean))];
-  if (ids.length === 0) return new Map<string, { name: string; picture: string }>();
-
-  const profiles = await Profile.find({ _id: { $in: ids } })
-    .select({ name: 1, picture: 1 })
-    .lean();
-
-  const map = new Map<string, { name: string; picture: string }>();
-  for (const p of profiles) {
-    map.set(String(p._id), {
-      name: String(p.name ?? '').trim(),
-      picture: String(p.picture ?? '').trim(),
-    });
+  const ids = [
+    ...new Set(
+      userIds
+        .map((id) => String(id ?? '').trim())
+        .filter((id) => isObjectIdString(id))
+    ),
+  ];
+  if (ids.length === 0) {
+    return new Map<string, { name: string; picture: string }>();
   }
-  return map;
+
+  try {
+    const profiles = await Profile.find({ _id: { $in: ids } })
+      .select({ name: 1, picture: 1 })
+      .lean();
+
+    const map = new Map<string, { name: string; picture: string }>();
+    for (const p of profiles) {
+      map.set(String(p._id), {
+        name: String(p.name ?? '').trim(),
+        picture: String(p.picture ?? '').trim(),
+      });
+    }
+    return map;
+  } catch {
+    return new Map<string, { name: string; picture: string }>();
+  }
 }
 
 function withAuthorFallback(

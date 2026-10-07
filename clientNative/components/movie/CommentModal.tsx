@@ -128,6 +128,7 @@ export function CommentModal({
   const [keyboardH, setKeyboardH] = useState(0);
   const [replyTo, setReplyTo] = useState<MovieComment | null>(null);
   const [loadingMoreId, setLoadingMoreId] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const collapsedH = keyboardOpen ? keyboardHSheet : openH;
 
@@ -482,6 +483,7 @@ export function CommentModal({
     if (!value || sending || !Number.isFinite(movieId)) return;
     if (!requireAuth('comment')) return;
     setSending(true);
+    setSendError(null);
     try {
       const parentId = replyTo?.id ?? null;
       const result = await createMovieComment(movieId, value, parentId);
@@ -518,8 +520,10 @@ export function CommentModal({
       }
       setText('');
       setReplyTo(null);
-    } catch {
-      // keep draft text on failure
+    } catch (err: unknown) {
+      setSendError(
+        err instanceof Error ? err.message : t('auth.errors.loginFailed')
+      );
     } finally {
       setSending(false);
     }
@@ -758,6 +762,11 @@ export function CommentModal({
                 </Pressable>
               </View>
             ) : null}
+            {sendError ? (
+              <Text style={[styles.sendError, { color: '#EF4444' }]}>
+                {sendError}
+              </Text>
+            ) : null}
             <View style={styles.composerRow}>
               <UserAvatar
                 name={profile?.name || t('auth.title')}
@@ -767,7 +776,10 @@ export function CommentModal({
               <TextInput
                 ref={inputRef}
                 value={text}
-                onChangeText={setText}
+                onChangeText={(v) => {
+                  setText(v);
+                  if (sendError) setSendError(null);
+                }}
                 placeholder={
                   replyTo
                     ? t('movie.reply')
@@ -917,6 +929,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     fontWeight: '600',
+  },
+  sendError: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   composerRow: {
     flexDirection: 'row',

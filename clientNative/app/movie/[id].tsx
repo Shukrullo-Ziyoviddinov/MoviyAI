@@ -156,16 +156,19 @@ export default function MovieDetailScreen() {
     setLoading(true);
     Promise.all([
       fetchMovieById(movieId),
-      fetchMovieComments(movieId, 50),
+      fetchMovieComments(movieId, 50).catch(() => ({
+        comments: [] as MovieComment[],
+        commentCount: 0,
+      })),
       fetchSimilarMovies(movieId, 16).catch(() => [] as Movie[]),
     ])
       .then(([doc, commentsResult, similar]) => {
         if (!alive) return;
         setMovie({
           ...doc,
-          commentCount: commentsResult.commentCount,
+          commentCount: commentsResult.commentCount ?? doc.commentCount,
         });
-        setComments(commentsResult.comments);
+        setComments(commentsResult.comments ?? []);
         setSimilarMovies(similar);
         setError(null);
       })

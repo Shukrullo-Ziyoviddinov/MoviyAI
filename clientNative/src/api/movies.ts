@@ -125,12 +125,25 @@ export async function createMovieComment(
   text: string,
   parentId?: string | null
 ): Promise<CreateCommentResult> {
-  const { data } = await api.post<ApiResponse<CreateCommentResult>>(
-    `/api/movies/${id}/comments`,
-    { text, parentId: parentId ?? null }
-  );
-  if (!data.ok || !data.data) {
-    throw new Error(data.error || 'Comment failed');
+  try {
+    const { data } = await api.post<ApiResponse<CreateCommentResult>>(
+      `/api/movies/${id}/comments`,
+      { text, parentId: parentId ?? null }
+    );
+    if (!data.ok || !data.data) {
+      throw new Error(data.error || 'Comment failed');
+    }
+    return data.data;
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'response' in err) {
+      const ax = err as {
+        response?: { data?: { error?: string }; status?: number };
+        message?: string;
+      };
+      const serverError = ax.response?.data?.error;
+      if (serverError) throw new Error(serverError);
+      if (ax.response?.status === 401) throw new Error('Login required');
+    }
+    throw err instanceof Error ? err : new Error('Comment failed');
   }
-  return data.data;
 }
