@@ -5,4 +5,5 @@ export type AuthProfile = {
   name: string;
   picture: string;
   searchGuideUnderstood?: boolean;
+  chatGuideUnderstood?: boolean;
 };

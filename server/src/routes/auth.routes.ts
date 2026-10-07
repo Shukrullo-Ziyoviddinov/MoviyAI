@@ -12,5 +12,10 @@ router.post(
   requireAuth,
   asyncHandler(authController.dismissSearchGuide)
 );
+router.post(
+  '/chat-guide/dismiss',
+  requireAuth,
+  asyncHandler(authController.dismissChatGuide)
+);
 
 export default router;

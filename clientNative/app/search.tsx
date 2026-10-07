@@ -122,8 +122,32 @@ export default function SearchScreen() {
         </View>
       </View>
 
+      <View style={styles.hero}>
+        <Image
+          source={SEARCH_HERO}
+          style={styles.heroImage}
+          contentFit="contain"
+        />
+
+        <Text style={[styles.eyebrow, { color: colors.accent }]}>
+          {t('search.aiHelper')}
+        </Text>
+        <Text style={[styles.headline, { color: colors.text }]}>
+          {t('search.heroTitle')}
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          {t('search.heroSubtitle')}
+        </Text>
+      </View>
+
       {guideReady && showGuide ? (
-        <View style={styles.guideWrap} pointerEvents="box-none">
+        <View
+          style={[
+            styles.guideWrap,
+            { top: insets.top + 64 },
+          ]}
+          pointerEvents="box-none"
+        >
           <View style={styles.guideTailRow}>
             <View
               style={[
@@ -163,24 +187,6 @@ export default function SearchScreen() {
           </View>
         </View>
       ) : null}
-
-      <View style={styles.hero}>
-        <Image
-          source={SEARCH_HERO}
-          style={styles.heroImage}
-          contentFit="contain"
-        />
-
-        <Text style={[styles.eyebrow, { color: colors.accent }]}>
-          {t('search.aiHelper')}
-        </Text>
-        <Text style={[styles.headline, { color: colors.text }]}>
-          {t('search.heroTitle')}
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-          {t('search.heroSubtitle')}
-        </Text>
-      </View>
     </View>
   );
 }
@@ -190,6 +196,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topBar: {
+    zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -230,10 +237,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   guideWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    elevation: 20,
     paddingHorizontal: 14,
     paddingLeft: 66,
-    marginTop: 8,
-    zIndex: 5,
   },
   guideTailRow: {
     paddingLeft: 28,

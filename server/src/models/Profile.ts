@@ -9,6 +9,9 @@ const profileSchema = new Schema(
     searchGuideVisited: { type: Boolean, default: false },
     searchGuideUnderstood: { type: Boolean, default: false },
     searchGuideUnderstoodAt: { type: Date, default: null },
+    chatGuideVisited: { type: Boolean, default: false },
+    chatGuideUnderstood: { type: Boolean, default: false },
+    chatGuideUnderstoodAt: { type: Date, default: null },
   },
   {
     timestamps: true,

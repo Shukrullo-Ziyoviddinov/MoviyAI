@@ -154,6 +154,8 @@
     "actionRecommend": "Get recommendations",
     "placeholder": "Type a message...",
     "downloadUnavailable": "Download is not available on this device.",
-    "downloadFailed": "Could not download the image."
+    "downloadFailed": "Could not download the image.",
+    "guideText": "With MoviyAI chat, find movies and series you’re interested in easily. Send a photo or video to the chat; if possible, briefly describe the movie to help AI find it. Chat with AI about the movies and series you care about.",
+    "guideGotIt": "Got it"
   }
 }

@@ -32,3 +32,13 @@ export async function dismissSearchGuide(req: Request, res: Response) {
   }
   res.json({ ok: true, data: profile });
 }
+
+export async function dismissChatGuide(req: Request, res: Response) {
+  const userId = (req as AuthRequest).userId;
+  const profile = await authService.dismissChatGuide(userId);
+  if (!profile) {
+    res.status(404).json({ ok: false, error: 'Profile not found' });
+    return;
+  }
+  res.json({ ok: true, data: profile });
+}

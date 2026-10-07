@@ -154,6 +154,8 @@
     "actionRecommend": "Tavsiya olish qidirish",
     "placeholder": "Xabar yozing...",
     "downloadUnavailable": "Yuklab olish bu qurilmada mavjud emas.",
-    "downloadFailed": "Rasmni yuklab bo‘lmadi."
+    "downloadFailed": "Rasmni yuklab bo‘lmadi.",
+    "guideText": "MoviyAI chat orqali qiziqqan kino va seriallaringizni oson toping. Rasm yoki videoni chatga yuboring; imkon bo‘lsa kino haqida qisqacha ta’riflang — AI topishiga yordam sifatida. AI chat orqali qiziqqan kino va seriallaringiz bo‘yicha suhbat quring.",
+    "guideGotIt": "Tushundim"
   }
 }

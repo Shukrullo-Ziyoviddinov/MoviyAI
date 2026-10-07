@@ -10,6 +10,7 @@ export type AuthProfile = {
   name: string;
   picture: string;
   searchGuideUnderstood: boolean;
+  chatGuideUnderstood: boolean;
 };
 
 type GoogleTokenInfo = {
@@ -64,6 +65,7 @@ export function toAuthProfile(doc: {
   name: string;
   picture?: string | null;
   searchGuideUnderstood?: boolean | null;
+  chatGuideUnderstood?: boolean | null;
 }): AuthProfile {
   return {
     id: doc._id.toString(),
@@ -72,6 +74,7 @@ export function toAuthProfile(doc: {
     name: doc.name,
     picture: doc.picture ?? '',
     searchGuideUnderstood: Boolean(doc.searchGuideUnderstood),
+    chatGuideUnderstood: Boolean(doc.chatGuideUnderstood),
   };
 }
 
@@ -129,6 +132,7 @@ export function verifyAccessToken(token: string): AuthProfile | null {
       name: '',
       picture: '',
       searchGuideUnderstood: false,
+      chatGuideUnderstood: false,
     };
   } catch {
     return null;
@@ -148,6 +152,21 @@ export async function dismissSearchGuide(userId: string) {
         searchGuideVisited: true,
         searchGuideUnderstood: true,
         searchGuideUnderstoodAt: new Date(),
+      },
+    },
+    { returnDocument: 'after' }
+  ).lean();
+  return doc ? toAuthProfile(doc) : null;
+}
+
+export async function dismissChatGuide(userId: string) {
+  const doc = await Profile.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        chatGuideVisited: true,
+        chatGuideUnderstood: true,
+        chatGuideUnderstoodAt: new Date(),
       },
     },
     { returnDocument: 'after' }
