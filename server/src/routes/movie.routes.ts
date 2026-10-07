@@ -6,7 +6,6 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 const router = Router();
 
 router.get('/', asyncHandler(movieController.listMovies));
-router.get('/search', asyncHandler(movieController.searchMovies));
 router.get(
   '/:id/similar-trailers',
   asyncHandler(movieController.listSimilarTrailers)

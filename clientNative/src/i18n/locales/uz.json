@@ -27,10 +27,7 @@
     "previousChats": "Oldingi suhbatlar"
   },
   "search": {
-    "placeholder": "Kino, aktyor qidirish...",
-    "hint": "Kino nomini yozing",
-    "empty": "Hech narsa topilmadi",
-    "error": "Qidiruvda xatolik"
+    "placeholder": "Kino, aktyor qidirish..."
   },
   "home": {
     "emptyTitle": "Hali hech narsa yo'q",

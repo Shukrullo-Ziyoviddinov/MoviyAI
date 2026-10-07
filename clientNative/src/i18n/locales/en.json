@@ -27,10 +27,7 @@
     "previousChats": "Previous chats"
   },
   "search": {
-    "placeholder": "Search movies, actors...",
-    "hint": "Type a movie title",
-    "empty": "Nothing found",
-    "error": "Search failed"
+    "placeholder": "Search movies, actors..."
   },
   "home": {
     "emptyTitle": "Nothing here yet",

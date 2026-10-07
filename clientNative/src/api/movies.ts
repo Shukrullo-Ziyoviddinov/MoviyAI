@@ -32,35 +32,10 @@ export type CommentRepliesResult = {
   hasMore: boolean;
 };
 
-export type MovieSearchResult = {
-  id: number;
-  title: { uz: string; ru: string };
-  homeImgPoster: string;
-  ratingImdb: number;
-  year: number;
-  searchScore: number;
-};
-
 export async function fetchMovies(): Promise<Movie[]> {
   const { data } = await api.get<ApiResponse<Movie[]>>('/api/movies');
   if (!data.ok || !data.data) {
     throw new Error(data.error || 'Movies failed to load');
-  }
-  return data.data;
-}
-
-export async function searchMovies(
-  query: string,
-  limit = 20
-): Promise<MovieSearchResult[]> {
-  const q = query.trim();
-  if (!q) return [];
-  const { data } = await api.get<ApiResponse<MovieSearchResult[]>>(
-    '/api/movies/search',
-    { params: { q, limit } }
-  );
-  if (!data.ok || !data.data) {
-    throw new Error(data.error || 'Search failed');
   }
   return data.data;
 }
