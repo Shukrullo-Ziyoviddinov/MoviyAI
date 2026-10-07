@@ -1,3 +1,4 @@
+import { UserAvatar } from '@/components/common/UserAvatar';
 import {
   ChatBubbleIcon,
   HeartIcon,
@@ -5,6 +6,7 @@ import {
   MenuIcon,
   PersonIcon,
 } from '@/components/icons';
+import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -47,6 +49,7 @@ export function BottomNav() {
   const openMenu = useSideMenuStore((s) => s.openMenu);
   const menuOpen = useSideMenuStore((s) => s.open);
   const viewing = useMediaViewerStore((s) => !!s.item);
+  const profile = useAuthStore((s) => s.profile);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {
@@ -148,7 +151,15 @@ export function BottomNav() {
                   (isDark ? styles.tabInnerActiveDark : styles.tabInnerActiveLight),
               ]}
             >
-              <Icon size={24} color={color} />
+              {key === 'profile' && profile?.picture ? (
+                <UserAvatar
+                  name={profile.name}
+                  picture={profile.picture}
+                  size={24}
+                />
+              ) : (
+                <Icon size={24} color={color} />
+              )}
               <Text
                 style={[
                   styles.label,

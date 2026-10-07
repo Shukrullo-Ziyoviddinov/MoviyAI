@@ -33,6 +33,9 @@ import YoutubePlayer, { PLAYER_STATES } from 'react-native-youtube-iframe';
 
 const OPEN_MS = 320;
 const CLOSE_MS = 240;
+const SNAP_MS = 280;
+/** Birinchi ochilish — yuqoridan ~20% ochiq. */
+const OPEN_RATIO = 0.8;
 const SAVE_ACTIVE = '#1E4FD6';
 
 type TrailerModalProps = {
@@ -77,11 +80,15 @@ export function TrailerModal({
 
   const bottomPad = Math.max(insets.bottom, 16);
   const videoH = Math.round((width - 32) * (9 / 16));
-  const sheetH = height;
+  const openH = Math.round(height * OPEN_RATIO);
+  const fullH = height;
 
   const progress = useSharedValue(0);
   const dragY = useSharedValue(0);
-  const sheetHeightSV = useSharedValue(sheetH);
+  const sheetH = useSharedValue(openH);
+  const collapsedHSV = useSharedValue(openH);
+  const fullHSV = useSharedValue(fullH);
+  const expanded = useSharedValue(0);
   const [mounted, setMounted] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [ready, setReady] = useState(false);
@@ -106,8 +113,14 @@ export function TrailerModal({
   );
 
   useEffect(() => {
-    sheetHeightSV.value = sheetH;
-  }, [sheetH, sheetHeightSV]);
+    collapsedHSV.value = openH;
+    fullHSV.value = fullH;
+    if (expanded.value < 0.5) {
+      sheetH.value = openH;
+    } else {
+      sheetH.value = fullH;
+    }
+  }, [openH, fullH, collapsedHSV, fullHSV, sheetH, expanded]);
 
   useEffect(() => {
     if (!visible) return;
@@ -152,6 +165,8 @@ export function TrailerModal({
       setReady(false);
       setPlaying(false);
       setDescOpen(false);
+      expanded.value = 0;
+      sheetH.value = openH;
       dragY.value = 0;
       progress.value = withTiming(1, {
         duration: OPEN_MS,
@@ -168,21 +183,22 @@ export function TrailerModal({
       return;
     }
 
-    const current = (1 - progress.value) * sheetHeightSV.value + dragY.value;
+    const current = (1 - progress.value) * sheetH.value + dragY.value;
     progress.value = 1;
     dragY.value = current;
     dragY.value = withTiming(
-      sheetHeightSV.value,
+      sheetH.value,
       { duration: CLOSE_MS, easing: Easing.out(Easing.cubic) },
       (finished) => {
         if (finished) {
           progress.value = 0;
           dragY.value = 0;
+          expanded.value = 0;
           runOnJS(setMounted)(false);
         }
       }
     );
-  }, [visible, progress, dragY, mounted, sheetHeightSV]);
+  }, [visible, progress, dragY, mounted, sheetH, expanded, openH]);
 
   useEffect(() => {
     if (!visible) return;
@@ -200,6 +216,7 @@ export function TrailerModal({
   const finishClose = () => {
     progress.value = 0;
     dragY.value = 0;
+    expanded.value = 0;
     skipCloseAnim.current = true;
     setPlaying(false);
     setDescOpen(false);
@@ -207,15 +224,47 @@ export function TrailerModal({
     setMounted(false);
   };
 
+  const snapToCollapsed = () => {
+    'worklet';
+    expanded.value = withTiming(0, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    sheetH.value = withTiming(collapsedHSV.value, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    dragY.value = withTiming(0, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+  };
+
+  const snapToFull = () => {
+    'worklet';
+    expanded.value = withTiming(1, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    sheetH.value = withTiming(fullHSV.value, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+    dragY.value = withTiming(0, {
+      duration: SNAP_MS,
+      easing: Easing.out(Easing.cubic),
+    });
+  };
+
   const snapClose = () => {
     'worklet';
-    const remaining = Math.max(0, sheetHeightSV.value - dragY.value);
+    const remaining = Math.max(0, sheetH.value - dragY.value);
     const duration = Math.max(
       140,
-      Math.min(CLOSE_MS, (remaining / sheetHeightSV.value) * CLOSE_MS)
+      Math.min(CLOSE_MS, (remaining / Math.max(sheetH.value, 1)) * CLOSE_MS)
     );
     dragY.value = withTiming(
-      sheetHeightSV.value,
+      sheetH.value,
       { duration, easing: Easing.out(Easing.cubic) },
       (finished) => {
         if (finished) runOnJS(finishClose)();
@@ -225,21 +274,58 @@ export function TrailerModal({
 
   const pan = Gesture.Pan()
     .enabled(!descOpen)
-    .activeOffsetY(12)
+    .activeOffsetY([-8, 8])
     .failOffsetX([-24, 24])
     .onUpdate((e) => {
-      dragY.value = Math.max(0, e.translationY);
+      const isFull = expanded.value > 0.5;
+      const collapsed = collapsedHSV.value;
+      const full = fullHSV.value;
+
+      if (isFull) {
+        sheetH.value = Math.min(
+          full,
+          Math.max(collapsed, full - Math.max(0, e.translationY))
+        );
+        dragY.value = 0;
+        return;
+      }
+
+      if (e.translationY < 0) {
+        const travel = full - collapsed;
+        sheetH.value = Math.min(
+          full,
+          collapsed + Math.min(travel, -e.translationY * 1.35)
+        );
+        dragY.value = 0;
+      } else {
+        sheetH.value = collapsed;
+        dragY.value = Math.max(0, e.translationY);
+      }
     })
     .onEnd((e) => {
-      const threshold = sheetHeightSV.value * 0.2;
-      if (dragY.value > threshold || e.velocityY > 800) {
-        snapClose();
-      } else {
-        dragY.value = withTiming(0, {
-          duration: 200,
-          easing: Easing.out(Easing.cubic),
-        });
+      const isFull = expanded.value > 0.5;
+      const collapsed = collapsedHSV.value;
+      const full = fullHSV.value;
+      const travel = Math.max(1, full - collapsed);
+
+      if (isFull) {
+        if (sheetH.value < collapsed + travel * 0.55 || e.velocityY > 700) {
+          snapToCollapsed();
+        } else {
+          snapToFull();
+        }
+        return;
       }
+
+      if (sheetH.value > collapsed + travel * 0.18 || e.velocityY < -500) {
+        snapToFull();
+        return;
+      }
+      if (dragY.value > collapsed * 0.16 || e.velocityY > 800) {
+        snapClose();
+        return;
+      }
+      snapToCollapsed();
     });
 
   const onStateChange = useCallback((state: PLAYER_STATES) => {
@@ -289,13 +375,14 @@ export function TrailerModal({
     opacity:
       progress.value *
       0.55 *
-      Math.max(0, 1 - dragY.value / (sheetHeightSV.value + 1)),
+      Math.max(0, 1 - dragY.value / (sheetH.value + 1)),
   }));
 
   const sheetStyle = useAnimatedStyle(() => ({
+    height: sheetH.value,
     transform: [
       {
-        translateY: (1 - progress.value) * sheetHeightSV.value + dragY.value,
+        translateY: (1 - progress.value) * sheetH.value + dragY.value,
       },
     ],
   }));
@@ -320,7 +407,6 @@ export function TrailerModal({
         style={[
           styles.sheet,
           {
-            height: sheetH,
             paddingBottom: bottomPad,
             backgroundColor: colors.panel,
             borderColor: colors.borderSoft,

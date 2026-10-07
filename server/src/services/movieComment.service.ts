@@ -1,5 +1,6 @@
 import { Movie } from '../models/Movie.js';
 import { MovieComment } from '../models/MovieComment.js';
+import { Profile } from '../models/Profile.js';
 
 const MAX_TEXT = 500;
 const PREVIEW_REPLIES = 1;
@@ -42,6 +43,36 @@ function toDto(doc: {
   };
 }
 
+async function authorMapForUserIds(userIds: string[]) {
+  const ids = [...new Set(userIds.map((id) => String(id ?? '').trim()).filter(Boolean))];
+  if (ids.length === 0) return new Map<string, { name: string; picture: string }>();
+
+  const profiles = await Profile.find({ _id: { $in: ids } })
+    .select({ name: 1, picture: 1 })
+    .lean();
+
+  const map = new Map<string, { name: string; picture: string }>();
+  for (const p of profiles) {
+    map.set(String(p._id), {
+      name: String(p.name ?? '').trim(),
+      picture: String(p.picture ?? '').trim(),
+    });
+  }
+  return map;
+}
+
+function withAuthorFallback(
+  dto: CommentDto,
+  authors: Map<string, { name: string; picture: string }>
+): CommentDto {
+  const fromProfile = authors.get(dto.userId);
+  return {
+    ...dto,
+    authorName: dto.authorName?.trim() || fromProfile?.name || '',
+    authorPicture: dto.authorPicture?.trim() || fromProfile?.picture || '',
+  };
+}
+
 function isTopLevelFilter() {
   return {
     $or: [{ parentId: null }, { parentId: { $exists: false } }],
@@ -59,7 +90,8 @@ export async function listComments(movieId: number, limit = 50) {
     .limit(safeLimit)
     .lean();
 
-  const result: CommentDto[] = [];
+  const drafts: CommentDto[] = [];
+  const userIds: string[] = [];
   for (const row of rows) {
     const id = row._id.toString();
     const replyCount = await MovieComment.countDocuments({ parentId: id });
@@ -67,13 +99,21 @@ export async function listComments(movieId: number, limit = 50) {
       .sort({ createdAt: 1 })
       .limit(PREVIEW_REPLIES)
       .lean();
-    result.push({
-      ...toDto(row),
+    const top = toDto(row);
+    const replies = preview.map(toDto);
+    userIds.push(top.userId, ...replies.map((r) => r.userId));
+    drafts.push({
+      ...top,
       replyCount,
-      replies: preview.map(toDto),
+      replies,
     });
   }
-  return result;
+
+  const authors = await authorMapForUserIds(userIds);
+  return drafts.map((item) => ({
+    ...withAuthorFallback(item, authors),
+    replies: (item.replies ?? []).map((r) => withAuthorFallback(r, authors)),
+  }));
 }
 
 export async function listReplies(
@@ -96,8 +136,10 @@ export async function listReplies(
     .limit(safeLimit)
     .lean();
 
+  const replies = rows.map(toDto);
+  const authors = await authorMapForUserIds(replies.map((r) => r.userId));
   return {
-    replies: rows.map(toDto),
+    replies: replies.map((r) => withAuthorFallback(r, authors)),
     replyCount,
     skip: safeSkip,
     limit: safeLimit,
@@ -137,14 +179,21 @@ export async function createComment(
     replyToUserId = parent.userId;
   }
 
+  const authorName = String(author?.authorName ?? '').trim();
+  const authorPicture = String(author?.authorPicture ?? '').trim();
   const doc = await MovieComment.create({
     userId,
     movieId,
     text,
     parentId,
     replyToUserId,
-    authorName: String(author?.authorName ?? '').trim(),
-    authorPicture: String(author?.authorPicture ?? '').trim(),
+    authorName,
+    authorPicture,
   });
-  return toDto(doc);
+  const dto = toDto(doc.toObject ? doc.toObject() : doc);
+  return {
+    ...dto,
+    authorName: dto.authorName || authorName,
+    authorPicture: dto.authorPicture || authorPicture,
+  };
 }

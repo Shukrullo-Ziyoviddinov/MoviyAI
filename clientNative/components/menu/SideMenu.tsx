@@ -13,6 +13,7 @@ import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
+import { Image } from 'expo-image';
 import { router, usePathname } from 'expo-router';
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +25,8 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+
+const GOOGLE_LOGO = require('../../assets/images/google-logo.png');
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -273,11 +276,21 @@ export function SideMenu({ children }: SideMenuProps) {
               ]}
             >
               <Pressable style={styles.profileRow} onPress={goProfile}>
-                <UserAvatar
-                  name={profile?.name || t('auth.title')}
-                  picture={profile?.picture}
-                  size={50}
-                />
+                {profile ? (
+                  <UserAvatar
+                    name={profile.name}
+                    picture={profile.picture}
+                    size={50}
+                  />
+                ) : (
+                  <View style={styles.guestAvatar}>
+                    <Image
+                      source={GOOGLE_LOGO}
+                      style={styles.guestLogo}
+                      contentFit="contain"
+                    />
+                  </View>
+                )}
                 <View style={styles.profileText}>
                   <Text
                     style={[styles.profileName, { color: colors.text }]}
@@ -393,6 +406,20 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 4,
     marginBottom: 18,
+  },
+  guestAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+  },
+  guestLogo: {
+    width: 26,
+    height: 26,
   },
   profileText: {
     flex: 1,

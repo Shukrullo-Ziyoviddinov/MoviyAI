@@ -96,6 +96,7 @@ export function CommentModal({
   const { t } = useTranslation();
   const { colors } = useTheme();
   const requireAuth = useAuthStore((s) => s.requireAuth);
+  const profile = useAuthStore((s) => s.profile);
   const { height: windowH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
@@ -484,12 +485,20 @@ export function CommentModal({
     try {
       const parentId = replyTo?.id ?? null;
       const result = await createMovieComment(movieId, value, parentId);
-      if (result.comment.parentId) {
-        const pid = result.comment.parentId;
+      const profileNow = useAuthStore.getState().profile;
+      const comment = {
+        ...result.comment,
+        authorName:
+          result.comment.authorName?.trim() || profileNow?.name || '',
+        authorPicture:
+          result.comment.authorPicture?.trim() || profileNow?.picture || '',
+      };
+      if (comment.parentId) {
+        const pid = comment.parentId;
         onCommentsChange(
           comments.map((c) => {
             if (c.id !== pid) return c;
-            const replies = [...(c.replies ?? []), result.comment];
+            const replies = [...(c.replies ?? []), comment];
             return {
               ...c,
               replies,
@@ -501,8 +510,8 @@ export function CommentModal({
       } else {
         onCommentsChange(
           [
-            { ...result.comment, replyCount: 0, replies: [] },
-            ...comments.filter((c) => c.id !== result.comment.id),
+            { ...comment, replyCount: 0, replies: [] },
+            ...comments.filter((c) => c.id !== comment.id),
           ],
           result.commentCount
         );
@@ -750,6 +759,11 @@ export function CommentModal({
               </View>
             ) : null}
             <View style={styles.composerRow}>
+              <UserAvatar
+                name={profile?.name || t('auth.title')}
+                picture={profile?.picture}
+                size={36}
+              />
               <TextInput
                 ref={inputRef}
                 value={text}
