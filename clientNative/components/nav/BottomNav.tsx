@@ -22,7 +22,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Qatiy balandlik — faqat icon + matn */
-export const BOTTOM_NAV_BAR = 54;
+export const BOTTOM_NAV_BAR = 60;
 /** Qurilma tugmasidan yuqoridagi bo'shliq */
 export const BOTTOM_NAV_LIFT = 10;
 
@@ -148,7 +148,7 @@ export function BottomNav() {
                   (isDark ? styles.tabInnerActiveDark : styles.tabInnerActiveLight),
               ]}
             >
-              <Icon size={20} color={color} />
+              <Icon size={24} color={color} />
               <Text
                 style={[
                   styles.label,
@@ -209,9 +209,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   label: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '500',
-    lineHeight: 12,
+    lineHeight: 14,
   },
   labelActive: {
     fontWeight: '700',

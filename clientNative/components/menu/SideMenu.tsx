@@ -1,3 +1,4 @@
+import { UserAvatar } from '@/components/common/UserAvatar';
 import {
   ChatBubbleIcon,
   ChevronRightIcon,
@@ -7,9 +8,11 @@ import {
   PlusIcon,
   SettingsIcon,
 } from '@/components/icons';
+import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
+import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import { router, usePathname } from 'expo-router';
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -72,6 +75,10 @@ export function SideMenu({ children }: SideMenuProps) {
   const openMenu = useSideMenuStore((state) => state.openMenu);
   const closeMenu = useSideMenuStore((state) => state.closeMenu);
   const viewing = useMediaViewerStore((state) => !!state.item);
+  const profile = useAuthStore((s) => s.profile);
+  const openAuthModal = useAuthStore((s) => s.openAuthModal);
+  const logout = useAuthStore((s) => s.logout);
+  const clearWishlist = useWishlistStore((s) => s.clear);
   const menuW = width * 0.7;
 
   const progress = useSharedValue(0);
@@ -107,7 +114,17 @@ export function SideMenu({ children }: SideMenuProps) {
 
   const goProfile = () => {
     closeMenu();
+    if (!profile) {
+      openAuthModal('profile');
+      return;
+    }
     router.push('/profile');
+  };
+
+  const onLogout = async () => {
+    closeMenu();
+    await logout();
+    clearWishlist();
   };
 
   const goSettings = () => {
@@ -256,12 +273,24 @@ export function SideMenu({ children }: SideMenuProps) {
               ]}
             >
               <Pressable style={styles.profileRow} onPress={goProfile}>
-                <View style={[styles.avatar, { backgroundColor: colors.panelSoft }]}>
-                  <PersonIcon size={26} color={colors.icon} />
-                </View>
+                <UserAvatar
+                  name={profile?.name || t('auth.title')}
+                  picture={profile?.picture}
+                  size={50}
+                />
                 <View style={styles.profileText}>
-                  <Text style={[styles.profileName, { color: colors.text }]}>Name:</Text>
-                  <Text style={[styles.profileEmail, { color: colors.textMuted }]}>Gmail:</Text>
+                  <Text
+                    style={[styles.profileName, { color: colors.text }]}
+                    numberOfLines={1}
+                  >
+                    {profile?.name || t('auth.title')}
+                  </Text>
+                  <Text
+                    style={[styles.profileEmail, { color: colors.textMuted }]}
+                    numberOfLines={1}
+                  >
+                    {profile?.email || t('auth.loginRequired')}
+                  </Text>
                 </View>
                 <ChevronRightIcon size={18} color={colors.textMuted} />
               </Pressable>
@@ -321,7 +350,7 @@ export function SideMenu({ children }: SideMenuProps) {
                 <View style={styles.historyEmpty} />
               </View>
 
-              <Pressable style={styles.logout} onPress={closeMenu}>
+              <Pressable style={styles.logout} onPress={onLogout}>
                 <LogoutIcon size={22} color={colors.icon} />
                 <Text style={[styles.logoutText, { color: colors.text }]}>
                   {t('common.logout')}
@@ -364,15 +393,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 4,
     marginBottom: 18,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(90, 140, 255, 0.55)',
   },
   profileText: {
     flex: 1,
