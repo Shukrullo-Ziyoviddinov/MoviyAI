@@ -22,4 +22,9 @@ export const env = {
   googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID || '',
   googleAndroidClientId: process.env.GOOGLE_ANDROID_CLIENT_ID || '',
   googleIosClientId: process.env.GOOGLE_IOS_CLIENT_ID || '',
+  r2AccountId: process.env.R2_ACCOUNT_ID || '',
+  r2Bucket: process.env.R2_BUCKET || '',
+  r2AccessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+  r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+  r2Endpoint: process.env.R2_ENDPOINT || '',
 };

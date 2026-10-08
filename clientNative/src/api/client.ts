@@ -7,12 +7,12 @@ import {
 } from '@/src/utils/authToken';
 import { getSecureItem } from '@/src/utils/storage';
 
-const baseURL =
+export const apiBaseUrl =
   (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ??
   'https://api.example.com';
 
 export const api = axios.create({
-  baseURL,
+  baseURL: apiBaseUrl,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
