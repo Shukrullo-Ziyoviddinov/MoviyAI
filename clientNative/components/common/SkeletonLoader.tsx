@@ -10,8 +10,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 type SkeletonLoaderProps = {
-  width: number;
-  height: number;
+  width?: number | `${number}%`;
+  height?: number;
   borderRadius?: number;
   style?: StyleProp<ViewStyle>;
 };
@@ -43,8 +43,8 @@ export function SkeletonLoader({
       style={[
         styles.bone,
         {
-          width,
-          height,
+          ...(width != null ? { width } : null),
+          ...(height != null ? { height } : null),
           borderRadius,
           backgroundColor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(17,24,39,0.10)',
         },

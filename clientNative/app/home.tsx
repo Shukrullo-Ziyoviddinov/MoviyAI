@@ -1,7 +1,8 @@
-import { PageLoader } from '@/components/common/PageLoader';
+import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { FloatingAiButton } from '@/components/home/FloatingAiButton';
 import { HomeEmptyState } from '@/components/home/HomeEmptyState';
 import { HomeHeader } from '@/components/home/HomeHeader';
+import { MovieCardSkeleton } from '@/components/movie/MovieCard';
 import { MovieCategoryRow } from '@/components/movie/MovieCategoryRow';
 import { useBottomNavOffset } from '@/components/nav/BottomNav';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
@@ -18,6 +19,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CONTENT_PAD = 16;
 const HEADER_ROW = 44;
+const CARD_GAP = 12;
+const SKELETON_ROWS = 3;
+const SKELETON_CARDS = 3;
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -26,7 +30,6 @@ export default function HomeScreen() {
   const navOffset = useBottomNavOffset(true);
   const language = useLanguageStore((s) => s.language);
   const movies = useMoviesStore((s) => s.movies);
-  const loading = useMoviesStore((s) => s.loading);
   const loaded = useMoviesStore((s) => s.loaded);
   const error = useMoviesStore((s) => s.error);
   const loadMovies = useMoviesStore((s) => s.loadMovies);
@@ -35,7 +38,7 @@ export default function HomeScreen() {
 
   const headerH = insets.top + 10 + HEADER_ROW;
   const cardWidth = useMemo(() => Math.round(width * 0.39), [width]);
-  const showLoader = !loaded && loading;
+  const showSkeleton = !loaded && !error;
   const categories = useMemo(() => groupMoviesByCategory(movies), [movies]);
 
   useEffect(() => {
@@ -49,8 +52,36 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      {showLoader ? (
-        <PageLoader />
+      {showSkeleton ? (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
+          contentContainerStyle={{
+            paddingTop: headerH + 12,
+            paddingBottom: navOffset + 12,
+          }}
+        >
+          {Array.from({ length: SKELETON_ROWS }, (_, row) => (
+            <View key={row} style={styles.skelSection}>
+              <SkeletonLoader
+                width={Math.round(cardWidth * 1.35)}
+                height={22}
+                borderRadius={8}
+                style={{ marginBottom: 12, marginLeft: CONTENT_PAD }}
+              />
+              <View style={[styles.skelRow, { paddingHorizontal: CONTENT_PAD }]}>
+                {Array.from({ length: SKELETON_CARDS }, (_, card) => (
+                  <View
+                    key={card}
+                    style={{ width: cardWidth, marginRight: CARD_GAP }}
+                  >
+                    <MovieCardSkeleton width={cardWidth} />
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       ) : error || categories.length === 0 ? (
         <View
           style={[
@@ -120,5 +151,12 @@ const styles = StyleSheet.create({
     height: HEADER_ROW,
     justifyContent: 'center',
     backgroundColor: 'transparent',
+  },
+  skelSection: {
+    marginBottom: 18,
+  },
+  skelRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
 });

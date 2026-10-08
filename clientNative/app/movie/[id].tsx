@@ -14,7 +14,6 @@ import {
   VideoIcon,
 } from '@/components/icons';
 import { HorizontalScroll } from '@/components/common/HorizontalScroll';
-import { PageLoader } from '@/components/common/PageLoader';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { ActorChip } from '@/components/actor/ActorChip';
 import { CommentModal } from '@/components/movie/CommentModal';
@@ -34,6 +33,7 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import type { Movie, MovieComment } from '@/src/types/movie';
 import { resolveMoviePoster } from '@/src/utils/moviePosters';
+import { BlockSkeleton, PhotoGate } from '@/components/common/BlockSkeleton';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import {
   Oswald_700Bold,
@@ -352,7 +352,19 @@ export default function MovieDetailScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {loading ? (
-        <PageLoader />
+        <View style={styles.detailBody}>
+          <View
+            style={[styles.posterFixed, { height: posterH }]}
+            pointerEvents="none"
+          >
+            <SkeletonLoader
+              width={width}
+              height={posterH}
+              borderRadius={0}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
+        </View>
       ) : error || !movie ? (
         <View style={[styles.center, { paddingHorizontal: 24 }]}>
           <Text style={{ color: colors.textMuted, textAlign: 'center' }}>
@@ -710,8 +722,9 @@ export default function MovieDetailScreen() {
                   const hasMore = replies.length < replyCount;
                   const canCollapse = replies.length > 1;
                   return (
+                    <PhotoGate key={item.id} picture={item.authorPicture}>
+                    {(photoReady, onPhotoReady) => (
                     <View
-                      key={item.id}
                       style={[
                         styles.commentPreviewRow,
                         { borderTopColor: colors.borderSoft },
@@ -721,14 +734,17 @@ export default function MovieDetailScreen() {
                         name={authorName(item)}
                         picture={item.authorPicture}
                         size={40}
+                        onPhotoReady={onPhotoReady}
                       />
                       <View style={styles.commentPreviewBody}>
                         <View style={styles.commentPreviewMeta}>
-                          <Text
-                            style={[styles.commentUser, { color: colors.text }]}
-                          >
-                            {authorName(item)}
-                          </Text>
+                          <BlockSkeleton visible={!photoReady} borderRadius={6}>
+                            <Text
+                              style={[styles.commentUser, { color: colors.text }]}
+                            >
+                              {authorName(item)}
+                            </Text>
+                          </BlockSkeleton>
                           <Text
                             style={[
                               styles.commentTime,
@@ -739,15 +755,17 @@ export default function MovieDetailScreen() {
                           </Text>
                         </View>
                         <View style={styles.previewTextBlock}>
-                          <Text
-                            style={[
-                              styles.commentPreviewText,
-                              { color: colors.text },
-                            ]}
-                            numberOfLines={3}
-                          >
-                            {item.text}
-                          </Text>
+                          <BlockSkeleton visible={!photoReady} borderRadius={8}>
+                            <Text
+                              style={[
+                                styles.commentPreviewText,
+                                { color: colors.text },
+                              ]}
+                              numberOfLines={3}
+                            >
+                              {item.text}
+                            </Text>
+                          </BlockSkeleton>
                           <Pressable
                             onPress={() => {
                               if (!requireAuth('comment')) return;
@@ -771,22 +789,27 @@ export default function MovieDetailScreen() {
                         {replies.length > 0 ? (
                           <View style={styles.previewReplies}>
                             {replies.map((reply) => (
-                              <View key={reply.id} style={styles.previewReplyRow}>
+                              <PhotoGate key={reply.id} picture={reply.authorPicture}>
+                              {(replyReady, onReplyReady) => (
+                              <View style={styles.previewReplyRow}>
                                 <UserAvatar
                                   name={authorName(reply)}
                                   picture={reply.authorPicture}
                                   size={32}
+                                  onPhotoReady={onReplyReady}
                                 />
                                 <View style={styles.previewReplyBody}>
                                   <View style={styles.previewReplyMeta}>
-                                    <Text
-                                      style={[
-                                        styles.previewReplyUser,
-                                        { color: colors.text },
-                                      ]}
-                                    >
-                                      {authorName(reply)}
-                                    </Text>
+                                    <BlockSkeleton visible={!replyReady} borderRadius={6}>
+                                      <Text
+                                        style={[
+                                          styles.previewReplyUser,
+                                          { color: colors.text },
+                                        ]}
+                                      >
+                                        {authorName(reply)}
+                                      </Text>
+                                    </BlockSkeleton>
                                     <Text
                                       style={[
                                         styles.previewReplyTime,
@@ -796,31 +819,35 @@ export default function MovieDetailScreen() {
                                       {formatCommentTime(reply.createdAt)}
                                     </Text>
                                   </View>
-                                  <Text
-                                    style={[
-                                      styles.previewReplyText,
-                                      { color: colors.text },
-                                    ]}
-                                    numberOfLines={2}
-                                  >
-                                    {reply.replyToUserId ? (
-                                      <>
-                                        <Text
-                                          style={{
-                                            color: colors.accentBright,
-                                            fontWeight: '700',
-                                          }}
-                                        >
-                                          {mentionLabel(reply.replyToUserId)}{' '}
-                                        </Text>
-                                        {reply.text}
-                                      </>
-                                    ) : (
-                                      reply.text
-                                    )}
-                                  </Text>
+                                  <BlockSkeleton visible={!replyReady} borderRadius={8}>
+                                    <Text
+                                      style={[
+                                        styles.previewReplyText,
+                                        { color: colors.text },
+                                      ]}
+                                      numberOfLines={2}
+                                    >
+                                      {reply.replyToUserId ? (
+                                        <>
+                                          <Text
+                                            style={{
+                                              color: colors.accentBright,
+                                              fontWeight: '700',
+                                            }}
+                                          >
+                                            {mentionLabel(reply.replyToUserId)}{' '}
+                                          </Text>
+                                          {reply.text}
+                                        </>
+                                      ) : (
+                                        reply.text
+                                      )}
+                                    </Text>
+                                  </BlockSkeleton>
                                 </View>
                               </View>
+                              )}
+                              </PhotoGate>
                             ))}
                             {hasMore || canCollapse ? (
                               <Pressable
@@ -856,6 +883,8 @@ export default function MovieDetailScreen() {
                         ) : null}
                       </View>
                     </View>
+                    )}
+                    </PhotoGate>
                   );
                 })
               )}

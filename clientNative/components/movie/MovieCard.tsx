@@ -25,6 +25,22 @@ type MovieCardProps = {
   onPress?: (movie: Movie) => void;
 };
 
+export function MovieCardSkeleton({ width }: { width: number }) {
+  const posterH = Math.round(width * 1.3);
+  return (
+    <View style={[styles.card, { width }]}>
+      <SkeletonLoader
+        width={width}
+        height={posterH}
+        borderRadius={POSTER_RADIUS}
+      />
+      <View style={[styles.titleSlot, { width, height: NAME_HEIGHT }]}>
+        <SkeletonLoader width={width} height={NAME_HEIGHT} borderRadius={8} />
+      </View>
+    </View>
+  );
+}
+
 export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
   const { colors } = useTheme();
   const isSaved = useWishlistStore((s) => s.isSaved(movie.id));

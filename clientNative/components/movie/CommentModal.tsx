@@ -1,4 +1,5 @@
 import { CloseIcon, SendIcon } from '@/components/icons';
+import { BlockSkeleton, PhotoGate } from '@/components/common/BlockSkeleton';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { createMovieComment, fetchCommentReplies } from '@/src/api/movies';
 import { useAuthStore } from '@/src/stores/useAuthStore';
@@ -589,8 +590,9 @@ export function CommentModal({
                 const canCollapse = replies.length > 1;
 
                 return (
+                  <PhotoGate key={item.id} picture={item.authorPicture}>
+                  {(photoReady, onPhotoReady) => (
                   <View
-                    key={item.id}
                     style={[
                       styles.commentRow,
                       { borderBottomColor: colors.borderSoft },
@@ -600,20 +602,25 @@ export function CommentModal({
                       name={authorName(item)}
                       picture={item.authorPicture}
                       size={40}
+                      onPhotoReady={onPhotoReady}
                     />
                     <View style={styles.commentBody}>
                       <View style={styles.commentMeta}>
-                        <Text style={[styles.userName, { color: colors.text }]}>
-                          {authorName(item)}
-                        </Text>
+                        <BlockSkeleton visible={!photoReady} borderRadius={6}>
+                          <Text style={[styles.userName, { color: colors.text }]}>
+                            {authorName(item)}
+                          </Text>
+                        </BlockSkeleton>
                         <Text style={[styles.time, { color: colors.textMuted }]}>
                           {formatCommentTime(item.createdAt)}
                         </Text>
                       </View>
                       <View style={styles.commentTextBlock}>
-                        <Text style={[styles.commentText, { color: colors.text }]}>
-                          {item.text}
-                        </Text>
+                        <BlockSkeleton visible={!photoReady} borderRadius={8}>
+                          <Text style={[styles.commentText, { color: colors.text }]}>
+                            {item.text}
+                          </Text>
+                        </BlockSkeleton>
 
                         <Pressable
                           onPress={() => startReply(item)}
@@ -631,22 +638,27 @@ export function CommentModal({
                       {replies.length > 0 ? (
                         <View style={styles.repliesBlock}>
                           {replies.map((reply) => (
-                            <View key={reply.id} style={styles.replyRow}>
+                            <PhotoGate key={reply.id} picture={reply.authorPicture}>
+                            {(replyReady, onReplyReady) => (
+                            <View style={styles.replyRow}>
                               <UserAvatar
                                 name={authorName(reply)}
                                 picture={reply.authorPicture}
                                 size={32}
+                                onPhotoReady={onReplyReady}
                               />
                               <View style={styles.replyBody}>
                                 <View style={styles.commentMeta}>
-                                  <Text
-                                    style={[
-                                      styles.replyUser,
-                                      { color: colors.text },
-                                    ]}
-                                  >
-                                    {authorName(reply)}
-                                  </Text>
+                                  <BlockSkeleton visible={!replyReady} borderRadius={6}>
+                                    <Text
+                                      style={[
+                                        styles.replyUser,
+                                        { color: colors.text },
+                                      ]}
+                                    >
+                                      {authorName(reply)}
+                                    </Text>
+                                  </BlockSkeleton>
                                   <Text
                                     style={[
                                       styles.time,
@@ -656,32 +668,34 @@ export function CommentModal({
                                     {formatCommentTime(reply.createdAt)}
                                   </Text>
                                 </View>
-                                <Text
-                                  style={[
-                                    styles.replyTextBody,
-                                    { color: colors.text },
-                                  ]}
-                                >
-                                  {reply.replyToUserId ? (
-                                    <>
-                                      <Text
-                                        style={{
-                                          color: colors.accentBright,
-                                          fontWeight: '700',
-                                        }}
-                                      >
-                                        {mentionLabel(
-                                          reply.replyToUserId,
-                                          comments.find((c) => c.userId === reply.replyToUserId)
-                                            ?.authorName
-                                        )}{' '}
-                                      </Text>
-                                      {reply.text}
-                                    </>
-                                  ) : (
-                                    reply.text
-                                  )}
-                                </Text>
+                                <BlockSkeleton visible={!replyReady} borderRadius={8}>
+                                  <Text
+                                    style={[
+                                      styles.replyTextBody,
+                                      { color: colors.text },
+                                    ]}
+                                  >
+                                    {reply.replyToUserId ? (
+                                      <>
+                                        <Text
+                                          style={{
+                                            color: colors.accentBright,
+                                            fontWeight: '700',
+                                          }}
+                                        >
+                                          {mentionLabel(
+                                            reply.replyToUserId,
+                                            comments.find((c) => c.userId === reply.replyToUserId)
+                                              ?.authorName
+                                          )}{' '}
+                                        </Text>
+                                        {reply.text}
+                                      </>
+                                    ) : (
+                                      reply.text
+                                    )}
+                                  </Text>
+                                </BlockSkeleton>
                                 <Pressable
                                   onPress={() => startReply(reply)}
                                   hitSlop={6}
@@ -698,6 +712,8 @@ export function CommentModal({
                                 </Pressable>
                               </View>
                             </View>
+                            )}
+                            </PhotoGate>
                           ))}
 
                           {hasMore || canCollapse ? (
@@ -734,6 +750,8 @@ export function CommentModal({
                       ) : null}
                     </View>
                   </View>
+                  )}
+                  </PhotoGate>
                 );
               })
             )}
