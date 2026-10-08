@@ -15,6 +15,8 @@ import {
 } from '@/components/icons';
 import { HorizontalScroll } from '@/components/common/HorizontalScroll';
 import { PageLoader } from '@/components/common/PageLoader';
+import { SkeletonLoader } from '@/components/common/SkeletonLoader';
+import { ActorChip } from '@/components/actor/ActorChip';
 import { CommentModal } from '@/components/movie/CommentModal';
 import { MovieDescriptionModal } from '@/components/movie/MovieDescriptionModal';
 import { SimilarMovieCard } from '@/components/movie/SimilarMovieCard';
@@ -31,7 +33,6 @@ import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import type { Movie, MovieComment } from '@/src/types/movie';
-import { resolveActorImage } from '@/src/utils/actorImages';
 import { resolveMoviePoster } from '@/src/utils/moviePosters';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import {
@@ -145,6 +146,7 @@ export default function MovieDetailScreen() {
   const [replyToId, setReplyToId] = useState<string | null>(null);
   const [loadingMoreId, setLoadingMoreId] = useState<string | null>(null);
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
+  const [posterReady, setPosterReady] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -188,6 +190,10 @@ export default function MovieDetailScreen() {
       alive = false;
     };
   }, [movieId]);
+
+  useEffect(() => {
+    setPosterReady(false);
+  }, [movieId, movie?.homeImgPoster]);
 
   const lang = language === 'en' ? 'uz' : language;
   const title = movie ? movie.title[lang] ?? movie.title.uz : '';
@@ -359,12 +365,22 @@ export default function MovieDetailScreen() {
             style={[styles.posterFixed, { height: posterH }]}
             pointerEvents="none"
           >
+            {poster && !posterReady ? (
+              <SkeletonLoader
+                width={width}
+                height={posterH}
+                borderRadius={0}
+                style={StyleSheet.absoluteFill}
+              />
+            ) : null}
             {poster ? (
               <Image
                 source={poster}
                 style={styles.poster}
                 contentFit="cover"
                 contentPosition="top"
+                onLoad={() => setPosterReady(true)}
+                onError={() => setPosterReady(true)}
               />
             ) : (
               <View
@@ -630,45 +646,9 @@ export default function MovieDetailScreen() {
                 {t('movie.actorsTitle')}
               </Text>
               <HorizontalScroll contentContainerStyle={styles.actorsRow}>
-                {movie.actors.map((actor) => {
-                  const photo = resolveActorImage(actor.actorImg);
-                  return (
-                    <Pressable
-                      key={actor.id}
-                      style={styles.actorItem}
-                      onPress={() =>
-                        router.push({
-                          pathname: '/actor/[id]',
-                          params: { id: String(actor.id) },
-                        })
-                      }
-                    >
-                      <View
-                        style={[
-                          styles.actorAvatar,
-                          {
-                            backgroundColor: colors.panelSoft,
-                            borderColor: colors.borderSoft,
-                          },
-                        ]}
-                      >
-                        {photo ? (
-                          <Image
-                            source={photo}
-                            style={styles.actorAvatarImg}
-                            contentFit="cover"
-                          />
-                        ) : null}
-                      </View>
-                      <Text
-                        style={[styles.actorName, { color: colors.text }]}
-                        numberOfLines={2}
-                      >
-                        {actor.actorName}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+                {movie.actors.map((actor) => (
+                  <ActorChip key={actor.id} actor={actor} />
+                ))}
               </HorizontalScroll>
             </View>
           ) : null}
@@ -1162,29 +1142,6 @@ const styles = StyleSheet.create({
   actorsRow: {
     paddingHorizontal: 16,
     alignItems: 'flex-start',
-  },
-  actorItem: {
-    width: 88,
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  actorAvatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  actorAvatarImg: {
-    width: '100%',
-    height: '100%',
-  },
-  actorName: {
-    marginTop: 8,
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-    lineHeight: 16,
   },
   commentsSection: {
     paddingHorizontal: 16,

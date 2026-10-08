@@ -1,5 +1,6 @@
 import { ActorInfoModal } from '@/components/actor/ActorInfoModal';
 import { PageLoader } from '@/components/common/PageLoader';
+import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { ChevronLeftIcon } from '@/components/icons';
 import { MovieCard } from '@/components/movie/MovieCard';
 import { fetchActorById } from '@/src/api/actors';
@@ -23,6 +24,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CONTENT_PAD = 16;
 const GAP = 12;
+const PHOTO_W = 110;
+const PHOTO_H = 148;
+const PHOTO_RADIUS = 14;
+const NAME_LINE_HEIGHT = 26;
+const NAME_HEIGHT = NAME_LINE_HEIGHT;
 
 export default function ActorPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -42,6 +48,7 @@ export default function ActorPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [photoReady, setPhotoReady] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -72,11 +79,17 @@ export default function ActorPage() {
     };
   }, [actorId]);
 
+  useEffect(() => {
+    setPhotoReady(false);
+  }, [actorId, actor?.actorImg]);
+
   const aboutText = actor
     ? actor.actorAbout[lang] ?? actor.actorAbout.uz
     : '';
   const photo = actor ? resolveActorImage(actor.actorImg) : null;
   const movies = actor?.movies ?? [];
+  const nameReady = Boolean(actor?.actorName?.trim());
+  const nameWidth = width - CONTENT_PAD * 2 - PHOTO_W - 14;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
@@ -124,19 +137,37 @@ export default function ActorPage() {
                 },
               ]}
             >
+              {photo && !photoReady ? (
+                <SkeletonLoader
+                  width={PHOTO_W}
+                  height={PHOTO_H}
+                  borderRadius={PHOTO_RADIUS}
+                  style={StyleSheet.absoluteFill}
+                />
+              ) : null}
               {photo ? (
                 <Image
                   source={photo}
                   style={styles.photo}
                   contentFit="cover"
+                  onLoad={() => setPhotoReady(true)}
+                  onError={() => setPhotoReady(true)}
                 />
               ) : null}
             </View>
 
             <View style={styles.infoCol}>
-              <Text style={[styles.name, { color: colors.text }]}>
-                {actor.actorName}
-              </Text>
+              {nameReady ? (
+                <Text style={[styles.name, { color: colors.text, width: nameWidth }]}>
+                  {actor.actorName}
+                </Text>
+              ) : (
+                <SkeletonLoader
+                  width={nameWidth}
+                  height={NAME_HEIGHT}
+                  borderRadius={8}
+                />
+              )}
               <Text
                 style={[styles.aboutPreview, { color: colors.text }]}
                 numberOfLines={2}
@@ -222,9 +253,9 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   photoWrap: {
-    width: 110,
-    height: 148,
-    borderRadius: 14,
+    width: PHOTO_W,
+    height: PHOTO_H,
+    borderRadius: PHOTO_RADIUS,
     borderWidth: 1,
     overflow: 'hidden',
   },
@@ -240,6 +271,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 20,
     fontWeight: '700',
+    lineHeight: NAME_LINE_HEIGHT,
   },
   aboutPreview: {
     fontSize: 14,
