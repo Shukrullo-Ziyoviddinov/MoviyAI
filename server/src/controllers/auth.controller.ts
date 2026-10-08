@@ -20,7 +20,8 @@ export async function googleLogin(req: Request, res: Response) {
 
 export async function me(req: Request, res: Response) {
   const profile = (req as AuthRequest).profile;
-  res.json({ ok: true, data: profile });
+  const token = authService.signAccessToken(profile);
+  res.json({ ok: true, data: profile, token });
 }
 
 export async function dismissSearchGuide(req: Request, res: Response) {

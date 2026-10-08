@@ -25,12 +25,17 @@ export async function loginWithGoogleIdToken(
   return data.data;
 }
 
-export async function fetchAuthMe(): Promise<AuthProfile> {
-  const { data } = await api.get<ApiResponse<AuthProfile>>('/api/auth/me');
+export async function fetchAuthMe(): Promise<{
+  profile: AuthProfile;
+  token?: string;
+}> {
+  const { data } = await api.get<ApiResponse<AuthProfile> & { token?: string }>(
+    '/api/auth/me'
+  );
   if (!data.ok || !data.data) {
     throw new Error(data.error || 'Session failed');
   }
-  return data.data;
+  return { profile: data.data, token: data.token };
 }
 
 export async function dismissSearchGuide(): Promise<AuthProfile> {

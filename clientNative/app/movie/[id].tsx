@@ -374,11 +374,68 @@ export default function MovieDetailScreen() {
                 height={34}
                 borderRadius={8}
               />
+              <View style={styles.skelSpecs}>
+                <SkeletonLoader width={70} height={26} borderRadius={999} />
+                <SkeletonLoader width={91} height={26} borderRadius={999} />
+                <SkeletonLoader width={63} height={26} borderRadius={999} />
+                <SkeletonLoader width={65} height={26} borderRadius={999} />
+              </View>
+              <View style={styles.skelSpecs}>
+                <SkeletonLoader width={61} height={26} borderRadius={999} />
+                <SkeletonLoader width={61} height={26} borderRadius={999} />
+                <SkeletonLoader width={71} height={26} borderRadius={999} />
+                <SkeletonLoader width={71} height={26} borderRadius={999} />
+                <SkeletonLoader width={78} height={26} borderRadius={999} />
+              </View>
+              <View style={styles.skelActions}>
+                <SkeletonLoader
+                  width={Math.floor((width - 42) / 2)}
+                  height={44}
+                  borderRadius={12}
+                />
+                <SkeletonLoader
+                  width={Math.floor((width - 42) / 2)}
+                  height={44}
+                  borderRadius={12}
+                />
+              </View>
+              <View style={styles.skelSpecs}>
+                <SkeletonLoader width={82} height={32} borderRadius={999} />
+                <SkeletonLoader width={58} height={32} borderRadius={999} />
+                <SkeletonLoader width={58} height={32} borderRadius={999} />
+              </View>
+              <View style={styles.skelAbout}>
+                <SkeletonLoader
+                  width={Math.round(width * 0.38)}
+                  height={22}
+                  borderRadius={6}
+                />
+                <SkeletonLoader
+                  width={Math.max(width - 60, 120)}
+                  height={84}
+                  borderRadius={8}
+                />
+              </View>
               <View style={styles.skelActorRow}>
                 {Array.from({ length: 4 }, (_, index) => (
                   <View key={index} style={styles.skelActor}>
                     <SkeletonLoader width={72} height={72} borderRadius={36} />
-                    <SkeletonLoader width={88} height={32} borderRadius={8} />
+                    <SkeletonLoader width={88} height={20} borderRadius={8} />
+                  </View>
+                ))}
+              </View>
+              <View style={styles.skelComments}>
+                {Array.from({ length: 2 }, (_, index) => (
+                  <View key={index} style={styles.skelCommentRow}>
+                    <SkeletonLoader width={40} height={40} borderRadius={20} />
+                    <View style={styles.skelCommentBody}>
+                      <SkeletonLoader width={96} height={16} borderRadius={6} />
+                      <SkeletonLoader
+                        width={Math.max(width - 82, 120)}
+                        height={54}
+                        borderRadius={8}
+                      />
+                    </View>
                   </View>
                 ))}
               </View>
@@ -395,7 +452,7 @@ export default function MovieDetailScreen() {
                       />
                       <SkeletonLoader
                         width={cardW}
-                        height={36}
+                        height={22}
                         borderRadius={8}
                         style={{ marginTop: 8 }}
                       />
@@ -1093,6 +1150,18 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     gap: 22,
   },
+  skelAbout: {
+    gap: 8,
+  },
+  skelSpecs: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  skelActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
   skelActorRow: {
     flexDirection: 'row',
     gap: 14,
@@ -1101,6 +1170,18 @@ const styles = StyleSheet.create({
     width: 88,
     alignItems: 'center',
     gap: 8,
+  },
+  skelComments: {
+    gap: 12,
+  },
+  skelCommentRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  skelCommentBody: {
+    flex: 1,
+    gap: 6,
   },
   skelSimilarRow: {
     flexDirection: 'row',
@@ -1148,6 +1229,7 @@ const styles = StyleSheet.create({
   },
   specText: {
     fontSize: 12,
+    lineHeight: 16,
     fontWeight: '600',
   },
   ratingIcon: {
@@ -1173,6 +1255,7 @@ const styles = StyleSheet.create({
   actionBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
+    lineHeight: 18,
     fontWeight: '700',
   },
   reactionRow: {
@@ -1192,6 +1275,7 @@ const styles = StyleSheet.create({
   },
   reactionText: {
     fontSize: 13,
+    lineHeight: 18,
     fontWeight: '600',
   },
   aboutSection: {
@@ -1200,6 +1284,7 @@ const styles = StyleSheet.create({
   },
   aboutTitle: {
     fontSize: 17,
+    lineHeight: 22,
     fontWeight: '700',
   },
   aboutCard: {

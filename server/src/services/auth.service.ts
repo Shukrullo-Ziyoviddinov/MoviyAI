@@ -113,7 +113,7 @@ export function signAccessToken(profile: AuthProfile) {
       email: profile.email,
     },
     env.jwtSecret,
-    { expiresIn: '30d' }
+    { expiresIn: '365d' }
   );
 }
 

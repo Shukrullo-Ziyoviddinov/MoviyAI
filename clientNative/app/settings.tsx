@@ -3,6 +3,7 @@ import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { SettingsLogoutButton } from '@/components/settings/SettingsLogoutButton';
 import { SettingsProfileCard } from '@/components/settings/SettingsProfileCard';
 import { SettingsSavedCard } from '@/components/settings/SettingsSavedCard';
+import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -11,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function SettingsScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const profile = useAuthStore((s) => s.profile);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
@@ -28,7 +30,12 @@ export default function SettingsScreen() {
         <SettingsHeader />
 
         <View style={styles.block}>
-          <SettingsProfileCard onPress={() => router.push('/profile')} />
+          <SettingsProfileCard
+            name={profile?.name}
+            email={profile?.email}
+            picture={profile?.picture}
+            onPress={() => router.push('/profile')}
+          />
         </View>
 
         <View style={styles.block}>

@@ -1,15 +1,53 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   deleteSecureItem,
   getSecureItem,
   setSecureItem,
 } from '@/src/utils/storage';
 import {
+  getAuthProfileKey,
+  getAuthTokenBackupKey,
   getAuthTokenKey,
   setAuthTokenSync,
 } from '@/src/utils/authToken';
 import type { AuthProfile } from '@/src/types/auth';
 import { fetchAuthMe, loginWithGoogleIdToken } from '@/src/api/auth';
 import { create } from 'zustand';
+
+function isUnauthorized(err: unknown) {
+  if (!err || typeof err !== 'object') return false;
+  const status = (err as { response?: { status?: number } }).response?.status;
+  return status === 401;
+}
+
+function readCachedProfile(raw: string | null): AuthProfile | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as AuthProfile;
+    if (!parsed?.email) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+async function persistSession(token: string, profile: AuthProfile) {
+  setAuthTokenSync(token);
+  await Promise.all([
+    setSecureItem(getAuthTokenKey(), token),
+    AsyncStorage.setItem(getAuthTokenBackupKey(), token),
+    AsyncStorage.setItem(getAuthProfileKey(), JSON.stringify(profile)),
+  ]);
+}
+
+async function clearSession() {
+  setAuthTokenSync(null);
+  await Promise.all([
+    deleteSecureItem(getAuthTokenKey()),
+    AsyncStorage.removeItem(getAuthTokenBackupKey()),
+    AsyncStorage.removeItem(getAuthProfileKey()),
+  ]);
+}
 
 type AuthModalReason = 'splash' | 'wishlist' | 'comment' | 'profile' | null;
 
@@ -40,25 +78,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hydrate: async () => {
     if (get().hydrated) return;
     try {
-      const token = await getSecureItem(getAuthTokenKey());
+      let token = await getSecureItem(getAuthTokenKey());
+      if (!token) token = await AsyncStorage.getItem(getAuthTokenBackupKey());
+      const cached = readCachedProfile(
+        await AsyncStorage.getItem(getAuthProfileKey())
+      );
       setAuthTokenSync(token);
       if (!token) {
         set({ token: null, profile: null, hydrated: true });
         return;
       }
-      set({ token, busy: true });
-      const profile = await fetchAuthMe();
-      set({ profile, hydrated: true, busy: false });
+      set({ token, profile: cached, hydrated: true, busy: true });
+      try {
+        const fresh = await fetchAuthMe();
+        const nextToken = fresh.token || token;
+        await persistSession(nextToken, fresh.profile);
+        set({ token: nextToken, profile: fresh.profile, busy: false });
+      } catch (err) {
+        if (isUnauthorized(err)) {
+          await clearSession();
+          set({ token: null, profile: null, busy: false });
+          return;
+        }
+        set({ busy: false });
+      }
     } catch {
-      setAuthTokenSync(null);
-      await deleteSecureItem(getAuthTokenKey());
-      set({ token: null, profile: null, hydrated: true, busy: false });
+      set({ hydrated: true, busy: false });
     }
   },
 
   setSession: async (token, profile) => {
-    setAuthTokenSync(token);
-    await setSecureItem(getAuthTokenKey(), token);
+    await persistSession(token, profile);
     set({ token, profile, modalOpen: false, modalReason: null });
   },
 
@@ -73,8 +123,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    setAuthTokenSync(null);
-    await deleteSecureItem(getAuthTokenKey());
+    await clearSession();
     set({ token: null, profile: null, modalOpen: false, modalReason: null });
   },
 

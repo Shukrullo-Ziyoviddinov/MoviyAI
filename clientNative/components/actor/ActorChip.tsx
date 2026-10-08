@@ -11,8 +11,8 @@ const AVATAR = 72;
 const AVATAR_RADIUS = AVATAR / 2;
 const NAME_WIDTH = 88;
 const NAME_LINE_HEIGHT = 16;
-const NAME_LINES = 2;
-const NAME_HEIGHT = NAME_LINE_HEIGHT * NAME_LINES;
+const NAME_LINES = 1;
+const NAME_HEIGHT = 20;
 
 type ActorChipProps = {
   actor: Actor;

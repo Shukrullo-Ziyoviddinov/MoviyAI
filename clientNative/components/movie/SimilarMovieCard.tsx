@@ -15,8 +15,8 @@ import { Pressable } from 'react-native-gesture-handler';
 const SAVE_ACTIVE = '#1E4FD6';
 const POSTER_RADIUS = 14;
 const NAME_LINE_HEIGHT = 18;
-const NAME_LINES = 2;
-const NAME_HEIGHT = NAME_LINE_HEIGHT * NAME_LINES;
+const NAME_LINES = 1;
+const NAME_HEIGHT = 22;
 
 type SimilarMovieCardProps = {
   movie: Movie;
