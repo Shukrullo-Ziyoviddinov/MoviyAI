@@ -30,6 +30,7 @@ export default function HomeScreen() {
   const navOffset = useBottomNavOffset(true);
   const language = useLanguageStore((s) => s.language);
   const movies = useMoviesStore((s) => s.movies);
+  const loading = useMoviesStore((s) => s.loading);
   const loaded = useMoviesStore((s) => s.loaded);
   const error = useMoviesStore((s) => s.error);
   const loadMovies = useMoviesStore((s) => s.loadMovies);
@@ -38,7 +39,7 @@ export default function HomeScreen() {
 
   const headerH = insets.top + 10 + HEADER_ROW;
   const cardWidth = useMemo(() => Math.round(width * 0.39), [width]);
-  const showSkeleton = !loaded && !error;
+  const showSkeleton = movies.length === 0 && !error && (loading || !loaded);
   const categories = useMemo(() => groupMoviesByCategory(movies), [movies]);
 
   useEffect(() => {

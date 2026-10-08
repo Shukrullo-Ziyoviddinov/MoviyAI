@@ -8,7 +8,7 @@ import type { AppLanguage } from '@/src/stores/useLanguageStore';
 import type { Movie } from '@/src/types/movie';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 
@@ -47,17 +47,15 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
   const toggle = useWishlistStore((s) => s.toggle);
   const requireAuth = useAuthStore((s) => s.requireAuth);
   const [busy, setBusy] = useState(false);
-  const [posterReady, setPosterReady] = useState(false);
+  const [readyPoster, setReadyPoster] = useState<string | null>(null);
   const lang = language === 'en' ? 'uz' : language;
   const title = movie.title[lang] ?? movie.title.uz;
   const poster = resolveMoviePoster(movie.homeImgPoster);
+  const posterKey = movie.homeImgPoster ?? '';
   const posterH = Math.round(width * 1.3);
+  const posterReady = posterKey.length > 0 && readyPoster === posterKey;
   const nameReady = Boolean(title?.trim());
   const showPosterChrome = !poster || posterReady;
-
-  useEffect(() => {
-    setPosterReady(false);
-  }, [movie.id, movie.homeImgPoster]);
 
   const onToggleSave = async () => {
     if (busy) return;
@@ -102,8 +100,8 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
             source={poster}
             style={styles.poster}
             contentFit="fill"
-            onLoad={() => setPosterReady(true)}
-            onError={() => setPosterReady(true)}
+            onLoad={() => setReadyPoster(posterKey)}
+            onError={() => setReadyPoster(posterKey)}
           />
         ) : null}
 

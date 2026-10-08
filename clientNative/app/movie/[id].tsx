@@ -135,7 +135,6 @@ export default function MovieDetailScreen() {
     Oswald_700Bold,
   });
   const [movie, setMovie] = useState<Movie | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [reactionBusy, setReactionBusy] = useState(false);
@@ -146,17 +145,19 @@ export default function MovieDetailScreen() {
   const [replyToId, setReplyToId] = useState<string | null>(null);
   const [loadingMoreId, setLoadingMoreId] = useState<string | null>(null);
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
-  const [posterReady, setPosterReady] = useState(false);
+  const [readyPoster, setReadyPoster] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
     if (!Number.isFinite(movieId)) {
       setError('Invalid movie id');
-      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    setMovie(null);
+    setError(null);
+    setComments([]);
+    setSimilarMovies([]);
     Promise.all([
       fetchMovieById(movieId),
       fetchMovieComments(movieId, 50).catch(() => ({
@@ -181,9 +182,6 @@ export default function MovieDetailScreen() {
         setMovie(null);
         setComments([]);
         setSimilarMovies([]);
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
       });
 
     return () => {
@@ -191,13 +189,11 @@ export default function MovieDetailScreen() {
     };
   }, [movieId]);
 
-  useEffect(() => {
-    setPosterReady(false);
-  }, [movieId, movie?.homeImgPoster]);
-
   const lang = language === 'en' ? 'uz' : language;
   const title = movie ? movie.title[lang] ?? movie.title.uz : '';
   const poster = movie ? resolveMoviePoster(movie.homeImgPoster) : null;
+  const posterKey = movie?.homeImgPoster ?? '';
+  const posterReady = posterKey.length > 0 && readyPoster === posterKey;
   const posterH = Math.round(width * 1.15);
   const fadeH = Math.round(posterH * 0.42);
   const description = movie
@@ -351,7 +347,7 @@ export default function MovieDetailScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      {loading ? (
+      {!movie && !error ? (
         <View style={styles.detailBody}>
           <View
             style={[styles.posterFixed, { height: posterH }]}
@@ -364,6 +360,51 @@ export default function MovieDetailScreen() {
               style={StyleSheet.absoluteFill}
             />
           </View>
+          <ScrollView
+            style={styles.scrollLayer}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingBottom: Math.max(insets.bottom, 24),
+            }}
+          >
+            <View style={{ height: posterH }} collapsable={false} />
+            <View style={styles.skelSheet}>
+              <SkeletonLoader
+                width={Math.round(width * 0.62)}
+                height={34}
+                borderRadius={8}
+              />
+              <View style={styles.skelActorRow}>
+                {Array.from({ length: 4 }, (_, index) => (
+                  <View key={index} style={styles.skelActor}>
+                    <SkeletonLoader width={72} height={72} borderRadius={36} />
+                    <SkeletonLoader width={88} height={32} borderRadius={8} />
+                  </View>
+                ))}
+              </View>
+              <View style={styles.skelSimilarRow}>
+                {Array.from({ length: 3 }, (_, index) => {
+                  const cardW = Math.round(width * 0.36);
+                  const cardPosterH = Math.round(cardW * 1.35);
+                  return (
+                    <View key={index} style={{ width: cardW }}>
+                      <SkeletonLoader
+                        width={cardW}
+                        height={cardPosterH}
+                        borderRadius={14}
+                      />
+                      <SkeletonLoader
+                        width={cardW}
+                        height={36}
+                        borderRadius={8}
+                        style={{ marginTop: 8 }}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          </ScrollView>
         </View>
       ) : error || !movie ? (
         <View style={[styles.center, { paddingHorizontal: 24 }]}>
@@ -391,8 +432,8 @@ export default function MovieDetailScreen() {
                 style={styles.poster}
                 contentFit="cover"
                 contentPosition="top"
-                onLoad={() => setPosterReady(true)}
-                onError={() => setPosterReady(true)}
+                onLoad={() => setReadyPoster(posterKey)}
+                onError={() => setReadyPoster(posterKey)}
               />
             ) : (
               <View
@@ -1046,6 +1087,24 @@ const styles = StyleSheet.create({
   },
   detailBody: {
     flex: 1,
+  },
+  skelSheet: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 22,
+  },
+  skelActorRow: {
+    flexDirection: 'row',
+    gap: 14,
+  },
+  skelActor: {
+    width: 88,
+    alignItems: 'center',
+    gap: 8,
+  },
+  skelSimilarRow: {
+    flexDirection: 'row',
+    gap: 12,
   },
   poster: {
     width: '100%',
