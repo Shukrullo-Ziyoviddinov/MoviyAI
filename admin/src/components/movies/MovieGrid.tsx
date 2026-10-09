@@ -61,8 +61,23 @@ export async function MovieGrid() {
                 {text ? (
                   <p className="line-clamp-3 text-sm leading-6 text-[#D1D5DB]">{text}</p>
                 ) : null}
-                <p className="mt-auto text-sm text-[#6B7280]">
-                  IMDb {movie.ratingImdb ?? "—"} · Kinopoisk {movie.ratingKinopoisk ?? "—"}
+                <p className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#6B7280]">
+                  <span className="inline-flex items-center gap-1.5">
+                    <img
+                      src="/img/imdbnew.png"
+                      alt=""
+                      className="h-5 w-5 rounded object-cover"
+                    />
+                    IMDb {movie.ratingImdb ?? "—"}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <img
+                      src="/img/kinopoisk.jpg"
+                      alt=""
+                      className="h-5 w-5 rounded object-cover"
+                    />
+                    Kinopoisk {movie.ratingKinopoisk ?? "—"}
+                  </span>
                 </p>
               </div>
             </article>
