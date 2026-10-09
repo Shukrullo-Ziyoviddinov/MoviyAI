@@ -20,8 +20,8 @@ export async function ActorGrid() {
         const name = actor.actorName || "Aktyor";
         return (
           <li key={actor.id} className="min-w-0">
-            <article className="flex h-64 gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-3">
-              <div className="h-full w-36 shrink-0 overflow-hidden rounded-lg bg-[#101624]">
+            <article className="flex h-48 gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-3">
+              <div className="h-full w-24 shrink-0 overflow-hidden rounded-lg bg-[#101624]">
                 <MoviePoster src={actorImageUrl(actor.actorImg)} alt={name} />
               </div>
               <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
@@ -40,8 +40,8 @@ export function ActorGridFallback() {
   return (
     <ul className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 3 }, (_, index) => (
-        <li key={index} className="flex h-64 gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-3">
-          <div className="h-full w-36 shrink-0 rounded-lg bg-[#101624]" />
+        <li key={index} className="flex h-48 gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-3">
+          <div className="h-full w-24 shrink-0 rounded-lg bg-[#101624]" />
           <div className="flex flex-1 flex-col gap-2">
             <div className="h-5 w-2/3 rounded bg-[#101624]" />
             <div className="h-4 w-full rounded bg-[#101624]" />
