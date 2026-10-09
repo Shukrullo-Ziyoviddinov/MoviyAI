@@ -71,6 +71,8 @@ export function AddMoviePanel() {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [movieOpen, setMovieOpen] = useState(false);
   const [actorOpen, setActorOpen] = useState(false);
+  const [movieQuery, setMovieQuery] = useState("");
+  const [actorQuery, setActorQuery] = useState("");
   const [categories, setCategories] = useState(CATEGORIES);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [actors, setActors] = useState<Actor[]>([]);
@@ -120,6 +122,15 @@ export function AddMoviePanel() {
       }
     })();
   }, [open]);
+
+  const movieTerm = movieQuery.trim().toLowerCase();
+  const visibleMovies = movieTerm
+    ? movies.filter((movie) => movieTitle(movie).toLowerCase().includes(movieTerm))
+    : movies;
+  const actorTerm = actorQuery.trim().toLowerCase();
+  const visibleActors = actorTerm
+    ? actors.filter((actor) => (actor.actorName ?? "").toLowerCase().includes(actorTerm))
+    : actors;
 
   function toggleId(list: number[], id: number, setList: (value: number[]) => void) {
     setList(list.includes(id) ? list.filter((item) => item !== id) : [...list, id]);
@@ -313,11 +324,24 @@ export function AddMoviePanel() {
               value={franchiseIds
                 .map((id) => movieTitle(movies.find((movie) => movie.id === id) ?? { id }))
                 .join(", ")}
-              onClick={() => setMovieOpen((value) => !value)}
+              onClick={() => {
+                setMovieOpen((value) => !value);
+                setMovieQuery("");
+              }}
             />
             {movieOpen ? (
-              <ul className="mt-1 max-h-48 scroll-none overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
-                {movies.map((movie) => (
+              <div className="mt-1 overflow-hidden rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
+                <input
+                  className="w-full border-b border-[rgba(40,70,130,0.35)] bg-transparent px-3 py-2 text-sm text-[#F3F4F6] outline-none"
+                  placeholder="Kino nomi"
+                  value={movieQuery}
+                  onChange={(event) => setMovieQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") event.preventDefault();
+                  }}
+                />
+                <ul className="max-h-48 scroll-none overflow-y-auto">
+                {visibleMovies.map((movie) => (
                   <li key={movie.id}>
                     <button
                       type="button"
@@ -336,7 +360,8 @@ export function AddMoviePanel() {
                     </button>
                   </li>
                 ))}
-              </ul>
+                </ul>
+              </div>
             ) : null}
           </div>
 
@@ -349,11 +374,24 @@ export function AddMoviePanel() {
               value={actorIds
                 .map((id) => actors.find((actor) => actor.id === id)?.actorName ?? String(id))
                 .join(", ")}
-              onClick={() => setActorOpen((value) => !value)}
+              onClick={() => {
+                setActorOpen((value) => !value);
+                setActorQuery("");
+              }}
             />
             {actorOpen ? (
-              <ul className="mt-1 max-h-56 scroll-none overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
-                {actors.map((actor) => (
+              <div className="mt-1 overflow-hidden rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
+                <input
+                  className="w-full border-b border-[rgba(40,70,130,0.35)] bg-transparent px-3 py-2 text-sm text-[#F3F4F6] outline-none"
+                  placeholder="Aktyor nomi"
+                  value={actorQuery}
+                  onChange={(event) => setActorQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") event.preventDefault();
+                  }}
+                />
+                <ul className="max-h-56 scroll-none overflow-y-auto">
+                {visibleActors.map((actor) => (
                   <li key={actor.id}>
                     <button
                       type="button"
@@ -372,7 +410,8 @@ export function AddMoviePanel() {
                     </button>
                   </li>
                 ))}
-              </ul>
+                </ul>
+              </div>
             ) : null}
           </div>
 
