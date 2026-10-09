@@ -17,13 +17,28 @@ export type Movie = {
       year?: number;
       duration?: number;
     };
+    ru?: {
+      text?: string;
+      director?: string;
+      country?: string;
+      year?: number;
+      duration?: number;
+    };
   };
+  trailers?: string;
+  watchUrl?: string;
+  filterCountry?: string;
+  filterGenre?: string[];
+  like?: string;
+  dislike?: string;
   specs?: {
     duration?: number;
     ageRating?: string;
     year?: number;
     countries?: string[];
   };
+  franchiseMovieIds?: number[];
+  actorIds?: number[];
 };
 
 export function mediaImageUrl(folder: "movieimg" | "actorimg", path?: string) {

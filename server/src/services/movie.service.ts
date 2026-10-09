@@ -15,6 +15,10 @@ export async function createMovie(input: Record<string, unknown>) {
   return doc.toObject();
 }
 
+export async function updateMovie(id: number, input: Record<string, unknown>) {
+  return Movie.findOneAndUpdate({ id }, { $set: input }, { returnDocument: 'after' }).lean();
+}
+
 export async function getMoviesByActorId(actorId: number) {
   return Movie.find({ actorIds: actorId }).sort({ id: 1 }).lean();
 }

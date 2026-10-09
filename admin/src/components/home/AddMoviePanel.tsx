@@ -72,8 +72,26 @@ function splitList(value: string) {
     .filter(Boolean);
 }
 
-export function AddMoviePanel() {
-  const [open, setOpen] = useState(false);
+export function AddMoviePanel({
+  movie = null,
+  open: openProp,
+  onClose,
+  onSaved,
+  showButton = true,
+}: {
+  movie?: Movie | null;
+  open?: boolean;
+  onClose?: () => void;
+  onSaved?: () => void;
+  showButton?: boolean;
+} = {}) {
+  const [innerOpen, setInnerOpen] = useState(false);
+  const open = openProp ?? innerOpen;
+
+  function close() {
+    setInnerOpen(false);
+    onClose?.();
+  }
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [movieOpen, setMovieOpen] = useState(false);
   const [actorOpen, setActorOpen] = useState(false);
@@ -118,6 +136,48 @@ export function AddMoviePanel() {
   const [actorIds, setActorIds] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!open || !movie) return;
+    setCategoryName(movie.categoryName ?? "");
+    setTitleUz(movie.title?.uz ?? "");
+    setTitleRu(movie.title?.ru ?? "");
+    setPoster(null);
+    setPosterPreview(movie.homeImgPoster ? moviePosterUrl(movie.homeImgPoster) : "");
+    setPosterLoading(false);
+    setPosterProgress(0);
+    setRatingImdb(movie.ratingImdb != null ? String(movie.ratingImdb) : "");
+    setRatingKinopoisk(movie.ratingKinopoisk != null ? String(movie.ratingKinopoisk) : "");
+    setGenreUz(movie.genre?.uz?.filter(Boolean) ?? []);
+    setGenreRu(movie.genre?.ru?.filter(Boolean) ?? []);
+    setUz({
+      text: movie.description?.uz?.text ?? "",
+      year: movie.description?.uz?.year != null ? String(movie.description.uz.year) : "",
+      country: movie.description?.uz?.country ?? "",
+      duration: movie.description?.uz?.duration != null ? String(movie.description.uz.duration) : "",
+      director: movie.description?.uz?.director ?? "",
+    });
+    setRu({
+      text: movie.description?.ru?.text ?? "",
+      year: movie.description?.ru?.year != null ? String(movie.description.ru.year) : "",
+      country: movie.description?.ru?.country ?? "",
+      duration: movie.description?.ru?.duration != null ? String(movie.description.ru.duration) : "",
+      director: movie.description?.ru?.director ?? "",
+    });
+    setTrailers(movie.trailers ?? "");
+    setWatchUrl(movie.watchUrl ?? "");
+    setFilterCountry(movie.filterCountry ?? "");
+    setFilterGenres(movie.filterGenre?.filter(Boolean) ?? []);
+    setLike(movie.like ?? "0");
+    setDislike(movie.dislike ?? "0");
+    setSpecsDuration(movie.specs?.duration != null ? String(movie.specs.duration) : "");
+    setAgeRating(movie.specs?.ageRating ?? "");
+    setSpecsYear(movie.specs?.year != null ? String(movie.specs.year) : "");
+    setSpecsCountries(movie.specs?.countries?.filter(Boolean).join(", ") ?? "");
+    setFranchiseIds(movie.franchiseMovieIds ?? []);
+    setActorIds(movie.actorIds ?? []);
+    setError("");
+  }, [open, movie]);
 
   useEffect(() => {
     if (!open) return;
@@ -227,7 +287,7 @@ export function AddMoviePanel() {
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
-    if (!poster) {
+    if (!poster && !movie) {
       setError("Poster kerak");
       return;
     }
@@ -268,10 +328,10 @@ export function AddMoviePanel() {
           actorIds,
         }),
       );
-      body.append("poster", poster);
+      if (poster) body.append("poster", poster);
       const result = await new Promise<{ ok?: boolean; error?: string; status: number }>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `${apiBaseUrl}/api/movies`);
+        xhr.open(movie ? "PATCH" : "POST", movie ? `${apiBaseUrl}/api/movies/${movie.id}` : `${apiBaseUrl}/api/movies`);
         xhr.upload.onprogress = (progress) => {
           if (!progress.lengthComputable || progress.total <= 0) return;
           const next = Math.round((progress.loaded / progress.total) * 100);
@@ -294,7 +354,8 @@ export function AddMoviePanel() {
         return;
       }
       setPosterProgress(100);
-      setOpen(false);
+      if (onSaved) onSaved();
+      close();
     } catch {
       setError("Serverga ulanib bo‘lmadi");
     } finally {
@@ -319,17 +380,21 @@ export function AddMoviePanel() {
   }
 
   return (
-    <section className="p-6">
-      <h2 className="text-lg font-semibold text-[#F3F4F6]">Amallar</h2>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="mt-4 flex items-center gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] px-4 py-3 text-sm font-medium text-[#F3F4F6]"
-      >
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1E4FD6] text-lg">+</span>
-        Kino qo‘shish
-      </button>
-      <GlobalModal wide open={open} title="Kino qo‘shish" onClose={() => setOpen(false)}>
+    <>
+      {showButton ? (
+        <section className="p-6">
+          <h2 className="text-lg font-semibold text-[#F3F4F6]">Amallar</h2>
+          <button
+            type="button"
+            onClick={() => setInnerOpen(true)}
+            className="mt-4 flex items-center gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] px-4 py-3 text-sm font-medium text-[#F3F4F6]"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1E4FD6] text-lg">+</span>
+            Kino qo‘shish
+          </button>
+        </section>
+      ) : null}
+      <GlobalModal wide open={open} title={movie ? "Tahrirlash" : "Kino qo‘shish"} onClose={close}>
         <form className="flex flex-col gap-4" onSubmit={onSubmit}>
           <div className="relative">
             <span className="mb-1 block text-sm text-[#6B7280]">Bo‘lim tanlang</span>
@@ -668,6 +733,6 @@ export function AddMoviePanel() {
           </button>
         </form>
       </GlobalModal>
-    </section>
+    </>
   );
 }

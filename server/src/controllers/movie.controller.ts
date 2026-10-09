@@ -264,28 +264,14 @@ function posterName(file: Express.Multer.File) {
   return `poster-${Date.now()}.${ext}`;
 }
 
-export async function createMovie(req: Request, res: Response) {
-  let payload: Record<string, unknown> = {};
-  try {
-    payload = JSON.parse(text(req.body?.data) || '{}') as Record<string, unknown>;
-  } catch {
-    res.status(400).json({ ok: false, error: 'Ma’lumot formati noto‘g‘ri' });
-    return;
-  }
-
-  const file = req.file;
-  if (!file) {
-    res.status(400).json({ ok: false, error: 'Poster kerak' });
-    return;
-  }
-
+function readMovieFields(payload: Record<string, unknown>, res: Response) {
   const title = (payload.title ?? {}) as Record<string, unknown>;
   const titleUz = text(title.uz);
   const titleRu = text(title.ru);
   const categoryName = text(payload.categoryName);
   if (!categoryName || !titleUz || !titleRu) {
     res.status(400).json({ ok: false, error: 'Bo‘lim va kino nomi kerak' });
-    return;
+    return null;
   }
 
   const description = (payload.description ?? {}) as Record<string, unknown>;
@@ -293,11 +279,11 @@ export async function createMovie(req: Request, res: Response) {
   const ru = readDescription(description.ru, 'Ruscha ma’lumot');
   if ('error' in uz) {
     res.status(400).json({ ok: false, error: uz.error });
-    return;
+    return null;
   }
   if ('error' in ru) {
     res.status(400).json({ ok: false, error: ru.error });
-    return;
+    return null;
   }
 
   const specs = (payload.specs ?? {}) as Record<string, unknown>;
@@ -306,25 +292,12 @@ export async function createMovie(req: Request, res: Response) {
   const ageRating = text(specs.ageRating);
   if (!Number.isFinite(specsYear) || !Number.isFinite(specsDuration) || !ageRating) {
     res.status(400).json({ ok: false, error: 'Specs maydonlari to‘liq emas' });
-    return;
+    return null;
   }
 
-  let poster;
-  try {
-    poster = await r2Service.putImage('movieimg', posterName(file), file.buffer, file.mimetype);
-  } catch (err) {
-    const code = err instanceof Error ? err.message : '';
-    if (code === 'INVALID_FILENAME') {
-      res.status(400).json({ ok: false, error: 'Poster nomi noto‘g‘ri' });
-      return;
-    }
-    throw err;
-  }
-
-  const doc = await movieService.createMovie({
+  return {
     categoryName,
     title: { uz: titleUz, ru: titleRu },
-    homeImgPoster: poster.path,
     ratingImdb: Number.isFinite(amount(payload.ratingImdb)) ? amount(payload.ratingImdb) : 0,
     ratingKinopoisk: Number.isFinite(amount(payload.ratingKinopoisk)) ? amount(payload.ratingKinopoisk) : 0,
     genre: {
@@ -346,7 +319,80 @@ export async function createMovie(req: Request, res: Response) {
     },
     franchiseMovieIds: numbers(payload.franchiseMovieIds),
     actorIds: numbers(payload.actorIds),
+  };
+}
+
+async function storePoster(file: Express.Multer.File, res: Response) {
+  try {
+    return await r2Service.putImage('movieimg', posterName(file), file.buffer, file.mimetype);
+  } catch (err) {
+    const code = err instanceof Error ? err.message : '';
+    if (code === 'INVALID_FILENAME') {
+      res.status(400).json({ ok: false, error: 'Poster nomi noto‘g‘ri' });
+      return null;
+    }
+    throw err;
+  }
+}
+
+function readPayload(req: Request, res: Response) {
+  try {
+    return JSON.parse(text(req.body?.data) || '{}') as Record<string, unknown>;
+  } catch {
+    res.status(400).json({ ok: false, error: 'Ma’lumot formati noto‘g‘ri' });
+    return null;
+  }
+}
+
+export async function createMovie(req: Request, res: Response) {
+  const payload = readPayload(req, res);
+  if (!payload) return;
+
+  const file = req.file;
+  if (!file) {
+    res.status(400).json({ ok: false, error: 'Poster kerak' });
+    return;
+  }
+
+  const fields = readMovieFields(payload, res);
+  if (!fields) return;
+
+  const poster = await storePoster(file, res);
+  if (!poster) return;
+
+  const doc = await movieService.createMovie({
+    ...fields,
+    homeImgPoster: poster.path,
   });
 
   res.status(201).json({ ok: true, data: doc });
+}
+
+export async function updateMovie(req: Request, res: Response) {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ ok: false, error: 'Invalid movie id' });
+    return;
+  }
+
+  const payload = readPayload(req, res);
+  if (!payload) return;
+
+  const fields = readMovieFields(payload, res);
+  if (!fields) return;
+
+  const input: Record<string, unknown> = { ...fields };
+  if (req.file) {
+    const poster = await storePoster(req.file, res);
+    if (!poster) return;
+    input.homeImgPoster = poster.path;
+  }
+
+  const doc = await movieService.updateMovie(id, input);
+  if (!doc) {
+    res.status(404).json({ ok: false, error: 'Movie not found' });
+    return;
+  }
+
+  res.json({ ok: true, data: doc });
 }

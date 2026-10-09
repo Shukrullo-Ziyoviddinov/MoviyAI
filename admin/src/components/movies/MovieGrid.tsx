@@ -1,3 +1,4 @@
+import { EditMovieButton } from "@/components/movies/EditMovieButton";
 import { MovieAbout } from "@/components/movies/MovieAbout";
 import { MoviePoster } from "@/components/movies/MoviePoster";
 import {
@@ -86,6 +87,7 @@ export async function MovieGrid() {
                     />
                     Kinopoisk {movie.ratingKinopoisk ?? "—"}
                   </span>
+                  <EditMovieButton movie={movie} />
                 </p>
               </div>
             </article>
