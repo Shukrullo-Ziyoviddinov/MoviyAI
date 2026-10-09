@@ -755,7 +755,12 @@ export default function MovieDetailScreen() {
               <Text style={[styles.actorsTitle, { color: colors.text }]}>
                 {t('movie.actorsTitle')}
               </Text>
-              <HorizontalScroll contentContainerStyle={styles.actorsRow}>
+              <HorizontalScroll
+                style={width < 768 ? styles.actorsScroll : undefined}
+                contentContainerStyle={
+                  width < 768 ? styles.actorsRowMobile : styles.actorsRow
+                }
+              >
                 {movie.actors.map((actor) => (
                   <ActorChip key={actor.id} actor={actor} />
                 ))}
@@ -1312,9 +1317,18 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
   },
+  actorsScroll: {
+    flexGrow: 0,
+  },
   actorsRow: {
     paddingHorizontal: 16,
     alignItems: 'flex-start',
+  },
+  actorsRowMobile: {
+    paddingHorizontal: 16,
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
   },
   commentsSection: {
     paddingHorizontal: 16,
