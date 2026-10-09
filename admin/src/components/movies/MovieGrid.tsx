@@ -45,7 +45,7 @@ export async function MovieGrid() {
         return (
           <li key={movie.id} className="@container min-w-0">
             <article className="flex h-full flex-col gap-4 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-3 @[32rem]:flex-row">
-              <div className="h-52 w-36 shrink-0 overflow-hidden rounded-lg bg-[#101624]">
+              <div className="h-56 w-40 shrink-0 overflow-hidden rounded-lg bg-[#101624]">
                 <MoviePoster src={moviePosterUrl(movie.homeImgPoster)} alt={title} />
               </div>
               <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -101,7 +101,7 @@ export function MovieGridFallback() {
     <ul className="grid gap-4 p-6 [grid-template-columns:repeat(auto-fill,minmax(min(100%,36rem),1fr))]">
       {Array.from({ length: 4 }, (_, index) => (
         <li key={index} className="flex gap-4 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-3">
-          <div className="h-52 w-36 shrink-0 rounded-lg bg-[#101624]" />
+          <div className="h-56 w-40 shrink-0 rounded-lg bg-[#101624]" />
           <div className="flex flex-1 flex-col gap-2">
             <div className="h-5 w-2/3 rounded bg-[#101624]" />
             <div className="h-4 w-1/2 rounded bg-[#101624]" />
