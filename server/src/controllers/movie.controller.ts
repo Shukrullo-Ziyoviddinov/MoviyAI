@@ -368,6 +368,20 @@ export async function createMovie(req: Request, res: Response) {
   res.status(201).json({ ok: true, data: doc });
 }
 
+export async function removeMovie(req: Request, res: Response) {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ ok: false, error: 'Invalid movie id' });
+    return;
+  }
+  const doc = await movieService.deleteMovie(id);
+  if (!doc) {
+    res.status(404).json({ ok: false, error: 'Movie not found' });
+    return;
+  }
+  res.json({ ok: true, data: doc });
+}
+
 export async function updateMovie(req: Request, res: Response) {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) {

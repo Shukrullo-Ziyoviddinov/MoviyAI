@@ -1,4 +1,7 @@
 import { Movie } from '../models/Movie.js';
+import { MovieComment } from '../models/MovieComment.js';
+import { MovieReaction } from '../models/MovieReaction.js';
+import { Wishlist } from '../models/Wishlist.js';
 
 export async function getAllMovies() {
   return Movie.find().sort({ id: 1 }).lean();
@@ -17,6 +20,16 @@ export async function createMovie(input: Record<string, unknown>) {
 
 export async function updateMovie(id: number, input: Record<string, unknown>) {
   return Movie.findOneAndUpdate({ id }, { $set: input }, { returnDocument: 'after' }).lean();
+}
+
+export async function deleteMovie(id: number) {
+  const doc = await Movie.findOneAndDelete({ id }).lean();
+  if (!doc) return null;
+  await Movie.updateMany({ franchiseMovieIds: id }, { $pull: { franchiseMovieIds: id } });
+  await MovieComment.deleteMany({ movieId: id });
+  await MovieReaction.deleteMany({ movieId: id });
+  await Wishlist.deleteMany({ movieId: id });
+  return doc;
 }
 
 export async function getMoviesByActorId(actorId: number) {
