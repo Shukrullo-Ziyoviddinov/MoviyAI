@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GlobalModal } from "@/components/GlobalModal";
+import { ProgressBar } from "@/components/ProgressBar";
 import { actorImageUrl, apiBaseUrl, moviePosterUrl, movieTitle, type Movie } from "@/lib/movies";
 
 const CATEGORIES = [
@@ -80,6 +81,10 @@ export function AddMoviePanel() {
   const [titleUz, setTitleUz] = useState("");
   const [titleRu, setTitleRu] = useState("");
   const [poster, setPoster] = useState<File | null>(null);
+  const [posterPreview, setPosterPreview] = useState("");
+  const [posterProgress, setPosterProgress] = useState(0);
+  const [posterLoading, setPosterLoading] = useState(false);
+  const posterTimer = useRef<number | null>(null);
   const [ratingImdb, setRatingImdb] = useState("");
   const [ratingKinopoisk, setRatingKinopoisk] = useState("");
   const [genreUz, setGenreUz] = useState("");
@@ -123,6 +128,8 @@ export function AddMoviePanel() {
     })();
   }, [open]);
 
+  useEffect(() => clearPosterTimer, []);
+
   const movieTerm = movieQuery.trim().toLowerCase();
   const visibleMovies = movieTerm
     ? movies.filter((movie) => movieTitle(movie).toLowerCase().includes(movieTerm))
@@ -131,6 +138,49 @@ export function AddMoviePanel() {
   const visibleActors = actorTerm
     ? actors.filter((actor) => (actor.actorName ?? "").toLowerCase().includes(actorTerm))
     : actors;
+
+  function clearPosterTimer() {
+    if (posterTimer.current == null) return;
+    window.clearInterval(posterTimer.current);
+    posterTimer.current = null;
+  }
+
+  function onPosterPick(file: File | null) {
+    clearPosterTimer();
+    setPoster(file);
+    setPosterPreview("");
+    if (!file) {
+      setPosterLoading(false);
+      setPosterProgress(0);
+      return;
+    }
+    setPosterLoading(true);
+    setPosterProgress(6);
+    let value = 6;
+    posterTimer.current = window.setInterval(() => {
+      value = Math.min(90, value + 7);
+      setPosterProgress(value);
+    }, 80);
+    const reader = new FileReader();
+    reader.onprogress = (event) => {
+      if (!event.lengthComputable || event.total <= 0) return;
+      value = Math.max(value, Math.round((event.loaded / event.total) * 90));
+      setPosterProgress(value);
+    };
+    reader.onload = () => {
+      clearPosterTimer();
+      setPosterPreview(String(reader.result ?? ""));
+      setPosterProgress(100);
+    };
+    reader.onerror = () => {
+      clearPosterTimer();
+      setPoster(null);
+      setPosterPreview("");
+      setPosterLoading(false);
+      setPosterProgress(0);
+    };
+    reader.readAsDataURL(file);
+  }
 
   function toggleId(list: number[], id: number, setList: (value: number[]) => void) {
     setList(list.includes(id) ? list.filter((item) => item !== id) : [...list, id]);
@@ -247,30 +297,48 @@ export function AddMoviePanel() {
             <Field label="Kino nomi (ruscha)" value={titleRu} onChange={setTitleRu} />
           </div>
 
-          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624] px-3 py-6">
-            <input
-              className="sr-only"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(event) => setPoster(event.target.files?.[0] ?? null)}
-            />
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-[#6B7280]">
-              <path
-                d="M12 16V5M12 5l-4 4M12 5l4 4"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          <div className="flex w-full flex-col gap-2">
+            <label
+              className={`flex w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624] ${
+                posterPreview ? "min-h-44 p-0" : "gap-2 px-3 py-6"
+              }`}
+            >
+              <input
+                className="sr-only"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => onPosterPick(event.target.files?.[0] ?? null)}
               />
-              <path
-                d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-            <span className="text-sm text-[#6B7280]">Poster yuklash</span>
-          </label>
+              {posterPreview ? (
+                <img
+                  src={posterPreview}
+                  alt=""
+                  className="h-44 w-full object-cover"
+                  onLoad={() => setPosterLoading(false)}
+                />
+              ) : (
+                <>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-[#6B7280]">
+                    <path
+                      d="M12 16V5M12 5l-4 4M12 5l4 4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="text-sm text-[#6B7280]">Poster yuklash</span>
+                </>
+              )}
+            </label>
+            {posterLoading ? <ProgressBar value={posterProgress} /> : null}
+          </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="IMDb reyting" value={ratingImdb} onChange={setRatingImdb} />
