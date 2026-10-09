@@ -11,7 +11,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="uz" className="h-full">
       <body className="h-full overflow-hidden">
-        <div className="flex h-full">
+        <div className="fixed inset-0 flex overflow-hidden">
           <Sidebar />
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <Navbar />

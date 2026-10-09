@@ -9,7 +9,13 @@ export type Movie = {
   ratingKinopoisk?: number;
   genre?: { uz?: string[]; ru?: string[] };
   description?: {
-    uz?: { text?: string; director?: string; country?: string };
+    uz?: {
+      text?: string;
+      director?: string;
+      country?: string;
+      year?: number;
+      duration?: number;
+    };
   };
   specs?: {
     duration?: number;

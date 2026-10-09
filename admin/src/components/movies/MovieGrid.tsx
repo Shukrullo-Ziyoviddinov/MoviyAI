@@ -1,3 +1,4 @@
+import { MovieAbout } from "@/components/movies/MovieAbout";
 import { MoviePoster } from "@/components/movies/MoviePoster";
 import {
   fetchMovies,
@@ -39,8 +40,8 @@ export async function MovieGrid() {
         const title = movieTitle(movie);
         const facts = movieFacts(movie);
         const genres = movie.genre?.uz?.filter(Boolean) ?? [];
-        const text = movie.description?.uz?.text;
-        const director = movie.description?.uz?.director;
+        const about = movie.description?.uz;
+        const director = about?.director;
         return (
           <li key={movie.id} className="@container min-w-0">
             <article className="flex h-full flex-col gap-4 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-3 @[32rem]:flex-row">
@@ -58,9 +59,16 @@ export async function MovieGrid() {
                 {director ? (
                   <p className="text-sm text-[#6B7280]">Rejissyor: {director}</p>
                 ) : null}
-                {text ? (
-                  <p className="line-clamp-3 text-sm leading-6 text-[#D1D5DB]">{text}</p>
-                ) : null}
+                <MovieAbout
+                  text={about?.text}
+                  year={about?.year ?? movie.specs?.year}
+                  country={
+                    about?.country ||
+                    movie.specs?.countries?.filter(Boolean).join(", ")
+                  }
+                  duration={about?.duration ?? movie.specs?.duration}
+                  director={director}
+                />
                 <p className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#6B7280]">
                   <span className="inline-flex items-center gap-1.5">
                     <img
