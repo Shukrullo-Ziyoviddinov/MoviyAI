@@ -90,6 +90,7 @@ export function AddMoviePanel() {
   const [posterProgress, setPosterProgress] = useState(0);
   const [posterLoading, setPosterLoading] = useState(false);
   const posterTimer = useRef<number | null>(null);
+  const uploadingRef = useRef(false);
   const [ratingImdb, setRatingImdb] = useState("");
   const [ratingKinopoisk, setRatingKinopoisk] = useState("");
   const [genreUz, setGenreUz] = useState<string[]>([]);
@@ -231,6 +232,15 @@ export function AddMoviePanel() {
       return;
     }
     setSaving(true);
+    uploadingRef.current = true;
+    setPosterLoading(true);
+    setPosterProgress(8);
+    clearPosterTimer();
+    let value = 8;
+    posterTimer.current = window.setInterval(() => {
+      value = Math.min(90, value + 4);
+      setPosterProgress((current) => Math.max(current, value));
+    }, 200);
     try {
       const body = new FormData();
       body.append(
@@ -259,16 +269,38 @@ export function AddMoviePanel() {
         }),
       );
       body.append("poster", poster);
-      const response = await fetch(`${apiBaseUrl}/api/movies`, { method: "POST", body });
-      const result = (await response.json()) as { ok?: boolean; error?: string };
-      if (!response.ok || !result.ok) {
+      const result = await new Promise<{ ok?: boolean; error?: string; status: number }>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${apiBaseUrl}/api/movies`);
+        xhr.upload.onprogress = (progress) => {
+          if (!progress.lengthComputable || progress.total <= 0) return;
+          const next = Math.round((progress.loaded / progress.total) * 100);
+          value = Math.max(value, next);
+          setPosterProgress(next);
+        };
+        xhr.onload = () => {
+          try {
+            const parsed = JSON.parse(xhr.responseText) as { ok?: boolean; error?: string };
+            resolve({ ...parsed, status: xhr.status });
+          } catch {
+            resolve({ status: xhr.status });
+          }
+        };
+        xhr.onerror = () => reject(new Error("network"));
+        xhr.send(body);
+      });
+      if (result.status < 200 || result.status >= 300 || !result.ok) {
         setError(result.error || "Kino saqlanmadi");
         return;
       }
+      setPosterProgress(100);
       setOpen(false);
     } catch {
       setError("Serverga ulanib bo‘lmadi");
     } finally {
+      clearPosterTimer();
+      uploadingRef.current = false;
+      setPosterLoading(false);
       setSaving(false);
     }
   }
@@ -350,7 +382,9 @@ export function AddMoviePanel() {
                   src={posterPreview}
                   alt=""
                   className="h-44 w-full object-cover"
-                  onLoad={() => setPosterLoading(false)}
+                  onLoad={() => {
+                    if (!uploadingRef.current) setPosterLoading(false);
+                  }}
                 />
               ) : (
                 <>
