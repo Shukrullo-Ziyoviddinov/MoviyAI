@@ -43,8 +43,8 @@ function TrashIcon() {
 
 export function CountryManager({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [countries, setCountries] = useState<Country[]>([]);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [nextName, setNextName] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<Country | null>(null);
@@ -58,43 +58,26 @@ export function CountryManager({ open, onClose }: { open: boolean; onClose: () =
     }
     const list = Array.isArray(body.data) ? body.data : [];
     setCountries(list);
-    setDrafts(Object.fromEntries(list.map((country) => [country._id, country.name])));
     setError("");
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setNextName("");
+      setEditingId(null);
+      setError("");
+      return;
+    }
     void load().catch(() => setError("Davlatlar olinmadi"));
   }, [open, load]);
 
-  async function saveName(id: string) {
-    const name = (drafts[id] ?? "").trim();
-    if (!name) {
-      setError("Davlat nomi kerak");
-      return;
-    }
-    setBusy(true);
+  function beginEdit(country: Country) {
+    setEditingId(country._id);
+    setNextName(country.name);
     setError("");
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/countries/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
-      const body = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        setError(body.error || "Davlat saqlanmadi");
-        return;
-      }
-      await load();
-    } catch {
-      setError("Davlat saqlanmadi");
-    } finally {
-      setBusy(false);
-    }
   }
 
-  async function addCountry() {
+  async function saveCountry() {
     const name = nextName.trim();
     if (!name) {
       setError("Davlat nomi kerak");
@@ -103,17 +86,21 @@ export function CountryManager({ open, onClose }: { open: boolean; onClose: () =
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`${apiBaseUrl}/api/countries`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
+      const response = await fetch(
+        editingId ? `${apiBaseUrl}/api/countries/${editingId}` : `${apiBaseUrl}/api/countries`,
+        {
+          method: editingId ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        },
+      );
       const body = (await response.json()) as { error?: string };
       if (!response.ok) {
         setError(body.error || "Davlat saqlanmadi");
         return;
       }
       setNextName("");
+      setEditingId(null);
       await load();
     } catch {
       setError("Davlat saqlanmadi");
@@ -134,6 +121,10 @@ export function CountryManager({ open, onClose }: { open: boolean; onClose: () =
       if (!response.ok) {
         setError(body.error || "Davlat o‘chirilmadi");
         return;
+      }
+      if (editingId === removeTarget._id) {
+        setEditingId(null);
+        setNextName("");
       }
       setRemoveTarget(null);
       await load();
@@ -158,10 +149,12 @@ export function CountryManager({ open, onClose }: { open: boolean; onClose: () =
             className="flex flex-col gap-2"
             onSubmit={(event) => {
               event.preventDefault();
-              void addCountry();
+              void saveCountry();
             }}
           >
-            <h3 className="text-sm font-semibold text-[#F3F4F6]">Davlat qo‘shish</h3>
+            <h3 className="text-sm font-semibold text-[#F3F4F6]">
+              {editingId ? "Tahrirlash" : "Davlat qo‘shish"}
+            </h3>
             <input
               className={fieldClass}
               value={nextName}
@@ -182,18 +175,12 @@ export function CountryManager({ open, onClose }: { open: boolean; onClose: () =
         <ul className="flex flex-col gap-2">
           {countries.map((country) => (
             <li key={country._id} className="flex items-center gap-2">
-              <input
-                className={fieldClass}
-                value={drafts[country._id] ?? country.name}
-                onChange={(event) =>
-                  setDrafts((current) => ({ ...current, [country._id]: event.target.value }))
-                }
-              />
+              <input readOnly className={fieldClass} value={country.name} />
               <button
                 type="button"
                 aria-label="Tahrirlash"
                 disabled={busy}
-                onClick={() => void saveName(country._id)}
+                onClick={() => beginEdit(country)}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#16A34A] text-white"
               >
                 <PencilIcon />
