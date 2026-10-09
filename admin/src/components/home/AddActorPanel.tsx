@@ -229,7 +229,7 @@ export function AddActorPanel({
             <label className="flex flex-col gap-1">
               <span className="text-sm text-[#6B7280]">Ma’lumot, o‘zbekcha</span>
               <textarea
-                className={`${fieldClass} min-h-28`}
+                className={`${fieldClass} scroll-none min-h-28`}
                 value={aboutUz}
                 onChange={(event) => setAboutUz(event.target.value)}
               />
@@ -237,7 +237,7 @@ export function AddActorPanel({
             <label className="flex flex-col gap-1">
               <span className="text-sm text-[#6B7280]">Ma’lumot, ruscha</span>
               <textarea
-                className={`${fieldClass} min-h-28`}
+                className={`${fieldClass} scroll-none min-h-28`}
                 value={aboutRu}
                 onChange={(event) => setAboutRu(event.target.value)}
               />
