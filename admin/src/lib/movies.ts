@@ -3,6 +3,7 @@ export const apiBaseUrl =
 
 export type Movie = {
   id: number;
+  categoryName?: string;
   title?: { uz?: string; ru?: string };
   homeImgPoster?: string;
   ratingImdb?: number;
@@ -25,12 +26,20 @@ export type Movie = {
   };
 };
 
-export function moviePosterUrl(path?: string) {
+export function mediaImageUrl(folder: "movieimg" | "actorimg", path?: string) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
   const file = path.split("/").pop() ?? "";
   if (!file || file.includes("..")) return "";
-  return `${apiBaseUrl}/api/media/movieimg/${encodeURIComponent(file)}`;
+  return `${apiBaseUrl}/api/media/${folder}/${encodeURIComponent(file)}`;
+}
+
+export function moviePosterUrl(path?: string) {
+  return mediaImageUrl("movieimg", path);
+}
+
+export function actorImageUrl(path?: string) {
+  return mediaImageUrl("actorimg", path);
 }
 
 export function movieTitle(movie: Movie) {

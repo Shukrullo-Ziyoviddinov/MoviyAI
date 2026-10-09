@@ -1,3 +1,5 @@
+import { AddMoviePanel } from "@/components/home/AddMoviePanel";
+
 export default function HomePage() {
-  return null;
+  return <AddMoviePanel />;
 }

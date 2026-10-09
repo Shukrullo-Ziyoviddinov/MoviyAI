@@ -8,6 +8,13 @@ export async function getMovieById(id: number) {
   return Movie.findOne({ id }).lean();
 }
 
+export async function createMovie(input: Record<string, unknown>) {
+  const last = await Movie.findOne().sort({ id: -1 }).select({ id: 1 }).lean();
+  const lastId = typeof last?.id === 'number' ? last.id : 8000;
+  const doc = await Movie.create({ ...input, id: lastId + 1 });
+  return doc.toObject();
+}
+
 export async function getMoviesByActorId(actorId: number) {
   return Movie.find({ actorIds: actorId }).sort({ id: 1 }).lean();
 }

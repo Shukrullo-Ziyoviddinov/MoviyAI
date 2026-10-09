@@ -8,9 +8,10 @@ type GlobalModalProps = {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  wide?: boolean;
 };
 
-export function GlobalModal({ open, title, onClose, children }: GlobalModalProps) {
+export function GlobalModal({ open, title, onClose, children, wide }: GlobalModalProps) {
   useEffect(() => {
     if (!open) return;
     function onKeyDown(event: KeyboardEvent) {
@@ -34,7 +35,9 @@ export function GlobalModal({ open, title, onClose, children }: GlobalModalProps
         role="dialog"
         aria-modal="true"
         aria-labelledby="global-modal-title"
-        className="relative flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12]"
+        className={`relative flex max-h-[85vh] w-full flex-col overflow-hidden rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] ${
+          wide ? "max-w-4xl" : "max-w-lg"
+        }`}
       >
         <div className="flex items-center justify-between gap-3 border-b border-[rgba(40,70,130,0.35)] px-4 py-3">
           <h2 id="global-modal-title" className="text-base font-semibold text-[#F3F4F6]">
