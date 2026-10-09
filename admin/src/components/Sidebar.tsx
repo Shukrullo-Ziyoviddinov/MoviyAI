@@ -1,10 +1,16 @@
 "use client";
 
+import { Orbitron } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { isNavActive, navItems } from "@/components/nav";
+
+const brandFont = Orbitron({
+  subsets: ["latin"],
+  weight: "700",
+});
 
 const COLLAPSED = 72;
 const MIN = 200;
@@ -115,7 +121,9 @@ export function Sidebar() {
           />
         </span>
         {iconOnly ? null : (
-          <span className="whitespace-nowrap text-base font-semibold tracking-tight text-[#F3F4F6]">
+          <span
+            className={`${brandFont.className} whitespace-nowrap text-[22px] leading-none font-bold tracking-wide text-[#F3F4F6]`}
+          >
             MoviyAI
           </span>
         )}
