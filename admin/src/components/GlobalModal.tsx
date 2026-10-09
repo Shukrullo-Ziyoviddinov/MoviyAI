@@ -9,9 +9,10 @@ type GlobalModalProps = {
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  footer?: ReactNode;
 };
 
-export function GlobalModal({ open, title, onClose, children, wide }: GlobalModalProps) {
+export function GlobalModal({ open, title, onClose, children, wide, footer }: GlobalModalProps) {
   useEffect(() => {
     if (!open) return;
     function onKeyDown(event: KeyboardEvent) {
@@ -59,7 +60,10 @@ export function GlobalModal({ open, title, onClose, children, wide }: GlobalModa
             </svg>
           </button>
         </div>
-        <div className="scroll-none overflow-y-auto px-4 py-4">{children}</div>
+        <div className="scroll-none min-h-0 overflow-y-auto px-4 py-4">{children}</div>
+        {footer ? (
+          <div className="shrink-0 border-t border-[rgba(40,70,130,0.35)] px-4 py-4">{footer}</div>
+        ) : null}
       </div>
     </div>,
     document.body,

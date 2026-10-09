@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
+import { GenreManager } from "@/components/genres/GenreManager";
 import { isNavActive, navItems } from "@/components/nav";
 
 const brandFont = Orbitron({
@@ -44,6 +45,19 @@ function MovieIcon() {
   );
 }
 
+function GenreIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 7h16M4 12h16M4 17h10"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function ActorIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -67,6 +81,7 @@ const icons = {
 export function Sidebar() {
   const pathname = usePathname();
   const [width, setWidth] = useState(DEFAULT);
+  const [genresOpen, setGenresOpen] = useState(false);
   const dragRef = useRef<{ x: number; width: number } | null>(null);
   const iconOnly = width < MIN;
 
@@ -175,7 +190,38 @@ export function Sidebar() {
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={() => setGenresOpen(true)}
+          className={
+            iconOnly
+              ? `group relative flex h-10 w-10 items-center justify-center rounded-lg text-[#F3F4F6] ${
+                  genresOpen ? "border border-[rgba(40,70,130,0.35)] bg-[#101624]" : ""
+                }`
+              : `flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#F3F4F6] ${
+                  genresOpen ? "border border-[rgba(40,70,130,0.35)] bg-[#101624]" : ""
+                }`
+          }
+        >
+          <GenreIcon />
+          {iconOnly ? (
+            <span className="pointer-events-none absolute left-full top-1/2 z-20 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624] px-2.5 py-1.5 text-sm font-medium text-[#F3F4F6] group-hover:block group-focus-visible:block">
+              <span
+                aria-hidden="true"
+                className="absolute top-1/2 right-full -translate-y-1/2 border-y-[7px] border-r-[7px] border-y-transparent border-r-[rgba(40,70,130,0.35)]"
+              />
+              <span
+                aria-hidden="true"
+                className="absolute top-1/2 right-[calc(100%-1px)] -translate-y-1/2 border-y-[6px] border-r-[6px] border-y-transparent border-r-[#101624]"
+              />
+              Janer malumotlari
+            </span>
+          ) : (
+            "Janer malumotlari"
+          )}
+        </button>
       </nav>
+      <GenreManager open={genresOpen} onClose={() => setGenresOpen(false)} />
       <div
         role="separator"
         aria-orientation="vertical"
