@@ -57,6 +57,13 @@ export function actorImageUrl(path?: string) {
   return mediaImageUrl("actorimg", path);
 }
 
+export type Actor = {
+  id: number;
+  actorName?: string;
+  actorImg?: string;
+  actorAbout?: { uz?: string; ru?: string };
+};
+
 export function movieTitle(movie: Movie) {
   return movie.title?.uz || movie.title?.ru || "Kino";
 }
@@ -67,5 +74,14 @@ export async function fetchMovies(): Promise<Movie[]> {
     throw new Error("Kinolar yuklanmadi");
   }
   const body = (await response.json()) as { data?: Movie[] };
+  return Array.isArray(body.data) ? body.data : [];
+}
+
+export async function fetchActors(): Promise<Actor[]> {
+  const response = await fetch(`${apiBaseUrl}/api/actors`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error("Aktyorlar yuklanmadi");
+  }
+  const body = (await response.json()) as { data?: Actor[] };
   return Array.isArray(body.data) ? body.data : [];
 }
