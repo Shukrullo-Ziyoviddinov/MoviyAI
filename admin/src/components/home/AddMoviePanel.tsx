@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { GlobalModal } from "@/components/GlobalModal";
-import { actorImageUrl, apiBaseUrl, movieTitle, type Movie } from "@/lib/movies";
+import { actorImageUrl, apiBaseUrl, moviePosterUrl, movieTitle, type Movie } from "@/lib/movies";
 
 const CATEGORIES = [
   "actionMovies",
@@ -305,11 +305,11 @@ export function AddMoviePanel() {
           </div>
 
           <div>
-            <span className="mb-1 block text-sm text-[#6B7280]">Franshiza kinolari</span>
+            <span className="mb-1 block text-sm text-[#6B7280]">Kino qismi qo‘shish</span>
             <input
               readOnly
               className={fieldClass}
-              placeholder="Kino tanlang"
+              placeholder="Kino qismi qo‘shish"
               value={franchiseIds
                 .map((id) => movieTitle(movies.find((movie) => movie.id === id) ?? { id }))
                 .join(", ")}
@@ -321,11 +321,18 @@ export function AddMoviePanel() {
                   <li key={movie.id}>
                     <button
                       type="button"
-                      className="w-full px-3 py-2 text-left text-sm text-[#F3F4F6]"
+                      className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-[#F3F4F6]"
                       onClick={() => toggleId(franchiseIds, movie.id, setFranchiseIds)}
                     >
-                      {franchiseIds.includes(movie.id) ? "✓ " : ""}
-                      {movieTitle(movie)}
+                      <img
+                        src={moviePosterUrl(movie.homeImgPoster)}
+                        alt=""
+                        className="h-12 w-8 rounded object-cover"
+                      />
+                      <span>
+                        {franchiseIds.includes(movie.id) ? "✓ " : ""}
+                        {movieTitle(movie)}
+                      </span>
                     </button>
                   </li>
                 ))}
