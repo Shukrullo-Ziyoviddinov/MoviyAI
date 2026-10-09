@@ -9,7 +9,7 @@ export function Navbar() {
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-[rgba(40,70,130,0.35)] bg-[#070A12] px-6">
-      <h1 className="text-base font-semibold text-[#F3F4F6]">
+      <h1 className="text-[24px] font-extrabold text-[#F3F4F6]">
         {current?.label ?? "Bosh sahifa"}
       </h1>
       <span className="flex items-center gap-2 rounded-full border border-[rgba(40,70,130,0.35)] px-3 py-1 text-sm text-[#6B7280]">
