@@ -334,7 +334,6 @@ export async function createMovie(req: Request, res: Response) {
     description: { uz: uz.value, ru: ru.value },
     trailers: text(payload.trailers),
     watchUrl: text(payload.watchUrl),
-    typeCategory: words(payload.typeCategory),
     filterCountry: text(payload.filterCountry),
     filterGenre: words(payload.filterGenre),
     like: text(payload.like) || '0',

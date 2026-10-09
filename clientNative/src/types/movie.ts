@@ -28,7 +28,6 @@ export type Movie = {
   };
   trailers: string;
   watchUrl: string;
-  typeCategory: string[];
   filterCountry: string;
   filterGenre: string[];
   like: string;

@@ -1,38 +1,50 @@
 [
   {
-    "name": "Animatsiya"
+    "name": "Animatsiya",
+    "nameRu": "Анимация"
   },
   {
-    "name": "Dramma"
+    "name": "Dramma",
+    "nameRu": "Драма"
   },
   {
-    "name": "Fantastika"
+    "name": "Fantastika",
+    "nameRu": "Фантастика"
   },
   {
-    "name": "Jangari"
+    "name": "Jangari",
+    "nameRu": "Боевик"
   },
   {
-    "name": "Komediya"
+    "name": "Komediya",
+    "nameRu": "Комедия"
   },
   {
-    "name": "Melodrama"
+    "name": "Melodrama",
+    "nameRu": "Мелодрама"
   },
   {
-    "name": "Oilaviy"
+    "name": "Oilaviy",
+    "nameRu": "Семейный"
   },
   {
-    "name": "Qo‘rqinchli"
+    "name": "Qo‘rqinchli",
+    "nameRu": "Ужасы"
   },
   {
-    "name": "Sarguzasht"
+    "name": "Sarguzasht",
+    "nameRu": "Приключения"
   },
   {
-    "name": "Sport"
+    "name": "Sport",
+    "nameRu": "Спорт"
   },
   {
-    "name": "Tarixiy"
+    "name": "Tarixiy",
+    "nameRu": "История"
   },
   {
-    "name": "Triller"
+    "name": "Triller",
+    "nameRu": "Триллер"
   }
 ]

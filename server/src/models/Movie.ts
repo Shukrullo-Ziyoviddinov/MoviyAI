@@ -37,7 +37,6 @@ const movieSchema = new Schema(
     },
     trailers: { type: String, default: '' },
     watchUrl: { type: String, default: '' },
-    typeCategory: { type: [String], default: [] },
     filterCountry: { type: String, default: '' },
     filterGenre: { type: [String], default: [] },
     like: { type: String, default: '0' },

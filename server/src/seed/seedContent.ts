@@ -25,7 +25,7 @@ async function seed() {
   const privacy = await readJson<Record<string, unknown>>('privacy.json');
   const movies = await readJson<Record<string, unknown>[]>('movie.json');
   const actors = await readJson<Record<string, unknown>[]>('actor.json');
-  const genres = await readJson<{ name: string }[]>('genre.json');
+  const genres = await readJson<{ name: string; nameRu?: string }[]>('genre.json');
   const countries = await readJson<{ name: string }[]>('country.json');
 
   const aboutDoc = await aboutService.upsertAbout(about);

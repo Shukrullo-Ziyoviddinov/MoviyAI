@@ -22,6 +22,11 @@ type Actor = {
   actorImg?: string;
 };
 
+type GenreChoice = {
+  name: string;
+  nameRu: string;
+};
+
 type Desc = {
   text: string;
   year: string;
@@ -87,13 +92,15 @@ export function AddMoviePanel() {
   const posterTimer = useRef<number | null>(null);
   const [ratingImdb, setRatingImdb] = useState("");
   const [ratingKinopoisk, setRatingKinopoisk] = useState("");
-  const [genreUz, setGenreUz] = useState("");
-  const [genreRu, setGenreRu] = useState("");
+  const [genreUz, setGenreUz] = useState<string[]>([]);
+  const [genreRu, setGenreRu] = useState<string[]>([]);
+  const [genreUzOpen, setGenreUzOpen] = useState(false);
+  const [genreRuOpen, setGenreRuOpen] = useState(false);
+  const [genreChoices, setGenreChoices] = useState<GenreChoice[]>([]);
   const [uz, setUz] = useState<Desc>(emptyDesc);
   const [ru, setRu] = useState<Desc>(emptyDesc);
   const [trailers, setTrailers] = useState("");
   const [watchUrl, setWatchUrl] = useState("");
-  const [typeCategory, setTypeCategory] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
   const [countryOptions, setCountryOptions] = useState<string[]>([]);
   const [countryOpen, setCountryOpen] = useState(false);
@@ -123,16 +130,19 @@ export function AddMoviePanel() {
         ]);
         const movieBody = (await movieRes.json()) as { data?: Movie[] };
         const actorBody = (await actorRes.json()) as { data?: Actor[] };
-        const genreBody = (await genreRes.json()) as { data?: { name?: string }[] };
+        const genreBody = (await genreRes.json()) as { data?: { name?: string; nameRu?: string }[] };
         const countryBody = (await countryRes.json()) as { data?: { name?: string }[] };
         const list = Array.isArray(movieBody.data) ? movieBody.data : [];
         setMovies(list);
         setActors(Array.isArray(actorBody.data) ? actorBody.data : []);
-        setGenreOptions(
-          (Array.isArray(genreBody.data) ? genreBody.data : [])
-            .map((genre) => genre.name ?? "")
-            .filter(Boolean),
-        );
+        const choices = (Array.isArray(genreBody.data) ? genreBody.data : [])
+          .map((genre) => ({
+            name: genre.name ?? "",
+            nameRu: genre.nameRu || genre.name || "",
+          }))
+          .filter((genre) => genre.name);
+        setGenreChoices(choices);
+        setGenreOptions(choices.map((genre) => genre.name));
         setCountryOptions(
           (Array.isArray(countryBody.data) ? countryBody.data : [])
             .map((country) => country.name ?? "")
@@ -200,6 +210,15 @@ export function AddMoviePanel() {
     reader.readAsDataURL(file);
   }
 
+  function toggleGenre(choice: GenreChoice) {
+    const ru = choice.nameRu || choice.name;
+    const selected = genreUz.includes(choice.name) || genreRu.includes(ru);
+    setGenreUz((current) =>
+      selected ? current.filter((item) => item !== choice.name) : [...current, choice.name],
+    );
+    setGenreRu((current) => (selected ? current.filter((item) => item !== ru) : [...current, ru]));
+  }
+
   function toggleId(list: number[], id: number, setList: (value: number[]) => void) {
     setList(list.includes(id) ? list.filter((item) => item !== id) : [...list, id]);
   }
@@ -221,11 +240,10 @@ export function AddMoviePanel() {
           title: { uz: titleUz, ru: titleRu },
           ratingImdb,
           ratingKinopoisk,
-          genre: { uz: splitList(genreUz), ru: splitList(genreRu) },
+          genre: { uz: genreUz, ru: genreRu },
           description: { uz, ru },
           trailers,
           watchUrl,
-          typeCategory: splitList(typeCategory),
           filterCountry,
           filterGenre: filterGenres,
           like,
@@ -364,8 +382,58 @@ export function AddMoviePanel() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Janr, o‘zbekcha" value={genreUz} onChange={setGenreUz} />
-            <Field label="Janr, ruscha" value={genreRu} onChange={setGenreRu} />
+            <div>
+              <span className="mb-1 block text-sm text-[#6B7280]">Janr, o‘zbekcha</span>
+              <input
+                readOnly
+                className={fieldClass}
+                placeholder="Janr, o‘zbekcha"
+                value={genreUz.join(", ")}
+                onClick={() => setGenreUzOpen((value) => !value)}
+              />
+              {genreUzOpen ? (
+                <ul className="mt-1 max-h-48 scroll-none overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
+                  {genreChoices.map((choice) => (
+                    <li key={choice.name}>
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 text-left text-sm text-[#F3F4F6]"
+                        onClick={() => toggleGenre(choice)}
+                      >
+                        {genreUz.includes(choice.name) ? "✓ " : ""}
+                        {choice.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+            <div>
+              <span className="mb-1 block text-sm text-[#6B7280]">Janr, ruscha</span>
+              <input
+                readOnly
+                className={fieldClass}
+                placeholder="Janr, ruscha"
+                value={genreRu.join(", ")}
+                onClick={() => setGenreRuOpen((value) => !value)}
+              />
+              {genreRuOpen ? (
+                <ul className="mt-1 max-h-48 scroll-none overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
+                  {genreChoices.map((choice) => (
+                    <li key={choice.name}>
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 text-left text-sm text-[#F3F4F6]"
+                        onClick={() => toggleGenre(choice)}
+                      >
+                        {genreRu.includes(choice.nameRu || choice.name) ? "✓ " : ""}
+                        {choice.nameRu || choice.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
           </div>
 
           <div className="rounded-xl border border-[rgba(40,70,130,0.35)] p-3">
@@ -381,7 +449,6 @@ export function AddMoviePanel() {
             <Field label="Tomosha link" value={watchUrl} onChange={setWatchUrl} />
           </div>
 
-          <Field label="Tur" value={typeCategory} onChange={setTypeCategory} />
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <span className="mb-1 block text-sm text-[#6B7280]">Filtr davlat</span>

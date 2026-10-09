@@ -39,11 +39,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=69L-nKRY3ac&list=RDDAYszemgPxc&index=5",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "action",
-      "thriller",
-      "crime"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Jangari",
@@ -103,10 +98,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=GoLCprbZo4I&list=RDGoLCprbZo4I&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "romance",
-      "drama"
-    ],
     "filterCountry": "India",
     "filterGenre": [
       "Melodrama",
@@ -169,11 +160,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=VIPKl6GG8uw&list=RDVIPKl6GG8uw&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "animation",
-      "sports",
-      "comedy"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Animatsiya",
@@ -237,11 +223,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=69L-nKRY3ac&list=RDDAYszemgPxc&index=5",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "animation",
-      "adventure",
-      "family"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Animatsiya",
@@ -306,10 +287,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=GoLCprbZo4I&list=RDGoLCprbZo4I&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "horror",
-      "thriller"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Qo‘rqinchli",
@@ -369,10 +346,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=VIPKl6GG8uw&list=RDVIPKl6GG8uw&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "action",
-      "thriller"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Jangari",
@@ -435,11 +408,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=69L-nKRY3ac&list=RDDAYszemgPxc&index=5",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "action",
-      "sci-fi",
-      "thriller"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Jangari",
@@ -503,11 +471,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=GoLCprbZo4I&list=RDGoLCprbZo4I&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "comedy",
-      "family",
-      "adventure"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Komediya",
@@ -570,10 +533,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=VIPKl6GG8uw&list=RDVIPKl6GG8uw&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "horror",
-      "thriller"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Qo‘rqinchli",
@@ -633,9 +592,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=69L-nKRY3ac&list=RDDAYszemgPxc&index=5",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "drama"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Dramma"
@@ -697,11 +653,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=GoLCprbZo4I&list=RDGoLCprbZo4I&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "action",
-      "thriller",
-      "actionMovies"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Jangari",
@@ -766,10 +717,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=VIPKl6GG8uw&list=RDVIPKl6GG8uw&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "action",
-      "thriller"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Jangari",
@@ -832,10 +779,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=69L-nKRY3ac&list=RDDAYszemgPxc&index=5",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "action",
-      "thriller"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Jangari",
@@ -897,11 +840,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=GoLCprbZo4I&list=RDGoLCprbZo4I&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "sci-fi",
-      "drama",
-      "adventure"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Fantastika",
@@ -964,11 +902,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=VIPKl6GG8uw&list=RDVIPKl6GG8uw&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "comedy",
-      "action",
-      "sci-fi"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Komediya",
@@ -1032,11 +965,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=69L-nKRY3ac&list=RDDAYszemgPxc&index=5",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "drama",
-      "history",
-      "biography"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Dramma",
@@ -1101,11 +1029,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=GoLCprbZo4I&list=RDGoLCprbZo4I&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "horror",
-      "thriller",
-      "mystery"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Qo‘rqinchli",
@@ -1165,10 +1088,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=VIPKl6GG8uw&list=RDVIPKl6GG8uw&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "romance",
-      "comedy"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Komediya",
@@ -1231,11 +1150,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=69L-nKRY3ac&list=RDDAYszemgPxc&index=5",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "animation",
-      "comedy",
-      "family"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Animatsiya",
@@ -1299,11 +1213,6 @@
     },
     "trailers": "https://www.youtube.com/watch?v=GoLCprbZo4I&list=RDGoLCprbZo4I&start_radio=1",
     "watchUrl": "https://www.youtube.com/watch?v=qoq8B8ThgEM&list=RDqoq8B8ThgEM&start_radio=1",
-    "typeCategory": [
-      "horror",
-      "thriller",
-      "crime"
-    ],
     "filterCountry": "USA",
     "filterGenre": [
       "Qo‘rqinchli",

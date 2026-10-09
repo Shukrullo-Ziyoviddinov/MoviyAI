@@ -5,14 +5,15 @@ export async function getAllGenres() {
   return Genre.find().sort({ name: 1 }).lean();
 }
 
-export async function upsertGenres(genres: { name: string }[]) {
+export async function upsertGenres(genres: { name: string; nameRu?: string }[]) {
   const results = [];
   for (const genre of genres) {
     const name = String(genre.name ?? '').trim();
     if (!name) continue;
+    const nameRu = String(genre.nameRu ?? '').trim();
     const doc = await Genre.findOneAndUpdate(
       { name },
-      { $set: { name } },
+      { $set: nameRu ? { name, nameRu } : { name } },
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     ).lean();
     results.push(doc);

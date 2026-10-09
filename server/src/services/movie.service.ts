@@ -28,6 +28,7 @@ export async function upsertMovies(movies: Record<string, unknown>[]) {
       {
         $set: movie,
         $unset: {
+          typeCategory: 1,
           movieDetailPoster: 1,
           trailersVideo: 1,
           homeImgPosterRu: 1,
