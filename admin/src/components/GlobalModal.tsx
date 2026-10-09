@@ -59,7 +59,7 @@ export function GlobalModal({ open, title, onClose, children, wide }: GlobalModa
             </svg>
           </button>
         </div>
-        <div className="overflow-y-auto px-4 py-4">{children}</div>
+        <div className="scroll-none overflow-y-auto px-4 py-4">{children}</div>
       </div>
     </div>,
     document.body,

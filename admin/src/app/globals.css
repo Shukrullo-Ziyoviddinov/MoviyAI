@@ -12,3 +12,12 @@ body {
   color: #f3f4f6;
   font-family: system-ui, sans-serif;
 }
+
+.scroll-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-none::-webkit-scrollbar {
+  display: none;
+}

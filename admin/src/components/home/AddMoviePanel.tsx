@@ -212,7 +212,7 @@ export function AddMoviePanel() {
               onClick={() => setCategoryOpen((value) => !value)}
             />
             {categoryOpen ? (
-              <ul className="mt-1 max-h-48 overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
+              <ul className="mt-1 max-h-48 scroll-none overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
                 {categories.map((name) => (
                   <li key={name}>
                     <button
@@ -301,7 +301,7 @@ export function AddMoviePanel() {
               onClick={() => setMovieOpen((value) => !value)}
             />
             {movieOpen ? (
-              <ul className="mt-1 max-h-48 overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
+              <ul className="mt-1 max-h-48 scroll-none overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
                 {movies.map((movie) => (
                   <li key={movie.id}>
                     <button
@@ -330,7 +330,7 @@ export function AddMoviePanel() {
               onClick={() => setActorOpen((value) => !value)}
             />
             {actorOpen ? (
-              <ul className="mt-1 max-h-56 overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
+              <ul className="mt-1 max-h-56 scroll-none overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
                 {actors.map((actor) => (
                   <li key={actor.id}>
                     <button
