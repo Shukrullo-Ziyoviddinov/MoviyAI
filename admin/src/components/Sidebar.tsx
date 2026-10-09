@@ -92,7 +92,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`relative flex h-screen shrink-0 flex-col border-r border-[rgba(40,70,130,0.35)] bg-[#070A12] ${
+      className={`relative flex h-full shrink-0 flex-col border-r border-[rgba(40,70,130,0.35)] bg-[#070A12] ${
         iconOnly ? "overflow-visible" : "overflow-hidden"
       }`}
       style={{ width }}

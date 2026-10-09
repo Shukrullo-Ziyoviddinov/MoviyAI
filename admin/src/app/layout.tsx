@@ -9,13 +9,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="uz">
-      <body>
-        <div className="flex min-h-screen">
+    <html lang="uz" className="h-full">
+      <body className="h-full overflow-hidden">
+        <div className="flex h-full">
           <Sidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <Navbar />
-            <main className="flex-1">{children}</main>
+            <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
           </div>
         </div>
       </body>
