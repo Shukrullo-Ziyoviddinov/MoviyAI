@@ -332,7 +332,7 @@ export function AddMoviePanel() {
             {movieOpen ? (
               <div className="mt-1 overflow-hidden rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
                 <input
-                  className="w-full border-b border-[rgba(40,70,130,0.35)] bg-transparent px-3 py-2 text-sm text-[#F3F4F6] outline-none"
+                  className="w-full border-b border-[#1E4FD6] bg-[#152038] px-3 py-2 text-sm text-[#F3F4F6] outline-none placeholder:text-[#6B7280]"
                   placeholder="Kino nomi"
                   value={movieQuery}
                   onChange={(event) => setMovieQuery(event.target.value)}
@@ -382,7 +382,7 @@ export function AddMoviePanel() {
             {actorOpen ? (
               <div className="mt-1 overflow-hidden rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
                 <input
-                  className="w-full border-b border-[rgba(40,70,130,0.35)] bg-transparent px-3 py-2 text-sm text-[#F3F4F6] outline-none"
+                  className="w-full border-b border-[#1E4FD6] bg-[#152038] px-3 py-2 text-sm text-[#F3F4F6] outline-none placeholder:text-[#6B7280]"
                   placeholder="Aktyor nomi"
                   value={actorQuery}
                   onChange={(event) => setActorQuery(event.target.value)}
