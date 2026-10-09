@@ -2,10 +2,13 @@ import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import * as genreService from '../services/genre.service.js';
 
-function readName(body: unknown) {
-  if (!body || typeof body !== 'object') return '';
-  const name = (body as { name?: unknown }).name;
-  return typeof name === 'string' ? name.trim() : '';
+function readPair(body: unknown) {
+  if (!body || typeof body !== 'object') return { name: '', nameRu: '' };
+  const record = body as { name?: unknown; nameRu?: unknown };
+  return {
+    name: typeof record.name === 'string' ? record.name.trim() : '',
+    nameRu: typeof record.nameRu === 'string' ? record.nameRu.trim() : '',
+  };
 }
 
 function sendError(res: Response, error: unknown) {
@@ -23,13 +26,13 @@ export async function listGenres(_req: Request, res: Response) {
 }
 
 export async function createGenre(req: Request, res: Response) {
-  const name = readName(req.body);
-  if (!name) {
-    res.status(400).json({ ok: false, error: 'Janr nomi kerak' });
+  const { name, nameRu } = readPair(req.body);
+  if (!name || !nameRu) {
+    res.status(400).json({ ok: false, error: 'O‘zbekcha va ruscha janr kerak' });
     return;
   }
   try {
-    const doc = await genreService.createGenre(name);
+    const doc = await genreService.createGenre(name, nameRu);
     res.status(201).json({ ok: true, data: doc });
   } catch (error) {
     sendError(res, error);
@@ -42,13 +45,13 @@ export async function updateGenre(req: Request, res: Response) {
     res.status(400).json({ ok: false, error: 'Janr topilmadi' });
     return;
   }
-  const name = readName(req.body);
-  if (!name) {
-    res.status(400).json({ ok: false, error: 'Janr nomi kerak' });
+  const { name, nameRu } = readPair(req.body);
+  if (!name || !nameRu) {
+    res.status(400).json({ ok: false, error: 'O‘zbekcha va ruscha janr kerak' });
     return;
   }
   try {
-    const doc = await genreService.updateGenre(id, name);
+    const doc = await genreService.updateGenre(id, name, nameRu);
     if (!doc) {
       res.status(404).json({ ok: false, error: 'Janr topilmadi' });
       return;

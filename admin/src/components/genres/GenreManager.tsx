@@ -8,6 +8,7 @@ import { apiBaseUrl } from "@/lib/movies";
 type Genre = {
   _id: string;
   name: string;
+  nameRu?: string;
 };
 
 const fieldClass =
@@ -44,6 +45,7 @@ function TrashIcon() {
 export function GenreManager({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [genres, setGenres] = useState<Genre[]>([]);
   const [nextName, setNextName] = useState("");
+  const [nextNameRu, setNextNameRu] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -64,6 +66,7 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
   useEffect(() => {
     if (!open) {
       setNextName("");
+      setNextNameRu("");
       setEditingId(null);
       setError("");
       return;
@@ -74,13 +77,15 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
   function beginEdit(genre: Genre) {
     setEditingId(genre._id);
     setNextName(genre.name);
+    setNextNameRu(genre.nameRu ?? "");
     setError("");
   }
 
   async function saveGenre() {
     const name = nextName.trim();
-    if (!name) {
-      setError("Janr nomi kerak");
+    const nameRu = nextNameRu.trim();
+    if (!name || !nameRu) {
+      setError("O‘zbekcha va ruscha janr kerak");
       return;
     }
     setBusy(true);
@@ -91,7 +96,7 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
         {
           method: editingId ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name }),
+          body: JSON.stringify({ name, nameRu }),
         },
       );
       const body = (await response.json()) as { error?: string };
@@ -100,6 +105,7 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
         return;
       }
       setNextName("");
+      setNextNameRu("");
       setEditingId(null);
       await load();
     } catch {
@@ -125,6 +131,7 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
       if (editingId === removeTarget._id) {
         setEditingId(null);
         setNextName("");
+        setNextNameRu("");
       }
       setRemoveTarget(null);
       await load();
@@ -155,12 +162,26 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
             <h3 className="text-sm font-semibold text-[#F3F4F6]">
               {editingId ? "Tahrirlash" : "Janer qo‘shish"}
             </h3>
-            <input
-              className={fieldClass}
-              value={nextName}
-              placeholder="Janr nomi"
-              onChange={(event) => setNextName(event.target.value)}
-            />
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1">
+                <span className="text-sm text-[#6B7280]">O‘zbekcha</span>
+                <input
+                  className={fieldClass}
+                  value={nextName}
+                  placeholder="O‘zbekcha"
+                  onChange={(event) => setNextName(event.target.value)}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-sm text-[#6B7280]">Ruscha</span>
+                <input
+                  className={fieldClass}
+                  value={nextNameRu}
+                  placeholder="Ruscha"
+                  onChange={(event) => setNextNameRu(event.target.value)}
+                />
+              </label>
+            </div>
             {error ? <p className="text-sm text-[#E11D48]">{error}</p> : null}
             <button
               type="submit"
@@ -175,7 +196,10 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
         <ul className="flex flex-col gap-2">
           {genres.map((genre) => (
             <li key={genre._id} className="flex items-center gap-2">
-              <input readOnly className={fieldClass} value={genre.name} />
+              <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
+                <input readOnly className={fieldClass} value={genre.name} />
+                <input readOnly className={fieldClass} value={genre.nameRu ?? ""} />
+              </div>
               <button
                 type="button"
                 aria-label="Tahrirlash"
