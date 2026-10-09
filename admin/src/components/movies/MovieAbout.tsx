@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { GlobalModal } from "@/components/GlobalModal";
 
 type MovieAboutProps = {
@@ -18,15 +18,7 @@ export function MovieAbout({
   duration,
   director,
 }: MovieAboutProps) {
-  const bodyRef = useRef<HTMLParagraphElement>(null);
-  const [overflows, setOverflows] = useState(false);
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const body = bodyRef.current;
-    if (!body) return;
-    setOverflows(body.scrollHeight > body.clientHeight + 1);
-  }, [text]);
 
   if (!text) return null;
 
@@ -40,18 +32,16 @@ export function MovieAbout({
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-sm font-semibold text-[#F3F4F6]">Film haqida</h3>
-      <p ref={bodyRef} className="line-clamp-2 text-sm leading-6 text-[#D1D5DB]">
-        {text}
-      </p>
-      {overflows ? (
+      <div className="relative">
+        <p className="line-clamp-2 pr-16 text-sm leading-6 text-[#D1D5DB]">{text}</p>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="self-start text-sm font-medium text-[#2A5FE0]"
+          className="absolute right-0 bottom-0 bg-[#070A12] pl-2 text-sm leading-6 font-medium text-[#2A5FE0]"
         >
           Ko'proq
         </button>
-      ) : null}
+      </div>
       <GlobalModal open={open} title="Film haqida" onClose={() => setOpen(false)}>
         <p className="text-sm leading-6 text-[#D1D5DB]">{text}</p>
         {rows.length > 0 ? (
