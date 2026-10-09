@@ -28,8 +28,6 @@ export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const [showGuide, setShowGuide] = useState(false);
   const [guideReady, setGuideReady] = useState(false);
-  const [dismissing, setDismissing] = useState(false);
-
   const profile = useAuthStore((s) => s.profile);
   const setSession = useAuthStore((s) => s.setSession);
   const requireAuth = useAuthStore((s) => s.requireAuth);
@@ -49,22 +47,19 @@ export default function SearchScreen() {
     };
   }, [profile?.searchGuideUnderstood]);
 
-  const onGotIt = async () => {
-    if (dismissing) return;
+  const onGotIt = () => {
     if (!requireAuth('profile')) return;
-
-    setDismissing(true);
-    try {
-      const next = await dismissSearchGuide();
-      const activeToken = useAuthStore.getState().token;
-      if (activeToken) await setSession(activeToken, next);
-      await setSecureItem(SEARCH_GUIDE_KEY, '1');
-      setShowGuide(false);
-    } catch {
-      // tip remains until server confirms
-    } finally {
-      setDismissing(false);
-    }
+    setShowGuide(false);
+    void (async () => {
+      try {
+        await setSecureItem(SEARCH_GUIDE_KEY, '1');
+        const next = await dismissSearchGuide();
+        const activeToken = useAuthStore.getState().token;
+        if (activeToken) await setSession(activeToken, next);
+      } catch {
+        // already hidden; local flag is saved when the write succeeds
+      }
+    })();
   };
 
   return (
@@ -145,8 +140,7 @@ export default function SearchScreen() {
           visible={showGuide}
           text={t('search.guideText')}
           gotItLabel={t('search.guideGotIt')}
-          onGotIt={() => void onGotIt()}
-          dismissing={dismissing}
+          onGotIt={onGotIt}
           tail="up"
           accent={colors.accent}
           textOnAccent={colors.textOnAccent}

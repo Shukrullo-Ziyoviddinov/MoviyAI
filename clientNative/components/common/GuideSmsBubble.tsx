@@ -13,7 +13,6 @@ type GuideSmsBubbleProps = {
   text: string;
   gotItLabel: string;
   onGotIt: () => void;
-  dismissing?: boolean;
   /** Search: tip above. Chat: tip below toward composer. */
   tail: 'up' | 'down';
   accent: string;
@@ -27,7 +26,6 @@ export function GuideSmsBubble({
   text,
   gotItLabel,
   onGotIt,
-  dismissing = false,
   tail,
   accent,
   textOnAccent,
@@ -35,23 +33,58 @@ export function GuideSmsBubble({
   delayMs = 2000,
 }: GuideSmsBubbleProps) {
   const [mounted, setMounted] = useState(false);
+  const mountedRef = useRef(false);
   const opacity = useRef(new Animated.Value(0)).current;
   const scaleX = useRef(new Animated.Value(0.35)).current;
   const scaleY = useRef(new Animated.Value(0.12)).current;
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
 
+  const playClose = () => {
+    animRef.current?.stop();
+    animRef.current = Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleX, {
+        toValue: 0.35,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleY, {
+        toValue: 0.08,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]);
+    animRef.current.start(({ finished }) => {
+      if (!finished) return;
+      mountedRef.current = false;
+      setMounted(false);
+    });
+  };
+
   useEffect(() => {
     animRef.current?.stop();
+
+    if (!visible) {
+      if (!mountedRef.current) {
+        setMounted(false);
+        return;
+      }
+      playClose();
+      return () => {
+        animRef.current?.stop();
+      };
+    }
+
     opacity.setValue(0);
     scaleX.setValue(0.35);
     scaleY.setValue(0.12);
 
-    if (!visible) {
-      setMounted(false);
-      return;
-    }
-
     const timer = setTimeout(() => {
+      mountedRef.current = true;
       setMounted(true);
       animRef.current = Animated.parallel([
         Animated.timing(opacity, {
@@ -116,8 +149,7 @@ export function GuideSmsBubble({
         <Pressable
           style={[styles.btn, { backgroundColor: 'rgba(255,255,255,0.18)' }]}
           onPress={onGotIt}
-          disabled={dismissing}
-          hitSlop={6}
+          hitSlop={16}
         >
           <Text style={[styles.btnText, { color: textOnAccent }]}>
             {gotItLabel}

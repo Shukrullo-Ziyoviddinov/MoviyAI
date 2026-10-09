@@ -36,7 +36,6 @@ export default function ChatScreen() {
   const [composerH, setComposerH] = useState(180);
   const [showGuide, setShowGuide] = useState(false);
   const [guideReady, setGuideReady] = useState(false);
-  const [dismissing, setDismissing] = useState(false);
   const messages = useChatStore((state) => state.messages);
   const viewing = useMediaViewerStore((state) => !!state.item);
   const hasMessages = messages.length > 0;
@@ -75,22 +74,19 @@ export default function ChatScreen() {
     };
   }, []);
 
-  const onGotIt = async () => {
-    if (dismissing) return;
+  const onGotIt = () => {
     if (!requireAuth('profile')) return;
-
-    setDismissing(true);
-    try {
-      const next = await dismissChatGuide();
-      const activeToken = useAuthStore.getState().token;
-      if (activeToken) await setSession(activeToken, next);
-      await setSecureItem(CHAT_GUIDE_KEY, '1');
-      setShowGuide(false);
-    } catch {
-      // tip remains until server confirms
-    } finally {
-      setDismissing(false);
-    }
+    setShowGuide(false);
+    void (async () => {
+      try {
+        await setSecureItem(CHAT_GUIDE_KEY, '1');
+        const next = await dismissChatGuide();
+        const activeToken = useAuthStore.getState().token;
+        if (activeToken) await setSession(activeToken, next);
+      } catch {
+        // already hidden; local flag is saved when the write succeeds
+      }
+    })();
   };
 
   return (
@@ -148,8 +144,7 @@ export default function ChatScreen() {
                 visible={showGuide}
                 text={t('chat.guideText')}
                 gotItLabel={t('chat.guideGotIt')}
-                onGotIt={() => void onGotIt()}
-                dismissing={dismissing}
+                onGotIt={onGotIt}
                 tail="down"
                 accent={colors.accent}
                 textOnAccent={colors.textOnAccent}
