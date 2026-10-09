@@ -236,14 +236,29 @@ export function AddMoviePanel() {
             <Field label="Kino nomi (ruscha)" value={titleRu} onChange={setTitleRu} />
           </div>
 
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-[#6B7280]">Poster</span>
+          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624] px-3 py-6">
             <input
-              className={fieldClass}
+              className="sr-only"
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={(event) => setPoster(event.target.files?.[0] ?? null)}
             />
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-[#6B7280]">
+              <path
+                d="M12 16V5M12 5l-4 4M12 5l4 4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="text-sm text-[#6B7280]">Poster yuklash</span>
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
