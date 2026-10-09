@@ -110,3 +110,68 @@ export async function createActor(req: Request, res: Response) {
 
   res.status(201).json({ ok: true, data: doc });
 }
+
+export async function updateActor(req: Request, res: Response) {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ ok: false, error: 'Invalid actor id' });
+    return;
+  }
+
+  let payload: Record<string, unknown> = {};
+  try {
+    payload = JSON.parse(text(req.body?.data) || '{}') as Record<string, unknown>;
+  } catch {
+    res.status(400).json({ ok: false, error: 'Ma’lumot formati noto‘g‘ri' });
+    return;
+  }
+
+  const actorName = text(payload.actorName);
+  const about = (payload.actorAbout ?? {}) as Record<string, unknown>;
+  const aboutUz = text(about.uz);
+  const aboutRu = text(about.ru);
+  if (!actorName || !aboutUz || !aboutRu) {
+    res.status(400).json({ ok: false, error: 'Ism va ma’lumot to‘liq emas' });
+    return;
+  }
+
+  const input: Record<string, unknown> = {
+    actorName,
+    actorAbout: { uz: aboutUz, ru: aboutRu },
+  };
+
+  if (req.file) {
+    try {
+      const image = await r2Service.putImage('actorimg', imageName(req.file), req.file.buffer, req.file.mimetype);
+      input.actorImg = image.path;
+    } catch (err) {
+      const code = err instanceof Error ? err.message : '';
+      if (code === 'INVALID_FILENAME') {
+        res.status(400).json({ ok: false, error: 'Rasm nomi noto‘g‘ri' });
+        return;
+      }
+      throw err;
+    }
+  }
+
+  const doc = await actorService.updateActor(id, input);
+  if (!doc) {
+    res.status(404).json({ ok: false, error: 'Actor not found' });
+    return;
+  }
+  res.json({ ok: true, data: doc });
+}
+
+export async function removeActor(req: Request, res: Response) {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ ok: false, error: 'Invalid actor id' });
+    return;
+  }
+  const doc = await actorService.deleteActor(id);
+  if (!doc) {
+    res.status(404).json({ ok: false, error: 'Actor not found' });
+    return;
+  }
+  res.json({ ok: true, data: doc });
+}

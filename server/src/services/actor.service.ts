@@ -1,4 +1,5 @@
 import { Actor } from '../models/Actor.js';
+import { Movie } from '../models/Movie.js';
 
 export async function getAllActors() {
   return Actor.find().sort({ id: 1 }).lean();
@@ -13,6 +14,17 @@ export async function createActor(input: Record<string, unknown>) {
   const lastId = typeof last?.id === 'number' ? last.id : 9000;
   const doc = await Actor.create({ ...input, id: lastId + 1 });
   return doc.toObject();
+}
+
+export async function updateActor(id: number, input: Record<string, unknown>) {
+  return Actor.findOneAndUpdate({ id }, { $set: input }, { returnDocument: 'after' }).lean();
+}
+
+export async function deleteActor(id: number) {
+  const doc = await Actor.findOneAndDelete({ id }).lean();
+  if (!doc) return null;
+  await Movie.updateMany({ actorIds: id }, { $pull: { actorIds: id } });
+  return doc;
 }
 
 export async function getActorsByIds(ids: number[]) {

@@ -1,4 +1,5 @@
 import { ActorAbout } from "@/components/actors/ActorAbout";
+import { ActorCardActions } from "@/components/actors/ActorCardActions";
 import { MoviePoster } from "@/components/movies/MoviePoster";
 import { actorImageUrl, fetchActors } from "@/lib/movies";
 
@@ -27,6 +28,7 @@ export async function ActorGrid() {
               <div className="flex h-32 min-h-0 min-w-0 flex-1 flex-col gap-2">
                 <h2 className="shrink-0 text-base font-semibold text-[#F3F4F6]">{name}</h2>
                 <ActorAbout text={actor.actorAbout?.uz} name={name} />
+                <ActorCardActions actor={actor} />
               </div>
             </article>
           </li>

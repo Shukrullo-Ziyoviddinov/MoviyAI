@@ -3,13 +3,31 @@
 import { useEffect, useRef, useState } from "react";
 import { GlobalModal } from "@/components/GlobalModal";
 import { ProgressBar } from "@/components/ProgressBar";
-import { apiBaseUrl } from "@/lib/movies";
+import { actorImageUrl, apiBaseUrl, type Actor } from "@/lib/movies";
 
 const fieldClass =
   "w-full rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624] px-3 py-2 text-sm text-[#F3F4F6] outline-none";
 
-export function AddActorPanel() {
-  const [open, setOpen] = useState(false);
+export function AddActorPanel({
+  actor = null,
+  open: openProp,
+  onClose,
+  onSaved,
+  showButton = true,
+}: {
+  actor?: Actor | null;
+  open?: boolean;
+  onClose?: () => void;
+  onSaved?: () => void;
+  showButton?: boolean;
+} = {}) {
+  const [innerOpen, setInnerOpen] = useState(false);
+  const open = openProp ?? innerOpen;
+
+  function close() {
+    setInnerOpen(false);
+    onClose?.();
+  }
   const [actorName, setActorName] = useState("");
   const [aboutUz, setAboutUz] = useState("");
   const [aboutRu, setAboutRu] = useState("");
@@ -34,6 +52,18 @@ export function AddActorPanel() {
     window.clearInterval(timer.current);
     timer.current = null;
   }
+
+  useEffect(() => {
+    if (!open || !actor) return;
+    setActorName(actor.actorName ?? "");
+    setAboutUz(actor.actorAbout?.uz ?? "");
+    setAboutRu(actor.actorAbout?.ru ?? "");
+    setImage(null);
+    setPreview(actor.actorImg ? actorImageUrl(actor.actorImg) : "");
+    setLoading(false);
+    setProgress(0);
+    setError("");
+  }, [open, actor]);
 
   function onImagePick(file: File | null) {
     clearTimer();
@@ -63,7 +93,7 @@ export function AddActorPanel() {
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
-    if (!image) {
+    if (!image && !actor) {
       setError("Rasm kerak");
       return;
     }
@@ -90,10 +120,10 @@ export function AddActorPanel() {
           actorAbout: { uz: aboutUz, ru: aboutRu },
         }),
       );
-      body.append("image", image);
+      if (image) body.append("image", image);
       const result = await new Promise<{ ok?: boolean; error?: string; status: number }>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `${apiBaseUrl}/api/actors`);
+        xhr.open(actor ? "PATCH" : "POST", actor ? `${apiBaseUrl}/api/actors/${actor.id}` : `${apiBaseUrl}/api/actors`);
         xhr.upload.onprogress = (eventProgress) => {
           if (!eventProgress.lengthComputable || eventProgress.total <= 0) return;
           const next = Math.round((eventProgress.loaded / eventProgress.total) * 100);
@@ -116,7 +146,8 @@ export function AddActorPanel() {
         return;
       }
       setProgress(100);
-      setOpen(false);
+      if (onSaved) onSaved();
+      close();
       setActorName("");
       setAboutUz("");
       setAboutRu("");
@@ -134,15 +165,17 @@ export function AddActorPanel() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] px-4 py-3 text-sm font-medium text-[#F3F4F6]"
-      >
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1E4FD6] text-lg">+</span>
-        Aktyor qo‘shish
-      </button>
-      <GlobalModal open={open} title="Aktyor qo‘shish" onClose={() => setOpen(false)}>
+      {showButton ? (
+        <button
+          type="button"
+          onClick={() => setInnerOpen(true)}
+          className="flex items-center gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] px-4 py-3 text-sm font-medium text-[#F3F4F6]"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1E4FD6] text-lg">+</span>
+          Aktyor qo‘shish
+        </button>
+      ) : null}
+      <GlobalModal open={open} title={actor ? "Tahrirlash" : "Aktyor qo‘shish"} onClose={close}>
         <form className="flex flex-col gap-4" onSubmit={onSubmit}>
           <label className="flex flex-col gap-1">
             <span className="text-sm text-[#6B7280]">Ism</span>
