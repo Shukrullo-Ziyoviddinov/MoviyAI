@@ -20,7 +20,7 @@ function NavSearch({ placeholder }: { placeholder: string }) {
         onChange={(event) => setQuery(event.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="h-10 w-full rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#101624] pr-3 pl-10 text-sm text-[#F3F4F6] outline-none placeholder:text-[#6B7280]"
+        className="h-10 w-full rounded-xl border border-[rgba(20,38,70,0.75)] bg-[#101624] pr-3 pl-10 text-sm text-[#F3F4F6] outline-none placeholder:text-[#6B7280]"
       />
     </label>
   );
@@ -41,7 +41,7 @@ export function Navbar() {
         {current?.label ?? "Bosh sahifa"}
       </h1>
       {searchPlaceholder ? <NavSearch placeholder={searchPlaceholder} /> : <span />}
-      <span className="flex w-fit items-center justify-self-end gap-2.5 rounded-full border border-[rgba(40,70,130,0.35)] bg-[#101624] px-3 py-1.5 text-sm font-medium text-[#F3F4F6]">
+      <span className="flex w-fit items-center justify-self-end gap-2.5 rounded-full border border-[rgba(20,38,70,0.75)] bg-[#101624] px-3 py-1.5 text-sm font-medium text-[#F3F4F6]">
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1E4FD6] text-white">
           <svg
             width="16"
