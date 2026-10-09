@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
+import { CountryManager } from "@/components/countries/CountryManager";
 import { GenreManager } from "@/components/genres/GenreManager";
 import { isNavActive, navItems } from "@/components/nav";
 
@@ -38,6 +39,19 @@ function MovieIcon() {
       <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="2" />
       <path
         d="M8 5v14M16 5v14M3 9h5M3 15h5M16 9h5M16 15h5"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
+function CountryIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M4 12h16M12 4c2.2 2.4 3.3 5.1 3.3 8S14.2 17.6 12 20c-2.2-2.4-3.3-5.1-3.3-8S9.8 6.4 12 4z"
         stroke="currentColor"
         strokeWidth="2"
       />
@@ -82,6 +96,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [width, setWidth] = useState(DEFAULT);
   const [genresOpen, setGenresOpen] = useState(false);
+  const [countriesOpen, setCountriesOpen] = useState(false);
   const dragRef = useRef<{ x: number; width: number } | null>(null);
   const iconOnly = width < MIN;
 
@@ -220,8 +235,39 @@ export function Sidebar() {
             "Janer malumotlari"
           )}
         </button>
+        <button
+          type="button"
+          onClick={() => setCountriesOpen(true)}
+          className={
+            iconOnly
+              ? `group relative flex h-10 w-10 items-center justify-center rounded-lg text-[#F3F4F6] ${
+                  countriesOpen ? "border border-[rgba(40,70,130,0.35)] bg-[#101624]" : ""
+                }`
+              : `flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#F3F4F6] ${
+                  countriesOpen ? "border border-[rgba(40,70,130,0.35)] bg-[#101624]" : ""
+                }`
+          }
+        >
+          <CountryIcon />
+          {iconOnly ? (
+            <span className="pointer-events-none absolute left-full top-1/2 z-20 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624] px-2.5 py-1.5 text-sm font-medium text-[#F3F4F6] group-hover:block group-focus-visible:block">
+              <span
+                aria-hidden="true"
+                className="absolute top-1/2 right-full -translate-y-1/2 border-y-[7px] border-r-[7px] border-y-transparent border-r-[rgba(40,70,130,0.35)]"
+              />
+              <span
+                aria-hidden="true"
+                className="absolute top-1/2 right-[calc(100%-1px)] -translate-y-1/2 border-y-[6px] border-r-[6px] border-y-transparent border-r-[#101624]"
+              />
+              Davlat malumotlari
+            </span>
+          ) : (
+            "Davlat malumotlari"
+          )}
+        </button>
       </nav>
       <GenreManager open={genresOpen} onClose={() => setGenresOpen(false)} />
+      <CountryManager open={countriesOpen} onClose={() => setCountriesOpen(false)} />
       <div
         role="separator"
         aria-orientation="vertical"

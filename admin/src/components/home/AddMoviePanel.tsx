@@ -95,6 +95,8 @@ export function AddMoviePanel() {
   const [watchUrl, setWatchUrl] = useState("");
   const [typeCategory, setTypeCategory] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
+  const [countryOptions, setCountryOptions] = useState<string[]>([]);
+  const [countryOpen, setCountryOpen] = useState(false);
   const [filterGenres, setFilterGenres] = useState<string[]>([]);
   const [genreOptions, setGenreOptions] = useState<string[]>([]);
   const [genreOpen, setGenreOpen] = useState(false);
@@ -113,20 +115,27 @@ export function AddMoviePanel() {
     if (!open) return;
     void (async () => {
       try {
-        const [movieRes, actorRes, genreRes] = await Promise.all([
+        const [movieRes, actorRes, genreRes, countryRes] = await Promise.all([
           fetch(`${apiBaseUrl}/api/movies`),
           fetch(`${apiBaseUrl}/api/actors`),
           fetch(`${apiBaseUrl}/api/genres`),
+          fetch(`${apiBaseUrl}/api/countries`),
         ]);
         const movieBody = (await movieRes.json()) as { data?: Movie[] };
         const actorBody = (await actorRes.json()) as { data?: Actor[] };
         const genreBody = (await genreRes.json()) as { data?: { name?: string }[] };
+        const countryBody = (await countryRes.json()) as { data?: { name?: string }[] };
         const list = Array.isArray(movieBody.data) ? movieBody.data : [];
         setMovies(list);
         setActors(Array.isArray(actorBody.data) ? actorBody.data : []);
         setGenreOptions(
           (Array.isArray(genreBody.data) ? genreBody.data : [])
             .map((genre) => genre.name ?? "")
+            .filter(Boolean),
+        );
+        setCountryOptions(
+          (Array.isArray(countryBody.data) ? countryBody.data : [])
+            .map((country) => country.name ?? "")
             .filter(Boolean),
         );
         const names = list.map((movie) => movie.categoryName).filter((name): name is string => Boolean(name));
@@ -374,7 +383,32 @@ export function AddMoviePanel() {
 
           <Field label="Tur" value={typeCategory} onChange={setTypeCategory} />
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Filtr davlat" value={filterCountry} onChange={setFilterCountry} />
+            <div>
+              <span className="mb-1 block text-sm text-[#6B7280]">Filtr davlat</span>
+              <input
+                readOnly
+                className={fieldClass}
+                placeholder="Filtr davlat"
+                value={filterCountry}
+                onClick={() => setCountryOpen((value) => !value)}
+              />
+              {countryOpen ? (
+                <ul className="mt-1 max-h-48 scroll-none overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
+                  {countryOptions.map((name) => (
+                    <li key={name}>
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 text-left text-sm text-[#F3F4F6]"
+                        onClick={() => setFilterCountry((current) => (current === name ? "" : name))}
+                      >
+                        {filterCountry === name ? "✓ " : ""}
+                        {name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
             <div>
               <span className="mb-1 block text-sm text-[#6B7280]">Filtr janr</span>
               <input

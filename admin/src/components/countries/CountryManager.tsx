@@ -5,7 +5,7 @@ import { GlobalModal } from "@/components/GlobalModal";
 import { MiniModal } from "@/components/MiniModal";
 import { apiBaseUrl } from "@/lib/movies";
 
-type Genre = {
+type Country = {
   _id: string;
   name: string;
 };
@@ -41,82 +41,82 @@ function TrashIcon() {
   );
 }
 
-export function GenreManager({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [genres, setGenres] = useState<Genre[]>([]);
+export function CountryManager({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [countries, setCountries] = useState<Country[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [nextName, setNextName] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [removeTarget, setRemoveTarget] = useState<Genre | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<Country | null>(null);
 
   const load = useCallback(async () => {
-    const response = await fetch(`${apiBaseUrl}/api/genres`);
-    const body = (await response.json()) as { data?: Genre[]; error?: string };
+    const response = await fetch(`${apiBaseUrl}/api/countries`);
+    const body = (await response.json()) as { data?: Country[]; error?: string };
     if (!response.ok) {
-      setError(body.error || "Janrlar olinmadi");
+      setError(body.error || "Davlatlar olinmadi");
       return;
     }
     const list = Array.isArray(body.data) ? body.data : [];
-    setGenres(list);
-    setDrafts(Object.fromEntries(list.map((genre) => [genre._id, genre.name])));
+    setCountries(list);
+    setDrafts(Object.fromEntries(list.map((country) => [country._id, country.name])));
     setError("");
   }, []);
 
   useEffect(() => {
     if (!open) return;
-    void load().catch(() => setError("Janrlar olinmadi"));
+    void load().catch(() => setError("Davlatlar olinmadi"));
   }, [open, load]);
 
   async function saveName(id: string) {
     const name = (drafts[id] ?? "").trim();
     if (!name) {
-      setError("Janr nomi kerak");
+      setError("Davlat nomi kerak");
       return;
     }
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`${apiBaseUrl}/api/genres/${id}`, {
+      const response = await fetch(`${apiBaseUrl}/api/countries/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       });
       const body = (await response.json()) as { error?: string };
       if (!response.ok) {
-        setError(body.error || "Janr saqlanmadi");
+        setError(body.error || "Davlat saqlanmadi");
         return;
       }
       await load();
     } catch {
-      setError("Janr saqlanmadi");
+      setError("Davlat saqlanmadi");
     } finally {
       setBusy(false);
     }
   }
 
-  async function addGenre() {
+  async function addCountry() {
     const name = nextName.trim();
     if (!name) {
-      setError("Janr nomi kerak");
+      setError("Davlat nomi kerak");
       return;
     }
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`${apiBaseUrl}/api/genres`, {
+      const response = await fetch(`${apiBaseUrl}/api/countries`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       });
       const body = (await response.json()) as { error?: string };
       if (!response.ok) {
-        setError(body.error || "Janr saqlanmadi");
+        setError(body.error || "Davlat saqlanmadi");
         return;
       }
       setNextName("");
       await load();
     } catch {
-      setError("Janr saqlanmadi");
+      setError("Davlat saqlanmadi");
     } finally {
       setBusy(false);
     }
@@ -127,18 +127,18 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`${apiBaseUrl}/api/genres/${removeTarget._id}`, {
+      const response = await fetch(`${apiBaseUrl}/api/countries/${removeTarget._id}`, {
         method: "DELETE",
       });
       const body = (await response.json()) as { error?: string };
       if (!response.ok) {
-        setError(body.error || "Janr o‘chirilmadi");
+        setError(body.error || "Davlat o‘chirilmadi");
         return;
       }
       setRemoveTarget(null);
       await load();
     } catch {
-      setError("Janr o‘chirilmadi");
+      setError("Davlat o‘chirilmadi");
     } finally {
       setBusy(false);
     }
@@ -148,7 +148,7 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
     <>
       <GlobalModal
         open={open}
-        title="Janer malumotlari"
+        title="Davlat malumotlari"
         onClose={() => {
           if (removeTarget) return;
           onClose();
@@ -158,14 +158,14 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
             className="flex flex-col gap-2"
             onSubmit={(event) => {
               event.preventDefault();
-              void addGenre();
+              void addCountry();
             }}
           >
-            <h3 className="text-sm font-semibold text-[#F3F4F6]">Janer qo‘shish</h3>
+            <h3 className="text-sm font-semibold text-[#F3F4F6]">Davlat qo‘shish</h3>
             <input
               className={fieldClass}
               value={nextName}
-              placeholder="Janr nomi"
+              placeholder="Davlat nomi"
               onChange={(event) => setNextName(event.target.value)}
             />
             {error ? <p className="text-sm text-[#E11D48]">{error}</p> : null}
@@ -180,20 +180,20 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
         }
       >
         <ul className="flex flex-col gap-2">
-          {genres.map((genre) => (
-            <li key={genre._id} className="flex items-center gap-2">
+          {countries.map((country) => (
+            <li key={country._id} className="flex items-center gap-2">
               <input
                 className={fieldClass}
-                value={drafts[genre._id] ?? genre.name}
+                value={drafts[country._id] ?? country.name}
                 onChange={(event) =>
-                  setDrafts((current) => ({ ...current, [genre._id]: event.target.value }))
+                  setDrafts((current) => ({ ...current, [country._id]: event.target.value }))
                 }
               />
               <button
                 type="button"
                 aria-label="Tahrirlash"
                 disabled={busy}
-                onClick={() => void saveName(genre._id)}
+                onClick={() => void saveName(country._id)}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#16A34A] text-white"
               >
                 <PencilIcon />
@@ -202,7 +202,7 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
                 type="button"
                 aria-label="O‘chirish"
                 disabled={busy}
-                onClick={() => setRemoveTarget(genre)}
+                onClick={() => setRemoveTarget(country)}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#DC2626] text-white"
               >
                 <TrashIcon />
@@ -215,7 +215,7 @@ export function GenreManager({ open, onClose }: { open: boolean; onClose: () => 
         open={Boolean(removeTarget)}
         message={
           removeTarget
-            ? `Chindan ham ${removeTarget.name} janerni o‘chirmoqchimisiz?`
+            ? `Chindan ham ${removeTarget.name} davlatni o‘chirmoqchimisiz?`
             : ""
         }
         onClose={() => setRemoveTarget(null)}
