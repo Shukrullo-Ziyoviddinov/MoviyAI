@@ -2,6 +2,7 @@ import { Router } from 'express';
 import aboutRoutes from './about.routes.js';
 import actorRoutes from './actor.routes.js';
 import authRoutes from './auth.routes.js';
+import genreRoutes from './genre.routes.js';
 import mediaRoutes from './media.routes.js';
 import movieRoutes from './movie.routes.js';
 import privacyRoutes from './privacy.routes.js';
@@ -14,6 +15,7 @@ router.use('/about', aboutRoutes);
 router.use('/privacy', privacyRoutes);
 router.use('/media', mediaRoutes);
 router.use('/movies', movieRoutes);
+router.use('/genres', genreRoutes);
 router.use('/actors', actorRoutes);
 router.use('/wishlist', wishlistRoutes);
 

@@ -95,7 +95,9 @@ export function AddMoviePanel() {
   const [watchUrl, setWatchUrl] = useState("");
   const [typeCategory, setTypeCategory] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
-  const [filterGenre, setFilterGenre] = useState("");
+  const [filterGenres, setFilterGenres] = useState<string[]>([]);
+  const [genreOptions, setGenreOptions] = useState<string[]>([]);
+  const [genreOpen, setGenreOpen] = useState(false);
   const [like, setLike] = useState("0");
   const [dislike, setDislike] = useState("0");
   const [specsDuration, setSpecsDuration] = useState("");
@@ -111,15 +113,22 @@ export function AddMoviePanel() {
     if (!open) return;
     void (async () => {
       try {
-        const [movieRes, actorRes] = await Promise.all([
+        const [movieRes, actorRes, genreRes] = await Promise.all([
           fetch(`${apiBaseUrl}/api/movies`),
           fetch(`${apiBaseUrl}/api/actors`),
+          fetch(`${apiBaseUrl}/api/genres`),
         ]);
         const movieBody = (await movieRes.json()) as { data?: Movie[] };
         const actorBody = (await actorRes.json()) as { data?: Actor[] };
+        const genreBody = (await genreRes.json()) as { data?: { name?: string }[] };
         const list = Array.isArray(movieBody.data) ? movieBody.data : [];
         setMovies(list);
         setActors(Array.isArray(actorBody.data) ? actorBody.data : []);
+        setGenreOptions(
+          (Array.isArray(genreBody.data) ? genreBody.data : [])
+            .map((genre) => genre.name ?? "")
+            .filter(Boolean),
+        );
         const names = list.map((movie) => movie.categoryName).filter((name): name is string => Boolean(name));
         setCategories(Array.from(new Set([...CATEGORIES, ...names])));
       } catch {
@@ -209,7 +218,7 @@ export function AddMoviePanel() {
           watchUrl,
           typeCategory: splitList(typeCategory),
           filterCountry,
-          filterGenre: splitList(filterGenre),
+          filterGenre: filterGenres,
           like,
           dislike,
           specs: {
@@ -366,7 +375,38 @@ export function AddMoviePanel() {
           <Field label="Tur" value={typeCategory} onChange={setTypeCategory} />
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Filtr davlat" value={filterCountry} onChange={setFilterCountry} />
-            <Field label="Filtr janr" value={filterGenre} onChange={setFilterGenre} />
+            <div>
+              <span className="mb-1 block text-sm text-[#6B7280]">Filtr janr</span>
+              <input
+                readOnly
+                className={fieldClass}
+                placeholder="Filtr janr"
+                value={filterGenres.join(", ")}
+                onClick={() => setGenreOpen((value) => !value)}
+              />
+              {genreOpen ? (
+                <ul className="mt-1 max-h-48 scroll-none overflow-y-auto rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624]">
+                  {genreOptions.map((name) => (
+                    <li key={name}>
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 text-left text-sm text-[#F3F4F6]"
+                        onClick={() =>
+                          setFilterGenres((current) =>
+                            current.includes(name)
+                              ? current.filter((item) => item !== name)
+                              : [...current, name],
+                          )
+                        }
+                      >
+                        {filterGenres.includes(name) ? "✓ " : ""}
+                        {name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Like" value={like} onChange={setLike} />
