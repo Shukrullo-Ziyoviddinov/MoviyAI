@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { GlobalModal } from "@/components/GlobalModal";
 
 type MovieAboutProps = {
@@ -18,9 +18,55 @@ export function MovieAbout({
   duration,
   director,
 }: MovieAboutProps) {
+  const bodyRef = useRef<HTMLParagraphElement>(null);
   const [open, setOpen] = useState(false);
+  const [cut, setCut] = useState(text?.length ?? 0);
+
+  useLayoutEffect(() => {
+    const body = bodyRef.current;
+    if (!body || !text) return;
+
+    const measure = () => {
+      const textNode = body.firstChild;
+      if (!textNode || textNode.nodeType !== Node.TEXT_NODE) return;
+      const line = parseFloat(getComputedStyle(body).lineHeight) || 24;
+      const limit = line * 2 + 1;
+      const apply = (count: number) => {
+        textNode.textContent =
+          count >= text.length ? `${text} ` : `${text.slice(0, count).trimEnd()} `;
+        return body.scrollHeight <= limit;
+      };
+
+      if (apply(text.length)) {
+        setCut(text.length);
+        return;
+      }
+
+      let low = 0;
+      let high = text.length;
+      let best = 0;
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        if (apply(mid)) {
+          best = mid;
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+      apply(best);
+      setCut(best);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(body);
+    return () => observer.disconnect();
+  }, [text]);
 
   if (!text) return null;
+
+  const preview = cut >= text.length ? `${text} ` : `${text.slice(0, cut).trimEnd()} `;
 
   const rows = [
     { label: "Yil", value: year ? String(year) : "" },
@@ -32,16 +78,16 @@ export function MovieAbout({
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-sm font-semibold text-[#F3F4F6]">Film haqida</h3>
-      <div className="relative">
-        <p className="line-clamp-2 pr-16 text-sm leading-6 text-[#D1D5DB]">{text}</p>
+      <p ref={bodyRef} className="text-sm leading-6 text-[#D1D5DB]">
+        {preview}
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="absolute right-0 bottom-0 bg-[#070A12] pl-2 text-sm leading-6 font-medium text-[#2A5FE0]"
+          className="font-medium text-[#2A5FE0]"
         >
           Ko'proq
         </button>
-      </div>
+      </p>
       <GlobalModal open={open} title="Film haqida" onClose={() => setOpen(false)}>
         <p className="text-sm leading-6 text-[#D1D5DB]">{text}</p>
         {rows.length > 0 ? (
