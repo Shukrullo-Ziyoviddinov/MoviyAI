@@ -382,17 +382,14 @@ export function AddMoviePanel({
   return (
     <>
       {showButton ? (
-        <section className="p-6">
-          <h2 className="text-lg font-semibold text-[#F3F4F6]">Amallar</h2>
-          <button
-            type="button"
-            onClick={() => setInnerOpen(true)}
-            className="mt-4 flex items-center gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] px-4 py-3 text-sm font-medium text-[#F3F4F6]"
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1E4FD6] text-lg">+</span>
-            Kino qo‘shish
-          </button>
-        </section>
+        <button
+          type="button"
+          onClick={() => setInnerOpen(true)}
+          className="flex items-center gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] px-4 py-3 text-sm font-medium text-[#F3F4F6]"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1E4FD6] text-lg">+</span>
+          Kino qo‘shish
+        </button>
       ) : null}
       <GlobalModal wide open={open} title={movie ? "Tahrirlash" : "Kino qo‘shish"} onClose={close}>
         <form className="flex flex-col gap-4" onSubmit={onSubmit}>

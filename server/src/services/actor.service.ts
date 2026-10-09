@@ -8,6 +8,13 @@ export async function getActorById(id: number) {
   return Actor.findOne({ id }).lean();
 }
 
+export async function createActor(input: Record<string, unknown>) {
+  const last = await Actor.findOne().sort({ id: -1 }).select({ id: 1 }).lean();
+  const lastId = typeof last?.id === 'number' ? last.id : 9000;
+  const doc = await Actor.create({ ...input, id: lastId + 1 });
+  return doc.toObject();
+}
+
 export async function getActorsByIds(ids: number[]) {
   if (!ids.length) return [];
   const docs = await Actor.find({ id: { $in: ids } }).lean();
