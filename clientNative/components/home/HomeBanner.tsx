@@ -5,7 +5,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, useWindowDimensions } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Pressable, ScrollView } from 'react-native-gesture-handler';
 
 function hexToRgba(hex: string, alpha: number) {
@@ -17,7 +17,7 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function HomeBanner() {
+export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => void }) {
   const { width } = useWindowDimensions();
   const { colors } = useTheme();
   const [items, setItems] = useState<Banner[]>([]);
@@ -38,6 +38,10 @@ export function HomeBanner() {
     };
   }, []);
 
+  useEffect(() => {
+    onVisible?.(items.length > 0);
+  }, [items.length, onVisible]);
+
   if (items.length === 0) return null;
 
   const fadeColors = [
@@ -50,6 +54,7 @@ export function HomeBanner() {
   ] as const;
 
   return (
+    <View style={{ width, height }}>
     <ScrollView
       horizontal
       pagingEnabled
@@ -86,6 +91,7 @@ export function HomeBanner() {
         );
       })}
     </ScrollView>
+    </View>
   );
 }
 

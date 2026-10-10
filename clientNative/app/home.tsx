@@ -12,7 +12,7 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import { groupMoviesByCategory } from '@/src/utils/groupMovies';
 import { router } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -37,6 +37,7 @@ export default function HomeScreen() {
   const loadMovies = useMoviesStore((s) => s.loadMovies);
   const loadWishlistIds = useWishlistStore((s) => s.loadIds);
   const { width } = useWindowDimensions();
+  const [bannerOn, setBannerOn] = useState(false);
 
   const headerH = insets.top + 10 + HEADER_ROW;
   const cardWidth = useMemo(() => Math.round(width * 0.39), [width]);
@@ -59,11 +60,11 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           scrollEnabled={false}
           contentContainerStyle={{
-            paddingTop: headerH,
+            paddingTop: bannerOn ? 0 : headerH,
             paddingBottom: navOffset + 12,
           }}
         >
-          <HomeBanner />
+          <HomeBanner onVisible={setBannerOn} />
           {Array.from({ length: SKELETON_ROWS }, (_, row) => (
             <View key={row} style={styles.skelSection}>
               <SkeletonLoader
@@ -90,12 +91,12 @@ export default function HomeScreen() {
           style={[
             styles.emptyWrap,
             {
-              paddingTop: headerH,
+              paddingTop: bannerOn ? 0 : headerH,
               paddingBottom: navOffset + 8,
             },
           ]}
         >
-          <HomeBanner />
+          <HomeBanner onVisible={setBannerOn} />
           <View style={styles.emptyBody}>
             <HomeEmptyState onGoToChat={goToChat} />
           </View>
@@ -105,11 +106,11 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
           contentContainerStyle={{
-            paddingTop: headerH,
+            paddingTop: bannerOn ? 0 : headerH,
             paddingBottom: navOffset + 12,
           }}
         >
-          <HomeBanner />
+          <HomeBanner onVisible={setBannerOn} />
           {categories.map((group) => (
             <MovieCategoryRow
               key={group.categoryName}
