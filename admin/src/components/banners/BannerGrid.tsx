@@ -44,12 +44,12 @@ export async function BannerGrid() {
                     const title = movieTitle(movie);
                     const genres = movie.genre?.uz?.filter(Boolean) ?? [];
                     return (
-                      <div key={movie.id} className="flex min-w-0 items-start gap-2">
+                      <div key={movie.id} className="flex w-full min-w-0 items-start gap-2">
                         <div className="h-20 w-14 shrink-0 overflow-hidden rounded-lg bg-[#101624]">
                           <MoviePoster src={moviePosterUrl(movie.homeImgPoster)} alt={title} />
                         </div>
-                        <div className="flex min-w-0 flex-col gap-1">
-                          <h2 className="text-sm font-semibold text-[#F3F4F6]">{title}</h2>
+                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                          <h2 className="w-full min-w-0 truncate text-sm font-semibold text-[#F3F4F6]">{title}</h2>
                           {genres.length > 0 ? (
                             <p className="text-sm text-[#6B7280]">{genres.join(", ")}</p>
                           ) : null}
