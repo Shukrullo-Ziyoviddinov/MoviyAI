@@ -17,6 +17,14 @@ export async function createBanner(input: BannerInput) {
   return doc.toObject();
 }
 
+export async function updateBanner(id: string, input: Partial<BannerInput>) {
+  return Banner.findByIdAndUpdate(id, { $set: input }, { returnDocument: 'after' }).lean();
+}
+
+export async function deleteBanner(id: string) {
+  return Banner.findByIdAndDelete(id).lean();
+}
+
 export async function upsertBanners(items: BannerInput[]) {
   const results = [];
   for (const item of items) {

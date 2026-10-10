@@ -3,13 +3,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GlobalModal } from "@/components/GlobalModal";
 import { ProgressBar } from "@/components/ProgressBar";
-import { apiBaseUrl, moviePosterUrl, movieTitle, type Movie } from "@/lib/movies";
+import { apiBaseUrl, bannerImageUrl, moviePosterUrl, movieTitle, type Banner, type Movie } from "@/lib/movies";
 
 const fieldClass =
   "w-full rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624] px-3 py-2 text-sm text-[#F3F4F6] outline-none";
 
-export function AddBannerPanel() {
-  const [open, setOpen] = useState(false);
+export function AddBannerPanel({
+  banner = null,
+  open: openProp,
+  onClose,
+  onSaved,
+  showButton = true,
+}: {
+  banner?: Banner | null;
+  open?: boolean;
+  onClose?: () => void;
+  onSaved?: () => void;
+  showButton?: boolean;
+} = {}) {
+  const [innerOpen, setInnerOpen] = useState(false);
+  const open = openProp ?? innerOpen;
   const [movies, setMovies] = useState<Movie[]>([]);
   const [query, setQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -62,8 +75,25 @@ export function AddBannerPanel() {
     timer.current = null;
   }
 
+  useEffect(() => {
+    if (!open || !banner) return;
+    setMovieId(banner.movieId[0] ?? null);
+    setImage(null);
+    setPreview(bannerImageUrl(banner.img));
+    setLoading(false);
+    setProgress(0);
+    setError("");
+  }, [open, banner]);
+
+  useEffect(() => {
+    if (!open || !banner) return;
+    const linked = movies.find((movie) => movie.id === banner.movieId[0]);
+    if (linked) setQuery(movieTitle(linked));
+  }, [open, banner, movies]);
+
   function close() {
-    setOpen(false);
+    setInnerOpen(false);
+    onClose?.();
     setMenuOpen(false);
     setQuery("");
     setMovieId(null);
@@ -108,7 +138,7 @@ export function AddBannerPanel() {
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
-    if (!image) {
+    if (!image && !banner) {
       setError("Rasm kerak");
       return;
     }
@@ -129,10 +159,13 @@ export function AddBannerPanel() {
     try {
       const body = new FormData();
       body.append("data", JSON.stringify({ movieId: [movieId] }));
-      body.append("image", image);
+      if (image) body.append("image", image);
       const result = await new Promise<{ ok?: boolean; error?: string; status: number }>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `${apiBaseUrl}/api/banners`);
+        xhr.open(
+          banner ? "PATCH" : "POST",
+          banner ? `${apiBaseUrl}/api/banners/${banner._id}` : `${apiBaseUrl}/api/banners`,
+        );
         xhr.upload.onprogress = (eventProgress) => {
           if (!eventProgress.lengthComputable || eventProgress.total <= 0) return;
           const next = Math.round((eventProgress.loaded / eventProgress.total) * 100);
@@ -155,6 +188,7 @@ export function AddBannerPanel() {
         return;
       }
       setProgress(100);
+      onSaved?.();
       close();
     } catch {
       setError("Serverga ulanib bo‘lmadi");
@@ -168,15 +202,17 @@ export function AddBannerPanel() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] px-4 py-3 text-sm font-medium text-[#F3F4F6]"
-      >
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1E4FD6] text-lg">+</span>
-        Banner qo‘shish
-      </button>
-      <GlobalModal open={open} title="Banner qo‘shish" onClose={close}>
+      {showButton ? (
+        <button
+          type="button"
+          onClick={() => setInnerOpen(true)}
+          className="flex items-center gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] px-4 py-3 text-sm font-medium text-[#F3F4F6]"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1E4FD6] text-lg">+</span>
+          Banner qo‘shish
+        </button>
+      ) : null}
+      <GlobalModal open={open} title={banner ? "Tahrirlash" : "Banner qo‘shish"} onClose={close}>
         <form className="flex flex-col gap-4" onSubmit={onSubmit}>
           <div className="flex w-full flex-col gap-2">
             <label

@@ -62,6 +62,7 @@ export function bannerImageUrl(path?: string) {
 }
 
 export type Banner = {
+  _id: string;
   img: string;
   movieId: number[];
 };

@@ -6,5 +6,7 @@ const router = Router();
 
 router.get('/', asyncHandler(bannerController.listBanners));
 router.post('/', bannerController.uploadBannerImage, asyncHandler(bannerController.createBanner));
+router.patch('/:id', bannerController.uploadBannerImage, asyncHandler(bannerController.updateBanner));
+router.delete('/:id', asyncHandler(bannerController.removeBanner));
 
 export default router;

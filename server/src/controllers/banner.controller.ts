@@ -93,3 +93,70 @@ export async function createBanner(req: Request, res: Response) {
   });
   res.status(201).json({ ok: true, data: doc });
 }
+
+export async function updateBanner(req: Request, res: Response) {
+  const id = String(req.params.id ?? '');
+  if (!id) {
+    res.status(400).json({ ok: false, error: 'Invalid banner id' });
+    return;
+  }
+
+  let payload: Record<string, unknown> = {};
+  try {
+    payload = JSON.parse(text(req.body?.data) || '{}') as Record<string, unknown>;
+  } catch {
+    res.status(400).json({ ok: false, error: 'Ma’lumot formati noto‘g‘ri' });
+    return;
+  }
+
+  const rawIds = Array.isArray(payload.movieId) ? payload.movieId : [payload.movieId];
+  const movieId = rawIds.map((value) => Number(value)).filter((value) => Number.isFinite(value));
+  if (movieId.length === 0) {
+    res.status(400).json({ ok: false, error: 'Kino biriktirilishi kerak' });
+    return;
+  }
+
+  const movie = await movieService.getMovieById(movieId[0]);
+  if (!movie) {
+    res.status(404).json({ ok: false, error: 'Kino topilmadi' });
+    return;
+  }
+
+  const input: BannerUpdate = { movieId: [movieId[0]] };
+  if (req.file) {
+    try {
+      const image = await r2Service.putImage('banner', imageName(req.file), req.file.buffer, req.file.mimetype);
+      input.img = image.path;
+    } catch (err) {
+      const code = err instanceof Error ? err.message : '';
+      if (code === 'INVALID_FILENAME') {
+        res.status(400).json({ ok: false, error: 'Rasm nomi noto‘g‘ri' });
+        return;
+      }
+      throw err;
+    }
+  }
+
+  const doc = await bannerService.updateBanner(id, input);
+  if (!doc) {
+    res.status(404).json({ ok: false, error: 'Banner topilmadi' });
+    return;
+  }
+  res.json({ ok: true, data: doc });
+}
+
+export async function removeBanner(req: Request, res: Response) {
+  const id = String(req.params.id ?? '');
+  if (!id) {
+    res.status(400).json({ ok: false, error: 'Invalid banner id' });
+    return;
+  }
+  const doc = await bannerService.deleteBanner(id);
+  if (!doc) {
+    res.status(404).json({ ok: false, error: 'Banner topilmadi' });
+    return;
+  }
+  res.json({ ok: true, data: doc });
+}
+
+type BannerUpdate = { movieId: number[]; img?: string };

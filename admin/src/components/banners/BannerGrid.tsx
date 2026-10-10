@@ -1,3 +1,4 @@
+import { BannerCardActions } from "@/components/banners/BannerCardActions";
 import { MoviePoster } from "@/components/movies/MoviePoster";
 import {
   bannerImageUrl,
@@ -32,8 +33,9 @@ export async function BannerGrid() {
         return (
           <li key={banner.img} className="min-w-0">
             <article className="flex h-full gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-3">
-              <div className="h-[180px] w-[120px] shrink-0 overflow-hidden rounded-lg bg-[#101624]">
+              <div className="relative h-[180px] w-[120px] shrink-0 overflow-hidden rounded-lg bg-[#101624]">
                 <MoviePoster src={bannerImageUrl(banner.img)} alt="Banner" fit="contain" />
+                <BannerCardActions banner={banner} />
               </div>
               <div className="flex min-w-0 flex-1 flex-col items-start gap-2">
                 {linked.length === 0 ? (
