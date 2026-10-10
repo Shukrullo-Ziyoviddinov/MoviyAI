@@ -32,12 +32,11 @@ export async function BannerGrid() {
           .filter((movie): movie is Movie => Boolean(movie));
         return (
           <li key={banner.img} className="min-w-0">
-            <article className="flex h-full gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-3">
-              <div className="relative h-[180px] w-[120px] shrink-0 overflow-hidden rounded-lg bg-[#101624]">
+            <article className="flex h-full items-end gap-3 rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-3">
+              <div className="h-[180px] w-[120px] shrink-0 self-start overflow-hidden rounded-lg bg-[#101624]">
                 <MoviePoster src={bannerImageUrl(banner.img)} alt="Banner" fit="contain" />
-                <BannerCardActions banner={banner} />
               </div>
-              <div className="flex min-w-0 flex-1 flex-col items-start gap-2">
+              <div className="flex min-w-0 flex-1 flex-col items-start gap-2 self-start">
                 {linked.length === 0 ? (
                   <p className="text-sm text-[#6B7280]">Kino topilmadi</p>
                 ) : (
@@ -78,6 +77,7 @@ export async function BannerGrid() {
                   })
                 )}
               </div>
+              <BannerCardActions banner={banner} />
             </article>
           </li>
         );

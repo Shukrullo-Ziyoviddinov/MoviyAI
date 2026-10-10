@@ -54,7 +54,7 @@ export function BannerCardActions({ banner }: { banner: Banner }) {
 
   return (
     <>
-      <div className="absolute right-1 bottom-1 flex gap-1">
+      <div className="flex gap-1">
         <button
           type="button"
           aria-label="Tahrirlash"
