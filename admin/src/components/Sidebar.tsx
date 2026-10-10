@@ -5,8 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
+import { useAdminAuth } from "@/components/auth/AdminAuthProvider";
 import { CountryManager } from "@/components/countries/CountryManager";
 import { GenreManager } from "@/components/genres/GenreManager";
+import { MiniModal } from "@/components/MiniModal";
 import { isNavActive, navItems } from "@/components/nav";
 
 const brandFont = Orbitron({
@@ -102,8 +104,24 @@ const icons = {
   "/banners": BannerIcon,
 } as const;
 
+function LogoutIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M10 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M15 12H3M6 9l-3 3 3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const { logout } = useAdminAuth();
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const [width, setWidth] = useState(DEFAULT);
   const [genresOpen, setGenresOpen] = useState(false);
   const [countriesOpen, setCountriesOpen] = useState(false);
@@ -276,6 +294,35 @@ export function Sidebar() {
           )}
         </button>
       </nav>
+      <div className={iconOnly ? "flex justify-center px-2 pb-4" : "px-3 pb-4"}>
+        <button
+          type="button"
+          onClick={() => setLogoutOpen(true)}
+          className={
+            iconOnly
+              ? "group relative flex h-10 w-10 items-center justify-center rounded-lg text-[#F3F4F6]"
+              : "flex w-full items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#F3F4F6]"
+          }
+        >
+          <LogoutIcon />
+          {iconOnly ? (
+            <span className="pointer-events-none absolute left-full top-1/2 z-20 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624] px-2.5 py-1.5 text-sm font-medium text-[#F3F4F6] group-hover:block group-focus-visible:block">
+              Hisobdan chiqish
+            </span>
+          ) : (
+            "Hisobdan chiqish"
+          )}
+        </button>
+      </div>
+      <MiniModal
+        open={logoutOpen}
+        message="Chindan ham hisobdan chiqmoqchimisiz?"
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={() => {
+          setLogoutOpen(false);
+          logout();
+        }}
+      />
       <GenreManager open={genresOpen} onClose={() => setGenresOpen(false)} />
       <CountryManager open={countriesOpen} onClose={() => setCountriesOpen(false)} />
       <div

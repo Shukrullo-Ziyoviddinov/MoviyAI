@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import aboutRoutes from './about.routes.js';
 import actorRoutes from './actor.routes.js';
+import adminAccessRoutes from './adminAccess.routes.js';
 import bannerRoutes from './banner.routes.js';
 import countryRoutes from './country.routes.js';
 import authRoutes from './auth.routes.js';
@@ -20,6 +21,7 @@ router.use('/movies', movieRoutes);
 router.use('/genres', genreRoutes);
 router.use('/countries', countryRoutes);
 router.use('/actors', actorRoutes);
+router.use('/admin-access', adminAccessRoutes);
 router.use('/banners', bannerRoutes);
 router.use('/wishlist', wishlistRoutes);
 
