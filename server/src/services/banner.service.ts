@@ -9,6 +9,14 @@ export async function getAllBanners() {
   return Banner.find().sort({ createdAt: 1 }).lean();
 }
 
+export async function createBanner(input: BannerInput) {
+  const doc = await Banner.create({
+    img: input.img,
+    movieId: input.movieId,
+  });
+  return doc.toObject();
+}
+
 export async function upsertBanners(items: BannerInput[]) {
   const results = [];
   for (const item of items) {

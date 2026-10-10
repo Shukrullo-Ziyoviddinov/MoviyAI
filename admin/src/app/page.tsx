@@ -1,4 +1,5 @@
 import { AddActorPanel } from "@/components/home/AddActorPanel";
+import { AddBannerPanel } from "@/components/home/AddBannerPanel";
 import { AddMoviePanel } from "@/components/home/AddMoviePanel";
 
 export default function HomePage() {
@@ -9,6 +10,7 @@ export default function HomePage() {
         <div className="mt-4 flex flex-wrap gap-3">
           <AddMoviePanel />
           <AddActorPanel />
+          <AddBannerPanel />
         </div>
       </div>
     </section>
