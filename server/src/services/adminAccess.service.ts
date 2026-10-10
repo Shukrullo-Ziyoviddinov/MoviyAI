@@ -15,20 +15,23 @@ export function adminPasswordMatches(password: string) {
   return passwordsMatch(password, env.adminPassword);
 }
 
-export async function saveAdminAccount(name: string, phone: string) {
-  const doc = await AdminAccount.create({ name, phone });
+export async function saveAdminAccount(name: string, phone: string, photo: string) {
+  const doc = await AdminAccount.create({ name, phone, photo });
   return doc.toObject();
 }
 
-export function signAdminSession(name: string) {
-  return jwt.sign({ role: 'admin-gate', name }, env.jwtSecret, { expiresIn: '30d' });
+export function signAdminSession(name: string, photo: string) {
+  return jwt.sign({ role: 'admin-gate', name, photo }, env.jwtSecret, { expiresIn: '30d' });
 }
 
 export function readAdminSession(token: string) {
   try {
-    const payload = jwt.verify(token, env.jwtSecret) as { role?: string; name?: string };
+    const payload = jwt.verify(token, env.jwtSecret) as { role?: string; name?: string; photo?: string };
     if (payload.role !== 'admin-gate') return null;
-    return { name: String(payload.name ?? '').trim() };
+    return {
+      name: String(payload.name ?? '').trim(),
+      photo: String(payload.photo ?? '').trim(),
+    };
   } catch {
     return null;
   }

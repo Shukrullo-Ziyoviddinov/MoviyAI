@@ -1,42 +1,60 @@
 "use client";
 
 import { useState } from "react";
-import { apiBaseUrl } from "@/lib/movies";
+import { apiBaseUrl, mediaImageUrl } from "@/lib/movies";
 
 const fieldClass =
   "w-full rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624] px-3 py-2 text-sm text-[#F3F4F6] outline-none";
 
-export function AdminRegisterGate({ onEnter }: { onEnter: (token: string, name: string) => void }) {
+export function AdminRegisterGate({
+  onEnter,
+}: {
+  onEnter: (token: string, name: string, photo: string) => void;
+}) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  function onPhoto(file: File | null) {
+    setPhoto(file);
+    setPreview((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return file ? URL.createObjectURL(file) : "";
+    });
+  }
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
-    if (!name.trim() || !phone.trim() || !password.trim()) {
-      setError("Ism, raqam va parol kerak");
+    if (!name.trim() || !phone.trim() || !password.trim() || !photo) {
+      setError("Ism, raqam, rasm va parol kerak");
       return;
     }
     setSaving(true);
     try {
+      const form = new FormData();
+      form.set("name", name.trim());
+      form.set("phone", phone.trim());
+      form.set("password", password);
+      form.set("image", photo);
       const response = await fetch(`${apiBaseUrl}/api/admin-access`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), password }),
+        body: form,
       });
       const body = (await response.json().catch(() => ({}))) as {
         ok?: boolean;
         error?: string;
-        data?: { token?: string };
+        data?: { token?: string; account?: { photo?: string } };
       };
       if (!response.ok || !body.ok || !body.data?.token) {
         setError(body.error || "Kirib bo‘lmadi");
         return;
       }
-      onEnter(body.data.token, name.trim());
+      onEnter(body.data.token, name.trim(), mediaImageUrl("adminimg", body.data.account?.photo) || preview);
     } catch {
       setError("Serverga ulanib bo‘lmadi");
     } finally {
@@ -52,6 +70,20 @@ export function AdminRegisterGate({ onEnter }: { onEnter: (token: string, name: 
       >
         <h2 className="text-lg font-semibold text-[#F3F4F6]">Ro‘yxatdan o‘tish</h2>
         <div className="mt-4 flex flex-col gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-[#6B7280]">Rasm</span>
+            <span className="flex items-center gap-3">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1E4FD6]">
+                {preview ? <img src={preview} alt="" className="h-full w-full object-cover" /> : null}
+              </span>
+              <input
+                className="text-sm text-[#F3F4F6] file:mr-3 file:rounded-lg file:border-0 file:bg-[#1E4FD6] file:px-3 file:py-2 file:text-sm file:text-[#F3F4F6]"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => onPhoto(event.target.files?.[0] ?? null)}
+              />
+            </span>
+          </label>
           <label className="flex flex-col gap-1">
             <span className="text-sm text-[#6B7280]">Ism</span>
             <input className={fieldClass} value={name} onChange={(event) => setName(event.target.value)} />

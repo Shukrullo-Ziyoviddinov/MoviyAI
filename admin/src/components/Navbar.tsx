@@ -29,7 +29,7 @@ function NavSearch({ placeholder }: { placeholder: string }) {
 
 export function Navbar() {
   const pathname = usePathname();
-  const { name } = useAdminAuth();
+  const { name, photo } = useAdminAuth();
   const current = navItems.find((item) => isNavActive(pathname, item.href));
   const searchPlaceholder = isNavActive(pathname, "/movies")
     ? "Kino qidirish"
@@ -44,24 +44,22 @@ export function Navbar() {
       </h1>
       {searchPlaceholder ? <NavSearch placeholder={searchPlaceholder} /> : <span />}
       <span className="flex w-fit items-center justify-self-end gap-2.5 rounded-full border border-[rgba(20,38,70,0.75)] bg-[#101624] px-3 py-1.5 text-sm font-medium text-[#F3F4F6]">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1E4FD6] text-white">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="2" />
-            <path
-              d="M5 19.5C5.8 16.5 8.2 14.5 12 14.5C15.8 14.5 18.2 16.5 19 19.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
+        <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-[#1E4FD6] text-white">
+          {photo ? (
+            <img src={photo} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="2" />
+              <path
+                d="M5 19.5C5.8 16.5 8.2 14.5 12 14.5C15.8 14.5 18.2 16.5 19 19.5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          )}
         </span>
-        <span className="max-w-40 truncate">{name || "Admin"}</span>
+        <span className="max-w-40 truncate">{name}</span>
       </span>
     </header>
   );

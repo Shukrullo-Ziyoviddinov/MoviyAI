@@ -41,7 +41,7 @@ export async function uploadImage(req: Request, res: Response) {
   }
   const folder = String(req.body?.folder ?? '').trim();
   if (!r2Service.isImageFolder(folder)) {
-    res.status(400).json({ ok: false, error: 'folder must be movieimg, actorimg, or banner' });
+    res.status(400).json({ ok: false, error: 'folder must be movieimg, actorimg, banner, or adminimg' });
     return;
   }
   try {

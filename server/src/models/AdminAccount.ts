@@ -4,6 +4,7 @@ const adminAccountSchema = new Schema(
   {
     name: { type: String, required: true },
     phone: { type: String, required: true },
+    photo: { type: String, default: '' },
   },
   {
     timestamps: true,

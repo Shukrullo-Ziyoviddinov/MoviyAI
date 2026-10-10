@@ -41,7 +41,7 @@ export type Movie = {
   actorIds?: number[];
 };
 
-export function mediaImageUrl(folder: "movieimg" | "actorimg" | "banner", path?: string) {
+export function mediaImageUrl(folder: "movieimg" | "actorimg" | "banner" | "adminimg", path?: string) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
   const file = path.split("/").pop() ?? "";

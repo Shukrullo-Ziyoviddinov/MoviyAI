@@ -7,7 +7,7 @@ import {
 import { env } from '../config/env.js';
 
 const SAFE_NAME = /^[a-zA-Z0-9._-]+$/;
-export const IMAGE_FOLDERS = ['movieimg', 'actorimg', 'banner'] as const;
+export const IMAGE_FOLDERS = ['movieimg', 'actorimg', 'banner', 'adminimg'] as const;
 export type ImageFolder = (typeof IMAGE_FOLDERS)[number];
 
 function requireR2(name: string, value: string) {
