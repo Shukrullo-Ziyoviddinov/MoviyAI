@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 
-export function MoviePoster({ src, alt }: { src: string; alt: string }) {
+export function MoviePoster({
+  src,
+  alt,
+  fit = "cover",
+}: {
+  src: string;
+  alt: string;
+  fit?: "cover" | "contain";
+}) {
   const [failed, setFailed] = useState(false);
 
   if (!src || failed) {
@@ -13,7 +21,7 @@ export function MoviePoster({ src, alt }: { src: string; alt: string }) {
     <img
       src={src}
       alt={alt}
-      className="h-full w-full object-cover"
+      className={`h-full w-full ${fit === "contain" ? "object-contain" : "object-cover"}`}
       onError={() => setFailed(true)}
     />
   );
