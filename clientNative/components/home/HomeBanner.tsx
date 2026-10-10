@@ -1,3 +1,4 @@
+import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { fetchBanners, type Banner } from '@/src/api/banners';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { resolveBannerImage } from '@/src/utils/bannerImages';
@@ -21,17 +22,25 @@ export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => vo
   const { width } = useWindowDimensions();
   const { colors } = useTheme();
   const [items, setItems] = useState<Banner[]>([]);
-  const height = Math.round(width * 0.92);
+  const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [readyImg, setReadyImg] = useState<Record<string, boolean>>({});
+  const height = Math.round(width * 1.15);
   const fadeH = Math.round(height * 0.42);
 
   useEffect(() => {
     let alive = true;
     fetchBanners()
       .then((rows) => {
-        if (alive) setItems(rows);
+        if (!alive) return;
+        setItems(rows);
       })
       .catch(() => {
-        if (alive) setItems([]);
+        if (!alive) return;
+        setItems([]);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
       });
     return () => {
       alive = false;
@@ -39,8 +48,16 @@ export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => vo
   }, []);
 
   useEffect(() => {
-    onVisible?.(items.length > 0);
-  }, [items.length, onVisible]);
+    onVisible?.(loading || items.length > 0);
+  }, [loading, items.length, onVisible]);
+
+  if (loading) {
+    return (
+      <View style={{ width, height }}>
+        <SkeletonLoader width={width} height={height} borderRadius={0} />
+      </View>
+    );
+  }
 
   if (items.length === 0) return null;
 
@@ -61,6 +78,11 @@ export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => vo
       nestedScrollEnabled
       showsHorizontalScrollIndicator={false}
       style={{ width, height }}
+      scrollEventThrottle={16}
+      onScroll={(event) => {
+        const next = Math.round(event.nativeEvent.contentOffset.x / width);
+        setIndex((current) => (current === next ? current : next));
+      }}
     >
       {items.map((item) => {
         const movieId = item.movieId.find((id) => Number.isFinite(id));
@@ -79,7 +101,18 @@ export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => vo
                 style={styles.image}
                 contentFit="cover"
                 contentPosition="top"
+                onLoad={() =>
+                  setReadyImg((current) => ({ ...current, [item.img]: true }))
+                }
+                onError={() =>
+                  setReadyImg((current) => ({ ...current, [item.img]: true }))
+                }
               />
+            ) : null}
+            {source && !readyImg[item.img] ? (
+              <View style={styles.imageLoader} pointerEvents="none">
+                <SkeletonLoader width={width} height={height} borderRadius={0} />
+              </View>
             ) : null}
             <LinearGradient
               colors={[...fadeColors]}
@@ -91,6 +124,14 @@ export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => vo
         );
       })}
     </ScrollView>
+      <View style={styles.dots} pointerEvents="none">
+        {items.map((item, dot) => (
+          <View
+            key={item.img}
+            style={[styles.dot, dot === index ? styles.dotActive : null]}
+          />
+        ))}
+      </View>
     </View>
   );
 }
@@ -100,10 +141,39 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  imageLoader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   fade: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  dots: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 28,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.45)',
+  },
+  dotActive: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
   },
 });

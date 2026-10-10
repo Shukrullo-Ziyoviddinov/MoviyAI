@@ -37,7 +37,7 @@ export default function HomeScreen() {
   const loadMovies = useMoviesStore((s) => s.loadMovies);
   const loadWishlistIds = useWishlistStore((s) => s.loadIds);
   const { width } = useWindowDimensions();
-  const [bannerOn, setBannerOn] = useState(false);
+  const [bannerOn, setBannerOn] = useState(true);
 
   const headerH = insets.top + 10 + HEADER_ROW;
   const cardWidth = useMemo(() => Math.round(width * 0.39), [width]);
