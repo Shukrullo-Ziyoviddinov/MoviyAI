@@ -25,16 +25,17 @@ export async function enterAdmin(req: Request, res: Response) {
   }
 
   const account = await adminAccessService.saveAdminAccount(name, phone);
-  const token = adminAccessService.signAdminSession();
+  const token = adminAccessService.signAdminSession(name);
   res.status(201).json({ ok: true, data: { token, account } });
 }
 
 export async function adminSession(req: Request, res: Response) {
   const header = String(req.headers.authorization ?? '');
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
-  if (!token || !adminAccessService.verifyAdminSession(token)) {
+  const session = token ? adminAccessService.readAdminSession(token) : null;
+  if (!session) {
     res.status(401).json({ ok: false, error: 'Sessiya yo‘q' });
     return;
   }
-  res.json({ ok: true });
+  res.json({ ok: true, data: { name: session.name } });
 }

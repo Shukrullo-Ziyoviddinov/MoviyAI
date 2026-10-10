@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useAdminAuth } from "@/components/auth/AdminAuthProvider";
 import { isNavActive, navItems } from "@/components/nav";
 import { usePageSearch } from "@/components/search/page-search";
 
@@ -28,6 +29,7 @@ function NavSearch({ placeholder }: { placeholder: string }) {
 
 export function Navbar() {
   const pathname = usePathname();
+  const { name } = useAdminAuth();
   const current = navItems.find((item) => isNavActive(pathname, item.href));
   const searchPlaceholder = isNavActive(pathname, "/movies")
     ? "Kino qidirish"
@@ -59,7 +61,7 @@ export function Navbar() {
             />
           </svg>
         </span>
-        Admin
+        <span className="max-w-40 truncate">{name || "Admin"}</span>
       </span>
     </header>
   );

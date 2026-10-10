@@ -6,7 +6,7 @@ import { apiBaseUrl } from "@/lib/movies";
 const fieldClass =
   "w-full rounded-lg border border-[rgba(40,70,130,0.35)] bg-[#101624] px-3 py-2 text-sm text-[#F3F4F6] outline-none";
 
-export function AdminRegisterGate({ onEnter }: { onEnter: (token: string) => void }) {
+export function AdminRegisterGate({ onEnter }: { onEnter: (token: string, name: string) => void }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +36,7 @@ export function AdminRegisterGate({ onEnter }: { onEnter: (token: string) => voi
         setError(body.error || "Kirib bo‘lmadi");
         return;
       }
-      onEnter(body.data.token);
+      onEnter(body.data.token, name.trim());
     } catch {
       setError("Serverga ulanib bo‘lmadi");
     } finally {
