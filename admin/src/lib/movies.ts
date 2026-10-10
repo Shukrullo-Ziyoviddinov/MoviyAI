@@ -41,7 +41,7 @@ export type Movie = {
   actorIds?: number[];
 };
 
-export function mediaImageUrl(folder: "movieimg" | "actorimg", path?: string) {
+export function mediaImageUrl(folder: "movieimg" | "actorimg" | "banner", path?: string) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
   const file = path.split("/").pop() ?? "";
@@ -55,6 +55,24 @@ export function moviePosterUrl(path?: string) {
 
 export function actorImageUrl(path?: string) {
   return mediaImageUrl("actorimg", path);
+}
+
+export function bannerImageUrl(path?: string) {
+  return mediaImageUrl("banner", path);
+}
+
+export type Banner = {
+  img: string;
+  movieId: number[];
+};
+
+export async function fetchBanners(): Promise<Banner[]> {
+  const response = await fetch(`${apiBaseUrl}/api/banners`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error("Bannerlar yuklanmadi");
+  }
+  const body = (await response.json()) as { data?: Banner[] };
+  return Array.isArray(body.data) ? body.data : [];
 }
 
 export type Actor = {
