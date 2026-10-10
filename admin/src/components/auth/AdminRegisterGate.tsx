@@ -45,10 +45,10 @@ export function AdminRegisterGate({ onEnter }: { onEnter: (token: string) => voi
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#030308] p-4">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-sm rounded-xl border border-[rgba(40,70,130,0.35)] bg-[#070A12] p-5"
+        className="w-full max-w-sm rounded-2xl border border-[#1E4FD6] bg-[#101624] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
       >
         <h2 className="text-lg font-semibold text-[#F3F4F6]">Ro‘yxatdan o‘tish</h2>
         <div className="mt-4 flex flex-col gap-3">
