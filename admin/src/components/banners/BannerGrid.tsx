@@ -35,7 +35,7 @@ export async function BannerGrid() {
               <div className="h-[180px] w-[120px] shrink-0 overflow-hidden rounded-lg bg-[#101624]">
                 <MoviePoster src={bannerImageUrl(banner.img)} alt="Banner" fit="contain" />
               </div>
-              <div className="flex min-w-0 flex-1 flex-col justify-center gap-3">
+              <div className="flex min-w-0 flex-1 flex-col items-start gap-2">
                 {linked.length === 0 ? (
                   <p className="text-sm text-[#6B7280]">Kino topilmadi</p>
                 ) : (
@@ -43,17 +43,17 @@ export async function BannerGrid() {
                     const title = movieTitle(movie);
                     const genres = movie.genre?.uz?.filter(Boolean) ?? [];
                     return (
-                      <div key={movie.id} className="flex min-w-0 items-center gap-3">
+                      <div key={movie.id} className="flex min-w-0 items-start gap-2">
                         <div className="h-20 w-14 shrink-0 overflow-hidden rounded-lg bg-[#101624]">
                           <MoviePoster src={moviePosterUrl(movie.homeImgPoster)} alt={title} />
                         </div>
-                        <div className="min-w-0">
+                        <div className="flex min-w-0 flex-col gap-1">
                           <h2 className="text-sm font-semibold text-[#F3F4F6]">{title}</h2>
                           {genres.length > 0 ? (
-                            <p className="mt-1 text-sm text-[#6B7280]">{genres.join(", ")}</p>
+                            <p className="text-sm text-[#6B7280]">{genres.join(", ")}</p>
                           ) : null}
-                          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#6B7280]">
-                            <span className="inline-flex items-center gap-1.5">
+                          <p className="flex flex-nowrap items-center gap-2 text-xs text-[#6B7280]">
+                            <span className="inline-flex shrink-0 items-center gap-1">
                               <img
                                 src="/img/imdbnew.png"
                                 alt=""
@@ -61,7 +61,7 @@ export async function BannerGrid() {
                               />
                               IMDb {movie.ratingImdb ?? "—"}
                             </span>
-                            <span className="inline-flex items-center gap-1.5">
+                            <span className="inline-flex shrink-0 items-center gap-1">
                               <img
                                 src="/img/kinopoisk.jpg"
                                 alt=""
