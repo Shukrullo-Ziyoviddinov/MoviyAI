@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { connectDb, disconnectDb } from '../db/connect.js';
 import * as aboutService from '../services/about.service.js';
+import * as bannerService from '../services/banner.service.js';
 import * as actorService from '../services/actor.service.js';
 import * as countryService from '../services/country.service.js';
 import * as genreService from '../services/genre.service.js';
@@ -27,6 +28,7 @@ async function seed() {
   const actors = await readJson<Record<string, unknown>[]>('actor.json');
   const genres = await readJson<{ name: string; nameRu?: string }[]>('genre.json');
   const countries = await readJson<{ name: string }[]>('country.json');
+  const banners = await readJson<{ img: string; movieId: number[] }[]>('banner.json');
 
   const aboutDoc = await aboutService.upsertAbout(about);
   const privacyDoc = await privacyService.upsertPrivacy(privacy);
@@ -34,6 +36,7 @@ async function seed() {
   const actorDocs = await actorService.upsertActors(actors);
   const genreDocs = await genreService.upsertGenres(genres);
   const countryDocs = await countryService.upsertCountries(countries);
+  const bannerDocs = await bannerService.upsertBanners(banners);
 
   console.log('Seeded about:', aboutDoc?.slug, 'v' + aboutDoc?.version);
   console.log('Seeded privacy:', privacyDoc?.slug, 'v' + privacyDoc?.version);
@@ -41,6 +44,7 @@ async function seed() {
   console.log('Seeded actors:', actorDocs.length);
   console.log('Seeded genres:', genreDocs.length);
   console.log('Seeded countries:', countryDocs.length);
+  console.log('Seeded banners:', bannerDocs.length);
 
   await disconnectDb();
 }

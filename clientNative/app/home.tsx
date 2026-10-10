@@ -1,6 +1,7 @@
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { FloatingAiButton } from '@/components/home/FloatingAiButton';
 import { HomeEmptyState } from '@/components/home/HomeEmptyState';
+import { HomeBanner } from '@/components/home/HomeBanner';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { MovieCardSkeleton } from '@/components/movie/MovieCard';
 import { MovieCategoryRow } from '@/components/movie/MovieCategoryRow';
@@ -58,10 +59,11 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           scrollEnabled={false}
           contentContainerStyle={{
-            paddingTop: headerH + 12,
+            paddingTop: headerH,
             paddingBottom: navOffset + 12,
           }}
         >
+          <HomeBanner />
           {Array.from({ length: SKELETON_ROWS }, (_, row) => (
             <View key={row} style={styles.skelSection}>
               <SkeletonLoader
@@ -88,23 +90,26 @@ export default function HomeScreen() {
           style={[
             styles.emptyWrap,
             {
-              paddingTop: headerH + 8,
+              paddingTop: headerH,
               paddingBottom: navOffset + 8,
-              paddingHorizontal: CONTENT_PAD,
             },
           ]}
         >
-          <HomeEmptyState onGoToChat={goToChat} />
+          <HomeBanner />
+          <View style={styles.emptyBody}>
+            <HomeEmptyState onGoToChat={goToChat} />
+          </View>
         </View>
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
           contentContainerStyle={{
-            paddingTop: headerH + 12,
+            paddingTop: headerH,
             paddingBottom: navOffset + 12,
           }}
         >
+          <HomeBanner />
           {categories.map((group) => (
             <MovieCategoryRow
               key={group.categoryName}
@@ -138,6 +143,10 @@ const styles = StyleSheet.create({
   },
   emptyWrap: {
     flex: 1,
+  },
+  emptyBody: {
+    flex: 1,
+    paddingHorizontal: CONTENT_PAD,
   },
   headerOverlay: {
     position: 'absolute',

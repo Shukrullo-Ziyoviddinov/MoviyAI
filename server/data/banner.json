@@ -1,0 +1,14 @@
+[
+  {
+    "img": "/img/banner1.png",
+    "movieId": [8001]
+  },
+  {
+    "img": "/img/banner2.png",
+    "movieId": [8002]
+  },
+  {
+    "img": "/img/banner3.png",
+    "movieId": [8003]
+  }
+]
