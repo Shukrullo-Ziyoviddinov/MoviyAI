@@ -17,6 +17,24 @@ type MediaGridBlockProps = {
 };
 
 const GAP = 3;
+const MEDIA_MAX_W = 360;
+const VIDEO_MAX_H = 460;
+const IMAGE_MAX_H = 280;
+
+function fitBox(width: number, height: number, maxW: number, maxH: number) {
+  const ratio = width / Math.max(height, 1);
+  let displayW = Math.min(width, maxW);
+  let displayH = displayW / ratio;
+  if (displayH > maxH) {
+    displayH = maxH;
+    displayW = displayH * ratio;
+  }
+  if (displayW > maxW) {
+    displayW = maxW;
+    displayH = displayW / ratio;
+  }
+  return { w: Math.max(1, Math.round(displayW)), h: Math.max(1, Math.round(displayH)) };
+}
 
 function MediaCell({
   item,
@@ -30,9 +48,7 @@ function MediaCell({
   return (
     <Pressable
       style={[styles.cell, style]}
-      onPress={() => {
-        if (item.type === 'image') open(item);
-      }}
+      onPress={() => open(item)}
     >
       <Image source={{ uri: item.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
       {item.type === 'video' ? (
@@ -47,33 +63,22 @@ function MediaCell({
 function SingleMedia({ item }: { item: ChatMediaItem }) {
   const { colors } = useTheme();
   const { width: screenW } = useWindowDimensions();
-  const maxW = screenW * 0.72;
-  const maxH = 280;
-  const [size, setSize] = useState({ w: maxW * 0.7, h: 180 });
+  const maxW = Math.min(screenW * 0.72, MEDIA_MAX_W);
+  const maxH = item.type === 'video' ? VIDEO_MAX_H : IMAGE_MAX_H;
+  const [size, setSize] = useState({ w: Math.round(maxW * 0.7), h: 180 });
 
   useEffect(() => {
+    if (item.width && item.height) {
+      setSize(fitBox(item.width, item.height, maxW, maxH));
+      return;
+    }
+    if (item.type === 'video') return;
     RNImage.getSize(
       item.uri,
-      (w, h) => {
-        const ratio = w / h;
-        let displayW = maxW;
-        let displayH = displayW / ratio;
-
-        if (displayH > maxH) {
-          displayH = maxH;
-          displayW = displayH * ratio;
-        }
-
-        if (displayW > maxW) {
-          displayW = maxW;
-          displayH = displayW / ratio;
-        }
-
-        setSize({ w: displayW, h: displayH });
-      },
-      () => setSize({ w: maxW * 0.7, h: 180 })
+      (w, h) => setSize(fitBox(w, h, maxW, maxH)),
+      () => setSize({ w: Math.round(maxW * 0.7), h: 180 })
     );
-  }, [item.uri, maxH, maxW]);
+  }, [item.height, item.type, item.uri, item.width, maxH, maxW]);
 
   return (
     <View
@@ -92,10 +97,14 @@ export function MediaGridBlock({ items }: MediaGridBlockProps) {
   const { width: screenW } = useWindowDimensions();
   const blockW = Math.min(screenW * 0.78, 320);
 
-  if (items.length === 1) {
+  if (items.length === 1 || items.every((item) => item.type === 'video')) {
     return (
       <View style={styles.row}>
-        <SingleMedia item={items[0]} />
+        <View style={styles.videoStack}>
+          {items.map((item) => (
+            <SingleMedia key={item.id} item={item} />
+          ))}
+        </View>
       </View>
     );
   }
@@ -181,6 +190,10 @@ const styles = StyleSheet.create({
   singleWrap: {
     borderRadius: 16,
     overflow: 'hidden',
+  },
+  videoStack: {
+    alignItems: 'flex-end',
+    gap: 8,
   },
   rowFlex: {
     flex: 1,

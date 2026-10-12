@@ -63,7 +63,8 @@
         }
       ],
       "expo-notifications",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-video"
     ],
     "extra": {
       "apiUrl": "https://moviyai.onrender.com",

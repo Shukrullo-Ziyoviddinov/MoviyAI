@@ -10,7 +10,6 @@ type MediaViewerState = {
 export const useMediaViewerStore = create<MediaViewerState>((set) => ({
   item: null,
   open: (item) => {
-    if (item.type !== 'image') return;
     set({ item });
   },
   close: () => set({ item: null }),

@@ -7,6 +7,8 @@ export type SelectedMedia = {
   id: string;
   uri: string;
   type: 'image' | 'video';
+  width?: number;
+  height?: number;
 };
 
 type SelectedMediaStripProps = {

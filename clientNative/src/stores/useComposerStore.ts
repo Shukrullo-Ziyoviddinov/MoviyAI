@@ -33,6 +33,8 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
         id: asset.assetId ?? `${asset.uri}-${Date.now()}-${index}`,
         uri: asset.uri,
         type,
+        width: asset.width,
+        height: asset.height,
       }));
 
       set((state) => {

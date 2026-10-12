@@ -55,7 +55,7 @@ export function MediaViewer() {
     );
   }, [item, maxH, maxW]);
 
-  if (!item) return null;
+  if (!item || item.type !== 'image') return null;
 
   return (
     <View

@@ -3,6 +3,7 @@ import { ChatHeader, HEADER_ROW_HEIGHT } from '@/components/chat/ChatHeader';
 import { ChatIntro } from '@/components/chat/ChatIntro';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { MediaViewer } from '@/components/chat/MediaViewer';
+import { VideoModal } from '@/components/chat/VideoModal';
 import { GuideSmsBubble } from '@/components/common/GuideSmsBubble';
 import { dismissChatGuide } from '@/src/api/auth';
 import { useAuthStore } from '@/src/stores/useAuthStore';
@@ -125,6 +126,7 @@ export default function ChatScreen() {
             <ChatHeader />
 
             {viewing ? <MediaViewer /> : null}
+            {viewing ? <VideoModal /> : null}
 
             {!viewing ? (
               <View
