@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ChatBubbleIcon,
   ChevronRightIcon,
@@ -28,6 +29,7 @@ const NAV_ITEMS: { key: NavKey; label: string; Icon: typeof HomeIcon }[] = [
 
 type SideMenuContextValue = {
   desktopOpen: boolean;
+  mobileOpen: boolean;
   openMenu: () => void;
   closeMenu: () => void;
 };
@@ -77,6 +79,8 @@ export function SideMenu({ children }: { children: ReactNode }) {
 
   function onTouchStart(event: React.TouchEvent) {
     if (isDesktop() || viewer) return;
+    const target = event.target;
+    if (target instanceof Element && target.closest("[data-media-strip]")) return;
     const touch = event.touches[0];
     drag.current = {
       x: touch.clientX,
@@ -120,7 +124,7 @@ export function SideMenu({ children }: { children: ReactNode }) {
   const backdrop = dragWidth != null ? (reveal / Math.max(panelWidth(), 1)) * 0.55 : mobileOpen ? 0.55 : 0;
 
   return (
-    <SideMenuContext.Provider value={{ desktopOpen, openMenu, closeMenu }}>
+    <SideMenuContext.Provider value={{ desktopOpen, mobileOpen, openMenu, closeMenu }}>
       <div
         className="flex h-dvh w-full overflow-hidden"
         onTouchStart={onTouchStart}
@@ -156,15 +160,18 @@ export function SideMenu({ children }: { children: ReactNode }) {
             onClick={() => setMobileOpen(false)}
           />
           <div
-            className={`absolute top-0 bottom-0 left-0 flex w-[70%] flex-col border-r ${
-              dragWidth == null ? (mobileOpen ? "translate-x-0" : "-translate-x-full") : ""
-            }`}
+            className="absolute top-0 bottom-0 left-0 flex w-[70%] flex-col border-r"
             style={{
               backgroundColor: colors.panel,
               borderColor: colors.borderSoft,
               paddingTop: "max(12px, env(safe-area-inset-top))",
               paddingBottom: "max(14px, env(safe-area-inset-bottom))",
-              transform: dragWidth != null ? `translateX(calc(-100% + ${dragWidth}px))` : undefined,
+              transform:
+                dragWidth != null
+                  ? `translateX(calc(-100% + ${dragWidth}px))`
+                  : mobileOpen
+                    ? "translateX(0)"
+                    : "translateX(-100%)",
               transition: dragWidth != null ? "none" : `transform ${SLIDE}`,
             }}
           >
@@ -185,6 +192,22 @@ function MenuBody({
   onClose?: () => void;
   onPick?: () => void;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  function go(href: string) {
+    onPick?.();
+    router.push(href);
+  }
+
+  function onItem(key: NavKey) {
+    if (key === "home") go("/home");
+    else if (key === "chat") go("/");
+    else if (key === "profile") go("/profile");
+    else if (key === "settings") go("/settings");
+    else onPick?.();
+  }
+
   return (
     <div
       className="flex h-full min-h-0 flex-col px-3"
@@ -203,7 +226,7 @@ function MenuBody({
         </div>
       ) : null}
 
-      <button type="button" onClick={onPick} className="mb-[18px] flex items-center gap-2.5 px-1 py-2 text-left">
+      <button type="button" onClick={() => go("/profile")} className="mb-[18px] flex items-center gap-2.5 px-1 py-2 text-left">
         <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full border border-black/10 bg-white">
           <img src="/images/google-logo.png" alt="" className="h-[26px] w-[26px] object-contain" />
         </span>
@@ -220,12 +243,16 @@ function MenuBody({
 
       <div className="flex flex-col gap-1.5">
         {NAV_ITEMS.map(({ key, label, Icon }) => {
-          const active = key === "chat";
+          const active =
+            (key === "home" && pathname === "/home") ||
+            (key === "chat" && pathname === "/") ||
+            (key === "profile" && pathname === "/profile") ||
+            (key === "settings" && pathname === "/settings");
           return (
             <button
               key={key}
               type="button"
-              onClick={onPick}
+              onClick={() => onItem(key)}
               className="flex items-center gap-3 rounded-xl px-3 py-[13px] text-left"
               style={
                 active

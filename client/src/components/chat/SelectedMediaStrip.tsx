@@ -13,7 +13,10 @@ export function SelectedMediaStrip({
   if (items.length === 0) return null;
 
   return (
-    <div className="mb-3 flex max-h-[84px] gap-2.5 overflow-x-auto pr-1">
+    <div
+      data-media-strip
+      className="no-scrollbar mb-3 flex max-h-[84px] gap-2.5 overflow-x-auto overscroll-x-contain pr-1"
+    >
       {items.map((item) => (
         <div
           key={item.id}

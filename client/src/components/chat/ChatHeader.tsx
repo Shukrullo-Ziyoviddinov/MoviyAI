@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { CloseIcon, DownloadIcon, MenuIcon, PersonIcon } from "@/components/icons";
 import { useChat } from "@/components/chat/chat-state";
 import { useSideMenu } from "@/components/menu/SideMenu";
@@ -10,6 +11,7 @@ export const HEADER_ROW_HEIGHT = 62;
 const circle = "flex h-11 w-11 items-center justify-center rounded-full border-[1.5px]";
 
 export function ChatHeader() {
+  const router = useRouter();
   const { viewer, closeViewer } = useChat();
   const { desktopOpen, openMenu } = useSideMenu();
 
@@ -38,7 +40,7 @@ export function ChatHeader() {
         <button
           type="button"
           aria-label={viewer ? "Yuklab olish" : "Profil"}
-          onClick={viewer ? download : undefined}
+          onClick={viewer ? download : () => router.push("/profile")}
           className={`${circle} pointer-events-auto`}
           style={{ backgroundColor: colors.panelSoft, borderColor: colors.border }}
         >

@@ -5,7 +5,9 @@ import { SettingsProfileCard } from '@/components/settings/SettingsProfileCard';
 import { SettingsSavedCard } from '@/components/settings/SettingsSavedCard';
 import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
-import { router } from 'expo-router';
+import { useWishlistStore } from '@/src/stores/useWishlistStore';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,6 +15,15 @@ export default function SettingsScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const profile = useAuthStore((s) => s.profile);
+  const openAuthModal = useAuthStore((s) => s.openAuthModal);
+  const movieIds = useWishlistStore((s) => s.movieIds);
+  const loadIds = useWishlistStore((s) => s.loadIds);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (profile) void loadIds(true);
+    }, [profile, loadIds])
+  );
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
@@ -39,7 +50,16 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.block}>
-          <SettingsSavedCard />
+          <SettingsSavedCard
+            moviesCount={profile ? movieIds.length : 0}
+            onMovies={() => {
+              if (!profile) {
+                openAuthModal('wishlist');
+                return;
+              }
+              router.push('/favorites');
+            }}
+          />
         </View>
 
         <View style={styles.block}>

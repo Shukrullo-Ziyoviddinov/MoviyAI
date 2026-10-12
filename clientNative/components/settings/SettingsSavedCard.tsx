@@ -12,7 +12,7 @@ type SettingsSavedCardProps = {
 };
 
 export function SettingsSavedCard({
-  moviesCount = 12,
+  moviesCount = 0,
   chatsCount = 18,
   onMovies,
   onChats,

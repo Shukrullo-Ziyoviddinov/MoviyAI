@@ -6,11 +6,10 @@ import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ChatHeader, HEADER_ROW_HEIGHT } from "@/components/chat/ChatHeader";
 import { ChatIntro } from "@/components/chat/ChatIntro";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
-import { ChatProvider, useChat } from "@/components/chat/chat-state";
+import { useChat } from "@/components/chat/chat-state";
 import { MediaViewer } from "@/components/chat/MediaViewer";
 import { VideoModal } from "@/components/chat/VideoModal";
 import { GuideSmsBubble } from "@/components/common/GuideSmsBubble";
-import { SideMenu } from "@/components/menu/SideMenu";
 import { colors } from "@/constants/theme";
 
 const GUIDE_KEY = "moviy-chat-guide-understood";
@@ -61,7 +60,7 @@ function ChatScreen() {
         </div>
       ) : (
         <div
-          className="flex flex-1 flex-col items-center justify-center px-3.5"
+          className="flex flex-1 flex-col items-center justify-center px-2 min-[384px]:px-3.5"
           style={{ paddingTop: HEADER_ROW_HEIGHT, paddingBottom: composerH }}
         >
           <img
@@ -98,11 +97,5 @@ function ChatScreen() {
 }
 
 export default function ChatPage() {
-  return (
-    <ChatProvider>
-      <SideMenu>
-        <ChatScreen />
-      </SideMenu>
-    </ChatProvider>
-  );
+  return <ChatScreen />;
 }
