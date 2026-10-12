@@ -1,7 +1,7 @@
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { FloatingAiButton } from '@/components/home/FloatingAiButton';
 import { HomeEmptyState } from '@/components/home/HomeEmptyState';
-import { HomeBanner } from '@/components/home/HomeBanner';
+import { HomeBanner, homeBannerHeight } from '@/components/home/HomeBanner';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { MovieCardSkeleton } from '@/components/movie/MovieCard';
 import { MovieCategoryRow } from '@/components/movie/MovieCategoryRow';
@@ -40,7 +40,15 @@ export default function HomeScreen() {
   const [bannerOn, setBannerOn] = useState(true);
 
   const headerH = insets.top + 10 + HEADER_ROW;
+  const bannerH = homeBannerHeight(width);
   const afterBanner = [styles.afterBanner, { backgroundColor: colors.bg }];
+  const bannerSlot = {
+    height: bannerOn ? bannerH : 0,
+    maxHeight: bannerOn ? bannerH : 0,
+    overflow: 'hidden' as const,
+    flexGrow: 0,
+    flexShrink: 0,
+  };
   const cardWidth = useMemo(() => Math.round(width * 0.39), [width]);
   const showSkeleton = movies.length === 0 && !error && (loading || !loaded);
   const categories = useMemo(() => groupMoviesByCategory(movies), [movies]);
@@ -65,7 +73,9 @@ export default function HomeScreen() {
             paddingBottom: navOffset + 12,
           }}
         >
-          <HomeBanner onVisible={setBannerOn} />
+          <View style={bannerSlot} collapsable={false}>
+            <HomeBanner onVisible={setBannerOn} />
+          </View>
           <View style={afterBanner}>
           {Array.from({ length: SKELETON_ROWS }, (_, row) => (
             <View key={row} style={styles.skelSection}>
@@ -99,7 +109,9 @@ export default function HomeScreen() {
             },
           ]}
         >
-          <HomeBanner onVisible={setBannerOn} />
+          <View style={bannerSlot} collapsable={false}>
+            <HomeBanner onVisible={setBannerOn} />
+          </View>
           <View style={[styles.emptyBody, afterBanner]}>
             <HomeEmptyState onGoToChat={goToChat} />
           </View>
@@ -113,7 +125,9 @@ export default function HomeScreen() {
             paddingBottom: navOffset + 12,
           }}
         >
-          <HomeBanner onVisible={setBannerOn} />
+          <View style={bannerSlot} collapsable={false}>
+            <HomeBanner onVisible={setBannerOn} />
+          </View>
           <View style={afterBanner}>
           {categories.map((group) => (
             <MovieCategoryRow
@@ -169,8 +183,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   afterBanner: {
-    position: 'relative',
-    zIndex: 2,
+    marginTop: 16,
   },
   skelSection: {
     marginBottom: 18,
