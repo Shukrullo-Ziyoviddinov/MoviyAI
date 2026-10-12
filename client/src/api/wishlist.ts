@@ -21,6 +21,17 @@ export async function fetchWishlistIds(): Promise<number[]> {
   return data.data;
 }
 
+export async function toggleWishlistMovie(movieId: number) {
+  const data = await apiFetch<ApiResponse<{ saved: boolean; movieId: number }>>("/api/wishlist/toggle", {
+    method: "POST",
+    body: JSON.stringify({ movieId }),
+  });
+  if (!data.ok || !data.data) {
+    throw new Error(data.error || "Wishlist toggle failed");
+  }
+  return data.data;
+}
+
 export async function fetchWishlistMovies(): Promise<WishlistMovie[]> {
   const data = await apiFetch<ApiResponse<WishlistMovie[]>>("/api/wishlist");
   if (!data.ok || !data.data) {

@@ -195,7 +195,11 @@ export function PlusIcon({ size = 20, color = "#E5E7EB" }: IconProps) {
   );
 }
 
-export function BookmarkIcon({ size = 20, color = "#E5E7EB" }: IconProps) {
+export function BookmarkIcon({
+  size = 20,
+  color = "#E5E7EB",
+  filled = false,
+}: IconProps & { filled?: boolean }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
@@ -203,6 +207,7 @@ export function BookmarkIcon({ size = 20, color = "#E5E7EB" }: IconProps) {
         stroke={color}
         strokeWidth="2"
         strokeLinejoin="round"
+        fill={filled ? color : "none"}
       />
     </svg>
   );
@@ -356,6 +361,104 @@ export function HeartIcon({ size = 20, color = "#E5E7EB" }: IconProps) {
         stroke={color}
         strokeWidth="2"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function PlayIcon({ size = 15, color = "#FFFFFF" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="2" />
+      <path d="M10 8.5L16 12L10 15.5V8.5Z" fill={color} />
+    </svg>
+  );
+}
+
+export function ShareIcon({ size = 20, color = "#E5E7EB" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="18" cy="5" r="2.5" stroke={color} strokeWidth="2" />
+      <circle cx="6" cy="12" r="2.5" stroke={color} strokeWidth="2" />
+      <circle cx="18" cy="19" r="2.5" stroke={color} strokeWidth="2" />
+      <path d="M8.2 10.8L15.8 6.2M8.2 13.2L15.8 17.8" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function CalendarIcon({ size = 20, color = "#E5E7EB" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke={color} strokeWidth="2" />
+      <path d="M3.5 10H20.5" stroke={color} strokeWidth="2" />
+      <path d="M8 3.5V7" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <path d="M16 3.5V7" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ClockIcon({ size = 20, color = "#E5E7EB" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" stroke={color} strokeWidth="2" />
+      <path d="M12 7.5V12L15 14.5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function AgeRatingIcon({ size = 20, color = "#E5E7EB" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="4" y="4" width="16" height="16" rx="3" stroke={color} strokeWidth="2" />
+      <path
+        d="M9 15.5V10.2C9 9.4 9.6 8.8 10.4 8.8H11.8C13.1 8.8 14.1 9.8 14.1 11.1C14.1 12.4 13.1 13.4 11.8 13.4H9"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M9 15.5H15" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function LikeIcon({ size = 20, color = "#E5E7EB", filled = false }: IconProps & { filled?: boolean }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M7 10.5V20.5H4.5C3.7 20.5 3 19.8 3 19V12C3 11.2 3.7 10.5 4.5 10.5H7Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill={filled ? color : "none"}
+      />
+      <path
+        d="M7 10.5L10.2 4.8C10.5 4.2 11.2 3.8 12 3.9L12.5 4C13.4 4.1 14 4.9 14 5.8V8.5H18.2C19.4 8.5 20.3 9.6 20 10.8L18.5 17.3C18.3 18.3 17.4 19 16.4 19H7"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill={filled ? color : "none"}
+      />
+    </svg>
+  );
+}
+
+export function DislikeIcon({ size = 20, color = "#E5E7EB", filled = false }: IconProps & { filled?: boolean }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M7 13.5V3.5H4.5C3.7 3.5 3 4.2 3 5V12C3 12.8 3.7 13.5 4.5 13.5H7Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill={filled ? color : "none"}
+      />
+      <path
+        d="M7 13.5L10.2 19.2C10.5 19.8 11.2 20.2 12 20.1L12.5 20C13.4 19.9 14 19.1 14 18.2V15.5H18.2C19.4 15.5 20.3 14.4 20 13.2L18.5 6.7C18.3 5.7 17.4 5 16.4 5H7"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill={filled ? color : "none"}
       />
     </svg>
   );

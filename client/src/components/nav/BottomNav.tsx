@@ -42,7 +42,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="absolute inset-x-3 z-50 flex h-[60px] items-center justify-around overflow-hidden rounded-[30px] border md:h-[68px]"
+      className="absolute inset-x-3 z-50 flex h-[60px] items-center justify-around overflow-hidden rounded-[30px] border md:hidden"
       style={{
         bottom: `calc(${BOTTOM_NAV_LIFT}px + env(safe-area-inset-bottom))`,
         backgroundColor: colors.panel,
@@ -62,11 +62,9 @@ export function BottomNav() {
                   : undefined
               }
             >
-              <span className="md:scale-110">
-                <Icon size={24} color={color} />
-              </span>
+              <Icon size={24} color={color} />
               <span
-                className={`max-w-full truncate text-[12px] leading-[14px] md:text-[13px] ${isActive ? "font-bold" : "font-medium"}`}
+                className={`max-w-full truncate text-[12px] leading-[14px] ${isActive ? "font-bold" : "font-medium"}`}
                 style={{ color: isActive ? colors.accentBright : colors.textMuted }}
               >
                 {label}

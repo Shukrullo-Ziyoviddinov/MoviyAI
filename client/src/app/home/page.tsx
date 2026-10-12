@@ -1,25 +1,28 @@
-"use client";
-
-import { FloatingAiButton } from "@/components/home/FloatingAiButton";
-import { HomeHeader } from "@/components/home/HomeHeader";
-import { BottomNav } from "@/components/nav/BottomNav";
-import { useTheme } from "@/components/theme/theme-state";
+import { Suspense } from "react";
+import { fetchBanners, type Banner } from "@/api/banners";
+import { fetchMovies, type HomeMovie } from "@/api/movies";
+import { HomeScreen } from "@/components/home/HomeScreen";
 
 export default function HomePage() {
-  const { colors } = useTheme();
-
   return (
-    <main className="relative h-full" style={{ backgroundColor: colors.bg }}>
-      <div
-        className="absolute inset-x-0 top-0 z-20 px-4"
-        style={{ paddingTop: "max(10px, env(safe-area-inset-top))" }}
-      >
-        <div className="flex h-11 items-center md:h-12">
-          <HomeHeader />
-        </div>
-      </div>
-      <FloatingAiButton />
-      <BottomNav />
-    </main>
+    <Suspense fallback={<HomeScreen banners={null} movies={null} />}>
+      <HomeContent />
+    </Suspense>
   );
+}
+
+async function HomeContent() {
+  let banners: Banner[] = [];
+  let movies: HomeMovie[] = [];
+  try {
+    banners = await fetchBanners();
+  } catch {
+    banners = [];
+  }
+  try {
+    movies = await fetchMovies();
+  } catch {
+    movies = [];
+  }
+  return <HomeScreen banners={banners} movies={movies} />;
 }

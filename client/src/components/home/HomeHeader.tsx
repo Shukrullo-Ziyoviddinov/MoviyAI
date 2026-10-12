@@ -9,12 +9,12 @@ export function HomeHeader({ onSearchPress }: { onSearchPress?: () => void }) {
 
   return (
     <div className="flex w-full items-center justify-between">
-      <img src={logo} alt="" className="h-9 w-[108px] object-contain object-left md:h-11 md:w-[128px]" />
+      <img src={logo} alt="" className="h-9 w-[108px] object-contain object-left" />
       <button
         type="button"
         aria-label="Qidiruv"
         onClick={onSearchPress}
-        className="flex h-10 w-10 items-center justify-center rounded-full border md:h-[46px] md:w-[46px]"
+        className="flex h-10 w-10 items-center justify-center rounded-full border"
         style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}
       >
         <SearchIcon size={22} color={colors.icon} />

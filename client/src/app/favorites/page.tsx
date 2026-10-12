@@ -31,11 +31,10 @@ export default function FavoritesPage() {
 
   return (
     <div
-      className="relative flex h-full flex-col"
+      className="relative flex h-full flex-col pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-[max(24px,env(safe-area-inset-bottom))]"
       style={{
         backgroundColor: colors.bg,
         paddingTop: "max(10px, env(safe-area-inset-top))",
-        paddingBottom: "max(94px, calc(80px + env(safe-area-inset-bottom)))",
       }}
     >
       <SettingsHeader title="Sevimli" />

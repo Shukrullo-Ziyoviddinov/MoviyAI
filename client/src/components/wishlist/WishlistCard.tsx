@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { moviePosterUrl, type WishlistMovie } from "@/api/wishlist";
 import { useTheme } from "@/components/theme/theme-state";
 
@@ -9,7 +10,7 @@ export function WishlistCard({ movie }: { movie: WishlistMovie }) {
   const title = movie.title.uz || movie.title.ru;
 
   return (
-    <article className="min-w-0">
+    <Link href={`/movie/${movie.id}`} className="block min-w-0">
       <div className="relative overflow-hidden rounded-[14px]" style={{ backgroundColor: colors.panelSoft }}>
         {poster ? (
           <img src={poster} alt="" className="aspect-[10/13] w-full object-cover" />
@@ -24,6 +25,6 @@ export function WishlistCard({ movie }: { movie: WishlistMovie }) {
       <p className="mt-2 line-clamp-2 text-[15px] leading-5 font-semibold" style={{ color: colors.text }}>
         {title}
       </p>
-    </article>
+    </Link>
   );
 }
