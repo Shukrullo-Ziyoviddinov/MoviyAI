@@ -40,6 +40,7 @@ export default function HomeScreen() {
   const [bannerOn, setBannerOn] = useState(true);
 
   const headerH = insets.top + 10 + HEADER_ROW;
+  const afterBanner = [styles.afterBanner, { backgroundColor: colors.bg }];
   const cardWidth = useMemo(() => Math.round(width * 0.39), [width]);
   const showSkeleton = movies.length === 0 && !error && (loading || !loaded);
   const categories = useMemo(() => groupMoviesByCategory(movies), [movies]);
@@ -65,6 +66,7 @@ export default function HomeScreen() {
           }}
         >
           <HomeBanner onVisible={setBannerOn} />
+          <View style={afterBanner}>
           {Array.from({ length: SKELETON_ROWS }, (_, row) => (
             <View key={row} style={styles.skelSection}>
               <SkeletonLoader
@@ -85,6 +87,7 @@ export default function HomeScreen() {
               </View>
             </View>
           ))}
+          </View>
         </ScrollView>
       ) : error || categories.length === 0 ? (
         <View
@@ -97,7 +100,7 @@ export default function HomeScreen() {
           ]}
         >
           <HomeBanner onVisible={setBannerOn} />
-          <View style={styles.emptyBody}>
+          <View style={[styles.emptyBody, afterBanner]}>
             <HomeEmptyState onGoToChat={goToChat} />
           </View>
         </View>
@@ -111,6 +114,7 @@ export default function HomeScreen() {
           }}
         >
           <HomeBanner onVisible={setBannerOn} />
+          <View style={afterBanner}>
           {categories.map((group) => (
             <MovieCategoryRow
               key={group.categoryName}
@@ -121,6 +125,7 @@ export default function HomeScreen() {
               contentPad={CONTENT_PAD}
             />
           ))}
+          </View>
         </ScrollView>
       )}
 
@@ -162,6 +167,10 @@ const styles = StyleSheet.create({
     height: HEADER_ROW,
     justifyContent: 'center',
     backgroundColor: 'transparent',
+  },
+  afterBanner: {
+    position: 'relative',
+    zIndex: 2,
   },
   skelSection: {
     marginBottom: 18,

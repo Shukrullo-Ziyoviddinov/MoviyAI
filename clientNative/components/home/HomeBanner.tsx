@@ -56,9 +56,16 @@ export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => vo
     onVisible?.(loading || items.length > 0);
   }, [loading, items.length, onVisible]);
 
+  const frame = {
+    width,
+    height,
+    zIndex: 0,
+    overflow: 'hidden' as const,
+  };
+
   if (loading) {
     return (
-      <View style={{ width, height }}>
+      <View style={frame}>
         <SkeletonLoader width={width} height={height} borderRadius={0} />
       </View>
     );
@@ -76,7 +83,7 @@ export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => vo
   ] as const;
 
   return (
-    <View style={{ width, height }} collapsable={false}>
+    <View style={frame} collapsable={false}>
       <FlatList
         data={items}
         horizontal
@@ -100,7 +107,7 @@ export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => vo
           const ready = Boolean(readyImg[item.img]);
           return (
             <Pressable
-              style={{ width, height }}
+              style={{ width, height, overflow: 'hidden' }}
               onPress={() => {
                 if (movieId) router.push(`/movie/${movieId}`);
               }}
