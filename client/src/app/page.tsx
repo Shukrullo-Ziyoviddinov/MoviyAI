@@ -10,6 +10,7 @@ import { ChatProvider, useChat } from "@/components/chat/chat-state";
 import { MediaViewer } from "@/components/chat/MediaViewer";
 import { VideoModal } from "@/components/chat/VideoModal";
 import { GuideSmsBubble } from "@/components/common/GuideSmsBubble";
+import { SideMenu } from "@/components/menu/SideMenu";
 import { colors } from "@/constants/theme";
 
 const GUIDE_KEY = "moviy-chat-guide-understood";
@@ -99,7 +100,9 @@ function ChatScreen() {
 export default function ChatPage() {
   return (
     <ChatProvider>
-      <ChatScreen />
+      <SideMenu>
+        <ChatScreen />
+      </SideMenu>
     </ChatProvider>
   );
 }

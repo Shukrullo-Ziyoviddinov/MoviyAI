@@ -25,7 +25,7 @@ export function ChatIntro() {
       >
         Kino haqida yozing, rasm yuboring yoki video yuklang.
       </p>
-      <div className="mt-[18px] grid w-full grid-cols-4 gap-2 md:gap-3">
+      <div className="mt-[18px] grid w-full max-w-[400px] grid-cols-4 gap-2 md:max-w-[520px] md:gap-3">
         {actions.map(({ key, label, Icon }) => (
           <button
             key={key}
@@ -41,11 +41,11 @@ export function ChatIntro() {
               opacity: picking && (key === "image" || key === "video") ? 0.5 : 1,
             }}
           >
-            <span className="[&_svg]:h-7 [&_svg]:w-7 md:[&_svg]:h-8 md:[&_svg]:w-8">
-              <Icon size={28} color={colors.accentBright} />
+            <span className="[&_svg]:h-6 [&_svg]:w-6 md:[&_svg]:h-7 md:[&_svg]:w-7">
+              <Icon size={24} color={colors.accentBright} />
             </span>
             <span
-              className="text-center text-[13px] leading-4 font-semibold md:text-[15px] md:leading-5"
+              className="text-center text-[12px] leading-4 font-semibold md:text-[13px] md:leading-[18px]"
               style={{ color: colors.text }}
             >
               {label}

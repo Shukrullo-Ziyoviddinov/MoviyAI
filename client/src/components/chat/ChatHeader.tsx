@@ -2,6 +2,7 @@
 
 import { CloseIcon, DownloadIcon, MenuIcon, PersonIcon } from "@/components/icons";
 import { useChat } from "@/components/chat/chat-state";
+import { useSideMenu } from "@/components/menu/SideMenu";
 import { colors } from "@/constants/theme";
 
 export const HEADER_ROW_HEIGHT = 62;
@@ -10,6 +11,7 @@ const circle = "flex h-11 w-11 items-center justify-center rounded-full border-[
 
 export function ChatHeader() {
   const { viewer, closeViewer } = useChat();
+  const { desktopOpen, openMenu } = useSideMenu();
 
   function download() {
     if (!viewer) return;
@@ -25,8 +27,10 @@ export function ChatHeader() {
         <button
           type="button"
           aria-label={viewer ? "Yopish" : "Menyu"}
-          onClick={viewer ? closeViewer : undefined}
-          className={`${circle} pointer-events-auto`}
+          onClick={viewer ? closeViewer : openMenu}
+          className={`${circle} pointer-events-auto ${
+            !viewer && desktopOpen ? "md:pointer-events-none md:invisible" : ""
+          }`}
           style={{ backgroundColor: colors.panelSoft, borderColor: colors.border }}
         >
           {viewer ? <CloseIcon size={22} color={colors.icon} /> : <MenuIcon size={22} color={colors.icon} />}
