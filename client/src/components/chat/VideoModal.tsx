@@ -63,8 +63,13 @@ function VideoModalPlayer({ item }: { item: ChatMediaItem }) {
           className="rounded-xl bg-black object-contain"
           style={{ width: size.w, height: size.h }}
           playsInline
+          preload="auto"
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
+          onLoadedData={(event) => {
+            const video = event.currentTarget;
+            if (video.currentTime < 0.01) video.currentTime = 0.05;
+          }}
           onLoadedMetadata={(event) => setDuration(event.currentTarget.duration || 0)}
           onTimeUpdate={(event) => setCurrent(event.currentTarget.currentTime)}
         />
