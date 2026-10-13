@@ -198,6 +198,17 @@ export function MovieDetailScreen({
               </div>
               </div>
             </div>
+            <section className="pt-3">
+              <div className="mx-4 h-[22px] w-[100px] animate-pulse rounded-md" style={{ backgroundColor: bone }} />
+              <div className="mt-2.5 flex overflow-hidden px-4">
+                {Array.from({ length: 6 }, (_, index) => (
+                  <div key={index} className="mr-3.5 w-[88px] shrink-0">
+                    <div className="mx-auto h-[72px] w-[72px] animate-pulse rounded-full" style={{ backgroundColor: bone }} />
+                    <div className="mt-2 h-4 w-full animate-pulse rounded-md" style={{ backgroundColor: bone }} />
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
         </div>
       </main>
