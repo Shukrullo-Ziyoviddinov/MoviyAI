@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ChatBubbleIcon,
@@ -145,12 +145,14 @@ export function SideMenu({ children }: { children: ReactNode }) {
               transition: `width ${SLIDE}`,
             }}
           >
-            <MenuBody
-              showClose
-              collapsed={!desktopOpen}
-              onClose={() => setDesktopOpen(false)}
-              onOpen={() => setDesktopOpen(true)}
-            />
+            <Suspense fallback={null}>
+              <MenuBody
+                showClose
+                collapsed={!desktopOpen}
+                onClose={() => setDesktopOpen(false)}
+                onOpen={() => setDesktopOpen(true)}
+              />
+            </Suspense>
           </div>
         </aside>
 
@@ -185,7 +187,9 @@ export function SideMenu({ children }: { children: ReactNode }) {
               transition: dragWidth != null ? "none" : `transform ${SLIDE}`,
             }}
           >
-            <MenuBody onPick={() => setMobileOpen(false)} />
+            <Suspense fallback={null}>
+              <MenuBody onPick={() => setMobileOpen(false)} />
+            </Suspense>
           </div>
         </div>
       </div>

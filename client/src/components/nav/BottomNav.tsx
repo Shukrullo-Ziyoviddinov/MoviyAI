@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ChatBubbleIcon, HeartIcon, HomeIcon, MenuIcon, PersonIcon } from "@/components/icons";
 import { useSideMenu } from "@/components/menu/SideMenu";
@@ -21,6 +21,14 @@ const TABS: { key: TabKey; label: string; Icon: IconComp; href?: string }[] = [
 ];
 
 export function BottomNav() {
+  return (
+    <Suspense fallback={null}>
+      <BottomNavBar />
+    </Suspense>
+  );
+}
+
+function BottomNavBar() {
   const pathname = usePathname();
   const router = useRouter();
   const { colors, isDark } = useTheme();
