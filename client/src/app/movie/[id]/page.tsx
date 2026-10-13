@@ -30,18 +30,15 @@ async function MovieContent({ params }: { params: Promise<{ id: string }> }) {
   let trailers: Movie[] = [];
   let error: string | null = null;
 
-  try {
-    movie = await fetchMovieById(movieId);
-  } catch (err) {
-    error = err instanceof Error ? err.message : "Load failed";
-  }
-
+  const [movieResult, commentResult, similarResult, trailerResult] = await Promise.allSettled([
+    fetchMovieById(movieId),
+    fetchMovieComments(movieId, 50),
+    fetchSimilarMovies(movieId, 16),
+    fetchSimilarTrailers(movieId, 12),
+  ]);
+  if (movieResult.status === "fulfilled") movie = movieResult.value;
+  else error = movieResult.reason instanceof Error ? movieResult.reason.message : "Load failed";
   if (movie) {
-    const [commentResult, similarResult, trailerResult] = await Promise.allSettled([
-      fetchMovieComments(movieId, 50),
-      fetchSimilarMovies(movieId, 16),
-      fetchSimilarTrailers(movieId, 12),
-    ]);
     if (commentResult.status === "fulfilled") comments = commentResult.value.comments ?? [];
     if (similarResult.status === "fulfilled") similar = similarResult.value ?? [];
     if (trailerResult.status === "fulfilled") trailers = trailerResult.value ?? [];

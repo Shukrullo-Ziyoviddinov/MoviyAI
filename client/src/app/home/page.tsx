@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { fetchBanners, type Banner } from "@/api/banners";
-import { fetchMovies, type HomeMovie } from "@/api/movies";
+import { fetchBanners } from "@/api/banners";
+import { fetchMovies } from "@/api/movies";
 import { HomeScreen } from "@/components/home/HomeScreen";
 
 export default function HomePage() {
@@ -12,17 +12,8 @@ export default function HomePage() {
 }
 
 async function HomeContent() {
-  let banners: Banner[] = [];
-  let movies: HomeMovie[] = [];
-  try {
-    banners = await fetchBanners();
-  } catch {
-    banners = [];
-  }
-  try {
-    movies = await fetchMovies();
-  } catch {
-    movies = [];
-  }
+  const [bannerResult, movieResult] = await Promise.allSettled([fetchBanners(), fetchMovies()]);
+  const banners = bannerResult.status === "fulfilled" ? bannerResult.value : [];
+  const movies = movieResult.status === "fulfilled" ? movieResult.value : [];
   return <HomeScreen banners={banners} movies={movies} />;
 }

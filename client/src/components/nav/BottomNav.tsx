@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, type ReactNode } from "react";
+import { Suspense, useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-state";
 import { UserAvatar } from "@/components/common/UserAvatar";
@@ -36,6 +36,13 @@ function BottomNavBar() {
   const { colors, isDark } = useTheme();
   const { profile } = useAuth();
   const { mobileOpen, openMenu } = useSideMenu();
+
+  useEffect(() => {
+    router.prefetch("/home");
+    router.prefetch("/favorites");
+    router.prefetch("/");
+    router.prefetch("/profile");
+  }, [router]);
 
   if (mobileOpen) return null;
 

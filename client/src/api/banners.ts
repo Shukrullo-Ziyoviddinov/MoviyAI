@@ -13,7 +13,7 @@ type ApiResponse<T> = {
 
 export async function fetchBanners(): Promise<Banner[]> {
   const data = await apiFetch<ApiResponse<Banner[]>>("/api/banners", {
-    cache: "no-store",
+    next: { revalidate: 60 },
     signal: AbortSignal.timeout(15000),
   });
   if (!data.ok || !data.data) {

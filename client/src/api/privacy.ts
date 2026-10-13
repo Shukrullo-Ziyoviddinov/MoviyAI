@@ -9,7 +9,7 @@ type ApiResponse<T> = {
 
 export async function fetchPrivacy(): Promise<PrivacyData> {
   const data = await apiFetch<ApiResponse<PrivacyData>>("/api/privacy", {
-    cache: "no-store",
+    next: { revalidate: 60 },
     signal: AbortSignal.timeout(15000),
   });
   if (!data.ok || !data.data) {

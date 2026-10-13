@@ -9,7 +9,7 @@ type ApiResponse<T> = {
 
 export async function fetchAbout(): Promise<AboutData> {
   const data = await apiFetch<ApiResponse<AboutData>>("/api/about", {
-    cache: "no-store",
+    next: { revalidate: 60 },
     signal: AbortSignal.timeout(15000),
   });
   if (!data.ok || !data.data) {

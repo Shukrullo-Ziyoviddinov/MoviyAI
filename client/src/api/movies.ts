@@ -73,10 +73,10 @@ type ApiResponse<T> = {
   error?: string;
 };
 
-async function read<T>(path: string): Promise<T> {
+async function read<T>(path: string, fresh = false): Promise<T> {
   const data = await apiFetch<ApiResponse<T>>(path, {
-    cache: "no-store",
     signal: AbortSignal.timeout(15000),
+    ...(fresh ? { cache: "no-store" as const } : { next: { revalidate: 60 } }),
   });
   if (!data.ok || data.data == null) {
     throw new Error(data.error || "Request failed");
@@ -93,7 +93,7 @@ export async function fetchMovieById(id: number): Promise<Movie> {
 }
 
 export async function fetchMovieComments(id: number, limit = 50): Promise<MovieCommentsResult> {
-  return read<MovieCommentsResult>(`/api/movies/${id}/comments?limit=${limit}`);
+  return read<MovieCommentsResult>(`/api/movies/${id}/comments?limit=${limit}`, true);
 }
 
 export async function fetchSimilarMovies(id: number, limit = 16): Promise<Movie[]> {
@@ -107,6 +107,7 @@ export async function fetchSimilarTrailers(id: number, limit = 12): Promise<Movi
 export async function fetchCommentReplies(movieId: number, commentId: string, skip = 0, limit = 5) {
   return read<CommentRepliesResult>(
     `/api/movies/${movieId}/comments/${commentId}/replies?skip=${skip}&limit=${limit}`,
+    true,
   );
 }
 

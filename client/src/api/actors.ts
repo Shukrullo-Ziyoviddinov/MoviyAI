@@ -17,7 +17,7 @@ type ApiResponse<T> = {
 
 export async function fetchActorById(id: number): Promise<Actor> {
   const data = await apiFetch<ApiResponse<Actor>>(`/api/actors/${id}`, {
-    cache: "no-store",
+    next: { revalidate: 60 },
     signal: AbortSignal.timeout(15000),
   });
   if (!data.ok || data.data == null) {

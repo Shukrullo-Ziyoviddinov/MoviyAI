@@ -233,6 +233,14 @@ function MenuBody({
   const pathname = usePathname();
   const { profile, openAuthModal, logout } = useAuth();
 
+  useEffect(() => {
+    router.prefetch("/home");
+    router.prefetch("/");
+    router.prefetch("/profile");
+    router.prefetch("/settings");
+    router.prefetch("/favorites");
+  }, [router]);
+
   function go(href: string) {
     onPick?.();
     router.push(href);
