@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { dismissSearchGuide } from "@/api/auth";
 import { useAuth } from "@/components/auth/auth-state";
+import { useMobileBackClose } from "@/components/common/useMobileBackClose";
 import { CameraIcon, ChevronLeftIcon } from "@/components/icons";
 import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
@@ -90,6 +91,8 @@ export function SearchModal({
       window.cancelAnimationFrame(frame);
     };
   }, [open, origin]);
+
+  useMobileBackClose(open && !desktop, onClose);
 
   useEffect(() => {
     if (!shown || !desktop) return;
