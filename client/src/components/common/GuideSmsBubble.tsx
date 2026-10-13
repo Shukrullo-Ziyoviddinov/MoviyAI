@@ -12,7 +12,7 @@ export function GuideSmsBubble({
   onGotIt: () => void;
 }) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-30 mx-auto w-full max-w-[430px] md:max-w-[560px]">
+    <div className="pointer-events-none mx-auto w-full max-w-[430px] md:max-w-[560px]">
       <div className="pointer-events-auto flex flex-col rounded-2xl px-3.5 py-3" style={{ backgroundColor: colors.accent }}>
         <p className="text-sm leading-5 font-medium" style={{ color: colors.textOnAccent }}>
           {text}

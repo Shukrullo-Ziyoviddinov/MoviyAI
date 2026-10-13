@@ -88,7 +88,7 @@ function ChatScreen() {
       )}
 
       {!viewer && guideReady && showGuide ? (
-        <div className="absolute inset-x-0 z-30" style={{ bottom: composerH }}>
+        <div className="pointer-events-none absolute inset-x-0 z-30 px-3" style={{ bottom: composerH }}>
           <GuideSmsBubble text={GUIDE_TEXT} gotItLabel="Tushundim" onGotIt={onGotIt} />
         </div>
       ) : null}
