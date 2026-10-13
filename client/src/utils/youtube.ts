@@ -10,3 +10,9 @@ export function extractYoutubeVideoId(input?: string | null): string | null {
   if (iframe && iframe !== raw) return extractYoutubeVideoId(iframe);
   return raw.match(ID_FROM_URL_RE)?.[1] ?? null;
 }
+
+export function youtubeThumbnailUrl(input?: string | null) {
+  const id = extractYoutubeVideoId(input);
+  if (!id) return "";
+  return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+}

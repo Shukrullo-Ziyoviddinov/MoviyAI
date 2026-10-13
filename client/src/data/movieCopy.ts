@@ -3,6 +3,7 @@ import type { AppLanguage } from "@/components/language/language-state";
 const COPY = {
   uz: {
     watch: "Tomosha",
+    save: "Saqlash",
     trailer: "Triller",
     trailerUnavailable: "Triller mavjud emas",
     aboutTitle: "Film haqida",
@@ -26,6 +27,7 @@ const COPY = {
   },
   ru: {
     watch: "Смотреть",
+    save: "Сохранить",
     trailer: "Трейлер",
     trailerUnavailable: "Трейлер недоступен",
     aboutTitle: "О фильме",
@@ -49,6 +51,7 @@ const COPY = {
   },
   en: {
     watch: "Watch",
+    save: "Save",
     trailer: "Trailer",
     trailerUnavailable: "Trailer unavailable",
     aboutTitle: "About the movie",

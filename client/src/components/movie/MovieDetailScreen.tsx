@@ -417,7 +417,7 @@ export function MovieDetailScreen({
         </section>
 
         {similar.length > 0 ? (
-          <section className="pt-2 pb-6">
+          <section className="pt-2 pb-6" data-media-strip>
             <h2 className="px-4 text-[17px] font-bold" style={{ color: colors.text }}>
               {copy.similarMovies}
             </h2>
@@ -459,6 +459,9 @@ export function MovieDetailScreen({
         description={description}
         copy={copy}
         language={language}
+        onSavedChange={(id, next) => {
+          if (current && id === current.id) setSaved(next);
+        }}
       />
       <CommentModal
         open={commentsOpen}

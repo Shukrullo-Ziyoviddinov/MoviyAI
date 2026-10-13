@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { actorImageUrl, type MovieActor } from "@/api/movies";
 import { useTheme } from "@/components/theme/theme-state";
 
@@ -11,7 +12,7 @@ export function ActorChip({ actor }: { actor: MovieActor }) {
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
 
   return (
-    <div className="mr-3.5 w-[88px] shrink-0 text-center">
+    <Link href={`/actor/${actor.id}`} className="mr-3.5 w-[88px] shrink-0 text-center">
       <div
         className="relative mx-auto h-[72px] w-[72px] overflow-hidden rounded-full border"
         style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}
@@ -30,6 +31,6 @@ export function ActorChip({ actor }: { actor: MovieActor }) {
       <p className="mt-2 truncate text-[13px] leading-4 font-semibold" style={{ color: colors.text }}>
         {actor.actorName}
       </p>
-    </div>
+    </Link>
   );
 }
