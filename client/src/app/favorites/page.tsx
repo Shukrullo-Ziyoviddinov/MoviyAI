@@ -47,16 +47,16 @@ export default function FavoritesPage() {
   }
 
   return (
-    <main className="relative h-full overflow-hidden" style={{ backgroundColor: colors.bg }}>
+    <main className="relative h-full min-h-0 overflow-hidden" style={{ backgroundColor: colors.bg }}>
       {movies === null ? (
         <div className="h-full" />
       ) : movies.length > 0 ? (
-        <div
-          className={`no-scrollbar grid h-full content-start grid-cols-2 gap-x-3 gap-y-3.5 overflow-y-auto px-4 pt-[max(64px,calc(env(safe-area-inset-top)+64px))] pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:gap-x-2.5 md:gap-y-3 md:pb-6 ${columns}`}
-        >
-          {movies.map((movie) => (
-            <WishlistCard key={movie.id} movie={movie} onToggleSave={(id) => void onToggleSave(id)} />
-          ))}
+        <div className="no-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pt-[max(64px,calc(env(safe-area-inset-top)+64px))] pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-6">
+          <div className={`grid content-start grid-cols-2 gap-x-3 gap-y-3.5 md:gap-x-2.5 md:gap-y-3 ${columns}`}>
+            {movies.map((movie) => (
+              <WishlistCard key={movie.id} movie={movie} onToggleSave={(id) => void onToggleSave(id)} />
+            ))}
+          </div>
         </div>
       ) : (
       <div className="flex h-full flex-col items-center justify-center px-4">

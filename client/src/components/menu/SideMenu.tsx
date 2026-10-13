@@ -158,7 +158,7 @@ export function SideMenu({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <div className="relative h-dvh min-w-0 flex-1">{children}</div>
+        <div className="relative h-full min-h-0 min-w-0 flex-1 overflow-hidden">{children}</div>
 
         <div
           className={`fixed inset-0 z-[70] md:hidden ${mobileVisible ? "" : "pointer-events-none"}`}
