@@ -92,9 +92,9 @@ export function SearchModal({
   }, [open, origin]);
 
   useEffect(() => {
-    if (!shown) return;
+    if (!shown || !desktop) return;
     inputRef.current?.focus();
-  }, [shown]);
+  }, [shown, desktop]);
 
   useEffect(() => {
     if (!open) return;
