@@ -2,6 +2,8 @@
 
 import { Suspense, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/auth-state";
+import { UserAvatar } from "@/components/common/UserAvatar";
 import { ChatBubbleIcon, HeartIcon, HomeIcon, MenuIcon, PersonIcon } from "@/components/icons";
 import { useSideMenu } from "@/components/menu/SideMenu";
 import { useTheme } from "@/components/theme/theme-state";
@@ -32,6 +34,7 @@ function BottomNavBar() {
   const pathname = usePathname();
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { profile } = useAuth();
   const { mobileOpen, openMenu } = useSideMenu();
 
   if (mobileOpen) return null;
@@ -70,7 +73,11 @@ function BottomNavBar() {
                   : undefined
               }
             >
-              <Icon size={24} color={color} />
+              {key === "profile" && profile?.picture ? (
+                <UserAvatar name={profile.name} picture={profile.picture} size={24} />
+              ) : (
+                <Icon size={24} color={color} />
+              )}
               <span
                 className={`max-w-full truncate text-[12px] leading-[14px] ${isActive ? "font-bold" : "font-medium"}`}
                 style={{ color: isActive ? colors.accentBright : colors.textMuted }}

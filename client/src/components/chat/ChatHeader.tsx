@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/auth-state";
 import { CloseIcon, DownloadIcon, MenuIcon, PersonIcon } from "@/components/icons";
 import { useChat } from "@/components/chat/chat-state";
 import { useSideMenu } from "@/components/menu/SideMenu";
@@ -12,8 +14,11 @@ const circle = "flex h-11 w-11 items-center justify-center rounded-full border-[
 
 export function ChatHeader() {
   const router = useRouter();
+  const { profile } = useAuth();
   const { viewer, closeViewer } = useChat();
   const { desktopOpen, openMenu } = useSideMenu();
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const picture = profile?.picture?.trim() || "";
 
   function download() {
     if (!viewer) return;
@@ -41,10 +46,22 @@ export function ChatHeader() {
           type="button"
           aria-label={viewer ? "Yuklab olish" : "Profil"}
           onClick={viewer ? download : () => router.push("/profile")}
-          className={`${circle} pointer-events-auto`}
+          className={`${circle} pointer-events-auto overflow-hidden`}
           style={{ backgroundColor: colors.panelSoft, borderColor: colors.border }}
         >
-          {viewer ? <DownloadIcon size={20} color={colors.icon} /> : <PersonIcon size={20} color={colors.icon} />}
+          {viewer ? (
+            <DownloadIcon size={20} color={colors.icon} />
+          ) : picture && !photoFailed ? (
+            <img
+              src={picture}
+              alt=""
+              className="h-full w-full object-cover"
+              referrerPolicy="no-referrer"
+              onError={() => setPhotoFailed(true)}
+            />
+          ) : (
+            <PersonIcon size={20} color={colors.icon} />
+          )}
         </button>
       </div>
     </div>
