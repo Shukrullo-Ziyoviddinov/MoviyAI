@@ -5,16 +5,18 @@ import { useRouter } from "next/navigation";
 import { fetchWishlistMovies, type WishlistMovie } from "@/api/wishlist";
 import { useAuth } from "@/components/auth/auth-state";
 import { ChatBubbleIcon, HeartIcon } from "@/components/icons";
-import { SettingsHeader } from "@/components/settings/SettingsHeader";
-import { useTheme } from "@/components/theme/theme-state";
 import { FloatingAiButton } from "@/components/home/FloatingAiButton";
+import { HomeHeader } from "@/components/home/HomeHeader";
+import { useSideMenu } from "@/components/menu/SideMenu";
 import { BottomNav } from "@/components/nav/BottomNav";
+import { useTheme } from "@/components/theme/theme-state";
 import { WishlistCard } from "@/components/wishlist/WishlistCard";
 
 export default function FavoritesPage() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const { token } = useAuth();
+  const { desktopOpen } = useSideMenu();
   const [movies, setMovies] = useState<WishlistMovie[] | null>(null);
 
   useEffect(() => {
@@ -31,25 +33,22 @@ export default function FavoritesPage() {
     };
   }, [token]);
 
+  const columns = desktopOpen ? "md:grid-cols-5" : "md:grid-cols-7";
+
   return (
-    <div
-      className="relative flex h-full flex-col pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-[max(24px,env(safe-area-inset-bottom))]"
-      style={{
-        backgroundColor: colors.bg,
-        paddingTop: "max(10px, env(safe-area-inset-top))",
-      }}
-    >
-      <SettingsHeader title="Sevimli" />
+    <main className="relative h-full overflow-hidden" style={{ backgroundColor: colors.bg }}>
       {movies === null ? (
-        <div className="flex-1" />
+        <div className="h-full" />
       ) : movies.length > 0 ? (
-        <div className="no-scrollbar grid flex-1 grid-cols-2 content-start gap-x-3 gap-y-3.5 overflow-y-auto px-4 pt-2.5">
+        <div
+          className={`no-scrollbar grid h-full content-start grid-cols-2 gap-x-3 gap-y-3.5 overflow-y-auto px-4 pt-[max(64px,calc(env(safe-area-inset-top)+64px))] pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:gap-x-2.5 md:gap-y-3 md:pb-6 ${columns}`}
+        >
           {movies.map((movie) => (
             <WishlistCard key={movie.id} movie={movie} />
           ))}
         </div>
       ) : (
-      <div className="flex flex-1 flex-col items-center justify-center px-4">
+      <div className="flex h-full flex-col items-center justify-center px-4">
         <div
           className="mb-5 flex h-24 w-24 items-center justify-center rounded-[28px] border"
           style={{
@@ -78,8 +77,16 @@ export default function FavoritesPage() {
         </button>
       </div>
       )}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-20 px-4"
+        style={{ paddingTop: "max(10px, env(safe-area-inset-top))" }}
+      >
+        <div className="pointer-events-auto flex h-11 items-center">
+          <HomeHeader />
+        </div>
+      </div>
       <FloatingAiButton />
       <BottomNav />
-    </div>
+    </main>
   );
 }
