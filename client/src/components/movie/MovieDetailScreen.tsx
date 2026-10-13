@@ -221,6 +221,17 @@ export function MovieDetailScreen({
                 </div>
               </div>
             </section>
+            <section className="pt-2 pb-6">
+              <div className="mx-4 h-[22px] w-[140px] animate-pulse rounded-md" style={{ backgroundColor: bone }} />
+              <div className="mt-3 flex overflow-hidden px-4">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <div key={index} className="mr-3 w-[36cqw] shrink-0 md:w-[168px]">
+                    <div className="aspect-[100/135] animate-pulse rounded-[14px]" style={{ backgroundColor: bone }} />
+                    <div className="mt-2 h-[22px] w-full animate-pulse rounded-md" style={{ backgroundColor: bone }} />
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
         </div>
       </main>
