@@ -188,12 +188,13 @@ export function TrailerModal({
   const saved = savedIds.includes(active.id);
 
   async function onSave() {
-    if (saveBusy) return;
+    if (saveBusy || !active) return;
+    const movieId = active.id;
     setSaveBusy(true);
     try {
-      const result = await toggleWishlistMovie(active.id);
-      setSavedIds((prev) => (result.saved ? [...prev.filter((id) => id !== active.id), active.id] : prev.filter((id) => id !== active.id)));
-      onSavedChange?.(active.id, result.saved);
+      const result = await toggleWishlistMovie(movieId);
+      setSavedIds((prev) => (result.saved ? [...prev.filter((id) => id !== movieId), movieId] : prev.filter((id) => id !== movieId)));
+      onSavedChange?.(movieId, result.saved);
     } catch {
       // token yo'q
     } finally {
