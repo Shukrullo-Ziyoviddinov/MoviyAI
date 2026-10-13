@@ -75,6 +75,12 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
     setReadyImg((current) => (current[img] ? current : { ...current, [img]: true }));
   }
 
+  function imageRef(img: string) {
+    return (node: HTMLImageElement | null) => {
+      if (node?.complete) markReady(img);
+    };
+  }
+
   function onDeskDown(event: React.PointerEvent<HTMLDivElement>) {
     if (pages <= 1) return;
     drag.current = { x: event.clientX, active: false };
@@ -137,6 +143,7 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
               >
                 {src ? (
                   <img
+                    ref={imageRef(item.img)}
                     src={src}
                     alt=""
                     draggable={false}
@@ -181,6 +188,7 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
             <div key={item.img} className="relative w-full shrink-0 snap-start overflow-hidden" style={!ready ? { backgroundColor: bone } : undefined}>
               {src ? (
                 <img
+                  ref={imageRef(item.img)}
                   src={src}
                   alt=""
                   draggable={false}

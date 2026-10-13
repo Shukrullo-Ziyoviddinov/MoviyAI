@@ -56,6 +56,9 @@ export function MovieCard({
           ) : null}
           {poster ? (
             <img
+              ref={(node) => {
+                if (node?.complete) setReady(true);
+              }}
               src={poster}
               alt=""
               draggable={false}
