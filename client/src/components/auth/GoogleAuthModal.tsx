@@ -10,9 +10,9 @@ import { SHEET_CLOSE_MS, SHEET_EASE, SHEET_OPEN_MS, useSheetMotion } from "@/com
 type GoogleId = {
   initialize: (config: {
     client_id: string;
-    callback: (response: { credential?: string }) => void;
+    ux_mode: "redirect";
+    login_uri: string;
     auto_select?: boolean;
-    cancel_on_tap_outside?: boolean;
   }) => void;
   renderButton: (parent: HTMLElement, options: Record<string, string | number>) => void;
 };
@@ -46,14 +46,11 @@ export function GoogleAuthModal() {
   const { language } = useLanguage();
   const copy = authCopy(language);
   const { colors } = useTheme();
-  const { modalOpen, busy, closeAuthModal, loginWithIdToken } = useAuth();
+  const { modalOpen, busy, closeAuthModal } = useAuth();
   const sheet = useSheetMotion(modalOpen, closeAuthModal);
   const hostRef = useRef<HTMLDivElement>(null);
-  const loginRef = useRef(loginWithIdToken);
   const [error, setError] = useState<string | null>(null);
   const [scriptReady, setScriptReady] = useState(false);
-
-  loginRef.current = loginWithIdToken;
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -79,19 +76,9 @@ export function GoogleAuthModal() {
     host.replaceChildren();
     id.initialize({
       client_id: GOOGLE_WEB_CLIENT_ID,
+      ux_mode: "redirect",
+      login_uri: `${window.location.origin}/api/auth/google-redirect`,
       auto_select: false,
-      cancel_on_tap_outside: true,
-      callback: (response) => {
-        const idToken = response.credential?.trim() || "";
-        if (!idToken) {
-          setError(copy.noToken);
-          return;
-        }
-        setError(null);
-        loginRef
-          .current(idToken)
-          .catch(() => setError(copy.loginFailed));
-      },
     });
     const width = Math.max(240, Math.round(host.getBoundingClientRect().width));
     id.renderButton(host, {
@@ -103,7 +90,7 @@ export function GoogleAuthModal() {
       logo_alignment: "left",
       width,
     });
-  }, [sheet.mounted, scriptReady, copy.noToken, copy.loginFailed]);
+  }, [sheet.mounted, scriptReady]);
 
   if (!sheet.mounted) return null;
 
