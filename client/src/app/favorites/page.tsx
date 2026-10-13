@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchWishlistMovies, type WishlistMovie } from "@/api/wishlist";
+import { fetchWishlistMovies, toggleWishlistMovie, type WishlistMovie } from "@/api/wishlist";
 import { useAuth } from "@/components/auth/auth-state";
 import { ChatBubbleIcon, HeartIcon } from "@/components/icons";
 import { FloatingAiButton } from "@/components/home/FloatingAiButton";
@@ -35,6 +35,17 @@ export default function FavoritesPage() {
 
   const columns = desktopOpen ? "md:grid-cols-5" : "md:grid-cols-7";
 
+  async function onToggleSave(movieId: number) {
+    const previous = movies;
+    setMovies((list) => list?.filter((item) => item.id !== movieId) ?? list);
+    try {
+      const result = await toggleWishlistMovie(movieId);
+      if (result.saved) setMovies(previous);
+    } catch {
+      setMovies(previous);
+    }
+  }
+
   return (
     <main className="relative h-full overflow-hidden" style={{ backgroundColor: colors.bg }}>
       {movies === null ? (
@@ -44,7 +55,7 @@ export default function FavoritesPage() {
           className={`no-scrollbar grid h-full content-start grid-cols-2 gap-x-3 gap-y-3.5 overflow-y-auto px-4 pt-[max(64px,calc(env(safe-area-inset-top)+64px))] pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:gap-x-2.5 md:gap-y-3 md:pb-6 ${columns}`}
         >
           {movies.map((movie) => (
-            <WishlistCard key={movie.id} movie={movie} />
+            <WishlistCard key={movie.id} movie={movie} onToggleSave={(id) => void onToggleSave(id)} />
           ))}
         </div>
       ) : (
