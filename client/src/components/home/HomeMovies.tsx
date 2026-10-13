@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { HomeMovie } from "@/api/movies";
+import { fetchWishlistIds, toggleWishlistMovie } from "@/api/wishlist";
 import { MovieCardSkeleton } from "@/components/home/MovieCard";
 import { MovieCategoryRow } from "@/components/home/MovieCategoryRow";
 import { HomeEmptyState } from "@/components/home/HomeEmptyState";
@@ -12,6 +14,38 @@ export function HomeMovies({ movies }: { movies: HomeMovie[] | null }) {
   const { language } = useLanguage();
   const { isDark } = useTheme();
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
+  const [savedIds, setSavedIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!movies) return;
+    let alive = true;
+    fetchWishlistIds()
+      .then((ids) => {
+        if (alive) setSavedIds(ids);
+      })
+      .catch(() => {
+        if (alive) setSavedIds([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [movies]);
+
+  async function onToggleSave(movieId: number) {
+    let previous: number[] = [];
+    setSavedIds((ids) => {
+      previous = ids;
+      return ids.includes(movieId) ? ids.filter((id) => id !== movieId) : [...ids, movieId];
+    });
+    try {
+      const result = await toggleWishlistMovie(movieId);
+      setSavedIds((ids) =>
+        result.saved ? (ids.includes(movieId) ? ids : [...ids, movieId]) : ids.filter((id) => id !== movieId),
+      );
+    } catch {
+      setSavedIds(previous);
+    }
+  }
 
   if (movies === null) {
     return (
@@ -31,6 +65,7 @@ export function HomeMovies({ movies }: { movies: HomeMovie[] | null }) {
   }
 
   const categories = groupMoviesByCategory(movies);
+
   if (categories.length === 0) {
     return (
       <div className="mt-4 flex min-h-[320px]">
@@ -47,6 +82,8 @@ export function HomeMovies({ movies }: { movies: HomeMovie[] | null }) {
           categoryName={group.categoryName}
           movies={group.movies}
           language={language}
+          savedIds={savedIds}
+          onToggleSave={(id) => void onToggleSave(id)}
         />
       ))}
     </div>

@@ -11,10 +11,14 @@ export function MovieCategoryRow({
   categoryName,
   movies,
   language,
+  savedIds,
+  onToggleSave,
 }: {
   categoryName: string;
   movies: HomeMovie[];
   language: AppLanguage;
+  savedIds: number[];
+  onToggleSave: (movieId: number) => void;
 }) {
   const { colors } = useTheme();
   if (movies.length === 0) return null;
@@ -29,7 +33,13 @@ export function MovieCategoryRow({
       </h2>
       <HorizontalScroll className="gap-3 px-4 md:gap-3.5">
         {movies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} language={language} />
+          <MovieCard
+            key={movie.id}
+            movie={movie}
+            language={language}
+            saved={savedIds.includes(movie.id)}
+            onToggleSave={onToggleSave}
+          />
         ))}
       </HorizontalScroll>
     </section>

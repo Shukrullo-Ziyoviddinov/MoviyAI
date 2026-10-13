@@ -133,14 +133,24 @@ export function SideMenu({ children }: { children: ReactNode }) {
         onTouchCancel={onTouchEnd}
       >
         <aside
-          className={`hidden h-full shrink-0 overflow-hidden md:block ${desktopOpen ? "w-[300px]" : "w-0"}`}
+          className={`relative hidden h-full shrink-0 md:block ${desktopOpen ? "w-[300px] overflow-hidden" : "z-40 w-[72px] overflow-visible"}`}
           style={{ transition: `width ${SLIDE}` }}
         >
           <div
-            className="flex h-full w-[300px] flex-col border-r"
-            style={{ backgroundColor: colors.panel, borderColor: colors.borderSoft }}
+            className="flex h-full flex-col border-r"
+            style={{
+              width: desktopOpen ? 300 : 72,
+              backgroundColor: colors.panel,
+              borderColor: colors.borderSoft,
+              transition: `width ${SLIDE}`,
+            }}
           >
-            <MenuBody showClose onClose={() => setDesktopOpen(false)} />
+            <MenuBody
+              showClose
+              collapsed={!desktopOpen}
+              onClose={() => setDesktopOpen(false)}
+              onOpen={() => setDesktopOpen(true)}
+            />
           </div>
         </aside>
 
@@ -183,13 +193,34 @@ export function SideMenu({ children }: { children: ReactNode }) {
   );
 }
 
+const LOGO = "/images/MY_preview_rev_1.png";
+
+function RailTip({ label, enabled, children }: { label: string; enabled: boolean; children: ReactNode }) {
+  if (!enabled) return children;
+  return (
+    <div className="group relative flex justify-center">
+      {children}
+      <span
+        className="pointer-events-none absolute top-1/2 left-[calc(100%+10px)] z-50 -translate-y-1/2 rounded-lg px-2.5 py-1 text-[13px] font-medium whitespace-nowrap opacity-0 shadow-lg transition-opacity group-hover:opacity-100"
+        style={{ backgroundColor: colors.panelSoft, color: colors.text, border: `1px solid ${colors.borderSoft}` }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
 function MenuBody({
   showClose = false,
+  collapsed = false,
   onClose,
+  onOpen,
   onPick,
 }: {
   showClose?: boolean;
+  collapsed?: boolean;
   onClose?: () => void;
+  onOpen?: () => void;
   onPick?: () => void;
 }) {
   const router = useRouter();
@@ -201,6 +232,10 @@ function MenuBody({
   }
 
   function onItem(key: NavKey) {
+    if (collapsed) {
+      onOpen?.();
+      return;
+    }
     if (key === "home") go("/home");
     else if (key === "chat") go("/");
     else if (key === "profile") go("/profile");
@@ -210,38 +245,64 @@ function MenuBody({
 
   return (
     <div
-      className="flex h-full min-h-0 flex-col px-3"
+      className={`flex h-full min-h-0 flex-col ${collapsed ? "cursor-pointer items-center px-2" : "px-3"}`}
       style={showClose ? { paddingTop: 12, paddingBottom: 14 } : undefined}
+      onClick={collapsed ? onOpen : undefined}
     >
       {showClose ? (
-        <div className="mb-1 flex justify-end">
-          <button
-            type="button"
-            aria-label="Yopish"
-            onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center"
-          >
-            <CloseIcon size={22} color={colors.icon} />
-          </button>
+        <div className={`flex items-center ${collapsed ? "mb-3 w-full justify-center" : "mb-1 justify-between"}`}>
+          {collapsed ? (
+            <button
+              type="button"
+              aria-label="Menyu"
+              onClick={onOpen}
+              className="flex h-11 w-full items-center justify-center"
+            >
+              <img src={LOGO} alt="" className="h-8 w-[56px] object-contain" />
+            </button>
+          ) : (
+            <img src={LOGO} alt="" className="ml-1 h-9 w-[140px] object-contain object-left" />
+          )}
+          {collapsed ? null : (
+            <button
+              type="button"
+              aria-label="Yopish"
+              onClick={onClose}
+              className="flex h-11 w-11 items-center justify-center"
+            >
+              <CloseIcon size={22} color={colors.icon} />
+            </button>
+          )}
         </div>
       ) : null}
 
-      <button type="button" onClick={() => go("/profile")} className="mb-[18px] flex items-center gap-2.5 px-1 py-2 text-left">
-        <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full border border-black/10 bg-white">
-          <img src="/images/google-logo.png" alt="" className="h-[26px] w-[26px] object-contain" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[16px] font-bold" style={{ color: colors.text }}>
-            Google orqali kirish
+      <RailTip label="Google orqali kirish" enabled={collapsed}>
+        <button
+          type="button"
+          aria-label="Google orqali kirish"
+          onClick={() => (collapsed ? onOpen?.() : go("/profile"))}
+          className={collapsed ? "mb-3 flex items-center justify-center" : "mb-[18px] flex w-full items-center gap-2.5 px-1 py-2 text-left"}
+        >
+          <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full border border-black/10 bg-white">
+            <img src="/images/google-logo.png" alt="" className="h-[26px] w-[26px] object-contain" />
           </span>
-          <span className="mt-[3px] block truncate text-[13px]" style={{ color: colors.textMuted }}>
-            Davom etish uchun Google orqali kiring
-          </span>
-        </span>
-        <ChevronRightIcon size={18} color={colors.textMuted} />
-      </button>
+          {collapsed ? null : (
+            <>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[16px] font-bold" style={{ color: colors.text }}>
+                  Google orqali kirish
+                </span>
+                <span className="mt-[3px] block truncate text-[13px]" style={{ color: colors.textMuted }}>
+                  Davom etish uchun Google orqali kiring
+                </span>
+              </span>
+              <ChevronRightIcon size={18} color={colors.textMuted} />
+            </>
+          )}
+        </button>
+      </RailTip>
 
-      <div className="flex flex-col gap-1.5">
+      <div className={`flex flex-col gap-1.5 ${collapsed ? "w-full items-center" : ""}`}>
         {NAV_ITEMS.map(({ key, label, Icon }) => {
           const active =
             (key === "home" && pathname === "/home") ||
@@ -249,43 +310,65 @@ function MenuBody({
             (key === "profile" && pathname === "/profile") ||
             (key === "settings" && pathname === "/settings");
           return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onItem(key)}
-              className="flex items-center gap-3 rounded-xl px-3 py-[13px] text-left"
-              style={
-                active
-                  ? {
-                      backgroundColor: "rgba(30, 79, 214, 0.22)",
-                      border: `1px solid ${colors.border}`,
-                    }
-                  : undefined
-              }
-            >
-              <Icon size={22} color={active ? colors.accentBright : colors.icon} />
-              <span className={`text-[15px] ${active ? "font-bold" : "font-medium"}`} style={{ color: colors.text }}>
-                {label}
-              </span>
-            </button>
+            <RailTip key={key} label={label} enabled={collapsed}>
+              <button
+                type="button"
+                aria-label={label}
+                onClick={() => onItem(key)}
+                className={
+                  collapsed
+                    ? "flex h-11 w-11 items-center justify-center rounded-xl"
+                    : "flex w-full items-center gap-3 rounded-xl px-3 py-[13px] text-left"
+                }
+                style={
+                  active
+                    ? {
+                        backgroundColor: "rgba(30, 79, 214, 0.22)",
+                        border: `1px solid ${colors.border}`,
+                      }
+                    : undefined
+                }
+              >
+                <Icon size={22} color={active ? colors.accentBright : colors.icon} />
+                {collapsed ? null : (
+                  <span className={`text-[15px] ${active ? "font-bold" : "font-medium"}`} style={{ color: colors.text }}>
+                    {label}
+                  </span>
+                )}
+              </button>
+            </RailTip>
           );
         })}
       </div>
 
-      <div className="my-3.5 h-px" style={{ backgroundColor: colors.borderSoft }} />
+      {collapsed ? (
+        <div className="min-h-0 flex-1" />
+      ) : (
+        <>
+          <div className="my-3.5 h-px" style={{ backgroundColor: colors.borderSoft }} />
+          <div className="min-h-0 flex-1">
+            <p className="mb-2 px-1 text-[15px] font-medium" style={{ color: colors.text }}>
+              Oldingi suhbatlar
+            </p>
+          </div>
+        </>
+      )}
 
-      <div className="min-h-0 flex-1">
-        <p className="mb-2 px-1 text-[15px] font-medium" style={{ color: colors.text }}>
-          Oldingi suhbatlar
-        </p>
-      </div>
-
-      <button type="button" onClick={onPick} className="flex items-center gap-3 px-3 py-[13px] text-left">
-        <LogoutIcon size={22} color={colors.icon} />
-        <span className="text-[15px] font-medium" style={{ color: colors.text }}>
-          Chiqish
-        </span>
-      </button>
+      <RailTip label="Chiqish" enabled={collapsed}>
+        <button
+          type="button"
+          aria-label="Chiqish"
+          onClick={() => (collapsed ? onOpen?.() : onPick?.())}
+          className={collapsed ? "flex h-11 w-11 items-center justify-center rounded-xl" : "flex w-full items-center gap-3 px-3 py-[13px] text-left"}
+        >
+          <LogoutIcon size={22} color={colors.icon} />
+          {collapsed ? null : (
+            <span className="text-[15px] font-medium" style={{ color: colors.text }}>
+              Chiqish
+            </span>
+          )}
+        </button>
+      </RailTip>
     </div>
   );
 }

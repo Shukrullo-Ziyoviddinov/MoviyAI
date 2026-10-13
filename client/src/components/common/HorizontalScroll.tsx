@@ -117,6 +117,7 @@ export function HorizontalScroll({ children, className }: HorizontalScrollProps)
   return (
     <div
       ref={ref}
+      data-media-strip
       className={`no-scrollbar flex touch-manipulation items-start overflow-x-auto overflow-y-hidden overscroll-x-auto select-none ${grabbing ? "cursor-grabbing" : "cursor-grab"} ${className ?? ""}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

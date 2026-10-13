@@ -57,7 +57,7 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
   if (banners === null) {
     return (
       <>
-        <div className="h-[calc(108vw-112px)] w-full animate-pulse md:hidden" style={{ backgroundColor: bone }} />
+        <div className="h-[calc(118vw-112px)] w-full animate-pulse md:hidden" style={{ backgroundColor: bone }} />
         <div className="hidden gap-3 p-4 md:max-[1177px]:flex md:max-[1177px]:h-[calc((100cqw-3.5rem)/3*1.7+2rem)] min-[1178px]:flex min-[1178px]:h-[calc(100dvh-144px)]">
           {Array.from({ length: 3 }, (_, card) => (
             <div key={card} className="h-full min-w-0 flex-1 animate-pulse rounded-2xl" style={{ backgroundColor: bone }} />
@@ -167,6 +167,7 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
         ) : null}
       </div>
       <div
+        data-media-strip
         className="no-scrollbar flex w-full snap-x snap-mandatory overflow-x-auto md:hidden"
         onScroll={(event) => {
           const width = event.currentTarget.clientWidth || 1;
@@ -183,7 +184,7 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
                   src={src}
                   alt=""
                   draggable={false}
-                  className="h-[calc(108vw-112px)] w-full object-cover object-top"
+                  className="h-[calc(118vw-112px)] w-full object-cover object-top"
                   onLoad={() => markReady(item.img)}
                   onError={() => markReady(item.img)}
                 />

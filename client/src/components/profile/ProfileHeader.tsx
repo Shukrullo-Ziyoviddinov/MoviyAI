@@ -23,12 +23,12 @@ export function ProfileHeader({
   return (
     <div className="px-[18px]">
       <div className="mb-[22px] flex items-center justify-between">
-        <img src={logo} alt="" className="h-9 w-9 object-contain" />
+        <img src={logo} alt="" className="h-9 w-9 object-contain md:hidden" />
         <button
           type="button"
           aria-label="Sozlamalar"
           onClick={onSettingsPress}
-          className="flex h-[34px] w-[34px] items-center justify-center rounded-full border"
+          className="flex h-[34px] w-[34px] items-center justify-center rounded-full border md:ml-auto"
           style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}
         >
           <SettingsIcon size={20} color={colors.icon} />

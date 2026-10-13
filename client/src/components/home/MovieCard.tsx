@@ -24,7 +24,19 @@ export function MovieCardSkeleton() {
   );
 }
 
-export function MovieCard({ movie, language }: { movie: HomeMovie; language: AppLanguage }) {
+const SAVE_ACTIVE = "#1E4FD6";
+
+export function MovieCard({
+  movie,
+  language,
+  saved,
+  onToggleSave,
+}: {
+  movie: HomeMovie;
+  language: AppLanguage;
+  saved: boolean;
+  onToggleSave: (movieId: number) => void;
+}) {
   const { colors, isDark } = useTheme();
   const poster = moviePosterUrl(movie.homeImgPoster);
   const title = movieTitle(movie, language);
@@ -33,50 +45,57 @@ export function MovieCard({ movie, language }: { movie: HomeMovie; language: App
   const showChrome = !poster || ready;
 
   return (
-    <Link href={`/movie/${movie.id}`} className={`${movieCardWidth} mb-[14px] block shrink-0 md:mb-4`}>
-      <div
-        className={`relative overflow-hidden rounded-[14px] md:rounded-[16px] ${moviePosterHeight}`}
-        style={{ backgroundColor: colors.panelSoft }}
-      >
-        {poster && !ready ? (
-          <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} />
-        ) : null}
-        {poster ? (
-          <img
-            src={poster}
-            alt=""
-            draggable={false}
-            className="h-full w-full object-fill"
-            onLoad={() => setReady(true)}
-            onError={() => setReady(true)}
-          />
-        ) : null}
-        {showChrome ? (
-          <>
-            <span className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.55] md:h-8 md:w-8">
-              <BookmarkIcon size={20} color="#FFFFFF" />
-            </span>
+    <div className={`${movieCardWidth} relative mb-[14px] shrink-0 md:mb-4`}>
+      <Link href={`/movie/${movie.id}`} className="block">
+        <div
+          className={`relative overflow-hidden rounded-[14px] md:rounded-[16px] ${moviePosterHeight}`}
+          style={{ backgroundColor: colors.panelSoft }}
+        >
+          {poster && !ready ? (
+            <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} />
+          ) : null}
+          {poster ? (
+            <img
+              src={poster}
+              alt=""
+              draggable={false}
+              className="h-full w-full object-fill"
+              onLoad={() => setReady(true)}
+              onError={() => setReady(true)}
+            />
+          ) : null}
+          {showChrome ? (
             <span className="absolute right-2 bottom-2 flex items-center gap-1 rounded-lg bg-black/[0.72] px-2 py-1">
               <span className="text-[10px] font-bold text-[#F5C518] md:text-[11px]">IMDb</span>
               <span className="text-[12px] font-bold text-white md:text-[13px]">
                 {Number(movie.ratingImdb || 0).toFixed(1)}
               </span>
             </span>
-          </>
-        ) : null}
-      </div>
-      <div className="mt-2 h-[22px] md:h-6">
-        {title.trim() ? (
-          <p
-            className="truncate text-[15px] leading-[18px] font-semibold md:text-[16px] md:leading-5"
-            style={{ color: colors.text }}
-          >
-            {title}
-          </p>
-        ) : (
-          <div className="h-[22px] animate-pulse rounded-lg md:h-6" style={{ backgroundColor: bone }} />
-        )}
-      </div>
-    </Link>
+          ) : null}
+        </div>
+        <div className="mt-2 h-[22px] md:h-6">
+          {title.trim() ? (
+            <p
+              className="truncate text-[15px] leading-[18px] font-semibold md:text-[16px] md:leading-5"
+              style={{ color: colors.text }}
+            >
+              {title}
+            </p>
+          ) : (
+            <div className="h-[22px] animate-pulse rounded-lg md:h-6" style={{ backgroundColor: bone }} />
+          )}
+        </div>
+      </Link>
+      {showChrome ? (
+        <button
+          type="button"
+          aria-label="Saqlash"
+          className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.55] md:h-8 md:w-8"
+          onClick={() => onToggleSave(movie.id)}
+        >
+          <BookmarkIcon size={20} color={saved ? SAVE_ACTIVE : "#FFFFFF"} filled={saved} />
+        </button>
+      ) : null}
+    </div>
   );
 }
