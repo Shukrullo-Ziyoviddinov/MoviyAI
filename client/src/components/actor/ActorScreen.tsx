@@ -15,6 +15,15 @@ import { actorCopy } from "@/data/actorCopy";
 
 const SAVE_ACTIVE = "#1E4FD6";
 
+function ActorMovieCardSkeleton({ bone }: { bone: string }) {
+  return (
+    <div className="min-w-0">
+      <div className="aspect-[10/13] animate-pulse rounded-[14px]" style={{ backgroundColor: bone }} />
+      <div className="mt-2 h-[18px] animate-pulse rounded-lg" style={{ backgroundColor: bone }} />
+    </div>
+  );
+}
+
 function ActorMovieCard({
   movie,
   title,
@@ -137,7 +146,7 @@ export function ActorScreen({
       </div>
 
       {loading ? (
-        <div className="px-4 pt-[max(64px,calc(env(safe-area-inset-top)+56px))]">
+        <div className="no-scrollbar h-full overflow-y-auto px-4 pt-[max(64px,calc(env(safe-area-inset-top)+56px))] pb-[max(24px,env(safe-area-inset-bottom))]">
           <div className="flex items-start gap-3.5">
             <div className="h-[148px] w-[110px] shrink-0 animate-pulse rounded-[14px]" style={{ backgroundColor: bone }} />
             <div className="min-w-0 flex-1 pt-0.5">
@@ -146,6 +155,14 @@ export function ActorScreen({
               <div className="mt-2 h-5 w-2/3 animate-pulse rounded-lg" style={{ backgroundColor: bone }} />
             </div>
           </div>
+          <section className="mt-[22px]">
+            <div className="h-[18px] w-24 animate-pulse rounded-lg" style={{ backgroundColor: bone }} />
+            <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3.5 md:grid-cols-5 md:gap-x-2.5 md:gap-y-3">
+              {Array.from({ length: 10 }, (_, index) => (
+                <ActorMovieCardSkeleton key={index} bone={bone} />
+              ))}
+            </div>
+          </section>
         </div>
       ) : error || !actor ? (
         <div className="flex h-full items-center justify-center px-6">
