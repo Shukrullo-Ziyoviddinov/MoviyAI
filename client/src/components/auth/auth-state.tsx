@@ -21,6 +21,7 @@ type AuthContextValue = {
   closeAuthModal: () => void;
   requireAuth: () => boolean;
   loginWithIdToken: (idToken: string) => Promise<void>;
+  replaceProfile: (profile: AuthProfile) => void;
   logout: () => void;
 };
 
@@ -100,6 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function replaceProfile(next: AuthProfile) {
+    writeProfile(next);
+    setProfile(next);
+  }
+
   function logout() {
     clearAuthToken();
     writeProfile(null);
@@ -126,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         closeAuthModal: () => setModalOpen(false),
         requireAuth,
         loginWithIdToken,
+        replaceProfile,
         logout,
       }}
     >

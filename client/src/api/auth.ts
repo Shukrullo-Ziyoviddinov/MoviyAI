@@ -38,6 +38,16 @@ export async function fetchAuthMe(): Promise<{ profile: AuthProfile; token?: str
   return { profile: data.data, token: data.token };
 }
 
+export async function dismissSearchGuide(): Promise<AuthProfile> {
+  const data = await apiFetch<ApiResponse<AuthProfile>>("/api/auth/search-guide/dismiss", {
+    method: "POST",
+  });
+  if (!data.ok || !data.data) {
+    throw new Error(data.error || "Dismiss failed");
+  }
+  return data.data;
+}
+
 export async function dismissChatGuide(): Promise<AuthProfile> {
   const data = await apiFetch<ApiResponse<AuthProfile>>("/api/auth/chat-guide/dismiss", {
     method: "POST",
