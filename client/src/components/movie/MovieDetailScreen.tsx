@@ -153,9 +153,43 @@ export function MovieDetailScreen({
   }
 
   if (loading) {
+    const chip = "h-[26px] shrink-0 animate-pulse rounded-full md:h-[34px]";
     return (
-      <main className="@container relative h-full overflow-hidden" style={{ backgroundColor: colors.bg }}>
-        <div className="h-[108cqw] w-full animate-pulse md:h-dvh" style={{ backgroundColor: bone }} />
+      <main className="@container relative h-full" style={{ backgroundColor: colors.bg }}>
+        <div className="absolute inset-x-0 top-0 z-0 h-[108cqw] animate-pulse md:h-dvh" style={{ backgroundColor: bone }} />
+        <div className="no-scrollbar relative z-[1] h-full overflow-y-auto">
+          <div className="h-[108cqw] md:h-dvh" />
+          <div className="relative pb-[max(24px,env(safe-area-inset-bottom))]" style={{ backgroundColor: colors.bg }}>
+            <div className="relative px-4">
+              <div className="md:absolute md:bottom-full md:left-0 md:z-[3] md:flex md:h-dvh md:w-[min(560px,72%)] md:flex-col md:justify-end md:px-8 md:pb-[16vh]">
+                <div className="relative z-[2] -mt-8 mb-1.5 h-20 w-[78%] animate-pulse rounded-lg md:mt-0 md:h-32 md:w-[92%]" style={{ backgroundColor: bone }} />
+                <div className="mt-2.5 flex gap-2 py-1">
+                  <div className={`${chip} w-[72px] md:w-[89px]`} style={{ backgroundColor: bone }} />
+                  <div className={`${chip} w-[84px] md:w-[108px]`} style={{ backgroundColor: bone }} />
+                  <div className={`${chip} w-14 md:w-20`} style={{ backgroundColor: bone }} />
+                  <div className={`${chip} w-16 md:w-[84px]`} style={{ backgroundColor: bone }} />
+                </div>
+                <div className="mt-2 flex gap-2 py-1">
+                  <div className={`${chip} w-14 md:w-[76px]`} style={{ backgroundColor: bone }} />
+                  <div className={`${chip} w-14 md:w-[76px]`} style={{ backgroundColor: bone }} />
+                  <div className={`${chip} w-16 md:w-[78px]`} style={{ backgroundColor: bone }} />
+                  <div className={`${chip} w-14 md:w-[67px]`} style={{ backgroundColor: bone }} />
+                  <div className={`${chip} w-[72px] md:w-[86px]`} style={{ backgroundColor: bone }} />
+                </div>
+                <div className="mt-2 flex gap-2.5">
+                  <div className="h-11 flex-1 animate-pulse rounded-xl md:h-[52px]" style={{ backgroundColor: bone }} />
+                  <div className="h-11 flex-1 animate-pulse rounded-xl md:h-[52px]" style={{ backgroundColor: bone }} />
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <div className={`${chip} w-[72px] md:w-[85px]`} style={{ backgroundColor: bone }} />
+                  <div className={`${chip} w-12 md:w-[62px]`} style={{ backgroundColor: bone }} />
+                  <div className={`${chip} w-12 md:w-[62px]`} style={{ backgroundColor: bone }} />
+                  <div className={`${chip} w-9 md:w-11`} style={{ backgroundColor: bone }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     );
   }
