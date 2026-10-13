@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { type Movie, type MovieDescription } from "@/api/movies";
 import { fetchWishlistIds, toggleWishlistMovie } from "@/api/wishlist";
 import { useAuth } from "@/components/auth/auth-state";
+import { useMobileBackClose } from "@/components/common/useMobileBackClose";
 import { BookmarkIcon, CloseIcon, PlayIcon } from "@/components/icons";
 import type { AppLanguage } from "@/components/language/language-state";
 import { SHEET_CLOSE_MS, SHEET_EASE, SHEET_OPEN_MS, useSheetMotion } from "@/components/movie/useSheetMotion";
@@ -33,6 +34,7 @@ export function TrailerModal({
   const { colors } = useTheme();
   const { token, requireAuth } = useAuth();
   const sheet = useSheetMotion(open, onClose);
+  useMobileBackClose(open && !sheet.desktop, onClose);
   const sheetRef = useRef<HTMLDivElement>(null);
   const collapsedH = useRef(0);
   const drag = useRef<{ x: number; y: number; t: number; origin: number; active: boolean; fromFull: boolean } | null>(null);

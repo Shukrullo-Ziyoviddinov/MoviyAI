@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createMovieComment, fetchCommentReplies, type MovieComment } from "@/api/movies";
 import { UserAvatar } from "@/components/common/UserAvatar";
+import { useMobileBackClose } from "@/components/common/useMobileBackClose";
 import { CloseIcon, SendIcon } from "@/components/icons";
 import type { MovieCopy } from "@/data/movieCopy";
 import { useAuth } from "@/components/auth/auth-state";
@@ -36,6 +37,7 @@ export function CommentModal({
   const { colors } = useTheme();
   const { requireAuth } = useAuth();
   const sheet = useSheetMotion(open, onClose);
+  useMobileBackClose(open && !sheet.desktop, onClose);
   const sheetRef = useRef<HTMLDivElement>(null);
   const collapsedH = useRef(0);
   const drag = useRef<{ x: number; y: number; t: number; origin: number; active: boolean; fromFull: boolean } | null>(null);

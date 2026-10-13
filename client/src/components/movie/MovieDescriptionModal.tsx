@@ -1,6 +1,7 @@
 "use client";
 
 import type { MovieDescription } from "@/api/movies";
+import { useMobileBackClose } from "@/components/common/useMobileBackClose";
 import { CloseIcon } from "@/components/icons";
 import type { MovieCopy } from "@/data/movieCopy";
 import { useTheme } from "@/components/theme/theme-state";
@@ -19,6 +20,7 @@ export function MovieDescriptionModal({
 }) {
   const { colors } = useTheme();
   const sheet = useSheetMotion(open, onClose);
+  useMobileBackClose(open && !sheet.desktop, onClose);
   if (!sheet.mounted || !description) return null;
 
   const rows = [

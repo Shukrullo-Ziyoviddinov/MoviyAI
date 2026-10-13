@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/components/theme/theme-state";
+import { useMobileBackClose } from "@/components/common/useMobileBackClose";
 import { CloseIcon } from "@/components/icons";
 import { SHEET_CLOSE_MS, SHEET_EASE, SHEET_OPEN_MS, useSheetMotion } from "@/components/movie/useSheetMotion";
 
@@ -19,6 +20,7 @@ export function ActorInfoModal({
 }) {
   const { colors } = useTheme();
   const sheet = useSheetMotion(open, onClose);
+  useMobileBackClose(open && !sheet.desktop, onClose);
   if (!sheet.mounted || !name) return null;
 
   const motion =
