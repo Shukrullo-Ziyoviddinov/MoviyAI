@@ -209,6 +209,18 @@ export function MovieDetailScreen({
                 ))}
               </div>
             </section>
+            <section className="px-4 pt-2.5 pb-2">
+              <div className="rounded-[14px] border px-3.5 py-3" style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}>
+                <div className="h-[26px] w-[72px] animate-pulse rounded-md" style={{ backgroundColor: bone }} />
+                <div className="mt-2.5 flex gap-2.5 border-t pt-2.5" style={{ borderColor: colors.borderSoft }}>
+                  <div className="h-10 w-10 shrink-0 animate-pulse rounded-full" style={{ backgroundColor: bone }} />
+                  <div className="min-w-0 flex-1">
+                    <div className="h-[18px] w-[83px] animate-pulse rounded-md" style={{ backgroundColor: bone }} />
+                    <div className="h-[18px] w-full animate-pulse rounded-md" style={{ backgroundColor: bone }} />
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </main>
