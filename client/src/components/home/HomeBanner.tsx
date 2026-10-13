@@ -1,10 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { bannerImageUrl, type Banner } from "@/api/banners";
 import { useTheme } from "@/components/theme/theme-state";
 
 const VISIBLE = 3;
+
+function bannerMovieHref(item: Banner) {
+  const movieId = item.movieId?.find((id) => Number.isFinite(id));
+  return movieId ? `/movie/${movieId}` : null;
+}
 
 function hexToRgba(hex: string, alpha: number) {
   const value = Number.parseInt(hex.replace("#", ""), 16);
@@ -24,6 +30,7 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
   const deskRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; active: boolean } | null>(null);
   const wheelLock = useRef(false);
+  const dragged = useRef(false);
   const pageRef = useRef(0);
   pageRef.current = page;
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
@@ -84,7 +91,6 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
   function onDeskDown(event: React.PointerEvent<HTMLDivElement>) {
     if (pages <= 1) return;
     drag.current = { x: event.clientX, active: false };
-    event.currentTarget.setPointerCapture(event.pointerId);
   }
 
   function onDeskMove(event: React.PointerEvent<HTMLDivElement>) {
@@ -95,6 +101,7 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
       if (Math.abs(dx) < 8) return;
       state.active = true;
       setDragging(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
     }
     setDragX(dx);
   }
@@ -107,6 +114,10 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
       setDragX(0);
       return;
     }
+    dragged.current = true;
+    window.setTimeout(() => {
+      dragged.current = false;
+    }, 0);
     const width = event.currentTarget.clientWidth || 1;
     const step = (width - 20) / VISIBLE;
     setDragging(false);
@@ -135,12 +146,11 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
           {banners.map((item) => {
             const src = bannerImageUrl(item.img);
             const ready = Boolean(readyImg[item.img]);
-            return (
-              <div
-                key={`desk-${item.img}`}
-                className="relative w-[calc((100cqw-2rem-1.5rem)/3)] shrink-0 overflow-hidden rounded-2xl max-[1177px]:h-[calc((100cqw-3.5rem)/3*1.7)] min-[1178px]:h-full"
-                style={!ready ? { backgroundColor: bone } : undefined}
-              >
+            const href = bannerMovieHref(item);
+            const cardClass =
+              "relative w-[calc((100cqw-2rem-1.5rem)/3)] shrink-0 overflow-hidden rounded-2xl max-[1177px]:h-[calc((100cqw-3.5rem)/3*1.7)] min-[1178px]:h-full";
+            const card = (
+              <>
                 {src ? (
                   <img
                     ref={imageRef(item.img)}
@@ -153,6 +163,25 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
                   />
                 ) : null}
                 {src && !ready ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
+              </>
+            );
+            return href ? (
+              <Link
+                key={`desk-${item.img}`}
+                href={href}
+                className={`${cardClass} cursor-pointer`}
+                style={!ready ? { backgroundColor: bone } : undefined}
+                onClick={(event) => {
+                  if (!dragged.current) return;
+                  event.preventDefault();
+                  dragged.current = false;
+                }}
+              >
+                {card}
+              </Link>
+            ) : (
+              <div key={`desk-${item.img}`} className={cardClass} style={!ready ? { backgroundColor: bone } : undefined}>
+                {card}
               </div>
             );
           })}
@@ -184,8 +213,9 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
         {banners.map((item) => {
           const src = bannerImageUrl(item.img);
           const ready = Boolean(readyImg[item.img]);
-          return (
-            <div key={item.img} className="relative w-full shrink-0 snap-start overflow-hidden" style={!ready ? { backgroundColor: bone } : undefined}>
+          const href = bannerMovieHref(item);
+          const slide = (
+            <>
               {src ? (
                 <img
                   ref={imageRef(item.img)}
@@ -199,6 +229,21 @@ export function HomeBanner({ banners }: { banners: Banner[] | null }) {
               ) : null}
               {src && !ready ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]" style={{ background: fade }} />
+            </>
+          );
+          const slideClass = "relative w-full shrink-0 snap-start overflow-hidden";
+          return href ? (
+            <Link
+              key={item.img}
+              href={href}
+              className={`${slideClass} cursor-pointer`}
+              style={!ready ? { backgroundColor: bone } : undefined}
+            >
+              {slide}
+            </Link>
+          ) : (
+            <div key={item.img} className={slideClass} style={!ready ? { backgroundColor: bone } : undefined}>
+              {slide}
             </div>
           );
         })}
