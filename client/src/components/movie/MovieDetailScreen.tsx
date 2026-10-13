@@ -214,7 +214,7 @@ export function MovieDetailScreen({
                 <div className="h-[26px] w-[72px] animate-pulse rounded-md" style={{ backgroundColor: bone }} />
                 <div className="mt-2.5 flex gap-2.5 border-t pt-2.5" style={{ borderColor: colors.borderSoft }}>
                   <div className="h-10 w-10 shrink-0 animate-pulse rounded-full" style={{ backgroundColor: bone }} />
-                  <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
                     <div className="h-[18px] w-[83px] animate-pulse rounded-md" style={{ backgroundColor: bone }} />
                     <div className="h-[18px] w-full animate-pulse rounded-md" style={{ backgroundColor: bone }} />
                   </div>
@@ -426,7 +426,7 @@ export function MovieDetailScreen({
                 return (
                   <div key={item.id} className="mt-2.5 flex gap-2.5 border-t pt-2.5" style={{ borderColor: colors.borderSoft }}>
                     <UserAvatar name={authorName(item)} picture={item.authorPicture} size={40} />
-                    <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-[12px] font-bold" style={{ color: colors.text }}>
                           {authorName(item)}
