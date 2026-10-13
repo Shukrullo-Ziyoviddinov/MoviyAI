@@ -162,7 +162,7 @@ export function MovieDetailScreen({
           <div className="relative pb-[max(24px,env(safe-area-inset-bottom))]" style={{ backgroundColor: colors.bg }}>
             <div className="relative px-4">
               <div className="md:absolute md:bottom-full md:left-0 md:z-[3] md:flex md:h-dvh md:w-[min(560px,72%)] md:flex-col md:justify-end md:px-8 md:pb-[16vh]">
-                <div className="relative z-[2] -mt-8 mb-1.5 h-10 w-[62%] animate-pulse rounded-lg md:mt-0 md:h-16 md:w-[72%]" style={{ backgroundColor: bone }} />
+                <div className="relative z-[2] mt-6 mb-1.5 h-10 w-[62%] animate-pulse rounded-lg md:mt-0 md:h-16 md:w-[72%]" style={{ backgroundColor: bone }} />
                 <div className="mt-2.5 flex gap-2 py-1">
                   <div className={`${chip} w-[72px] md:w-[89px]`} style={{ backgroundColor: bone }} />
                   <div className={`${chip} w-[84px] md:w-[108px]`} style={{ backgroundColor: bone }} />
