@@ -158,7 +158,7 @@ export function MovieDetailScreen({
       <main className="@container relative h-full" style={{ backgroundColor: colors.bg }}>
         <div className="absolute inset-x-0 top-0 z-0 h-[108cqw] animate-pulse md:h-dvh" style={{ backgroundColor: bone }} />
         <div className="no-scrollbar relative z-[1] h-full overflow-y-auto">
-          <div className="h-[108cqw] md:h-dvh" />
+          <div className="h-[108cqw] shrink-0 md:h-dvh" />
           <div className="relative pb-[max(24px,env(safe-area-inset-bottom))]" style={{ backgroundColor: colors.bg }}>
             <div className="relative px-4">
               <div className="md:absolute md:bottom-full md:left-0 md:z-[3] md:flex md:h-dvh md:w-[min(560px,72%)] md:flex-col md:justify-end md:px-8 md:pb-[16vh]">
@@ -188,7 +188,7 @@ export function MovieDetailScreen({
                 </div>
               </div>
               <div
-                className="mt-3 rounded-[14px] border px-3.5 py-3"
+                className="relative z-[1] mt-8 rounded-[14px] border px-3.5 py-3 md:mt-10"
                 style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}
               >
                 <div className="h-[22px] w-[110px] animate-pulse rounded-md" style={{ backgroundColor: bone }} />
