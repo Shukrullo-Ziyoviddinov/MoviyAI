@@ -16,9 +16,14 @@ async function bootstrap() {
   const app = express();
 
   app.use(helmet());
+  const clientOrigins = env.clientOrigin
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   app.use(
     cors({
-      origin: env.clientOrigin,
+      origin: clientOrigins.length > 1 ? clientOrigins : clientOrigins[0] || '*',
       credentials: true,
     })
   );
