@@ -5,6 +5,7 @@ import { createMovieComment, fetchCommentReplies, type MovieComment } from "@/ap
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { CloseIcon, SendIcon } from "@/components/icons";
 import type { MovieCopy } from "@/data/movieCopy";
+import { useAuth } from "@/components/auth/auth-state";
 import { useTheme } from "@/components/theme/theme-state";
 import { SHEET_CLOSE_MS, SHEET_EASE, SHEET_OPEN_MS, useSheetMotion } from "@/components/movie/useSheetMotion";
 
@@ -33,6 +34,7 @@ export function CommentModal({
   onCommentsChange: (comments: MovieComment[], commentCount?: number) => void;
 }) {
   const { colors } = useTheme();
+  const { requireAuth } = useAuth();
   const sheet = useSheetMotion(open, onClose);
   const sheetRef = useRef<HTMLDivElement>(null);
   const collapsedH = useRef(0);
@@ -149,7 +151,7 @@ export function CommentModal({
 
   async function send() {
     const value = text.trim();
-    if (!value || busy) return;
+    if (!value || busy || !requireAuth()) return;
     setBusy(true);
     try {
       const result = await createMovieComment(movieId, value, replyToId);

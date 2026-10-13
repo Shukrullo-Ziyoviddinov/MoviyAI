@@ -6,6 +6,7 @@ import { fetchWishlistIds, toggleWishlistMovie } from "@/api/wishlist";
 import { MovieCardSkeleton } from "@/components/home/MovieCard";
 import { MovieCategoryRow } from "@/components/home/MovieCategoryRow";
 import { HomeEmptyState } from "@/components/home/HomeEmptyState";
+import { useAuth } from "@/components/auth/auth-state";
 import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
 import { groupMoviesByCategory } from "@/data/homeMovies";
@@ -13,6 +14,7 @@ import { groupMoviesByCategory } from "@/data/homeMovies";
 export function HomeMovies({ movies }: { movies: HomeMovie[] | null }) {
   const { language } = useLanguage();
   const { isDark } = useTheme();
+  const { token, requireAuth } = useAuth();
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
   const [savedIds, setSavedIds] = useState<number[]>([]);
 
@@ -29,9 +31,10 @@ export function HomeMovies({ movies }: { movies: HomeMovie[] | null }) {
     return () => {
       alive = false;
     };
-  }, [movies]);
+  }, [movies, token]);
 
   async function onToggleSave(movieId: number) {
+    if (!requireAuth()) return;
     let previous: number[] = [];
     setSavedIds((ids) => {
       previous = ids;

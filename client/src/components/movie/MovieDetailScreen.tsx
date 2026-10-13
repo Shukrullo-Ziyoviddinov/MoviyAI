@@ -12,6 +12,7 @@ import {
   type MovieDescription,
 } from "@/api/movies";
 import { fetchWishlistIds, toggleWishlistMovie } from "@/api/wishlist";
+import { useAuth } from "@/components/auth/auth-state";
 import { ActorChip } from "@/components/actor/ActorChip";
 import { HorizontalScroll } from "@/components/common/HorizontalScroll";
 import { UserAvatar } from "@/components/common/UserAvatar";
@@ -77,6 +78,7 @@ export function MovieDetailScreen({
 }) {
   const { colors, isDark } = useTheme();
   const { language } = useLanguage();
+  const { token, requireAuth } = useAuth();
   const copy = movieCopy(language);
   const router = useRouter();
   const [current, setCurrent] = useState(movie);
@@ -102,7 +104,7 @@ export function MovieDetailScreen({
     fetchWishlistIds()
       .then((ids) => setSaved(ids.includes(movie.id)))
       .catch(() => setSaved(false));
-  }, [movie]);
+  }, [movie, token]);
 
   const lang = language === "en" ? "uz" : language;
   const title = current ? (current.title?.[lang] ?? current.title?.uz ?? "") : "";
@@ -115,7 +117,7 @@ export function MovieDetailScreen({
   const fadeDesktop = `linear-gradient(to bottom, transparent 0%, ${colors.bg}73 18%, ${colors.bg}e6 55%, ${colors.bg} 78%, ${colors.bg} 100%)`;
 
   async function onSave() {
-    if (!current) return;
+    if (!current || !requireAuth()) return;
     try {
       const result = await toggleWishlistMovie(current.id);
       setSaved(result.saved);

@@ -12,7 +12,9 @@ import {
   PlusIcon,
   SettingsIcon,
 } from "@/components/icons";
+import { useAuth } from "@/components/auth/auth-state";
 import { useChat } from "@/components/chat/chat-state";
+import { UserAvatar } from "@/components/common/UserAvatar";
 import { colors } from "@/constants/theme";
 
 const SLIDE = "260ms cubic-bezier(0.33, 1, 0.68, 1)";
@@ -229,6 +231,7 @@ function MenuBody({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { profile, openAuthModal, logout } = useAuth();
 
   function go(href: string) {
     onPick?.();
@@ -280,24 +283,40 @@ function MenuBody({
         </div>
       ) : null}
 
-      <RailTip label="Google orqali kirish" enabled={collapsed}>
+      <RailTip label={profile?.name || "Google orqali kirish"} enabled={collapsed}>
         <button
           type="button"
-          aria-label="Google orqali kirish"
-          onClick={() => (collapsed ? onOpen?.() : go("/profile"))}
+          aria-label={profile?.name || "Google orqali kirish"}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (collapsed) {
+              onOpen?.();
+              return;
+            }
+            if (profile) {
+              go("/profile");
+              return;
+            }
+            onPick?.();
+            openAuthModal();
+          }}
           className={collapsed ? "mb-3 flex items-center justify-center" : "mb-[18px] flex w-full items-center gap-2.5 px-1 py-2 text-left"}
         >
-          <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full border border-black/10 bg-white">
-            <img src="/images/google-logo.png" alt="" className="h-[26px] w-[26px] object-contain" />
-          </span>
+          {profile ? (
+            <UserAvatar name={profile.name} picture={profile.picture} size={50} />
+          ) : (
+            <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full border border-black/10 bg-white">
+              <img src="/images/google-logo.png" alt="" className="h-[26px] w-[26px] object-contain" />
+            </span>
+          )}
           {collapsed ? null : (
             <>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[16px] font-bold" style={{ color: colors.text }}>
-                  Google orqali kirish
+                  {profile?.name || "Google orqali kirish"}
                 </span>
                 <span className="mt-[3px] block truncate text-[13px]" style={{ color: colors.textMuted }}>
-                  Davom etish uchun Google orqali kiring
+                  {profile?.email || "Davom etish uchun Google orqali kiring"}
                 </span>
               </span>
               <ChevronRightIcon size={18} color={colors.textMuted} />
@@ -362,7 +381,15 @@ function MenuBody({
         <button
           type="button"
           aria-label="Chiqish"
-          onClick={() => (collapsed ? onOpen?.() : onPick?.())}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (collapsed) {
+              onOpen?.();
+              return;
+            }
+            logout();
+            onPick?.();
+          }}
           className={collapsed ? "flex h-11 w-11 items-center justify-center rounded-xl" : "flex w-full items-center gap-3 px-3 py-[13px] text-left"}
         >
           <LogoutIcon size={22} color={colors.icon} />

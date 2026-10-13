@@ -1,6 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { AuthProvider } from "@/components/auth/auth-state";
+import { GoogleAuthModal } from "@/components/auth/GoogleAuthModal";
 import { ChatProvider } from "@/components/chat/chat-state";
 import { LanguageProvider } from "@/components/language/language-state";
 import { SideMenu } from "@/components/menu/SideMenu";
@@ -10,9 +12,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <ChatProvider>
-          <SideMenu>{children}</SideMenu>
-        </ChatProvider>
+        <AuthProvider>
+          <ChatProvider>
+            <SideMenu>{children}</SideMenu>
+            <GoogleAuthModal />
+          </ChatProvider>
+        </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

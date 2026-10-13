@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Actor } from "@/api/actors";
 import { actorImageUrl, moviePosterUrl, type HomeMovie } from "@/api/movies";
 import { fetchWishlistIds, toggleWishlistMovie } from "@/api/wishlist";
+import { useAuth } from "@/components/auth/auth-state";
 import { ActorInfoModal } from "@/components/actor/ActorInfoModal";
 import { BookmarkIcon, ChevronLeftIcon } from "@/components/icons";
 import { useLanguage } from "@/components/language/language-state";
@@ -83,6 +84,7 @@ export function ActorScreen({
 }) {
   const { colors, isDark } = useTheme();
   const { language } = useLanguage();
+  const { token, requireAuth } = useAuth();
   const copy = actorCopy(language);
   const router = useRouter();
   const [infoOpen, setInfoOpen] = useState(false);
@@ -100,9 +102,10 @@ export function ActorScreen({
     fetchWishlistIds()
       .then(setSavedIds)
       .catch(() => setSavedIds([]));
-  }, [actor?.id, actor?.movies?.length]);
+  }, [actor?.id, actor?.movies?.length, token]);
 
   async function onToggleSave(movieId: number) {
+    if (!requireAuth()) return;
     const prev = savedIds;
     const nextSaved = !prev.includes(movieId);
     setSavedIds(nextSaved ? [...prev, movieId] : prev.filter((id) => id !== movieId));

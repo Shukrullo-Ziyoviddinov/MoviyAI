@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/auth-state";
 import { LanguageModal } from "@/components/language/LanguageModal";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileMenuCard } from "@/components/profile/ProfileMenuCard";
@@ -9,6 +10,7 @@ import { useTheme } from "@/components/theme/theme-state";
 export default function ProfilePage() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { profile, openAuthModal } = useAuth();
 
   return (
     <div
@@ -20,9 +22,13 @@ export default function ProfilePage() {
       }}
     >
       <ProfileHeader
-        name="Google orqali kirish"
-        email="Davom etish uchun Google orqali kiring"
+        name={profile?.name || "Google orqali kirish"}
+        email={profile?.email || "Davom etish uchun Google orqali kiring"}
+        picture={profile?.picture}
         onSettingsPress={() => router.push("/settings")}
+        onProfilePress={() => {
+          if (!profile) openAuthModal();
+        }}
       />
       <div className="mt-7">
         <ProfileMenuCard

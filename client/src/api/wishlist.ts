@@ -24,6 +24,7 @@ export type WishlistMovie = {
 };
 
 export async function fetchWishlistIds(): Promise<number[]> {
+  if (!readAuthToken()) return [];
   const data = await wishlistFetch<ApiResponse<number[]>>("/api/wishlist/ids");
   if (!data.ok || !data.data) {
     throw new Error(data.error || "Wishlist ids failed");
@@ -43,6 +44,7 @@ export async function toggleWishlistMovie(movieId: number) {
 }
 
 export async function fetchWishlistMovies(): Promise<WishlistMovie[]> {
+  if (!readAuthToken()) return [];
   const data = await wishlistFetch<ApiResponse<WishlistMovie[]>>("/api/wishlist");
   if (!data.ok || !data.data) {
     throw new Error(data.error || "Wishlist failed");

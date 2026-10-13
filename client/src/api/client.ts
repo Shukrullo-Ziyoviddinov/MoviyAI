@@ -8,6 +8,14 @@ export function readAuthToken() {
   return window.localStorage.getItem(TOKEN_KEY) ?? "";
 }
 
+export function writeAuthToken(token: string) {
+  window.localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearAuthToken() {
+  window.localStorage.removeItem(TOKEN_KEY);
+}
+
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   headers.set("Accept", "application/json");

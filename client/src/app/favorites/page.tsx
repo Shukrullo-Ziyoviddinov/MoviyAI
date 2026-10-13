@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchWishlistMovies, type WishlistMovie } from "@/api/wishlist";
+import { useAuth } from "@/components/auth/auth-state";
 import { ChatBubbleIcon, HeartIcon } from "@/components/icons";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
 import { useTheme } from "@/components/theme/theme-state";
@@ -13,6 +14,7 @@ import { WishlistCard } from "@/components/wishlist/WishlistCard";
 export default function FavoritesPage() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { token } = useAuth();
   const [movies, setMovies] = useState<WishlistMovie[] | null>(null);
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export default function FavoritesPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [token]);
 
   return (
     <div

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchWishlistIds } from "@/api/wishlist";
+import { useAuth } from "@/components/auth/auth-state";
 import { LanguageModal } from "@/components/language/LanguageModal";
 import { SettingsGeneralCard } from "@/components/settings/SettingsGeneralCard";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
@@ -14,6 +15,7 @@ import { useTheme } from "@/components/theme/theme-state";
 export default function SettingsPage() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { token, profile, openAuthModal, logout } = useAuth();
   const [moviesCount, setMoviesCount] = useState(0);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function SettingsPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [token]);
 
   return (
     <div
@@ -42,13 +44,23 @@ export default function SettingsPage() {
       <SettingsHeader title="Sozlamalar" subtitle="Ilovangizni o'zingizga moslab sozlang" />
       <div className="mt-4">
         <SettingsProfileCard
-          name="Google orqali kirish"
-          email="Davom etish uchun Google orqali kiring"
-          onPress={() => router.push("/profile")}
+          name={profile?.name || "Google orqali kirish"}
+          email={profile?.email || "Davom etish uchun Google orqali kiring"}
+          picture={profile?.picture}
+          onPress={() => {
+            if (profile) router.push("/profile");
+            else openAuthModal();
+          }}
         />
       </div>
       <div className="mt-4">
-        <SettingsSavedCard moviesCount={moviesCount} onMovies={() => router.push("/favorites")} />
+        <SettingsSavedCard
+          moviesCount={moviesCount}
+          onMovies={() => {
+            if (profile) router.push("/favorites");
+            else openAuthModal();
+          }}
+        />
       </div>
       <div className="mt-4">
         <SettingsGeneralCard
@@ -58,7 +70,7 @@ export default function SettingsPage() {
         />
       </div>
       <div className="mt-4">
-        <SettingsLogoutButton />
+        <SettingsLogoutButton onPress={logout} />
       </div>
       <LanguageModal />
     </div>
