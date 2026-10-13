@@ -44,6 +44,7 @@ export function FloatingAiButton() {
 
   function onPointerDown(event: React.PointerEvent<HTMLButtonElement>) {
     drag.current = { x: event.clientX, y: event.clientY, left: point.x, top: point.y, moved: false };
+    event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
   }
 
@@ -89,6 +90,8 @@ export function FloatingAiButton() {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
+      data-float-ai=""
+      onTouchStart={(event) => event.stopPropagation()}
       className="absolute top-0 left-0 z-40 touch-none"
       style={{
         width: size,

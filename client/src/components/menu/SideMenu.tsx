@@ -82,7 +82,7 @@ export function SideMenu({ children }: { children: ReactNode }) {
   function onTouchStart(event: React.TouchEvent) {
     if (isDesktop() || viewer) return;
     const target = event.target;
-    if (target instanceof Element && target.closest("[data-media-strip]")) return;
+    if (target instanceof Element && target.closest("[data-media-strip], [data-float-ai]")) return;
     const touch = event.touches[0];
     drag.current = {
       x: touch.clientX,
