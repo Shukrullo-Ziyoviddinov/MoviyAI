@@ -193,8 +193,7 @@ export function MovieDetailScreen({
                 style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}
               >
                 <div className="h-[22px] w-[110px] animate-pulse rounded-md" style={{ backgroundColor: bone }} />
-                <div className="mt-2 h-[21px] w-full animate-pulse rounded-md" style={{ backgroundColor: bone }} />
-                <div className="h-[21px] w-[92%] animate-pulse rounded-md" style={{ backgroundColor: bone }} />
+                <div className="mt-2 h-[42px] w-full animate-pulse rounded-md" style={{ backgroundColor: bone }} />
                 <div className="mt-2 h-[21px] w-[95px] animate-pulse rounded-md" style={{ backgroundColor: bone }} />
               </div>
               </div>
