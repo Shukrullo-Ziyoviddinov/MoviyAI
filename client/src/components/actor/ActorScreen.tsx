@@ -197,7 +197,7 @@ export function ActorScreen({
               <h2 className="text-[18px] font-bold" style={{ color: colors.text }}>
                 {copy.moviesTitle}
               </h2>
-              <div className="mt-3 grid grid-cols-5 gap-x-2.5 gap-y-3">
+              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3.5 md:grid-cols-5 md:gap-x-2.5 md:gap-y-3">
                 {movies.map((movie) => (
                   <ActorMovieCard
                     key={movie.id}
