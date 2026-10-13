@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/common/UserAvatar";
 import { ChatBubbleIcon, HeartIcon, HomeIcon, MenuIcon, PersonIcon } from "@/components/icons";
 import { useSideMenu } from "@/components/menu/SideMenu";
 import { useTheme } from "@/components/theme/theme-state";
+import { useT } from "@/i18n/useT";
 
 export const BOTTOM_NAV_BAR = 60;
 export const BOTTOM_NAV_LIFT = 10;
@@ -14,12 +15,12 @@ export const BOTTOM_NAV_LIFT = 10;
 type TabKey = "home" | "favorites" | "chat" | "menu" | "profile";
 type IconComp = (props: { size?: number; color?: string }) => ReactNode;
 
-const TABS: { key: TabKey; label: string; Icon: IconComp; href?: string }[] = [
-  { key: "home", label: "Asosiy", Icon: HomeIcon, href: "/home" },
-  { key: "favorites", label: "Sevimli", Icon: HeartIcon, href: "/favorites" },
-  { key: "chat", label: "AI suhbat", Icon: ChatBubbleIcon, href: "/" },
-  { key: "menu", label: "Menyu", Icon: MenuIcon },
-  { key: "profile", label: "Profil", Icon: PersonIcon, href: "/profile" },
+const TABS: { key: TabKey; labelKey: string; Icon: IconComp; href?: string }[] = [
+  { key: "home", labelKey: "menu.home", Icon: HomeIcon, href: "/home" },
+  { key: "favorites", labelKey: "menu.favorites", Icon: HeartIcon, href: "/favorites" },
+  { key: "chat", labelKey: "menu.chat", Icon: ChatBubbleIcon, href: "/" },
+  { key: "menu", labelKey: "menu.menyu", Icon: MenuIcon },
+  { key: "profile", labelKey: "menu.profile", Icon: PersonIcon, href: "/profile" },
 ];
 
 export function BottomNav() {
@@ -36,6 +37,7 @@ function BottomNavBar() {
   const { colors, isDark } = useTheme();
   const { profile } = useAuth();
   const { mobileOpen, openMenu } = useSideMenu();
+  const t = useT();
 
   useEffect(() => {
     router.prefetch("/home");
@@ -67,7 +69,7 @@ function BottomNavBar() {
         borderColor: colors.borderSoft,
       }}
     >
-      {TABS.map(({ key, label, Icon, href }) => {
+      {TABS.map(({ key, labelKey, Icon, href }) => {
         const isActive = key === active;
         const color = isActive ? colors.accentBright : colors.icon;
         return (
@@ -89,7 +91,7 @@ function BottomNavBar() {
                 className={`max-w-full truncate text-[12px] leading-[14px] ${isActive ? "font-bold" : "font-medium"}`}
                 style={{ color: isActive ? colors.accentBright : colors.textMuted }}
               >
-                {label}
+                {t(labelKey)}
               </span>
             </span>
           </button>

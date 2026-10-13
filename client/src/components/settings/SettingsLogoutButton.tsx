@@ -2,9 +2,11 @@
 
 import { ChevronRightIcon, LogoutIcon } from "@/components/icons";
 import { useTheme } from "@/components/theme/theme-state";
+import { useT } from "@/i18n/useT";
 
 export function SettingsLogoutButton({ onPress }: { onPress?: () => void }) {
   const { isDark } = useTheme();
+  const t = useT();
   const red = isDark ? "#F87171" : "#DC2626";
   const title = isDark ? "#FCA5A5" : "#B91C1C";
 
@@ -25,7 +27,7 @@ export function SettingsLogoutButton({ onPress }: { onPress?: () => void }) {
         <LogoutIcon size={18} color={red} />
       </span>
       <span className="flex-1 text-[15px] font-semibold" style={{ color: title }}>
-        Tizimdan chiqish
+        {t("common.logoutSystem")}
       </span>
       <ChevronRightIcon size={18} color={red} />
     </button>

@@ -6,6 +6,7 @@ import { useLanguage } from "@/components/language/language-state";
 import { NotificationToggle } from "@/components/settings/NotificationToggle";
 import { SettingsMenuRow } from "@/components/settings/SettingsMenuRow";
 import { useTheme } from "@/components/theme/theme-state";
+import { useT } from "@/i18n/useT";
 
 export function SettingsGeneralCard({
   onPrivacy,
@@ -18,34 +19,35 @@ export function SettingsGeneralCard({
 }) {
   const { colors, isDark } = useTheme();
   const { label, openModal } = useLanguage();
+  const t = useT();
 
   return (
     <div className="mx-4 overflow-hidden rounded-[18px] border" style={{ backgroundColor: colors.panel, borderColor: colors.borderSoft }}>
       <SettingsMenuRow
-        title="Bildirishnomalar"
-        subtitle="Yangiliklar va eslatmalar"
+        title={t("settings.notifications")}
+        subtitle={t("settings.notificationsSub")}
         Icon={BellIcon}
         showChevron={false}
         right={<NotificationToggle />}
       />
       <div className="ml-16 h-px" style={{ backgroundColor: colors.borderSoft }} />
-      <SettingsMenuRow title="Til" subtitle={label} Icon={GlobeIcon} onPress={openModal} />
+      <SettingsMenuRow title={t("common.language")} subtitle={label} Icon={GlobeIcon} onPress={openModal} />
       <div className="ml-16 h-px" style={{ backgroundColor: colors.borderSoft }} />
       <SettingsMenuRow
-        title="Tema"
-        subtitle={isDark ? "Qorong'i" : "Yorug'"}
+        title={t("common.theme")}
+        subtitle={isDark ? t("common.themeDark") : t("common.themeLight")}
         Icon={isDark ? MoonIcon : SunIcon}
         showChevron={false}
         right={<ThemeToggle />}
       />
       <div className="ml-16 h-px" style={{ backgroundColor: colors.borderSoft }} />
-      <SettingsMenuRow title="Maxfiylik va xavfsizlik" Icon={ShieldIcon} onPress={onPrivacy} />
+      <SettingsMenuRow title={t("settings.privacy")} Icon={ShieldIcon} onPress={onPrivacy} />
       <div className="ml-16 h-px" style={{ backgroundColor: colors.borderSoft }} />
-      <SettingsMenuRow title="Ma'lumotlarni boshqarish" subtitle="Kesh va saqlash" Icon={CloudIcon} onPress={onData} />
+      <SettingsMenuRow title={t("settings.data")} subtitle={t("settings.dataSub")} Icon={CloudIcon} onPress={onData} />
       <div className="ml-16 h-px" style={{ backgroundColor: colors.borderSoft }} />
-      <SettingsMenuRow title="Yordam va qo'llab-quvvatlash" Icon={HelpIcon} />
+      <SettingsMenuRow title={t("settings.help")} Icon={HelpIcon} />
       <div className="ml-16 h-px" style={{ backgroundColor: colors.borderSoft }} />
-      <SettingsMenuRow title="Ilova haqida" Icon={InfoIcon} onPress={onAbout} />
+      <SettingsMenuRow title={t("settings.about")} Icon={InfoIcon} onPress={onAbout} />
     </div>
   );
 }

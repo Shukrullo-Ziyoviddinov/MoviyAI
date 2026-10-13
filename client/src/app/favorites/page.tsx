@@ -10,6 +10,7 @@ import { HomeHeader } from "@/components/home/HomeHeader";
 import { useSideMenu } from "@/components/menu/SideMenu";
 import { BottomNav } from "@/components/nav/BottomNav";
 import { useTheme } from "@/components/theme/theme-state";
+import { useT } from "@/i18n/useT";
 import { WishlistCard } from "@/components/wishlist/WishlistCard";
 
 export default function FavoritesPage() {
@@ -17,6 +18,7 @@ export default function FavoritesPage() {
   const { colors, isDark } = useTheme();
   const { token } = useAuth();
   const { desktopOpen } = useSideMenu();
+  const t = useT();
   const [movies, setMovies] = useState<WishlistMovie[] | null>(null);
 
   useEffect(() => {
@@ -70,10 +72,10 @@ export default function FavoritesPage() {
           <HeartIcon size={44} color="#F472B6" />
         </div>
         <p className="text-center text-[20px] font-bold" style={{ color: colors.text }}>
-          Sevimlilar bo‘sh
+          {t("favorites.emptyTitle")}
         </p>
         <p className="mt-2 max-w-[300px] text-center text-[14px] leading-5" style={{ color: colors.textMuted }}>
-          O‘z sevimli kino filmlaringizni AI Chat orqali qidiring va sevimli kino filmlarni saqlang.
+          {t("favorites.emptySubtitle")}
         </p>
         <button
           type="button"
@@ -83,7 +85,7 @@ export default function FavoritesPage() {
         >
           <ChatBubbleIcon size={18} color={colors.textOnAccent} />
           <span className="text-[15px] font-bold" style={{ color: colors.textOnAccent }}>
-            AI Chatga o‘tish
+            {t("favorites.goToChat")}
           </span>
         </button>
       </div>

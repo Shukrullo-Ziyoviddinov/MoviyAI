@@ -5,11 +5,13 @@ import { useChat } from "@/components/chat/chat-state";
 import { SelectedMediaStrip } from "@/components/chat/SelectedMediaStrip";
 import { CameraIcon, GalleryIcon, MicIcon, SendIcon, VideoIcon } from "@/components/icons";
 import { colors } from "@/constants/theme";
+import { useT } from "@/i18n/useT";
 
 const mediaBtn = "flex h-9 w-9 items-center justify-center rounded-full border";
 
 export function ChatComposer() {
   const { selectedMedia, removeMedia, send, pick, picking } = useChat();
+  const t = useT();
   const [text, setText] = useState("");
   const canSend = text.trim().length > 0 || selectedMedia.length > 0;
 
@@ -29,7 +31,7 @@ export function ChatComposer() {
         <textarea
           value={text}
           onChange={(event) => setText(event.target.value)}
-          placeholder="Xabar yozing..."
+          placeholder={t("chat.placeholder")}
           rows={1}
           className="max-h-[110px] min-h-12 flex-1 resize-none rounded-3xl border px-[18px] py-3 text-[15px] outline-none"
           style={{

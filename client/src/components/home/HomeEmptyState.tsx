@@ -2,32 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { ChatBubbleIcon, FilmIcon } from "@/components/icons";
-import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
-
-const COPY = {
-  uz: {
-    title: "Hali hech narsa yo'q",
-    subtitle: "Kinolar va tavsiyalar shu yerda paydo bo'ladi. Hozir AI Chat orqali qidirishni boshlang.",
-    action: "AI Chatga o'tish",
-  },
-  ru: {
-    title: "Пока здесь пусто",
-    subtitle: "Фильмы и рекомендации появятся здесь. Начните поиск через AI Chat.",
-    action: "Перейти в AI Chat",
-  },
-  en: {
-    title: "Nothing here yet",
-    subtitle: "Movies and recommendations will show up here. Start searching with AI Chat.",
-    action: "Go to AI Chat",
-  },
-};
+import { useT } from "@/i18n/useT";
 
 export function HomeEmptyState() {
   const { colors, isDark } = useTheme();
-  const { language } = useLanguage();
   const router = useRouter();
-  const copy = COPY[language];
+  const t = useT();
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4 py-10">
@@ -41,10 +22,10 @@ export function HomeEmptyState() {
         <FilmIcon size={42} color={colors.accentBright} />
       </div>
       <p className="text-center text-[20px] font-bold" style={{ color: colors.text }}>
-        {copy.title}
+        {t("home.emptyTitle")}
       </p>
       <p className="mt-2 max-w-[280px] text-center text-[14px] leading-5" style={{ color: colors.textMuted }}>
-        {copy.subtitle}
+        {t("home.emptySubtitle")}
       </p>
       <button
         type="button"
@@ -53,7 +34,7 @@ export function HomeEmptyState() {
         onClick={() => router.push("/")}
       >
         <ChatBubbleIcon size={18} color={colors.textOnAccent} />
-        {copy.action}
+        {t("home.goToChat")}
       </button>
     </div>
   );

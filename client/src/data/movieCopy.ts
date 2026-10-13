@@ -1,82 +1,57 @@
 import type { AppLanguage } from "@/components/language/language-state";
+import { durationUnit, translate } from "@/i18n";
 
-const COPY = {
-  uz: {
-    watch: "Tomosha",
-    save: "Saqlash",
-    trailer: "Triller",
-    trailerUnavailable: "Triller mavjud emas",
-    aboutTitle: "Film haqida",
-    actorsTitle: "Aktyorlar",
-    readMore: "Ko'proq o'qish",
-    similarTrailers: "O'xshash trillerlar",
-    similarMovies: "O'xshash kinolar",
-    year: "Yil",
-    country: "Davlat",
-    duration: "Davomiylik",
-    director: "Rejissyor",
-    commentsTitle: "Koment",
-    commentPlaceholder: "Koment yozing...",
-    moreComments: "Ko'proq natija",
-    noComments: "Hali koment yo'q",
-    reply: "Javob",
-    moreReplies: "Ko'proq",
-    lessReplies: "Kamroq",
-    minutes: "daq",
-    notFound: "Kino topilmadi",
-  },
-  ru: {
-    watch: "Смотреть",
-    save: "Сохранить",
-    trailer: "Трейлер",
-    trailerUnavailable: "Трейлер недоступен",
-    aboutTitle: "О фильме",
-    actorsTitle: "Актёры",
-    readMore: "Читать далее",
-    similarTrailers: "Похожие трейлеры",
-    similarMovies: "Похожие фильмы",
-    year: "Год",
-    country: "Страна",
-    duration: "Длительность",
-    director: "Режиссёр",
-    commentsTitle: "Комментарии",
-    commentPlaceholder: "Напишите комментарий...",
-    moreComments: "Больше результатов",
-    noComments: "Пока нет комментариев",
-    reply: "Ответ",
-    moreReplies: "Ещё",
-    lessReplies: "Меньше",
-    minutes: "мин",
-    notFound: "Фильм не найден",
-  },
-  en: {
-    watch: "Watch",
-    save: "Save",
-    trailer: "Trailer",
-    trailerUnavailable: "Trailer unavailable",
-    aboutTitle: "About the movie",
-    actorsTitle: "Actors",
-    readMore: "Read more",
-    similarTrailers: "Similar trailers",
-    similarMovies: "Similar movies",
-    year: "Year",
-    country: "Country",
-    duration: "Duration",
-    director: "Director",
-    commentsTitle: "Comments",
-    commentPlaceholder: "Write a comment...",
-    moreComments: "More results",
-    noComments: "No comments yet",
-    reply: "Reply",
-    moreReplies: "More",
-    lessReplies: "Less",
-    minutes: "min",
-    notFound: "Movie not found",
-  },
-} as const;
-
-export type MovieCopy = { [K in keyof (typeof COPY)["uz"]]: string };
+export type MovieCopy = {
+  watch: string;
+  save: string;
+  trailer: string;
+  trailerUnavailable: string;
+  aboutTitle: string;
+  actorsTitle: string;
+  readMore: string;
+  moreInfo: string;
+  similarTrailers: string;
+  similarMovies: string;
+  year: string;
+  country: string;
+  duration: string;
+  director: string;
+  commentsTitle: string;
+  commentPlaceholder: string;
+  moreComments: string;
+  noComments: string;
+  reply: string;
+  moreReplies: string;
+  lessReplies: string;
+  minutes: string;
+  notFound: string;
+};
 
 export function movieCopy(language: AppLanguage): MovieCopy {
-  return COPY[language];
+  const t = (key: string) => translate(language, key);
+  return {
+    watch: t("movie.watch"),
+    save: t("movie.save"),
+    trailer: t("movie.trailer"),
+    trailerUnavailable: t("movie.trailerUnavailable"),
+    aboutTitle: t("movie.aboutTitle"),
+    actorsTitle: t("movie.actorsTitle"),
+    readMore: t("movie.readMore"),
+    moreInfo: t("movie.moreInfo"),
+    similarTrailers: t("movie.similarTrailers"),
+    similarMovies: t("movie.similarMovies"),
+    year: t("movie.year"),
+    country: t("movie.country"),
+    duration: t("movie.duration"),
+    director: t("movie.director"),
+    commentsTitle: t("movie.commentsTitle"),
+    commentPlaceholder: t("movie.commentPlaceholder"),
+    moreComments: t("movie.moreComments"),
+    noComments: t("movie.noComments"),
+    reply: t("movie.reply"),
+    moreReplies: t("movie.moreReplies"),
+    lessReplies: t("movie.lessReplies"),
+    minutes: durationUnit(language),
+    notFound: language === "ru" ? "Фильм не найден" : language === "en" ? "Movie not found" : "Kino topilmadi",
+  };
 }

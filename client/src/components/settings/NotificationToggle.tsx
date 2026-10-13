@@ -2,15 +2,17 @@
 
 import { useState } from "react";
 import { useTheme } from "@/components/theme/theme-state";
+import { useT } from "@/i18n/useT";
 
 export function NotificationToggle() {
   const { colors } = useTheme();
+  const t = useT();
   const [on, setOn] = useState(true);
 
   return (
     <button
       type="button"
-      aria-label="Bildirishnomalar"
+      aria-label={t("settings.notifications")}
       onClick={() => setOn((value) => !value)}
       className="flex h-7 w-12 items-center rounded-full px-[3px]"
       style={{

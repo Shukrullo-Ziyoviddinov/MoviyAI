@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { CloseIcon } from "@/components/icons";
 import { LANGUAGE_OPTIONS, useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
+import { useT } from "@/i18n/useT";
 
 const OPEN_MS = 320;
 const CLOSE_MS = 240;
@@ -12,6 +13,7 @@ const EASE = "cubic-bezier(0.33, 1, 0.68, 1)";
 export function LanguageModal() {
   const { colors } = useTheme();
   const { modalOpen, language, setLanguage, closeModal } = useLanguage();
+  const t = useT();
   const [mounted, setMounted] = useState(false);
   const [shown, setShown] = useState(false);
   const [desktop, setDesktop] = useState(false);
@@ -134,7 +136,7 @@ export function LanguageModal() {
         {desktop ? (
           <div className="mb-2 flex items-center justify-between px-1">
             <p className="text-[16px] font-bold" style={{ color: colors.text }}>
-              Tilni tanlang
+              {t("language.choose")}
             </p>
             <button type="button" aria-label="Yopish" onClick={closeModal} className="flex h-9 w-9 items-center justify-center">
               <CloseIcon size={22} color={colors.icon} />
@@ -144,7 +146,7 @@ export function LanguageModal() {
           <>
             <div className="mx-auto mb-3 h-1 w-[42px] rounded-full" style={{ backgroundColor: colors.border }} />
             <p className="mb-2.5 px-1 text-[16px] font-bold" style={{ color: colors.text }}>
-              Tilni tanlang
+              {t("language.choose")}
             </p>
           </>
         )}
@@ -165,7 +167,7 @@ export function LanguageModal() {
               >
                 <img src={item.flag} alt="" className="h-6 w-9 rounded object-cover" />
                 <span className="flex-1 text-[15px] font-semibold" style={{ color: colors.text }}>
-                  {item.label}
+                  {t(`language.${item.code}`)}
                 </span>
                 <span
                   className="h-2.5 w-2.5 rounded-full"

@@ -1,0 +1,161 @@
+{
+  "common": {
+    "logout": "Log out",
+    "logoutSystem": "Sign out",
+    "language": "Language",
+    "theme": "Theme",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "error": "Error",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "language": {
+    "choose": "Choose language",
+    "uz": "O'zbekcha",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "menu": {
+    "home": "Home",
+    "favorites": "Favorites",
+    "chat": "AI Chat",
+    "menyu": "Menu",
+    "profile": "Profile",
+    "settings": "Settings",
+    "newChat": "New chat",
+    "previousChats": "Previous chats"
+  },
+  "search": {
+    "placeholder": "Search movies, actors...",
+    "aiHelper": "AI search assistant",
+    "heroTitle": "Find your favorite movies even easier",
+    "heroSubtitle": "Discover them easily via photo or video",
+    "guideText": "Type a movie title or describe your mood, favorite genres, and interests. Or find movies you can’t locate via photo and video — fast and easy.",
+    "guideGotIt": "Got it"
+  },
+  "home": {
+    "emptyTitle": "Nothing here yet",
+    "emptySubtitle": "Movies and recommendations will show up here. Start searching with AI Chat.",
+    "goToChat": "Go to AI Chat",
+    "categories": {
+      "actionMovies": "Action movies",
+      "horrorMovies": "Horror movies",
+      "animationMovies": "Cartoons",
+      "romanceMovies": "Romance and love",
+      "dramaMovies": "Drama movies",
+      "comedyMovies": "Comedy movies & series",
+      "familyMovies": "Family movies & series",
+      "sciFiMovies": "Sci-Fi movies"
+    }
+  },
+  "favorites": {
+    "emptyTitle": "Favorites is empty",
+    "emptySubtitle": "Find your favorite movies through AI Chat and save them to favorites.",
+    "goToChat": "Go to AI Chat"
+  },
+  "movie": {
+    "watch": "Watch",
+    "trailer": "Trailer",
+    "trailerUnavailable": "Trailer unavailable",
+    "aboutTitle": "About the movie",
+    "actorsTitle": "Actors",
+    "readMore": "Read more",
+    "moreInfo": "More info",
+    "similarTrailers": "Similar trailers",
+    "similarMovies": "Similar movies",
+    "save": "Save",
+    "year": "Year",
+    "country": "Country",
+    "duration": "Duration",
+    "director": "Director",
+    "commentsTitle": "Comments",
+    "commentPlaceholder": "Write a comment...",
+    "moreComments": "More results",
+    "noComments": "No comments yet",
+    "reply": "Reply",
+    "moreReplies": "More",
+    "lessReplies": "Less",
+    "replyingTo": "Reply: {{user}}"
+  },
+  "actor": {
+    "aboutTitle": "About the actor",
+    "moviesTitle": "Movies",
+    "readMore": "More",
+    "notFound": "Actor not found"
+  },
+  "auth": {
+    "title": "Sign in with Google",
+    "subtitle": "Don't forget to sign in to your Google account to use the app.",
+    "continueGoogle": "Continue with Google",
+    "hint": "Your name and avatar will be saved to your profile after sign-in.",
+    "later": "Later",
+    "errors": {
+      "missingClientId": "Google Client ID is not configured",
+      "missingNativeClientId": "A separate Android/iOS Google Client ID is required (Web ID is not enough)",
+      "needsDevBuild": "Google sign-in needs a development build (Expo Go is not enough)",
+      "playServices": "Google Play Services is missing or outdated",
+      "noToken": "Google token was not received",
+      "loginFailed": "Sign-in failed",
+      "cancelled": "Sign-in was cancelled"
+    },
+    "loginRequired": "Sign in with Google to continue"
+  },
+  "profile": {
+    "savedMovies": "Saved movies",
+    "savedMoviesSub": "Your favorite movies list",
+    "savedChats": "Saved chats",
+    "savedChatsSub": "Your previous AI chats",
+    "settings": "Settings",
+    "settingsSub": "Configure the app",
+    "logoutSub": "Sign out of your account"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize the app to your preference",
+    "notifications": "Notifications",
+    "notificationsSub": "News and reminders",
+    "privacy": "Privacy and security",
+    "data": "Manage data",
+    "dataSub": "Cache and storage",
+    "help": "Help and support",
+    "about": "About the app",
+    "savedMovies": "Saved movies",
+    "savedMoviesSub": "Your favorite movies list",
+    "savedChats": "Saved chats",
+    "savedChatsSub": "Your previous AI chats"
+  },
+  "dataManage": {
+    "title": "Manage data",
+    "subtitle": "Cache, history, and saved data",
+    "chatsTitle": "Chat history",
+    "chatsSub": "Delete all chats",
+    "chatsModalTitle": "Chat history",
+    "chatsModalBody": "All chats will be deleted. This cannot be undone. Continue?",
+    "searchesTitle": "Search history",
+    "searchesSub": "Clear search history",
+    "searchesModalTitle": "Search history",
+    "searchesModalBody": "Search history will be cleared. This cannot be undone. Continue?",
+    "mediaTitle": "Uploaded files",
+    "mediaSub": "Delete sent images and videos",
+    "mediaModalTitle": "Uploaded files",
+    "mediaModalBody": "Sent images and videos will be deleted. This cannot be undone. Continue?",
+    "favoritesTitle": "Saved movies",
+    "favoritesSub": "Delete saved/favorite movies",
+    "favoritesModalTitle": "Saved movies",
+    "favoritesModalBody": "Saved and favorite movies will be deleted. This cannot be undone. Continue?"
+  },
+  "chat": {
+    "introTitle": "What movie are you looking for?",
+    "introSubtitle": "Describe a movie, send a photo, or upload a video.",
+    "actionText": "Ask with text",
+    "actionImage": "Find by image",
+    "actionVideo": "Find by video",
+    "actionRecommend": "Get recommendations",
+    "placeholder": "Type a message...",
+    "downloadUnavailable": "Download is not available on this device.",
+    "downloadFailed": "Could not download the image.",
+    "guideText": "With MoviyAI chat, find movies and series you’re interested in easily. Send a photo or video to the chat; if possible, briefly describe the movie to help AI find it. Chat with AI about the movies and series you care about.",
+    "guideGotIt": "Got it"
+  }
+}

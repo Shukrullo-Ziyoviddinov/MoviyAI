@@ -6,11 +6,13 @@ import { LanguageModal } from "@/components/language/LanguageModal";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileMenuCard } from "@/components/profile/ProfileMenuCard";
 import { useTheme } from "@/components/theme/theme-state";
+import { useT } from "@/i18n/useT";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { profile, openAuthModal } = useAuth();
+  const t = useT();
 
   return (
     <div
@@ -22,8 +24,8 @@ export default function ProfilePage() {
       }}
     >
       <ProfileHeader
-        name={profile?.name || "Google orqali kirish"}
-        email={profile?.email || "Davom etish uchun Google orqali kiring"}
+        name={profile?.name || t("auth.title")}
+        email={profile?.email || t("auth.loginRequired")}
         picture={profile?.picture}
         onSettingsPress={() => router.push("/settings")}
         onProfilePress={() => {

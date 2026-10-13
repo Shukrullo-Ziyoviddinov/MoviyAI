@@ -5,6 +5,7 @@ import { ProfileMenuRow } from "@/components/profile/ProfileMenuRow";
 import { ThemeToggle } from "@/components/profile/ThemeToggle";
 import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
+import { useT } from "@/i18n/useT";
 
 export function ProfileMenuCard({
   onSavedMovies,
@@ -17,12 +18,13 @@ export function ProfileMenuCard({
 }) {
   const { colors, isDark } = useTheme();
   const { label, openModal } = useLanguage();
+  const t = useT();
 
   return (
     <div className="mx-4 overflow-hidden rounded-[22px] border" style={{ backgroundColor: colors.panel, borderColor: colors.borderSoft }}>
       <ProfileMenuRow
-        title="Saqlangan kinolar"
-        subtitle="Sevimli kinolaringiz ro'yxati"
+        title={t("profile.savedMovies")}
+        subtitle={t("profile.savedMoviesSub")}
         Icon={BookmarkIcon}
         iconColor="#60A5FA"
         iconBg="rgba(37, 99, 235, 0.2)"
@@ -30,16 +32,16 @@ export function ProfileMenuCard({
       />
       <div className="ml-[66px] h-px" style={{ backgroundColor: colors.borderSoft }} />
       <ProfileMenuRow
-        title="Saqlangan suhbatlar"
-        subtitle="Oldingi AI suhbatlaringiz"
+        title={t("profile.savedChats")}
+        subtitle={t("profile.savedChatsSub")}
         Icon={ChatBubbleIcon}
         iconColor="#A78BFA"
         iconBg="rgba(109, 40, 217, 0.2)"
       />
       <div className="ml-[66px] h-px" style={{ backgroundColor: colors.borderSoft }} />
       <ProfileMenuRow
-        title="Sozlamalar"
-        subtitle="Ilovani sozlash"
+        title={t("profile.settings")}
+        subtitle={t("profile.settingsSub")}
         Icon={SettingsIcon}
         iconColor="#93C5FD"
         iconBg="rgba(59, 130, 246, 0.16)"
@@ -47,7 +49,7 @@ export function ProfileMenuCard({
       />
       <div className="ml-[66px] h-px" style={{ backgroundColor: colors.borderSoft }} />
       <ProfileMenuRow
-        title="Til"
+        title={t("common.language")}
         subtitle={label}
         Icon={GlobeIcon}
         iconColor="#38BDF8"
@@ -56,8 +58,8 @@ export function ProfileMenuCard({
       />
       <div className="ml-[66px] h-px" style={{ backgroundColor: colors.borderSoft }} />
       <ProfileMenuRow
-        title="Tema"
-        subtitle={isDark ? "Qorong'i" : "Yorug'"}
+        title={t("common.theme")}
+        subtitle={isDark ? t("common.themeDark") : t("common.themeLight")}
         Icon={isDark ? MoonIcon : SunIcon}
         iconColor="#C4B5FD"
         iconBg="rgba(124, 58, 237, 0.18)"
@@ -66,8 +68,8 @@ export function ProfileMenuCard({
       />
       <div className="ml-[66px] h-px" style={{ backgroundColor: colors.borderSoft }} />
       <ProfileMenuRow
-        title="Chiqish"
-        subtitle="Hisobingizdan chiqish"
+        title={t("common.logout")}
+        subtitle={t("profile.logoutSub")}
         Icon={LogoutIcon}
         iconColor="#F87171"
         iconBg="rgba(239, 68, 68, 0.16)"

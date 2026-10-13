@@ -3,30 +3,32 @@
 import { useChat } from "@/components/chat/chat-state";
 import { ChatBubbleIcon, GalleryIcon, StarIcon, VideoIcon } from "@/components/icons";
 import { colors } from "@/constants/theme";
+import { useT } from "@/i18n/useT";
 
 const actions = [
-  { key: "text", label: "Matn bilan so'rov", Icon: ChatBubbleIcon },
-  { key: "image", label: "Rasm bilan topish", Icon: GalleryIcon },
-  { key: "video", label: "Video orqali topish", Icon: VideoIcon },
-  { key: "recommend", label: "Tavsiya olish qidirish", Icon: StarIcon },
+  { key: "text", labelKey: "chat.actionText", Icon: ChatBubbleIcon },
+  { key: "image", labelKey: "chat.actionImage", Icon: GalleryIcon },
+  { key: "video", labelKey: "chat.actionVideo", Icon: VideoIcon },
+  { key: "recommend", labelKey: "chat.actionRecommend", Icon: StarIcon },
 ];
 
 export function ChatIntro() {
   const { pick, picking } = useChat();
+  const t = useT();
 
   return (
     <div className="flex w-full flex-col items-center px-0 min-[384px]:px-1">
       <h1 className="text-center text-[22px] font-bold min-[384px]:text-[26px]" style={{ color: colors.text }}>
-        Qanday kino izlayapsiz?
+        {t("chat.introTitle")}
       </h1>
       <p
         className="mt-2 px-1 text-center text-[14px] leading-5 min-[384px]:px-3 min-[384px]:text-[16px] min-[384px]:leading-6"
         style={{ color: colors.textMuted }}
       >
-        Kino haqida yozing, rasm yuboring yoki video yuklang.
+        {t("chat.introSubtitle")}
       </p>
       <div className="mt-3.5 grid w-full max-w-[400px] grid-cols-4 gap-1 min-[384px]:mt-[18px] min-[384px]:gap-2 md:max-w-[520px] md:gap-3">
-        {actions.map(({ key, label, Icon }) => (
+        {actions.map(({ key, labelKey, Icon }) => (
           <button
             key={key}
             type="button"
@@ -48,7 +50,7 @@ export function ChatIntro() {
               className="flex min-h-9 w-full items-start justify-center text-center text-[10px] leading-3 font-semibold min-[384px]:min-h-8 min-[384px]:text-[12px] min-[384px]:leading-4 md:min-h-9 md:text-[13px] md:leading-[18px]"
               style={{ color: colors.text }}
             >
-              {label}
+              {t(labelKey)}
             </span>
           </button>
         ))}

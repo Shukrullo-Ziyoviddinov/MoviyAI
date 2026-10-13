@@ -11,11 +11,13 @@ import { SettingsLogoutButton } from "@/components/settings/SettingsLogoutButton
 import { SettingsProfileCard } from "@/components/settings/SettingsProfileCard";
 import { SettingsSavedCard } from "@/components/settings/SettingsSavedCard";
 import { useTheme } from "@/components/theme/theme-state";
+import { useT } from "@/i18n/useT";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { colors } = useTheme();
   const { token, profile, openAuthModal, logout } = useAuth();
+  const t = useT();
   const [moviesCount, setMoviesCount] = useState(0);
 
   useEffect(() => {
@@ -41,11 +43,11 @@ export default function SettingsPage() {
         paddingBottom: "max(28px, env(safe-area-inset-bottom))",
       }}
     >
-      <SettingsHeader title="Sozlamalar" subtitle="Ilovangizni o'zingizga moslab sozlang" />
+      <SettingsHeader title={t("settings.title")} subtitle={t("settings.subtitle")} />
       <div className="mt-4">
         <SettingsProfileCard
-          name={profile?.name || "Google orqali kirish"}
-          email={profile?.email || "Davom etish uchun Google orqali kiring"}
+          name={profile?.name || t("auth.title")}
+          email={profile?.email || t("auth.loginRequired")}
           picture={profile?.picture}
           onPress={() => {
             if (profile) router.push("/profile");

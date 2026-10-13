@@ -16,17 +16,18 @@ import { useAuth } from "@/components/auth/auth-state";
 import { useChat } from "@/components/chat/chat-state";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { colors } from "@/constants/theme";
+import { useT } from "@/i18n/useT";
 
 const SLIDE = "260ms cubic-bezier(0.33, 1, 0.68, 1)";
 
 type NavKey = "home" | "chat" | "profile" | "settings" | "newChat";
 
-const NAV_ITEMS: { key: NavKey; label: string; Icon: typeof HomeIcon }[] = [
-  { key: "home", label: "Asosiy", Icon: HomeIcon },
-  { key: "chat", label: "AI suhbat", Icon: ChatBubbleIcon },
-  { key: "profile", label: "Profil", Icon: PersonIcon },
-  { key: "settings", label: "Sozlamalar", Icon: SettingsIcon },
-  { key: "newChat", label: "Yangi chat", Icon: PlusIcon },
+const NAV_ITEMS: { key: NavKey; labelKey: string; Icon: typeof HomeIcon }[] = [
+  { key: "home", labelKey: "menu.home", Icon: HomeIcon },
+  { key: "chat", labelKey: "menu.chat", Icon: ChatBubbleIcon },
+  { key: "profile", labelKey: "menu.profile", Icon: PersonIcon },
+  { key: "settings", labelKey: "menu.settings", Icon: SettingsIcon },
+  { key: "newChat", labelKey: "menu.newChat", Icon: PlusIcon },
 ];
 
 type SideMenuContextValue = {
@@ -232,6 +233,7 @@ function MenuBody({
   const router = useRouter();
   const pathname = usePathname();
   const { profile, openAuthModal, logout } = useAuth();
+  const t = useT();
 
   useEffect(() => {
     router.prefetch("/home");
@@ -291,10 +293,10 @@ function MenuBody({
         </div>
       ) : null}
 
-      <RailTip label={profile?.name || "Google orqali kirish"} enabled={collapsed}>
+      <RailTip label={profile?.name || t("auth.title")} enabled={collapsed}>
         <button
           type="button"
-          aria-label={profile?.name || "Google orqali kirish"}
+          aria-label={profile?.name || t("auth.title")}
           onClick={(event) => {
             event.stopPropagation();
             if (collapsed) {
@@ -321,10 +323,10 @@ function MenuBody({
             <>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[16px] font-bold" style={{ color: colors.text }}>
-                  {profile?.name || "Google orqali kirish"}
+                  {profile?.name || t("auth.title")}
                 </span>
                 <span className="mt-[3px] block truncate text-[13px]" style={{ color: colors.textMuted }}>
-                  {profile?.email || "Davom etish uchun Google orqali kiring"}
+                  {profile?.email || t("auth.loginRequired")}
                 </span>
               </span>
               <ChevronRightIcon size={18} color={colors.textMuted} />
@@ -334,7 +336,8 @@ function MenuBody({
       </RailTip>
 
       <div className={`flex flex-col gap-1.5 ${collapsed ? "w-full items-center" : ""}`}>
-        {NAV_ITEMS.map(({ key, label, Icon }) => {
+        {NAV_ITEMS.map(({ key, labelKey, Icon }) => {
+          const label = t(labelKey);
           const active =
             (key === "home" && pathname === "/home") ||
             (key === "chat" && pathname === "/") ||
@@ -379,16 +382,16 @@ function MenuBody({
           <div className="my-3.5 h-px" style={{ backgroundColor: colors.borderSoft }} />
           <div className="min-h-0 flex-1">
             <p className="mb-2 px-1 text-[15px] font-medium" style={{ color: colors.text }}>
-              Oldingi suhbatlar
+              {t("menu.previousChats")}
             </p>
           </div>
         </>
       )}
 
-      <RailTip label="Chiqish" enabled={collapsed}>
+      <RailTip label={t("common.logout")} enabled={collapsed}>
         <button
           type="button"
-          aria-label="Chiqish"
+          aria-label={t("common.logout")}
           onClick={(event) => {
             event.stopPropagation();
             if (collapsed) {
@@ -403,7 +406,7 @@ function MenuBody({
           <LogoutIcon size={22} color={colors.icon} />
           {collapsed ? null : (
             <span className="text-[15px] font-medium" style={{ color: colors.text }}>
-              Chiqish
+              {t("common.logout")}
             </span>
           )}
         </button>

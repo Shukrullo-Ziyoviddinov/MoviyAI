@@ -1,0 +1,161 @@
+{
+  "common": {
+    "logout": "Выйти",
+    "logoutSystem": "Выйти из аккаунта",
+    "language": "Язык",
+    "theme": "Тема",
+    "themeDark": "Тёмная",
+    "themeLight": "Светлая",
+    "error": "Ошибка",
+    "yes": "Да",
+    "no": "Нет"
+  },
+  "language": {
+    "choose": "Выберите язык",
+    "uz": "O'zbekcha",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "menu": {
+    "home": "Главная",
+    "favorites": "Избранное",
+    "chat": "AI чат",
+    "menyu": "Меню",
+    "profile": "Профиль",
+    "settings": "Настройки",
+    "newChat": "Новый чат",
+    "previousChats": "Предыдущие чаты"
+  },
+  "search": {
+    "placeholder": "Поиск фильмов, актёров...",
+    "aiHelper": "AI помощник поиска",
+    "heroTitle": "Ищите любимые фильмы ещё проще",
+    "heroSubtitle": "Находите легко по фото или видео",
+    "guideText": "Введите название фильма или опишите настроение, любимые жанры и интересы. Или найдите фильмы по фото и видео — быстро и просто.",
+    "guideGotIt": "Понятно"
+  },
+  "home": {
+    "emptyTitle": "Пока здесь пусто",
+    "emptySubtitle": "Фильмы и рекомендации появятся здесь. Начните поиск через AI Chat.",
+    "goToChat": "Перейти в AI Chat",
+    "categories": {
+      "actionMovies": "Боевики",
+      "horrorMovies": "Ужасы",
+      "animationMovies": "Мультфильмы",
+      "romanceMovies": "Романтика и любовь",
+      "dramaMovies": "Драмы",
+      "comedyMovies": "Комедии и сериалы",
+      "familyMovies": "Семейные кино и сериалы",
+      "sciFiMovies": "Фантастика"
+    }
+  },
+  "favorites": {
+    "emptyTitle": "Избранное пусто",
+    "emptySubtitle": "Найдите любимые фильмы через AI Chat и сохраните их в избранное.",
+    "goToChat": "Перейти в AI Chat"
+  },
+  "movie": {
+    "watch": "Смотреть",
+    "trailer": "Трейлер",
+    "trailerUnavailable": "Трейлер недоступен",
+    "aboutTitle": "О фильме",
+    "actorsTitle": "Актёры",
+    "readMore": "Читать далее",
+    "moreInfo": "Подробнее",
+    "similarTrailers": "Похожие трейлеры",
+    "similarMovies": "Похожие фильмы",
+    "save": "Сохранить",
+    "year": "Год",
+    "country": "Страна",
+    "duration": "Длительность",
+    "director": "Режиссёр",
+    "commentsTitle": "Комментарии",
+    "commentPlaceholder": "Напишите комментарий...",
+    "moreComments": "Больше результатов",
+    "noComments": "Пока нет комментариев",
+    "reply": "Ответ",
+    "moreReplies": "Ещё",
+    "lessReplies": "Меньше",
+    "replyingTo": "Ответ: {{user}}"
+  },
+  "actor": {
+    "aboutTitle": "Об актёре",
+    "moviesTitle": "Фильмы",
+    "readMore": "Ещё",
+    "notFound": "Актёр не найден"
+  },
+  "auth": {
+    "title": "Вход через Google",
+    "subtitle": "Не забудьте войти в аккаунт Google, чтобы пользоваться приложением.",
+    "continueGoogle": "Продолжить с Google",
+    "hint": "После входа имя и аватар сохранятся в профиле.",
+    "later": "Позже",
+    "errors": {
+      "missingClientId": "Google Client ID не настроен",
+      "missingNativeClientId": "Для Android/iOS нужен отдельный Google Client ID (Web ID недостаточно)",
+      "needsDevBuild": "Для входа через Google нужен development build (Expo Go недостаточно)",
+      "playServices": "Google Play Services отсутствует или устарел",
+      "noToken": "Токен Google не получен",
+      "loginFailed": "Не удалось войти",
+      "cancelled": "Вход отменён"
+    },
+    "loginRequired": "Войдите через Google, чтобы продолжить"
+  },
+  "profile": {
+    "savedMovies": "Сохранённые фильмы",
+    "savedMoviesSub": "Список любимых фильмов",
+    "savedChats": "Сохранённые чаты",
+    "savedChatsSub": "Ваши предыдущие AI-чаты",
+    "settings": "Настройки",
+    "settingsSub": "Настройка приложения",
+    "logoutSub": "Выйти из аккаунта"
+  },
+  "settings": {
+    "title": "Настройки",
+    "subtitle": "Настройте приложение под себя",
+    "notifications": "Уведомления",
+    "notificationsSub": "Новости и напоминания",
+    "privacy": "Конфиденциальность и безопасность",
+    "data": "Управление данными",
+    "dataSub": "Кэш и хранилище",
+    "help": "Помощь и поддержка",
+    "about": "О приложении",
+    "savedMovies": "Сохранённые фильмы",
+    "savedMoviesSub": "Список любимых фильмов",
+    "savedChats": "Сохранённые чаты",
+    "savedChatsSub": "Ваши предыдущие AI-чаты"
+  },
+  "dataManage": {
+    "title": "Управление данными",
+    "subtitle": "Кэш, история и сохранённые данные",
+    "chatsTitle": "История чатов",
+    "chatsSub": "Удалить все чаты",
+    "chatsModalTitle": "История чатов",
+    "chatsModalBody": "Все чаты будут удалены. Это действие нельзя отменить. Продолжить?",
+    "searchesTitle": "История поиска",
+    "searchesSub": "Очистить историю поиска",
+    "searchesModalTitle": "История поиска",
+    "searchesModalBody": "История поиска будет очищена. Это действие нельзя отменить. Продолжить?",
+    "mediaTitle": "Загруженные файлы",
+    "mediaSub": "Удалить отправленные фото и видео",
+    "mediaModalTitle": "Загруженные файлы",
+    "mediaModalBody": "Отправленные фото и видео будут удалены. Это действие нельзя отменить. Продолжить?",
+    "favoritesTitle": "Сохранённые фильмы",
+    "favoritesSub": "Удалить сохранённые/избранные фильмы",
+    "favoritesModalTitle": "Сохранённые фильмы",
+    "favoritesModalBody": "Сохранённые и избранные фильмы будут удалены. Это действие нельзя отменить. Продолжить?"
+  },
+  "chat": {
+    "introTitle": "Какой фильм ищете?",
+    "introSubtitle": "Опишите фильм, отправьте фото или загрузите видео.",
+    "actionText": "Запрос текстом",
+    "actionImage": "Найти по фото",
+    "actionVideo": "Найти по видео",
+    "actionRecommend": "Получить рекомендации",
+    "placeholder": "Напишите сообщение...",
+    "downloadUnavailable": "Скачивание недоступно на этом устройстве.",
+    "downloadFailed": "Не удалось скачать изображение.",
+    "guideText": "Через MoviyAI chat легко находите интересующие фильмы и сериалы. Отправьте фото или видео в чат; по возможности кратко опишите фильм — это поможет AI. Общайтесь с AI о фильмах и сериалах, которые вам интересны.",
+    "guideGotIt": "Понятно"
+  }
+}

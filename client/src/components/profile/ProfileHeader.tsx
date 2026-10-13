@@ -3,6 +3,7 @@
 import { SettingsIcon } from "@/components/icons";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { useTheme } from "@/components/theme/theme-state";
+import { useT } from "@/i18n/useT";
 
 export function ProfileHeader({
   name,
@@ -18,6 +19,7 @@ export function ProfileHeader({
   onProfilePress?: () => void;
 }) {
   const { colors, isDark } = useTheme();
+  const t = useT();
   const logo = isDark ? "/images/MY_preview_rev_1.png" : "/images/qoralogo_preview_rev_1.png";
 
   return (
@@ -26,7 +28,7 @@ export function ProfileHeader({
         <img src={logo} alt="" className="h-9 w-9 object-contain md:hidden" />
         <button
           type="button"
-          aria-label="Sozlamalar"
+          aria-label={t("menu.settings")}
           onClick={onSettingsPress}
           className="flex h-[34px] w-[34px] items-center justify-center rounded-full border md:ml-auto"
           style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}

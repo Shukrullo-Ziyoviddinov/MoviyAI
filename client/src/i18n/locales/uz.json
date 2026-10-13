@@ -1,0 +1,161 @@
+{
+  "common": {
+    "logout": "Chiqish",
+    "logoutSystem": "Tizimdan chiqish",
+    "language": "Til",
+    "theme": "Tema",
+    "themeDark": "Qorong'i",
+    "themeLight": "Yorug'",
+    "error": "Xato",
+    "yes": "Ha",
+    "no": "Yo'q"
+  },
+  "language": {
+    "choose": "Tilni tanlang",
+    "uz": "O'zbekcha",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "menu": {
+    "home": "Asosiy",
+    "favorites": "Sevimli",
+    "chat": "AI suhbat",
+    "menyu": "Menyu",
+    "profile": "Profil",
+    "settings": "Sozlamalar",
+    "newChat": "Yangi chat",
+    "previousChats": "Oldingi suhbatlar"
+  },
+  "search": {
+    "placeholder": "Kino, aktyor qidirish...",
+    "aiHelper": "AI qidiruv yordamchi",
+    "heroTitle": "Sevimli kinolaringizni yanada oson qidiring",
+    "heroSubtitle": "Surat yoki video orqali oson toping",
+    "guideText": "Kino nomi yoki his-tuyg‘ularingizni ta’riflab, sizga yoqadigan janr va qiziqarli yo‘nalishni yozing. Yoki topa olmayotgan kinolarni rasm va video orqali tez va oson toping.",
+    "guideGotIt": "Tushundim"
+  },
+  "home": {
+    "emptyTitle": "Hali hech narsa yo'q",
+    "emptySubtitle": "Kinolar va tavsiyalar shu yerda paydo bo'ladi. Hozir AI Chat orqali qidirishni boshlang.",
+    "goToChat": "AI Chatga o'tish",
+    "categories": {
+      "actionMovies": "Jangari kinolar",
+      "horrorMovies": "Qo'rqinchli kinolar",
+      "animationMovies": "Multfilimlar",
+      "romanceMovies": "Romantika va muhabbat",
+      "dramaMovies": "Drama kino",
+      "comedyMovies": "Komediya kino seriallar",
+      "familyMovies": "Oilaviy kino seriallar",
+      "sciFiMovies": "Fantastika kinolar"
+    }
+  },
+  "favorites": {
+    "emptyTitle": "Sevimlilar bo'sh",
+    "emptySubtitle": "O'z sevimli kino filmlaringizni AI Chat orqali qidiring va sevimli kino filmlarni saqlang.",
+    "goToChat": "AI Chatga o'tish"
+  },
+  "movie": {
+    "watch": "Tomosha",
+    "trailer": "Triller",
+    "trailerUnavailable": "Triller mavjud emas",
+    "aboutTitle": "Film haqida",
+    "actorsTitle": "Aktyorlar",
+    "readMore": "Ko'proq o'qish",
+    "moreInfo": "Ko'proq ma'lumot",
+    "similarTrailers": "O'xshash trillerlar",
+    "similarMovies": "O'xshash kinolar",
+    "save": "Saqlash",
+    "year": "Yil",
+    "country": "Davlat",
+    "duration": "Davomiylik",
+    "director": "Rejissyor",
+    "commentsTitle": "Koment",
+    "commentPlaceholder": "Koment yozing...",
+    "moreComments": "Ko'proq natija",
+    "noComments": "Hali koment yo'q",
+    "reply": "Javob",
+    "moreReplies": "Ko'proq",
+    "lessReplies": "Kamroq",
+    "replyingTo": "Javob: {{user}}"
+  },
+  "actor": {
+    "aboutTitle": "Aktor haqida",
+    "moviesTitle": "Filmlar",
+    "readMore": "Ko'proq",
+    "notFound": "Aktor topilmadi"
+  },
+  "auth": {
+    "title": "Google orqali kirish",
+    "subtitle": "Qurilmadan foydalanish uchun Google hisobingizga kirishni unutmang.",
+    "continueGoogle": "Google bilan davom etish",
+    "hint": "Kirishdan keyin ismingiz va avatar profilga saqlanadi.",
+    "later": "Keyinroq",
+    "errors": {
+      "missingClientId": "Google Client ID sozlanmagan",
+      "missingNativeClientId": "Android/iOS uchun alohida Google Client ID kerak (Web ID yetmaydi)",
+      "needsDevBuild": "Google login uchun development build kerak (Expo Go yetarli emas)",
+      "playServices": "Google Play Services mavjud emas yoki eski",
+      "noToken": "Google token olinmadi",
+      "loginFailed": "Kirish muvaffaqiyatsiz",
+      "cancelled": "Kirish bekor qilindi"
+    },
+    "loginRequired": "Davom etish uchun Google orqali kiring"
+  },
+  "profile": {
+    "savedMovies": "Saqlangan kinolar",
+    "savedMoviesSub": "Sevimli kinolaringiz ro'yxati",
+    "savedChats": "Saqlangan suhbatlar",
+    "savedChatsSub": "Oldingi AI suhbatlaringiz",
+    "settings": "Sozlamalar",
+    "settingsSub": "Ilovani sozlash",
+    "logoutSub": "Hisobingizdan chiqish"
+  },
+  "settings": {
+    "title": "Sozlamalar",
+    "subtitle": "Ilovangizni o'zingizga moslab sozlang",
+    "notifications": "Bildirishnomalar",
+    "notificationsSub": "Yangiliklar va eslatmalar",
+    "privacy": "Maxfiylik va xavfsizlik",
+    "data": "Ma'lumotlarni boshqarish",
+    "dataSub": "Kesh va saqlash",
+    "help": "Yordam va qo'llab-quvvatlash",
+    "about": "Ilova haqida",
+    "savedMovies": "Saqlangan kinolar",
+    "savedMoviesSub": "Sevimli filmlaringiz ro'yxati",
+    "savedChats": "Saqlangan suhbatlar",
+    "savedChatsSub": "Oldingi AI suhbatlaringiz"
+  },
+  "dataManage": {
+    "title": "Ma'lumotlarni boshqarish",
+    "subtitle": "Kesh, tarix va saqlangan ma'lumotlar",
+    "chatsTitle": "Suhbatlar tarixi",
+    "chatsSub": "Barcha suhbatlarni o‘chirish",
+    "chatsModalTitle": "Suhbatlar tarixi",
+    "chatsModalBody": "Barcha suhbatlar o‘chiriladi. Bu amalni qaytarib bo‘lmaydi. Davom etasizmi?",
+    "searchesTitle": "Qidiruv tarixi",
+    "searchesSub": "Qidiruv tarixini tozalash",
+    "searchesModalTitle": "Qidiruv tarixi",
+    "searchesModalBody": "Qidiruv tarixi tozalanadi. Bu amalni qaytarib bo‘lmaydi. Davom etasizmi?",
+    "mediaTitle": "Yuklangan fayllar",
+    "mediaSub": "Yuborilgan rasm va videolarni o‘chirish",
+    "mediaModalTitle": "Yuklangan fayllar",
+    "mediaModalBody": "Yuborilgan rasm va videolar o‘chiriladi. Bu amalni qaytarib bo‘lmaydi. Davom etasizmi?",
+    "favoritesTitle": "Saqlangan kinolar",
+    "favoritesSub": "Saqlangan/sevimli kinolarni o‘chirish",
+    "favoritesModalTitle": "Saqlangan kinolar",
+    "favoritesModalBody": "Saqlangan va sevimli kinolar o‘chiriladi. Bu amalni qaytarib bo‘lmaydi. Davom etasizmi?"
+  },
+  "chat": {
+    "introTitle": "Qanday kino izlayapsiz?",
+    "introSubtitle": "Kino haqida yozing, rasm yuboring yoki video yuklang.",
+    "actionText": "Matn bilan so'rov",
+    "actionImage": "Rasm bilan topish",
+    "actionVideo": "Video orqali topish",
+    "actionRecommend": "Tavsiya olish qidirish",
+    "placeholder": "Xabar yozing...",
+    "downloadUnavailable": "Yuklab olish bu qurilmada mavjud emas.",
+    "downloadFailed": "Rasmni yuklab bo‘lmadi.",
+    "guideText": "MoviyAI chat orqali qiziqqan kino va seriallaringizni oson toping. Rasm yoki videoni chatga yuboring; imkon bo‘lsa kino haqida qisqacha ta’riflang — AI topishiga yordam sifatida. AI chat orqali qiziqqan kino va seriallaringiz bo‘yicha suhbat quring.",
+    "guideGotIt": "Tushundim"
+  }
+}

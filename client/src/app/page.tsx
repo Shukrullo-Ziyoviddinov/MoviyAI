@@ -11,13 +11,13 @@ import { MediaViewer } from "@/components/chat/MediaViewer";
 import { VideoModal } from "@/components/chat/VideoModal";
 import { GuideSmsBubble } from "@/components/common/GuideSmsBubble";
 import { colors } from "@/constants/theme";
+import { useT } from "@/i18n/useT";
 
 const GUIDE_KEY = "moviy-chat-guide-understood";
-const GUIDE_TEXT =
-  "MoviyAI chat orqali qiziqqan kino va seriallaringizni oson toping. Rasm yoki videoni chatga yuboring; imkon bo‘lsa kino haqida qisqacha ta’riflang — AI topishiga yordam sifatida. AI chat orqali qiziqqan kino va seriallaringiz bo‘yicha suhbat quring.";
 
 function ChatScreen() {
   const { messages, viewer } = useChat();
+  const t = useT();
   const [showGuide, setShowGuide] = useState(false);
   const [guideReady, setGuideReady] = useState(false);
   const [composerH, setComposerH] = useState(180);
@@ -89,7 +89,7 @@ function ChatScreen() {
 
       {!viewer && guideReady && showGuide ? (
         <div className="pointer-events-none absolute inset-x-0 z-30 px-3" style={{ bottom: composerH }}>
-          <GuideSmsBubble text={GUIDE_TEXT} gotItLabel="Tushundim" onGotIt={onGotIt} />
+          <GuideSmsBubble text={t("chat.guideText")} gotItLabel={t("chat.guideGotIt")} onGotIt={onGotIt} />
         </div>
       ) : null}
     </main>
