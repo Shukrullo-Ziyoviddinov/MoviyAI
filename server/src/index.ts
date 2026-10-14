@@ -5,6 +5,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { attachTelegramBot, connectTelegramBot } from './bot.js';
 import { env } from './config/env.js';
 import { connectDb } from './db/connect.js';
 import apiRoutes from './routes/index.js';
@@ -31,6 +32,7 @@ async function bootstrap() {
   app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));
+  attachTelegramBot(app);
   app.use(cookieParser());
   app.use(
     rateLimit({
@@ -51,6 +53,7 @@ async function bootstrap() {
 
   app.listen(env.port, () => {
     console.log(`MoviyAI server http://localhost:${env.port}`);
+    void connectTelegramBot();
   });
 }
 

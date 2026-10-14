@@ -28,4 +28,6 @@ export const env = {
   r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
   r2Endpoint: process.env.R2_ENDPOINT || '',
   adminPassword: process.env.ADMIN_PASSWORD || '',
+  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
+  publicUrl: (process.env.PUBLIC_URL || 'https://moviyai.onrender.com').replace(/\/$/, ''),
 };
