@@ -7,12 +7,10 @@ import { HomeBanner } from "@/components/home/HomeBanner";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { HomeMovies } from "@/components/home/HomeMovies";
 import { BottomNav } from "@/components/nav/BottomNav";
-import { useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
 import { useTheme } from "@/components/theme/theme-state";
 
 export function HomeScreen({ banners, movies }: { banners: Banner[] | null; movies: HomeMovie[] | null }) {
   const { colors } = useTheme();
-  const { active } = useTelegramChrome();
 
   return (
     <main className="relative h-full" style={{ backgroundColor: colors.bg }}>
@@ -24,20 +22,15 @@ export function HomeScreen({ banners, movies }: { banners: Banner[] | null; movi
         <HomeMovies movies={movies} />
       </div>
       <div
-        className="absolute inset-x-0 z-40 px-4"
-        style={
-          active
-            ? { top: "var(--tg-chrome, 0px)" }
-            : { top: 0, paddingTop: "max(10px, env(safe-area-inset-top))" }
-        }
+        className="pointer-events-none absolute inset-x-0 z-40 max-md:fixed"
+        style={{
+          top: "var(--tg-chrome, 0px)",
+          paddingTop: "var(--tg-home-pad, max(10px, env(safe-area-inset-top)))",
+        }}
       >
-        {active ? (
-          <div className="flex h-[62px] items-center">
-            <HomeHeader />
-          </div>
-        ) : (
+        <div className="pointer-events-auto flex items-center px-4" style={{ height: "var(--tg-home-row, auto)" }}>
           <HomeHeader />
-        )}
+        </div>
       </div>
       <FloatingAiButton />
       <BottomNav />

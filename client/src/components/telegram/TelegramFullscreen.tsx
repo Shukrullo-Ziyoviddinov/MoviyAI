@@ -56,6 +56,8 @@ export function TelegramChromeProvider({ children }: { children: ReactNode }) {
       root.style.removeProperty("--tg-chrome");
       root.style.removeProperty("--tg-safe-pad");
       root.style.removeProperty("--tg-home-gap");
+      root.style.removeProperty("--tg-home-pad");
+      root.style.removeProperty("--tg-home-row");
       setChrome({ active: false, back: 0 });
     };
 
@@ -70,6 +72,8 @@ export function TelegramChromeProvider({ children }: { children: ReactNode }) {
       root.style.setProperty("--tg-chrome", `${back}px`);
       root.style.setProperty("--tg-safe-pad", "0px");
       root.style.setProperty("--tg-home-gap", "8px");
+      root.style.setProperty("--tg-home-pad", "0px");
+      root.style.setProperty("--tg-home-row", "62px");
       setChrome({ active: true, back });
     };
 
