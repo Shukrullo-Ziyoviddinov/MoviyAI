@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { Suspense, createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/components/theme/theme-state";
 
 type Chrome = { active: boolean; back: number };
@@ -13,11 +14,19 @@ export function useTelegramChrome() {
 
 type Insets = { top?: number };
 
+type TelegramBackButton = {
+  show: () => void;
+  hide: () => void;
+  onClick: (cb: () => void) => void;
+  offClick: (cb: () => void) => void;
+};
+
 type TelegramWebApp = {
   platform?: string;
   isFullscreen?: boolean;
   safeAreaInset?: Insets;
   contentSafeAreaInset?: Insets;
+  BackButton?: TelegramBackButton;
   ready: () => void;
   expand: () => void;
   requestFullscreen?: () => void;
@@ -98,6 +107,42 @@ export function TelegramChromeProvider({ children }: { children: ReactNode }) {
   }, [colors.bg]);
 
   return <ChromeContext.Provider value={chrome}>{children}</ChromeContext.Provider>;
+}
+
+function TelegramBackControl() {
+  const { active } = useTelegramChrome();
+  const pathname = usePathname();
+  const router = useRouter();
+  const entry = useRef<string | null>(null);
+
+  useEffect(() => {
+    const button = window.Telegram?.WebApp?.BackButton;
+    if (!button) return;
+    if (!active) {
+      button.hide();
+      return;
+    }
+    if (entry.current == null) entry.current = pathname;
+    const onBack = () => {
+      const index = window.history.state?.idx;
+      if (typeof index === "number" && index > 0) router.back();
+      else if (entry.current) router.push(entry.current);
+    };
+    button.onClick(onBack);
+    if (pathname === entry.current) button.hide();
+    else button.show();
+    return () => button.offClick(onBack);
+  }, [active, pathname, router]);
+
+  return null;
+}
+
+export function TelegramBackButton() {
+  return (
+    <Suspense fallback={null}>
+      <TelegramBackControl />
+    </Suspense>
+  );
 }
 
 export function TelegramNav() {
