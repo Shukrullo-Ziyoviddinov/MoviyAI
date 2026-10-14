@@ -7,7 +7,7 @@ import { MenuIcon, PersonIcon } from "@/components/icons";
 import { useSideMenu } from "@/components/menu/SideMenu";
 import { useTheme } from "@/components/theme/theme-state";
 
-export const TELEGRAM_ROW = 56;
+export const TELEGRAM_ROW = 44;
 
 type Chrome = { active: boolean; back: number };
 
@@ -73,14 +73,14 @@ export function TelegramChromeProvider({ children }: { children: ReactNode }) {
       const root = document.documentElement;
       root.style.setProperty("--tg-back", `${back}px`);
       root.style.setProperty("--tg-chrome", `${back + TELEGRAM_ROW}px`);
-      root.style.setProperty("--tg-safe-pad", "10px");
+      root.style.setProperty("--tg-safe-pad", "0px");
       setChrome({ active: true, back });
     };
 
     tg.ready();
     tg.expand();
     tg.disableVerticalSwipes?.();
-    tg.setHeaderColor?.(colors.bg);
+    tg.setHeaderColor?.(colors.panel);
     tg.setBackgroundColor?.(colors.bg);
     tg.setBottomBarColor?.(colors.bg);
     document.documentElement.style.backgroundColor = colors.bg;
@@ -112,9 +112,16 @@ export function TelegramNav() {
   if (!active) return null;
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[60] md:hidden" style={{ backgroundColor: colors.bg }}>
+    <div
+      className="fixed inset-x-0 top-0 z-[60] md:hidden"
+      style={{
+        backgroundColor: colors.panel,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+      }}
+    >
       <div style={{ height: "var(--tg-back, 48px)" }} />
-      <div className="flex h-14 items-center justify-between px-4">
+      <div className="-mt-3 flex h-14 items-center justify-between px-4">
         <button
           type="button"
           aria-label="Menyu"
