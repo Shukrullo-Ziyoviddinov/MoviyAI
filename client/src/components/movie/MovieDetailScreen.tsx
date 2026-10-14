@@ -513,7 +513,7 @@ export function MovieDetailScreen({
 
       <div
         className="absolute inset-x-0 z-20 flex items-center justify-between px-4"
-        style={{ top: "var(--tg-chrome, 0px)", paddingTop: "var(--tg-safe-pad, max(8px, env(safe-area-inset-top)))" }}
+        style={{ top: "var(--tg-chrome, 0px)", paddingTop: "calc(var(--tg-safe-pad, max(8px, env(safe-area-inset-top))) + var(--tg-home-gap, 0px))" }}
       >
         <button
           type="button"
