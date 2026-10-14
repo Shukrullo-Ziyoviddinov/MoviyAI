@@ -12,7 +12,7 @@ import { useTheme } from "@/components/theme/theme-state";
 
 export function HomeScreen({ banners, movies }: { banners: Banner[] | null; movies: HomeMovie[] | null }) {
   const { colors } = useTheme();
-  const { active, back } = useTelegramChrome();
+  const { active } = useTelegramChrome();
 
   return (
     <main className="relative h-full" style={{ backgroundColor: colors.bg }}>
@@ -24,14 +24,20 @@ export function HomeScreen({ banners, movies }: { banners: Banner[] | null; movi
         <HomeMovies movies={movies} />
       </div>
       <div
-        className="absolute inset-x-0 z-[65] px-4"
+        className="absolute inset-x-0 z-40 px-4"
         style={
           active
-            ? { top: Math.max(8, back - 28) }
+            ? { top: "var(--tg-chrome, 0px)" }
             : { top: 0, paddingTop: "max(10px, env(safe-area-inset-top))" }
         }
       >
-        <HomeHeader />
+        {active ? (
+          <div className="flex h-[62px] items-center">
+            <HomeHeader />
+          </div>
+        ) : (
+          <HomeHeader />
+        )}
       </div>
       <FloatingAiButton />
       <BottomNav />
