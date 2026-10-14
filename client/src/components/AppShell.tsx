@@ -6,21 +6,22 @@ import { GoogleAuthModal } from "@/components/auth/GoogleAuthModal";
 import { ChatProvider } from "@/components/chat/chat-state";
 import { LanguageProvider } from "@/components/language/language-state";
 import { SideMenu } from "@/components/menu/SideMenu";
-import { TelegramFullscreen } from "@/components/telegram/TelegramFullscreen";
+import { TelegramChromeProvider } from "@/components/telegram/TelegramFullscreen";
 import { ThemeProvider } from "@/components/theme/theme-state";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
-      <TelegramFullscreen />
-      <LanguageProvider>
-        <AuthProvider>
-          <ChatProvider>
-            <SideMenu>{children}</SideMenu>
-            <GoogleAuthModal />
-          </ChatProvider>
-        </AuthProvider>
-      </LanguageProvider>
+      <TelegramChromeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <ChatProvider>
+              <SideMenu>{children}</SideMenu>
+              <GoogleAuthModal />
+            </ChatProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </TelegramChromeProvider>
     </ThemeProvider>
   );
 }

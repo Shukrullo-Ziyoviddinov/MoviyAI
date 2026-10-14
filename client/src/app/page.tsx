@@ -11,6 +11,7 @@ import { MediaViewer } from "@/components/chat/MediaViewer";
 import { VideoModal } from "@/components/chat/VideoModal";
 import { GuideSmsBubble } from "@/components/common/GuideSmsBubble";
 import { colors } from "@/constants/theme";
+import { TELEGRAM_ROW, useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
 import { useT } from "@/i18n/useT";
 
 const GUIDE_KEY = "moviy-chat-guide-understood";
@@ -22,6 +23,8 @@ function ChatScreen() {
   const [guideReady, setGuideReady] = useState(false);
   const [composerH, setComposerH] = useState(180);
   const dockRef = useRef<HTMLDivElement>(null);
+  const { active: telegram, back } = useTelegramChrome();
+  const topInset = telegram ? back + TELEGRAM_ROW : HEADER_ROW_HEIGHT;
   const hasMessages = messages.length > 0;
 
   useEffect(() => {
@@ -56,12 +59,12 @@ function ChatScreen() {
     <main className="relative flex h-dvh w-full flex-col" style={{ backgroundColor: colors.bg }}>
       {hasMessages ? (
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <ChatMessageList topInset={HEADER_ROW_HEIGHT} bottomInset={viewer ? 24 : composerH} />
+          <ChatMessageList topInset={topInset} bottomInset={viewer ? 24 : composerH} />
         </div>
       ) : (
         <div
           className="flex flex-1 flex-col items-center justify-center px-2 min-[384px]:px-3.5"
-          style={{ paddingTop: HEADER_ROW_HEIGHT, paddingBottom: composerH }}
+          style={{ paddingTop: topInset, paddingBottom: composerH }}
         >
           <img
             src="/images/ai_preview_rev_1.png"

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+:root {
+  --tg-back: 0px;
+  --tg-chrome: 0px;
+}
+
 html,
 body {
   height: 100%;

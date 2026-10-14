@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/components/auth/auth-state";
 import { useChat } from "@/components/chat/chat-state";
 import { UserAvatar } from "@/components/common/UserAvatar";
+import { TelegramNav } from "@/components/telegram/TelegramFullscreen";
 import { colors } from "@/constants/theme";
 import { useT } from "@/i18n/useT";
 
@@ -160,6 +161,7 @@ export function SideMenu({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="relative h-full min-h-0 min-w-0 flex-1 overflow-hidden">{children}</div>
+        <TelegramNav />
 
         <div
           className={`fixed inset-0 z-[70] md:hidden ${mobileVisible ? "" : "pointer-events-none"}`}
@@ -179,7 +181,7 @@ export function SideMenu({ children }: { children: ReactNode }) {
             style={{
               backgroundColor: colors.panel,
               borderColor: colors.borderSoft,
-              paddingTop: "max(12px, env(safe-area-inset-top))",
+              paddingTop: "calc(var(--tg-back, 0px) + var(--tg-safe-pad, max(12px, env(safe-area-inset-top))))",
               paddingBottom: "max(14px, env(safe-area-inset-bottom))",
               transform:
                 dragWidth != null

@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth/auth-state";
 import { CloseIcon, DownloadIcon, MenuIcon, PersonIcon } from "@/components/icons";
 import { useChat } from "@/components/chat/chat-state";
 import { useSideMenu } from "@/components/menu/SideMenu";
+import { useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
 import { colors } from "@/constants/theme";
 
 export const HEADER_ROW_HEIGHT = 62;
@@ -17,6 +18,7 @@ export function ChatHeader() {
   const { profile } = useAuth();
   const { viewer, closeViewer } = useChat();
   const { desktopOpen, openMenu } = useSideMenu();
+  const { active: telegram } = useTelegramChrome();
   const [photoFailed, setPhotoFailed] = useState(false);
   const picture = profile?.picture?.trim() || "";
 
@@ -28,8 +30,13 @@ export function ChatHeader() {
     link.click();
   }
 
+  if (telegram && !viewer) return null;
+
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)]">
+    <div
+      className="pointer-events-none absolute inset-x-0 z-40"
+      style={{ top: "var(--tg-chrome, 0px)", paddingTop: telegram ? 0 : "env(safe-area-inset-top)" }}
+    >
       <div className="flex h-[62px] items-center justify-between px-4">
         <button
           type="button"

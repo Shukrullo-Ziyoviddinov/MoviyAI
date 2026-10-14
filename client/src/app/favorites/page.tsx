@@ -53,7 +53,10 @@ export default function FavoritesPage() {
       {movies === null ? (
         <div className="h-full" />
       ) : movies.length > 0 ? (
-        <div className="no-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pt-[max(64px,calc(env(safe-area-inset-top)+64px))] pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-6">
+        <div
+          className="no-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-6"
+          style={{ paddingTop: "calc(var(--tg-chrome, 0px) + max(64px, calc(env(safe-area-inset-top) + 64px)))" }}
+        >
           <div className={`grid content-start grid-cols-2 gap-x-3 gap-y-3.5 md:gap-x-2.5 md:gap-y-3 ${columns}`}>
             {movies.map((movie) => (
               <WishlistCard key={movie.id} movie={movie} onToggleSave={(id) => void onToggleSave(id)} />
@@ -91,8 +94,11 @@ export default function FavoritesPage() {
       </div>
       )}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 z-20 px-4"
-        style={{ paddingTop: "max(10px, env(safe-area-inset-top))" }}
+        className="pointer-events-none absolute inset-x-0 z-20 px-4"
+        style={{
+          top: "var(--tg-chrome, 0px)",
+          paddingTop: "var(--tg-safe-pad, max(10px, env(safe-area-inset-top)))",
+        }}
       >
         <div className="pointer-events-auto flex h-11 items-center">
           <HomeHeader />

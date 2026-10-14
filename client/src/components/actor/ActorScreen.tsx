@@ -133,7 +133,10 @@ export function ActorScreen({
 
   return (
     <main className="@container relative h-full overflow-hidden" style={{ backgroundColor: colors.bg }}>
-      <div className="absolute inset-x-0 top-0 z-20 px-4 pt-[max(8px,env(safe-area-inset-top))]">
+      <div
+        className="absolute inset-x-0 z-20 px-4"
+        style={{ top: "var(--tg-chrome, 0px)", paddingTop: "var(--tg-safe-pad, max(8px, env(safe-area-inset-top)))" }}
+      >
         <button
           type="button"
           aria-label="Orqaga"
@@ -146,7 +149,10 @@ export function ActorScreen({
       </div>
 
       {loading ? (
-        <div className="no-scrollbar h-full overflow-y-auto px-4 pt-[max(64px,calc(env(safe-area-inset-top)+56px))] pb-[max(24px,env(safe-area-inset-bottom))]">
+        <div
+          className="no-scrollbar h-full overflow-y-auto px-4 pb-[max(24px,env(safe-area-inset-bottom))]"
+          style={{ paddingTop: "calc(var(--tg-chrome, 0px) + max(64px, calc(env(safe-area-inset-top) + 56px)))" }}
+        >
           <div className="flex items-start gap-3.5">
             <div className="h-[148px] w-[110px] shrink-0 animate-pulse rounded-[14px]" style={{ backgroundColor: bone }} />
             <div className="min-w-0 flex-1 pt-0.5">
@@ -171,7 +177,10 @@ export function ActorScreen({
           </p>
         </div>
       ) : (
-        <div className="no-scrollbar h-full overflow-y-auto px-4 pt-[max(64px,calc(env(safe-area-inset-top)+56px))] pb-[max(24px,env(safe-area-inset-bottom))]">
+        <div
+          className="no-scrollbar h-full overflow-y-auto px-4 pb-[max(24px,env(safe-area-inset-bottom))]"
+          style={{ paddingTop: "calc(var(--tg-chrome, 0px) + max(64px, calc(env(safe-area-inset-top) + 56px)))" }}
+        >
           <div className="flex items-start gap-3.5">
             <div
               className="relative h-[148px] w-[110px] shrink-0 overflow-hidden rounded-[14px] border"

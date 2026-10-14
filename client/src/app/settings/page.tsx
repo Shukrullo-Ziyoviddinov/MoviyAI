@@ -39,7 +39,7 @@ export default function SettingsPage() {
       className="no-scrollbar h-full overflow-y-auto"
       style={{
         backgroundColor: colors.bg,
-        paddingTop: "max(10px, env(safe-area-inset-top))",
+        paddingTop: "calc(var(--tg-chrome, 0px) + var(--tg-safe-pad, max(10px, env(safe-area-inset-top))))",
         paddingBottom: "max(28px, env(safe-area-inset-bottom))",
       }}
     >

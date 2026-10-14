@@ -172,7 +172,7 @@ export function SearchModal({
         <div
           className="z-10 flex items-center gap-2.5 border-b px-3.5 pb-3"
           style={{
-            paddingTop: "max(10px, env(safe-area-inset-top))",
+            paddingTop: "calc(var(--tg-back, 0px) + var(--tg-safe-pad, max(10px, env(safe-area-inset-top))))",
             borderColor: colors.borderSoft,
           }}
         >
@@ -223,7 +223,7 @@ export function SearchModal({
           <div
             className="absolute right-0 left-0 z-30 pr-3.5 pl-[66px]"
             style={{
-              top: "calc(env(safe-area-inset-top) + 64px)",
+              top: "calc(var(--tg-back, 0px) + var(--tg-safe-pad, env(safe-area-inset-top)) + 64px)",
               transformOrigin: "40px 0%",
               animation: "search-guide-in 380ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
