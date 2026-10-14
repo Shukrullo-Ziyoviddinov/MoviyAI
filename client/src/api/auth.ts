@@ -26,14 +26,33 @@ export async function loginWithGoogleIdToken(idToken: string): Promise<GoogleLog
   return data.data;
 }
 
+export class AuthRequestError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 export async function fetchAuthMe(): Promise<{ profile: AuthProfile; token?: string }> {
   const headers = new Headers({ Accept: "application/json" });
   const token = readAuthToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  const response = await fetch("/api/auth/me", { headers, cache: "no-store" });
-  const data = (await response.json()) as ApiResponse<AuthProfile> & { token?: string };
-  if (!response.ok || !data.ok || !data.data) {
-    throw new Error(data.error || "Session failed");
+  let response: Response;
+  try {
+    response = await fetch("/api/auth/me", { headers, cache: "no-store" });
+  } catch (err) {
+    throw new AuthRequestError(0, err instanceof Error ? err.message : "Session failed");
+  }
+  let data: (ApiResponse<AuthProfile> & { token?: string }) | null = null;
+  try {
+    data = (await response.json()) as ApiResponse<AuthProfile> & { token?: string };
+  } catch {
+    data = null;
+  }
+  if (!response.ok || !data?.ok || !data.data) {
+    throw new AuthRequestError(response.status, data?.error || "Session failed");
   }
   return { profile: data.data, token: data.token };
 }

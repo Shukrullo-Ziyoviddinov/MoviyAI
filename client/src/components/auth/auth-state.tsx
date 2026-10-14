@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { fetchAuthMe, loginWithGoogleIdToken } from "@/api/auth";
+import { AuthRequestError, fetchAuthMe, loginWithGoogleIdToken } from "@/api/auth";
 import { clearAuthToken, readAuthToken, writeAuthToken } from "@/api/client";
 import type { AuthProfile } from "@/types/auth";
 
@@ -72,8 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(nextToken);
         setProfile(fresh.profile);
       })
-      .catch(() => {
+      .catch((err) => {
         if (!alive) return;
+        if (!(err instanceof AuthRequestError) || err.status !== 401) return;
         clearAuthToken();
         writeProfile(null);
         setToken(null);
