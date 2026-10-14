@@ -7,10 +7,12 @@ import { HomeBanner } from "@/components/home/HomeBanner";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { HomeMovies } from "@/components/home/HomeMovies";
 import { BottomNav } from "@/components/nav/BottomNav";
+import { useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
 import { useTheme } from "@/components/theme/theme-state";
 
 export function HomeScreen({ banners, movies }: { banners: Banner[] | null; movies: HomeMovie[] | null }) {
   const { colors } = useTheme();
+  const { active, back } = useTelegramChrome();
 
   return (
     <main className="relative h-full" style={{ backgroundColor: colors.bg }}>
@@ -22,8 +24,12 @@ export function HomeScreen({ banners, movies }: { banners: Banner[] | null; movi
         <HomeMovies movies={movies} />
       </div>
       <div
-        className="absolute inset-x-0 z-20 px-4"
-        style={{ top: "var(--tg-chrome, 0px)", paddingTop: "calc(var(--tg-safe-pad, max(8px, env(safe-area-inset-top))) + var(--tg-home-gap, 0px))" }}
+        className="absolute inset-x-0 z-[65] px-4"
+        style={
+          active
+            ? { top: Math.max(8, back - 28) }
+            : { top: 0, paddingTop: "max(10px, env(safe-area-inset-top))" }
+        }
       >
         <HomeHeader />
       </div>
