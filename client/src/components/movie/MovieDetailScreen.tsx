@@ -156,9 +156,9 @@ export function MovieDetailScreen({
     const chip = "h-[26px] shrink-0 animate-pulse rounded-full md:h-[34px]";
     return (
       <main className="@container relative h-full" style={{ backgroundColor: colors.bg }}>
-        <div className="absolute inset-x-0 top-0 z-0 h-[108cqw] animate-pulse md:h-dvh" style={{ backgroundColor: bone }} />
+        <div className="absolute inset-x-0 top-[var(--tg-chrome)] z-0 h-[108cqw] animate-pulse md:top-0 md:h-dvh" style={{ backgroundColor: bone }} />
         <div className="no-scrollbar relative z-[1] h-full overflow-y-auto">
-          <div className="h-[108cqw] shrink-0 md:h-dvh" />
+          <div className="h-[calc(var(--tg-chrome)+108cqw)] shrink-0 md:h-dvh" />
           <div className="relative pb-[max(24px,env(safe-area-inset-bottom))]" style={{ backgroundColor: colors.bg }}>
             <div className="relative px-4">
               <div className="md:absolute md:bottom-full md:left-0 md:z-[3] md:flex md:h-dvh md:w-[min(560px,72%)] md:flex-col md:justify-end md:px-8 md:pb-[16vh]">
@@ -257,7 +257,7 @@ export function MovieDetailScreen({
 
   return (
     <main className="@container relative h-full" style={{ backgroundColor: colors.bg }}>
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[108cqw] overflow-hidden md:h-dvh">
+      <div className="pointer-events-none absolute inset-x-0 top-[var(--tg-chrome)] z-0 h-[108cqw] overflow-hidden md:top-0 md:h-dvh">
         {poster && !posterReady ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
         {poster ? (
           <img
@@ -279,7 +279,7 @@ export function MovieDetailScreen({
         />
       </div>
       <div className="no-scrollbar relative z-[1] h-full overflow-y-auto">
-        <div className="h-[108cqw] md:h-dvh" />
+        <div className="h-[calc(var(--tg-chrome)+108cqw)] md:h-dvh" />
         <div className="relative pb-[max(24px,env(safe-area-inset-bottom))]" style={{ backgroundColor: colors.bg }}>
           <div className="pointer-events-none absolute inset-x-0 bottom-full h-[calc(108cqw*0.42)] md:hidden" style={{ background: fadeMobile }} />
           <div className="pointer-events-none absolute inset-x-0 bottom-full hidden h-[42dvh] md:block" style={{ background: fadeDesktop }} />

@@ -14,7 +14,10 @@ export function HomeScreen({ banners, movies }: { banners: Banner[] | null; movi
 
   return (
     <main className="relative h-full" style={{ backgroundColor: colors.bg }}>
-      <div className="@container no-scrollbar h-full overflow-y-auto pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-6">
+      <div
+        className="@container no-scrollbar overflow-y-auto pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-6"
+        style={{ marginTop: "var(--tg-chrome)", height: "calc(100% - var(--tg-chrome))" }}
+      >
         <HomeBanner banners={banners} />
         <HomeMovies movies={movies} />
       </div>
