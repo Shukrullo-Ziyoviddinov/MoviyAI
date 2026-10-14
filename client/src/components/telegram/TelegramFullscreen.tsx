@@ -1,13 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/auth/auth-state";
-import { MenuIcon, PersonIcon } from "@/components/icons";
-import { useSideMenu } from "@/components/menu/SideMenu";
 import { useTheme } from "@/components/theme/theme-state";
-
-export const TELEGRAM_ROW = 44;
 
 type Chrome = { active: boolean; back: number };
 
@@ -72,7 +66,7 @@ export function TelegramChromeProvider({ children }: { children: ReactNode }) {
       const back = readBack(tg);
       const root = document.documentElement;
       root.style.setProperty("--tg-back", `${back}px`);
-      root.style.setProperty("--tg-chrome", `${back + TELEGRAM_ROW}px`);
+      root.style.setProperty("--tg-chrome", `${back}px`);
       root.style.setProperty("--tg-safe-pad", "0px");
       setChrome({ active: true, back });
     };
@@ -100,57 +94,20 @@ export function TelegramChromeProvider({ children }: { children: ReactNode }) {
   return <ChromeContext.Provider value={chrome}>{children}</ChromeContext.Provider>;
 }
 
-const circle = "flex h-11 w-11 items-center justify-center rounded-full border-[1.5px]";
-
 export function TelegramNav() {
   const { active } = useTelegramChrome();
   const { colors } = useTheme();
-  const { profile, openAuthModal } = useAuth();
-  const { openMenu } = useSideMenu();
-  const router = useRouter();
-  const picture = profile?.picture?.trim() || "";
   if (!active) return null;
 
   return (
     <div
       className="fixed inset-x-0 top-0 z-[60] md:hidden"
       style={{
+        height: "var(--tg-back, 48px)",
         backgroundColor: colors.panel,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
       }}
-    >
-      <div style={{ height: "var(--tg-back, 48px)" }} />
-      <div className="-mt-3 flex h-14 items-center justify-between px-4">
-        <button
-          type="button"
-          aria-label="Menyu"
-          onClick={openMenu}
-          className={circle}
-          style={{ backgroundColor: colors.panelSoft, borderColor: colors.border }}
-        >
-          <MenuIcon size={22} color={colors.icon} />
-        </button>
-        <button
-          type="button"
-          aria-label="Profil"
-          onClick={() => {
-            if (!profile) {
-              openAuthModal();
-              return;
-            }
-            router.push("/profile");
-          }}
-          className={`${circle} overflow-hidden`}
-          style={{ backgroundColor: colors.panelSoft, borderColor: colors.border }}
-        >
-          {picture ? (
-            <img src={picture} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-          ) : (
-            <PersonIcon size={20} color={colors.icon} />
-          )}
-        </button>
-      </div>
-    </div>
+    />
   );
 }

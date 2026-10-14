@@ -11,7 +11,7 @@ import { MediaViewer } from "@/components/chat/MediaViewer";
 import { VideoModal } from "@/components/chat/VideoModal";
 import { GuideSmsBubble } from "@/components/common/GuideSmsBubble";
 import { colors } from "@/constants/theme";
-import { TELEGRAM_ROW, useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
+import { useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
 import { useT } from "@/i18n/useT";
 
 const GUIDE_KEY = "moviy-chat-guide-understood";
@@ -24,7 +24,7 @@ function ChatScreen() {
   const [composerH, setComposerH] = useState(180);
   const dockRef = useRef<HTMLDivElement>(null);
   const { active: telegram, back } = useTelegramChrome();
-  const topInset = telegram ? back + TELEGRAM_ROW : HEADER_ROW_HEIGHT;
+  const topInset = telegram ? back + HEADER_ROW_HEIGHT : HEADER_ROW_HEIGHT;
   const hasMessages = messages.length > 0;
 
   useEffect(() => {

@@ -30,8 +30,6 @@ export function ChatHeader() {
     link.click();
   }
 
-  if (telegram && !viewer) return null;
-
   return (
     <div
       className="pointer-events-none absolute inset-x-0 z-40"
