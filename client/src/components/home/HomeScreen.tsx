@@ -23,11 +23,9 @@ export function HomeScreen({ banners, movies }: { banners: Banner[] | null; movi
       </div>
       <div
         className="absolute inset-x-0 z-20 px-4"
-        style={{ top: "calc(var(--tg-chrome, 0px) + var(--tg-home-gap, max(10px, env(safe-area-inset-top))))" }}
+        style={{ top: "var(--tg-chrome, 0px)", paddingTop: "calc(var(--tg-safe-pad, max(8px, env(safe-area-inset-top))) + var(--tg-home-gap, 0px))" }}
       >
-        <div className="flex h-11 items-center">
-          <HomeHeader />
-        </div>
+        <HomeHeader />
       </div>
       <FloatingAiButton />
       <BottomNav />
