@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { useChat } from "@/components/chat/chat-state";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/components/theme/theme-state";
 import type { ChatMediaItem } from "@/types/chat";
 
 const GAP = 3;
@@ -52,6 +52,7 @@ function MediaCell({ item, style }: { item: ChatMediaItem; style?: CSSProperties
 }
 
 function SingleMedia({ item }: { item: ChatMediaItem }) {
+  const { colors } = useTheme();
   const [size, setSize] = useState({ w: 180, h: 180 });
 
   useEffect(() => {
@@ -82,6 +83,7 @@ function SingleMedia({ item }: { item: ChatMediaItem }) {
 }
 
 export function MediaGridBlock({ items }: { items: ChatMediaItem[] }) {
+  const { colors } = useTheme();
   const blockW = typeof window === "undefined" ? 320 : Math.min(window.innerWidth * 0.78, 320);
 
   if (items.length === 1 || items.every((item) => item.type === "video")) {

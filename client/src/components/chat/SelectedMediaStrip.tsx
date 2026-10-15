@@ -1,6 +1,6 @@
 "use client";
 
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/components/theme/theme-state";
 import type { ChatMediaItem } from "@/types/chat";
 
 export function SelectedMediaStrip({
@@ -10,6 +10,7 @@ export function SelectedMediaStrip({
   items: ChatMediaItem[];
   onRemove: (id: string) => void;
 }) {
+  const { colors } = useTheme();
   if (items.length === 0) return null;
 
   return (

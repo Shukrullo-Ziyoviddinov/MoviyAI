@@ -10,13 +10,14 @@ import { useChat } from "@/components/chat/chat-state";
 import { MediaViewer } from "@/components/chat/MediaViewer";
 import { VideoModal } from "@/components/chat/VideoModal";
 import { GuideSmsBubble } from "@/components/common/GuideSmsBubble";
-import { colors } from "@/constants/theme";
 import { useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
+import { useTheme } from "@/components/theme/theme-state";
 import { useT } from "@/i18n/useT";
 
 const GUIDE_KEY = "moviy-chat-guide-understood";
 
 function ChatScreen() {
+  const { colors } = useTheme();
   const { messages, viewer } = useChat();
   const t = useT();
   const [showGuide, setShowGuide] = useState(false);

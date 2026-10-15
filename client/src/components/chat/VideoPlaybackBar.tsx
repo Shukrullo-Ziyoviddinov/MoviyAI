@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/components/theme/theme-state";
 
 type VideoPlaybackBarProps = {
   playing: boolean;
@@ -25,6 +25,7 @@ export function VideoPlaybackBar({
   onToggle,
   onSeek,
 }: VideoPlaybackBarProps) {
+  const { colors } = useTheme();
   const [trackW, setTrackW] = useState(1);
   const progress = duration > 0 ? Math.min(1, current / duration) : 0;
 

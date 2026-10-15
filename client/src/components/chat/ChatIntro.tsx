@@ -2,7 +2,7 @@
 
 import { useChat } from "@/components/chat/chat-state";
 import { ChatBubbleIcon, GalleryIcon, StarIcon, VideoIcon } from "@/components/icons";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/components/theme/theme-state";
 import { useT } from "@/i18n/useT";
 
 const actions = [
@@ -13,6 +13,7 @@ const actions = [
 ];
 
 export function ChatIntro() {
+  const { colors } = useTheme();
   const { pick, picking } = useChat();
   const t = useT();
 

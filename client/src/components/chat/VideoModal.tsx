@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { HEADER_ROW_HEIGHT } from "@/components/chat/ChatHeader";
 import { VideoPlaybackBar } from "@/components/chat/VideoPlaybackBar";
 import { useChat } from "@/components/chat/chat-state";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/components/theme/theme-state";
 import type { ChatMediaItem } from "@/types/chat";
 
 function fitBox(width: number, height: number, maxW: number, maxH: number) {
@@ -25,6 +25,7 @@ export function VideoModal() {
 }
 
 function VideoModalPlayer({ item }: { item: ChatMediaItem }) {
+  const { colors } = useTheme();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);

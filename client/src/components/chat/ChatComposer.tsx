@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useChat } from "@/components/chat/chat-state";
 import { SelectedMediaStrip } from "@/components/chat/SelectedMediaStrip";
 import { CameraIcon, GalleryIcon, MicIcon, SendIcon, VideoIcon } from "@/components/icons";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/components/theme/theme-state";
 import { useT } from "@/i18n/useT";
 
 const mediaBtn = "flex h-9 w-9 items-center justify-center rounded-full border";
 
 export function ChatComposer() {
+  const { colors } = useTheme();
   const { selectedMedia, removeMedia, send, pick, picking } = useChat();
   const t = useT();
   const [text, setText] = useState("");

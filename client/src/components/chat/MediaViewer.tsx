@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { HEADER_ROW_HEIGHT } from "@/components/chat/ChatHeader";
 import { useChat } from "@/components/chat/chat-state";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/components/theme/theme-state";
 
 export function MediaViewer() {
+  const { colors } = useTheme();
   const { viewer, closeViewer } = useChat();
   const [size, setSize] = useState({ w: 320, h: 240 });
 

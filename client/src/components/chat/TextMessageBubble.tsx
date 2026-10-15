@@ -1,6 +1,10 @@
-import { colors } from "@/constants/theme";
+"use client";
+
+import { useTheme } from "@/components/theme/theme-state";
 
 export function TextMessageBubble({ text }: { text: string }) {
+  const { colors } = useTheme();
+
   return (
     <div className="mb-2.5 flex w-full justify-end px-3.5">
       <div className="relative max-w-[min(78%,420px)]">

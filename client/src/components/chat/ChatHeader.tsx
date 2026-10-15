@@ -7,13 +7,14 @@ import { CloseIcon, DownloadIcon, MenuIcon, PersonIcon } from "@/components/icon
 import { useChat } from "@/components/chat/chat-state";
 import { useSideMenu } from "@/components/menu/SideMenu";
 import { useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/components/theme/theme-state";
 
 export const HEADER_ROW_HEIGHT = 62;
 
 const circle = "flex h-11 w-11 items-center justify-center rounded-full border-[1.5px]";
 
 export function ChatHeader() {
+  const { colors } = useTheme();
   const router = useRouter();
   const { profile } = useAuth();
   const { viewer, closeViewer } = useChat();

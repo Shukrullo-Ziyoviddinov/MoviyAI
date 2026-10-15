@@ -16,7 +16,7 @@ import { useAuth } from "@/components/auth/auth-state";
 import { useChat } from "@/components/chat/chat-state";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { TelegramNav } from "@/components/telegram/TelegramFullscreen";
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/components/theme/theme-state";
 import { useT } from "@/i18n/useT";
 
 const SLIDE = "260ms cubic-bezier(0.33, 1, 0.68, 1)";
@@ -55,6 +55,7 @@ function panelWidth() {
 }
 
 export function SideMenu({ children }: { children: ReactNode }) {
+  const { colors } = useTheme();
   const { viewer } = useChat();
   const [desktopOpen, setDesktopOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -205,6 +206,7 @@ export function SideMenu({ children }: { children: ReactNode }) {
 const LOGO = "/images/MY_preview_rev_1.png";
 
 function RailTip({ label, enabled, children }: { label: string; enabled: boolean; children: ReactNode }) {
+  const { colors } = useTheme();
   if (!enabled) return children;
   return (
     <div className="group relative flex justify-center">
@@ -232,6 +234,7 @@ function MenuBody({
   onOpen?: () => void;
   onPick?: () => void;
 }) {
+  const { colors } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const { profile, openAuthModal, logout } = useAuth();

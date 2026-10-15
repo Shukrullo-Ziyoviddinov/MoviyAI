@@ -1,6 +1,6 @@
 "use client";
 
-import { colors } from "@/constants/theme";
+import { useTheme } from "@/components/theme/theme-state";
 
 export function GuideSmsBubble({
   text,
@@ -11,6 +11,8 @@ export function GuideSmsBubble({
   gotItLabel: string;
   onGotIt: () => void;
 }) {
+  const { colors } = useTheme();
+
   return (
     <div className="pointer-events-none mx-auto w-full max-w-[430px] md:max-w-[560px]">
       <div className="pointer-events-auto flex flex-col rounded-2xl px-3.5 py-3" style={{ backgroundColor: colors.accent }}>
