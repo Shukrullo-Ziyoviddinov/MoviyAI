@@ -383,7 +383,16 @@ function SimilarTrailerRow({
           {title}
         </span>
         {text ? (
-          <span className="mt-1 line-clamp-2 block text-[13px] leading-[18px] font-normal" style={{ color: colors.textMuted }}>
+          <span
+            className="mt-1 text-[13px] leading-[18px] font-normal"
+            style={{
+              color: colors.textMuted,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
             {text}
           </span>
         ) : null}
