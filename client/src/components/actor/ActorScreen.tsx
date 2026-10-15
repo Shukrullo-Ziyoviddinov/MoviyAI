@@ -8,6 +8,7 @@ import { actorImageUrl, moviePosterUrl, type HomeMovie } from "@/api/movies";
 import { fetchWishlistIds, toggleWishlistMovie } from "@/api/wishlist";
 import { useAuth } from "@/components/auth/auth-state";
 import { ActorInfoModal } from "@/components/actor/ActorInfoModal";
+import { useImageReady } from "@/components/common/useImageReady";
 import { BookmarkIcon, ChevronLeftIcon } from "@/components/icons";
 import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
@@ -37,23 +38,24 @@ function ActorMovieCard({
 }) {
   const { colors, isDark } = useTheme();
   const poster = moviePosterUrl(movie.homeImgPoster);
-  const [ready, setReady] = useState(false);
+  const image = useImageReady(poster);
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
-  const showChrome = !poster || ready;
+  const showChrome = image.ready;
 
   return (
     <div className="min-w-0">
       <div className="relative">
         <Link href={`/movie/${movie.id}`} className="block">
           <div className="relative aspect-[10/13] overflow-hidden rounded-[14px]" style={{ backgroundColor: colors.panelSoft }}>
-            {poster && !ready ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
+            {poster && !image.ready ? <div className="absolute inset-0 z-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
             {poster ? (
               <img
+                ref={image.ref}
                 src={poster}
                 alt=""
-                className="h-full w-full object-fill"
-                onLoad={() => setReady(true)}
-                onError={() => setReady(true)}
+                className="relative z-[1] h-full w-full object-fill"
+                onLoad={image.onLoad}
+                onError={image.onError}
               />
             ) : null}
             {showChrome ? (
@@ -97,12 +99,10 @@ export function ActorScreen({
   const copy = actorCopy(language);
   const router = useRouter();
   const [infoOpen, setInfoOpen] = useState(false);
-  const [photoReady, setPhotoReady] = useState(false);
   const [savedIds, setSavedIds] = useState<number[]>([]);
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
 
   useEffect(() => {
-    setPhotoReady(false);
     setInfoOpen(false);
   }, [actor?.id, actor?.actorImg]);
 
@@ -129,6 +129,7 @@ export function ActorScreen({
   const lang = language === "en" ? "uz" : language;
   const aboutText = actor?.actorAbout ? (actor.actorAbout[lang] ?? actor.actorAbout.uz ?? "") : "";
   const photo = actor ? actorImageUrl(actor.actorImg) : "";
+  const photoImage = useImageReady(photo);
   const movies = actor?.movies ?? [];
 
   return (
@@ -186,14 +187,15 @@ export function ActorScreen({
               className="relative h-[148px] w-[110px] shrink-0 overflow-hidden rounded-[14px] border"
               style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}
             >
-              {photo && !photoReady ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
+              {photo && !photoImage.ready ? <div className="absolute inset-0 z-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
               {photo ? (
                 <img
+                  ref={photoImage.ref}
                   src={photo}
                   alt=""
-                  className="h-full w-full object-cover"
-                  onLoad={() => setPhotoReady(true)}
-                  onError={() => setPhotoReady(true)}
+                  className="relative z-[1] h-full w-full object-cover"
+                  onLoad={photoImage.onLoad}
+                  onError={photoImage.onError}
                 />
               ) : null}
             </div>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { moviePosterUrl, type WishlistMovie } from "@/api/wishlist";
+import { useImageReady } from "@/components/common/useImageReady";
 import { BookmarkIcon } from "@/components/icons";
 import { useTheme } from "@/components/theme/theme-state";
 
@@ -24,25 +24,23 @@ export function WishlistCard({ movie, onToggleSave }: { movie: WishlistMovie; on
   const { colors, isDark } = useTheme();
   const poster = moviePosterUrl(movie.homeImgPoster);
   const title = movie.title.uz || movie.title.ru;
-  const [ready, setReady] = useState(false);
+  const image = useImageReady(poster);
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
-  const showChrome = !poster || ready;
+  const showChrome = image.ready;
 
   return (
     <div className="relative min-w-0">
       <Link href={`/movie/${movie.id}`} className="block">
         <div className="relative overflow-hidden rounded-[14px]" style={{ backgroundColor: colors.panelSoft }}>
-          {poster && !ready ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
+          {poster && !image.ready ? <div className="absolute inset-0 z-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
           {poster ? (
             <img
-              ref={(node) => {
-                if (node?.complete) setReady(true);
-              }}
+              ref={image.ref}
               src={poster}
               alt=""
-              className="aspect-[10/13] w-full object-cover"
-              onLoad={() => setReady(true)}
-              onError={() => setReady(true)}
+              className="relative z-[1] aspect-[10/13] w-full object-cover"
+              onLoad={image.onLoad}
+              onError={image.onError}
             />
           ) : (
             <div className="aspect-[10/13] w-full" />

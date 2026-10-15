@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { moviePosterUrl, type Movie } from "@/api/movies";
+import { useImageReady } from "@/components/common/useImageReady";
 import { BookmarkIcon } from "@/components/icons";
 import type { AppLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
@@ -12,7 +12,7 @@ export function SimilarMovieCard({ movie, language }: { movie: Movie; language: 
   const lang = language === "en" ? "uz" : language;
   const title = movie.title[lang] ?? movie.title.uz;
   const poster = moviePosterUrl(movie.homeImgPoster);
-  const [ready, setReady] = useState(false);
+  const image = useImageReady(poster);
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
 
   return (
@@ -21,17 +21,18 @@ export function SimilarMovieCard({ movie, language }: { movie: Movie; language: 
         className="relative aspect-[100/135] overflow-hidden rounded-[14px] border"
         style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}
       >
-        {poster && !ready ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
+        {poster && !image.ready ? <div className="absolute inset-0 z-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
         {poster ? (
           <img
+            ref={image.ref}
             src={poster}
             alt=""
-            className="h-full w-full object-cover"
-            onLoad={() => setReady(true)}
-            onError={() => setReady(true)}
+            className="relative z-[1] h-full w-full object-cover"
+            onLoad={image.onLoad}
+            onError={image.onError}
           />
         ) : null}
-        {poster && ready ? (
+        {poster && image.ready ? (
           <>
             <span className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.55]">
               <BookmarkIcon size={20} color="#FFFFFF" />

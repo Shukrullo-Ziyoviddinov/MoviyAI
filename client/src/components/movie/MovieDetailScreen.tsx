@@ -15,6 +15,7 @@ import { fetchWishlistIds, toggleWishlistMovie } from "@/api/wishlist";
 import { useAuth } from "@/components/auth/auth-state";
 import { ActorChip } from "@/components/actor/ActorChip";
 import { HorizontalScroll } from "@/components/common/HorizontalScroll";
+import { useImageReady } from "@/components/common/useImageReady";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import {
   AgeRatingIcon,
@@ -84,7 +85,6 @@ export function MovieDetailScreen({
   const [current, setCurrent] = useState(movie);
   const [thread, setThread] = useState(comments);
   const [saved, setSaved] = useState(false);
-  const [posterReady, setPosterReady] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -96,7 +96,6 @@ export function MovieDetailScreen({
     if (loading) return;
     setCurrent(movie);
     setThread(comments);
-    setPosterReady(false);
   }, [loading, movie, comments]);
 
   useEffect(() => {
@@ -112,6 +111,7 @@ export function MovieDetailScreen({
     ? (current.description[lang] ?? current.description.uz ?? null)
     : null;
   const poster = current ? moviePosterUrl(current.homeImgPoster) : "";
+  const posterImage = useImageReady(poster);
   const genres = current?.genre ? (current.genre[lang] ?? current.genre.uz ?? []) : [];
   const fadeMobile = `linear-gradient(to bottom, transparent 0%, ${colors.bg} 100%)`;
   const fadeDesktop = `linear-gradient(to bottom, transparent 0%, ${colors.bg}73 18%, ${colors.bg}e6 55%, ${colors.bg} 78%, ${colors.bg} 100%)`;
@@ -258,14 +258,15 @@ export function MovieDetailScreen({
   return (
     <main className="@container relative h-full" style={{ backgroundColor: colors.bg }}>
       <div className="pointer-events-none absolute inset-x-0 top-[var(--tg-chrome)] z-0 h-[108cqw] overflow-hidden md:top-0 md:h-dvh">
-        {poster && !posterReady ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
+        {poster && !posterImage.ready ? <div className="absolute inset-0 z-0 animate-pulse" style={{ backgroundColor: bone }} /> : null}
         {poster ? (
           <img
+            ref={posterImage.ref}
             src={poster}
             alt=""
-            className="h-full w-full object-cover object-top"
-            onLoad={() => setPosterReady(true)}
-            onError={() => setPosterReady(true)}
+            className="relative z-[1] h-full w-full object-cover object-top"
+            onLoad={posterImage.onLoad}
+            onError={posterImage.onError}
           />
         ) : (
           <div className="h-full w-full" style={{ backgroundColor: colors.panelSoft }} />
