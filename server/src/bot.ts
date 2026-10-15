@@ -48,7 +48,10 @@ async function onUpdate(update: TelegramUpdate) {
   const text = update.message?.text?.trim() ?? '';
   if (!chatId || !text) return;
   if (text === '/start' || text.startsWith('/start@') || text.startsWith('/start ')) {
-    await sendTelegramMessage(chatId, 'MoviyAI bot serverga ulandi.');
+    await sendTelegramMessage(
+      chatId,
+      "Assalomu alaykum va rahmatulloh va barakatuh. Qanday savolingiz bor yoki qanday kino ko‘rishni hohlaysiz, chatga yozib qoldiring. MoviyAI siz hohlagan savol va kinolarni topishda yordam beradi.",
+    );
   }
 }
 
