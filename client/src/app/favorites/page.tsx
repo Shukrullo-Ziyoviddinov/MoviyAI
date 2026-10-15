@@ -55,7 +55,7 @@ export default function FavoritesPage() {
       ) : movies.length > 0 ? (
         <div
           className="no-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-6"
-          style={{ paddingTop: "calc(var(--tg-chrome, 0px) + max(64px, calc(env(safe-area-inset-top) + 64px)))" }}
+          style={{ paddingTop: "calc(var(--tg-chrome, 0px) + max(64px, calc(env(safe-area-inset-top) + 64px), calc(var(--tg-home-row, 0px) + 16px)))" }}
         >
           <div className={`grid content-start grid-cols-2 gap-x-3 gap-y-3.5 md:gap-x-2.5 md:gap-y-3 ${columns}`}>
             {movies.map((movie) => (
@@ -94,13 +94,13 @@ export default function FavoritesPage() {
       </div>
       )}
       <div
-        className="pointer-events-none absolute inset-x-0 z-20 px-4"
+        className="pointer-events-none absolute inset-x-0 z-20 max-md:fixed"
         style={{
           top: "var(--tg-chrome, 0px)",
-          paddingTop: "var(--tg-safe-pad, max(10px, env(safe-area-inset-top)))",
+          paddingTop: "var(--tg-home-pad, max(10px, env(safe-area-inset-top)))",
         }}
       >
-        <div className="pointer-events-auto flex h-11 items-center">
+        <div className="pointer-events-auto flex items-center px-4" style={{ height: "var(--tg-home-row, 44px)" }}>
           <HomeHeader />
         </div>
       </div>

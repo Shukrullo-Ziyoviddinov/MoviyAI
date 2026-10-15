@@ -24,7 +24,7 @@ export function ProfileHeader({
 
   return (
     <div className="px-[18px]">
-      <div className="mb-[22px] flex items-center justify-between">
+      <div className="mb-[22px] flex items-center justify-between" style={{ height: "var(--tg-home-row, auto)" }}>
         <img src={logo} alt="" className="h-9 w-9 object-contain md:hidden" />
         <button
           type="button"
