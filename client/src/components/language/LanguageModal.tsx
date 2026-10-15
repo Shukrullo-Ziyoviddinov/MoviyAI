@@ -57,8 +57,9 @@ export function LanguageModal() {
   if (!mounted) return null;
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    if (desktop) return;
+    if (desktop || event.button !== 0) return;
     drag.current = { y: event.clientY, t: performance.now(), active: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
   }
 
   function onPointerMove(event: React.PointerEvent<HTMLDivElement>) {
@@ -81,7 +82,7 @@ export function LanguageModal() {
     const dy = Math.max(0, event.clientY - state.y);
     const elapsed = Math.max(performance.now() - state.t, 1);
     const velocity = dy / elapsed;
-    const height = event.currentTarget.offsetHeight || 280;
+    const height = event.currentTarget.parentElement?.offsetHeight || 280;
     setDragging(false);
     if (dy > height * 0.25 || velocity > 0.8) {
       setSettleClose(true);
@@ -95,7 +96,10 @@ export function LanguageModal() {
   const backdrop = dragging ? Math.max(0, 0.5 * (1 - dragY / 320)) : shown ? 0.5 : 0;
 
   return (
-    <div className={`fixed inset-0 z-[80] flex ${desktop ? "items-center justify-center p-6" : "items-end"}`}>
+    <div
+      className={`fixed inset-0 z-[80] flex ${desktop ? "items-center justify-center p-6" : "items-end"}`}
+      style={desktop ? undefined : { touchAction: "none" }}
+    >
       <button
         type="button"
         aria-label="Yopish"
@@ -108,10 +112,6 @@ export function LanguageModal() {
       />
 
       <div
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
         className={
           desktop
             ? "relative w-full max-w-[420px] rounded-3xl border px-4 pt-4 pb-4"
@@ -143,12 +143,19 @@ export function LanguageModal() {
             </button>
           </div>
         ) : (
-          <>
+          <div
+            className="mb-2.5 select-none"
+            style={{ touchAction: "none" }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+          >
             <div className="mx-auto mb-3 h-1 w-[42px] rounded-full" style={{ backgroundColor: colors.border }} />
-            <p className="mb-2.5 px-1 text-[16px] font-bold" style={{ color: colors.text }}>
+            <p className="px-1 text-[16px] font-bold" style={{ color: colors.text }}>
               {t("language.choose")}
             </p>
-          </>
+          </div>
         )}
 
         <div className="flex flex-col gap-1.5">
