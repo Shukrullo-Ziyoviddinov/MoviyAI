@@ -11,7 +11,7 @@ import { useSideMenu } from "@/components/menu/SideMenu";
 import { BottomNav } from "@/components/nav/BottomNav";
 import { useTheme } from "@/components/theme/theme-state";
 import { useT } from "@/i18n/useT";
-import { WishlistCard } from "@/components/wishlist/WishlistCard";
+import { WishlistCard, WishlistCardSkeleton } from "@/components/wishlist/WishlistCard";
 
 export default function FavoritesPage() {
   const router = useRouter();
@@ -36,6 +36,12 @@ export default function FavoritesPage() {
   }, [token]);
 
   const columns = desktopOpen ? "md:grid-cols-5" : "md:grid-cols-7";
+  const gridClass = `grid content-start grid-cols-2 gap-x-3 gap-y-3.5 md:gap-x-2.5 md:gap-y-3 ${columns}`;
+  const listClass =
+    "no-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-6";
+  const listPad = {
+    paddingTop: "calc(var(--tg-chrome, 0px) + max(64px, calc(env(safe-area-inset-top) + 64px), calc(var(--tg-home-row, 0px) + 16px)))",
+  };
 
   async function onToggleSave(movieId: number) {
     const previous = movies;
@@ -51,13 +57,16 @@ export default function FavoritesPage() {
   return (
     <main className="relative h-full min-h-0 overflow-hidden" style={{ backgroundColor: colors.bg }}>
       {movies === null ? (
-        <div className="h-full" />
+        <div className={listClass} style={listPad}>
+          <div className={gridClass}>
+            {Array.from({ length: 6 }, (_, index) => (
+              <WishlistCardSkeleton key={index} />
+            ))}
+          </div>
+        </div>
       ) : movies.length > 0 ? (
-        <div
-          className="no-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-6"
-          style={{ paddingTop: "calc(var(--tg-chrome, 0px) + max(64px, calc(env(safe-area-inset-top) + 64px), calc(var(--tg-home-row, 0px) + 16px)))" }}
-        >
-          <div className={`grid content-start grid-cols-2 gap-x-3 gap-y-3.5 md:gap-x-2.5 md:gap-y-3 ${columns}`}>
+        <div className={listClass} style={listPad}>
+          <div className={gridClass}>
             {movies.map((movie) => (
               <WishlistCard key={movie.id} movie={movie} onToggleSave={(id) => void onToggleSave(id)} />
             ))}
