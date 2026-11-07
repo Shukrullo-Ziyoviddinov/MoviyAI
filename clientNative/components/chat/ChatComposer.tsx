@@ -17,6 +17,7 @@ export function ChatComposer() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const sending = useChatStore(state => state.sending);
+  const loading = useChatStore(state => state.loading);
   const error = useChatStore(state => state.error);
   const pending = useChatStore(state => state.pending);
   const retry = useChatStore(state => state.retry);
@@ -28,7 +29,7 @@ export function ChatComposer() {
   const clearMedia = useComposerStore((state) => state.clearMedia);
   const [text, setText] = useState('');
 
-  const canSend = !sending && !pending && selectedMedia.length === 0 && text.trim().length > 0;
+  const canSend = !loading && !sending && !error && !pending && selectedMedia.length === 0 && text.trim().length > 0;
 
   const handleSend = () => {
     if (!canSend) return;
@@ -49,9 +50,9 @@ export function ChatComposer() {
         { backgroundColor: colors.panel, borderColor: colors.borderSoft },
       ]}
     >
-      {sending && <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>AI javob tayyorlayapti...</Text>}
       {selectedMedia.length > 0 && <Text style={{ color: colors.textMuted }}>Rasm/video tahlili keyingi bosqichda ulanadi. Matn yuborish uchun tanlangan fayllarni olib tashlang.</Text>}
-      {error && <View><Text accessibilityRole="alert" style={{ color: colors.textMuted }}>{error}</Text>{pending && <Pressable onPress={retry} disabled={sending}><Text style={{ color: colors.accent }}>Qayta urinish</Text></Pressable>}</View>}
+      {loading && <Text style={{ color: colors.textMuted }}>Suhbat yuklanmoqda...</Text>}
+      {error && <View><Text accessibilityRole="alert" style={{ color: colors.textMuted }}>{error}</Text><Pressable onPress={retry} disabled={sending || loading}><Text style={{ color: colors.accent }}>Qayta urinish</Text></Pressable></View>}
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
 
       <View style={styles.inputRow}>

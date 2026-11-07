@@ -1,19 +1,45 @@
+import { fetch } from 'expo/fetch';
+import { getAuthTokenKey, getAuthTokenSync } from '@/src/utils/authToken';
+import { getSecureItem } from '@/src/utils/storage';
+import { consumeChatStream } from './chat-stream';
+import { apiBaseUrl } from './client';
 import { api } from './client';
-import axios from 'axios';
-
-export type ChatHistory = { role: 'user' | 'model'; text: string }[];
-
-export async function sendChatText(text: string, history: ChatHistory): Promise<string> {
-  try {
-    const { data } = await api.post('/api/ai/chat', { text, history }, { timeout: 75_000 });
-    if (!data.ok || typeof data.data?.text !== 'string' || !data.data.text.trim()) {
-      throw new Error('AI javobi noto‘g‘ri formatda.');
+export type ChatSummary = {
+    id: string;
+    title: string;
+    updatedAt: string;
+};
+export type SavedTurn = {
+    requestId: string;
+    text: string;
+    answer: string;
+    status: 'processing' | 'completed' | 'failed';
+    createdAt: string;
+    model: string;
+};
+export type SavedConversation = ChatSummary & {
+    turns: SavedTurn[];
+};
+async function request<T>(path: string, body?: unknown): Promise<T> {
+    try {
+        const res = body ? await api.post('/api/ai/conversations' + path, body, { timeout: 75000 }) : await api.get('/api/ai/conversations' + path);
+        if (!res.data.ok)
+            throw new Error('So\'rov bajarilmadi.');
+        return res.data.data;
     }
-    return data.data.text;
-  } catch (error) {
-    if (!axios.isAxiosError(error)) throw error;
-    const status = error.response?.status;
-    throw new Error(status === 401 ? 'AI bilan yozishish uchun hisobingizga kiring.' : status === 429
-      ? 'So‘rovlar chegarasiga yetildi. Biroz kuting.' : 'AI javob bera olmadi. Qayta urinib ko‘ring.');
-  }
+    catch {
+        throw new Error('So\'rov bajarilmadi. Hisobingiz va ulanishni tekshirib, qayta urining.');
+    }
+}
+export const listChats = () => request<ChatSummary[]>('');
+export const createChat = (id: string) => request<SavedConversation>('', { id });
+export const getChat = (id: string) => request<SavedConversation>('/' + id);
+export async function sendChat(id: string, requestId: string, text: string, onDelta: (text:string)=>void = () => {}): Promise<SavedConversation> {
+ const token=getAuthTokenSync() ?? await getSecureItem(getAuthTokenKey());
+ if(!token)throw new Error('Hisobingizga kiring.');
+ const response=await fetch(apiBaseUrl+'/api/ai/conversations/'+id+'/messages', {
+  method:'POST',headers:{'Content-Type':'application/json',Accept:'text/event-stream',Authorization:'Bearer '+token},
+  body:JSON.stringify({requestId,text}),signal:AbortSignal.timeout(90000),
+ });
+ return consumeChatStream(response,onDelta);
 }

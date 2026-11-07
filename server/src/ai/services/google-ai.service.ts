@@ -22,6 +22,7 @@ export async function generateAiResponse(
   model: string,
   contents: Content[],
   systemInstruction: string,
+  onDelta?: (text: string) => void,
 ): Promise<AiResult> {
   const apiKey = AI_CONFIG.apiKey?.trim();
   if (!apiKey) throw new AiServiceError('GOOGLE_AI_API_KEY sozlanmagan.');
@@ -31,11 +32,28 @@ export async function generateAiResponse(
       apiKey,
       httpOptions: { timeout: 60_000, retryOptions: { attempts: 1 } },
     });
-    const response = await ai.models.generateContent({
+    const params = {
       model,
       contents,
-      config: { systemInstruction, maxOutputTokens: 4096 },
-    });
+      config: { systemInstruction, maxOutputTokens: 4096, abortSignal: AbortSignal.timeout(60_000) },
+    };
+    if (onDelta) {
+      const stream = await ai.models.generateContentStream(params);
+      let text = '';
+      let usage: AiResult['usage'];
+      for await (const chunk of stream) {
+        const delta = chunk.text;
+        if (delta) { text += delta; onDelta(delta); }
+        if (chunk.usageMetadata) usage = {
+          inputTokens: chunk.usageMetadata.promptTokenCount,
+          outputTokens: chunk.usageMetadata.candidatesTokenCount,
+          totalTokens: chunk.usageMetadata.totalTokenCount,
+        };
+      }
+      if (!text.trim()) throw new AiServiceError('AI matnli javob qaytarmadi.');
+      return { text: text.trim(), model, usage };
+    }
+    const response = await ai.models.generateContent(params);
     const text = response.text?.trim();
     if (!text) throw new AiServiceError('AI matnli javob qaytarmadi.');
     return {

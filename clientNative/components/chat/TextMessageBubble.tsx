@@ -10,7 +10,7 @@ type TextMessageBubbleProps = {
 export function TextMessageBubble({ text, role = 'user' }: TextMessageBubbleProps) {
   const { colors } = useTheme();
 
-  if (role === 'model') return <View style={[styles.row, { alignItems: 'flex-start' }]}><View style={[styles.bubble, { maxWidth: '85%', backgroundColor: colors.panelSoft }]}><Text selectable style={[styles.text, { color: colors.text }]}>{text}</Text></View></View>;
+  if (role === 'model') return <View style={styles.answer}><Text selectable style={[styles.text, { color: colors.text, lineHeight: 27 }]}>{text}</Text></View>;
 
   return (
     <View style={styles.row}>
@@ -29,6 +29,7 @@ export function TextMessageBubble({ text, role = 'user' }: TextMessageBubbleProp
 }
 
 const styles = StyleSheet.create({
+  answer: { width: '100%', paddingHorizontal: 14, paddingVertical: 8, marginBottom: 20 },
   row: {
     width: '100%',
     alignItems: 'flex-end',

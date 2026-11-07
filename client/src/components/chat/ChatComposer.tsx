@@ -11,10 +11,10 @@ const mediaBtn = "flex h-9 w-9 items-center justify-center rounded-full border";
 
 export function ChatComposer() {
   const { colors } = useTheme();
-  const { selectedMedia, removeMedia, send, pick, picking, sending, error, retry } = useChat();
+  const { selectedMedia, removeMedia, send, pick, picking, sending, loading, error, retry } = useChat();
   const t = useT();
   const [text, setText] = useState("");
-  const canSend = !sending && !error && selectedMedia.length === 0 && text.trim().length > 0;
+  const canSend = !loading && !sending && !error && selectedMedia.length === 0 && text.trim().length > 0;
 
   function handleSend() {
     if (!canSend) return;
@@ -27,9 +27,9 @@ export function ChatComposer() {
       className="mx-auto w-full max-w-[430px] rounded-[28px] border-[1.5px] px-3 py-3 md:max-w-[720px]"
       style={{ backgroundColor: colors.panel, borderColor: colors.borderSoft }}
     >
-      {sending && <p role="status" style={{ color: colors.textMuted }}>AI javob tayyorlayapti...</p>}
       {selectedMedia.length > 0 && <p style={{ color: colors.textMuted }}>Rasm/video tahlili keyingi bosqichda ulanadi. Matn yuborish uchun tanlangan fayllarni olib tashlang.</p>}
-      {error && <div role="alert" style={{ color: colors.textMuted }}>{error} <button type="button" onClick={retry}>Qayta urinish</button></div>}
+      {loading && <p role="status" style={{ color: colors.textMuted }}>Suhbat yuklanmoqda...</p>}
+      {error && <div role="alert" style={{ color: colors.textMuted }}>{error} <button type="button" disabled={sending || loading} onClick={retry}>Qayta urinish</button></div>}
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
       <div className="flex items-end gap-2.5">
         <textarea

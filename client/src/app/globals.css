@@ -59,3 +59,11 @@ textarea::placeholder {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+@keyframes ai-reel-turn { to { transform: rotate(360deg); } }
+@keyframes ai-dots-pulse { 50% { opacity: .25; } }
+.ai-film-reel { animation: ai-reel-turn 2.4s linear infinite; }
+.ai-waiting-dots { animation: ai-dots-pulse 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ai-film-reel, .ai-waiting-dots { animation: none; }
+}

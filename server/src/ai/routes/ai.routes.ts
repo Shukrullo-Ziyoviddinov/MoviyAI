@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import { requireAuth, type AuthRequest } from '../../middleware/requireAuth.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 import { chat } from '../controllers/ai.controller.js';
+import * as conversations from '../controllers/conversation.controller.js';
 
 const router = Router();
 const allowedTypes = new Set([
@@ -45,13 +46,18 @@ const parseMedia: RequestHandler = (req, res, next) => {
   });
 };
 
-router.post('/chat', requireAuth, rateLimit({
+const aiLimit = rateLimit({
   windowMs: 60_000,
   limit: 10,
   keyGenerator: req => (req as AuthRequest).userId,
   standardHeaders: true,
   legacyHeaders: false,
   message: { ok: false, error: 'Too many AI requests. Please try again later.' },
-}), parseMedia, asyncHandler(chat));
+});
+router.post('/chat', requireAuth, aiLimit, parseMedia, asyncHandler(chat));
+router.get('/conversations', requireAuth, asyncHandler(conversations.list));
+router.post('/conversations', requireAuth, asyncHandler(conversations.create));
+router.get('/conversations/:id', requireAuth, asyncHandler(conversations.get));
+router.post('/conversations/:id/messages', requireAuth, aiLimit, asyncHandler(conversations.send));
 
 export default router;

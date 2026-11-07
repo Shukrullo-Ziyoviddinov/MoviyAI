@@ -238,6 +238,7 @@ function MenuBody({
   const router = useRouter();
   const pathname = usePathname();
   const { profile, openAuthModal, logout } = useAuth();
+  const { conversations, activeId, loading, sending, openChat, newChat } = useChat();
   const t = useT();
 
   useEffect(() => {
@@ -262,7 +263,7 @@ function MenuBody({
     else if (key === "chat") go("/");
     else if (key === "profile") go("/profile");
     else if (key === "settings") go("/settings");
-    else onPick?.();
+    else { if (!sending && !loading) { newChat(); go('/'); } }
   }
 
   return (
@@ -385,10 +386,16 @@ function MenuBody({
       ) : (
         <>
           <div className="my-3.5 h-px" style={{ backgroundColor: colors.borderSoft }} />
-          <div className="min-h-0 flex-1">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <p className="mb-2 px-1 text-[15px] font-medium" style={{ color: colors.text }}>
               {t("menu.previousChats")}
             </p>
+            {loading && <p className="px-2 text-sm" style={{ color: colors.textMuted }}>Yuklanmoqda...</p>}
+            {conversations.map(chat => <button key={chat.id} type="button" disabled={sending || loading}
+              onClick={() => { void openChat(chat.id); go('/'); }}
+              className="mb-1 block w-full truncate rounded-xl px-3 py-2 text-left text-sm"
+              style={{ color: colors.text, backgroundColor: activeId === chat.id ? colors.panelSoft : undefined }}
+              title={chat.title}>{chat.title}</button>)}
           </div>
         </>
       )}

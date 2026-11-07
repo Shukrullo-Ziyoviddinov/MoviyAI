@@ -5,7 +5,7 @@ import { useTheme } from "@/components/theme/theme-state";
 export function TextMessageBubble({ text, role = "user" }: { text: string; role?: "user" | "model" }) {
   const { colors } = useTheme();
 
-  if (role === "model") return <div className="mb-2.5 flex w-full justify-start px-3.5"><div className="max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5" style={{ backgroundColor: colors.panelSoft, color: colors.text }}>{text}</div></div>;
+  if (role === "model") return <div className="mb-5 w-full whitespace-pre-wrap break-words px-3.5 py-2 text-[15px] leading-7" style={{ color: colors.text, overflowWrap: 'anywhere' }}>{text}</div>;
 
   return (
     <div className="mb-2.5 flex w-full justify-end px-3.5">

@@ -9,6 +9,7 @@ import {
   SettingsIcon,
 } from '@/components/icons';
 import { useAuthStore } from '@/src/stores/useAuthStore';
+import { useChatStore } from '@/src/stores/useChatStore';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -19,6 +20,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   BackHandler,
+  ScrollView,
   Pressable,
   StyleSheet,
   Text,
@@ -79,6 +81,16 @@ export function SideMenu({ children }: SideMenuProps) {
   const closeMenu = useSideMenuStore((state) => state.closeMenu);
   const viewing = useMediaViewerStore((state) => !!state.item);
   const profile = useAuthStore((s) => s.profile);
+  const hydrated = useAuthStore(s => s.hydrated);
+  const conversations = useChatStore(s => s.conversations);
+  const activeId = useChatStore(s => s.activeId);
+  const chatLoading = useChatStore(s => s.loading);
+  const chatSending = useChatStore(s => s.sending);
+  const initializeChat = useChatStore(s => s.initialize);
+  const openChat = useChatStore(s => s.openChat);
+  const newChat = useChatStore(s => s.newChat);
+  const chatOwner = hydrated ? profile?.id ?? null : null;
+  useEffect(() => { void initializeChat(chatOwner); }, [chatOwner, initializeChat]);
   const openAuthModal = useAuthStore((s) => s.openAuthModal);
   const logout = useAuthStore((s) => s.logout);
   const clearWishlist = useWishlistStore((s) => s.clear);
@@ -168,6 +180,9 @@ export function SideMenu({ children }: SideMenuProps) {
       goSettings();
       return;
     }
+    if (chatSending || chatLoading) return;
+    newChat();
+    router.replace('/');
     closeMenu();
   };
 
@@ -360,7 +375,14 @@ export function SideMenu({ children }: SideMenuProps) {
                 <Text style={[styles.historyTitle, { color: colors.text }]}>
                   {t('menu.previousChats')}
                 </Text>
-                <View style={styles.historyEmpty} />
+                <ScrollView style={styles.historyEmpty}>
+                  {chatLoading && <Text style={{ color: colors.textMuted }}>Yuklanmoqda...</Text>}
+                  {conversations.map(chat => <Pressable key={chat.id} disabled={chatSending || chatLoading}
+                    onPress={() => { void openChat(chat.id); closeMenu(); router.replace('/'); }}
+                    style={{ padding: 10, borderRadius: 12, backgroundColor: activeId === chat.id ? colors.panelSoft : undefined }}>
+                    <Text numberOfLines={1} style={{ color: colors.text }}>{chat.title}</Text>
+                  </Pressable>)}
+                </ScrollView>
               </View>
 
               <Pressable style={styles.logout} onPress={onLogout}>

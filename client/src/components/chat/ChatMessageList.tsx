@@ -1,34 +1,34 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { MediaGridBlock } from "@/components/chat/MediaGridBlock";
-import { TextMessageBubble } from "@/components/chat/TextMessageBubble";
-import { useChat } from "@/components/chat/chat-state";
+import { useEffect, useRef } from 'react';
+import { MediaGridBlock } from '@/components/chat/MediaGridBlock';
+import { TextMessageBubble } from '@/components/chat/TextMessageBubble';
+import { AiWaiting } from '@/components/chat/AiWaiting';
+import { useChat } from '@/components/chat/chat-state';
 
-export function ChatMessageList({ topInset, bottomInset }: { topInset: number; bottomInset: number }) {
-  const { messages } = useChat();
-  const endRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    }, 80);
-    return () => window.clearTimeout(timer);
-  }, [messages.length]);
-
-  return (
-    <div
-      className="flex min-h-full flex-col justify-end"
-      style={{ paddingTop: topInset + 8, paddingBottom: bottomInset }}
-    >
-      {messages.map((item) =>
-        item.kind === "text" ? (
-          <TextMessageBubble key={item.id} text={item.text} role={item.role} />
-        ) : (
-          <MediaGridBlock key={item.id} items={item.items} />
-        )
-      )}
-      <div ref={endRef} />
-    </div>
-  );
+export function ChatMessageList({topInset,bottomInset}:{topInset:number;bottomInset:number}) {
+ const {messages,sending,streamingText,activeId}=useChat();
+ const root=useRef<HTMLDivElement>(null);
+ const following=useRef(true);
+ const lastUser=messages.filter(item=>item.kind==='text' && item.role!=='model').at(-1)?.id;
+ useEffect(()=>{
+  const scroller=root.current?.parentElement;
+  if(!scroller)return;
+  following.current=true;
+  const onScroll=()=>{following.current=scroller.scrollHeight-scroller.scrollTop-scroller.clientHeight<100;};
+  const onWheel=(event:WheelEvent)=>{if(event.deltaY<0)following.current=false;};
+  scroller.addEventListener('scroll',onScroll,{passive:true});
+  scroller.addEventListener('wheel',onWheel,{passive:true});
+  scroller.scrollTop=scroller.scrollHeight;
+  return()=>{scroller.removeEventListener('scroll',onScroll);scroller.removeEventListener('wheel',onWheel);};
+ },[activeId]);
+ useEffect(()=>{following.current=true;},[lastUser]);
+ useEffect(()=>{
+  const frame=requestAnimationFrame(()=>{const scroller=root.current?.parentElement;if(scroller && following.current)scroller.scrollTop=scroller.scrollHeight;});
+  return()=>cancelAnimationFrame(frame);
+ },[messages,streamingText,sending,bottomInset]);
+ return <div ref={root} aria-busy={sending} className="flex min-h-full w-full flex-col justify-end" style={{paddingTop:topInset+8,paddingBottom:bottomInset}}>
+  {messages.map(item=>item.kind==='text'?<TextMessageBubble key={item.id} text={item.text} role={item.role}/>:<MediaGridBlock key={item.id} items={item.items}/>)}
+  {sending && (streamingText ? <TextMessageBubble text={streamingText} role="model"/> : <AiWaiting/>)}
+ </div>;
 }

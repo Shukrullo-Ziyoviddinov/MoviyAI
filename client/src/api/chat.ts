@@ -1,28 +1,44 @@
+import { consumeChatStream } from './chat-stream';
 import { apiBaseUrl, readAuthToken } from './client';
-
-export type ChatHistory = { role: 'user' | 'model'; text: string }[];
-
-export async function sendChatText(text: string, history: ChatHistory): Promise<string> {
-  const token = readAuthToken();
-  if (!token) throw new Error('AI bilan yozishish uchun hisobingizga kiring.');
-  let response: Response;
-  try {
-    response = await fetch(`${apiBaseUrl}/api/ai/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ text, history }),
-      signal: AbortSignal.timeout(75_000),
+export type ChatSummary = {
+    id: string;
+    title: string;
+    updatedAt: string;
+};
+export type SavedTurn = {
+    requestId: string;
+    text: string;
+    answer: string;
+    status: 'processing' | 'completed' | 'failed';
+    createdAt: string;
+    model: string;
+};
+export type SavedConversation = ChatSummary & {
+    turns: SavedTurn[];
+};
+async function request<T>(path: string, body?: unknown): Promise<T> {
+    const token = readAuthToken();
+    if (!token)
+        throw new Error('Hisobingizga kiring.');
+    const res = await fetch(apiBaseUrl + '/api/ai/conversations' + path, {
+        method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(75000), cache: 'no-store',
     });
-  } catch {
-    throw new Error('Serverga ulanib bo‘lmadi yoki kutish vaqti tugadi.');
-  }
-  if (!response.ok) {
-    throw new Error(response.status === 401 ? 'Hisobingizga qayta kiring.' : response.status === 429
-      ? 'So‘rovlar chegarasiga yetildi. Biroz kuting.' : 'AI javob bera olmadi. Qayta urinib ko‘ring.');
-  }
-  const result = await response.json();
-  if (!result.ok || typeof result.data?.text !== 'string' || !result.data.text.trim()) {
-    throw new Error('AI javobi noto‘g‘ri formatda.');
-  }
-  return result.data.text;
+    if (!res.ok)
+        throw new Error(res.status === 401 ? 'Hisobingizga qayta kiring.' : res.status === 404 ? 'Suhbat topilmadi.' : 'So\'rov bajarilmadi. Qayta urinib ko\'ring.');
+    const data = await res.json();
+    if (!data.ok)
+        throw new Error('So\'rov bajarilmadi.');
+    return data.data;
+}
+export const listChats = () => request<ChatSummary[]>('');
+export const createChat = (id: string) => request<SavedConversation>('', { id });
+export const getChat = (id: string) => request<SavedConversation>('/' + id);
+export async function sendChat(id: string, requestId: string, text: string, onDelta: (text:string)=>void = () => {}): Promise<SavedConversation> {
+ const token=readAuthToken(); if(!token)throw new Error('Hisobingizga kiring.');
+ const response=await fetch(apiBaseUrl+'/api/ai/conversations/'+id+'/messages', {
+  method:'POST',headers:{'Content-Type':'application/json',Accept:'text/event-stream',Authorization:'Bearer '+token},
+  body:JSON.stringify({requestId,text}),signal:AbortSignal.timeout(90000),
+ });
+ return consumeChatStream(response,onDelta);
 }
