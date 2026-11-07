@@ -1,19 +1,5 @@
 # AI chat API
 
-## Temporary Render diagnostic
-
-Deploy the updated server code, then set `AI_DIAGNOSTIC=true` in Render's
-Environment settings and deploy/restart. Once the HTTP server is listening,
-each process sends one small Gemma request with no search tools or retries.
-It does not block startup and times out after 30 seconds.
-Filter Render Logs for `[AI_DIAGNOSTIC]`: expect `started` followed by
-`success`, `empty_response`, or `failed`. Failures include a safe reason and
-an HTTP status when available. Missing keys produce `skipped`.
-Neither the API key, request text, nor response text is logged.
-This probe checks a plain provider request, not the complete chat endpoint.
-Set `AI_DIAGNOSTIC=false` or remove the variable after the test, since each
-enabled process restart sends another billable/quota-counted request.
-
 `POST /api/ai/chat` requires the existing Bearer access token.
 
 Text requests use `application/json`:
@@ -32,7 +18,10 @@ Text is limited to 20,000 characters; history to 30 messages of 20,000 character
 The endpoint accepts 10 requests per authenticated user per minute per server process.
 History is supplied by the caller in this phase; it is not yet stored in MongoDB.
 
-Text-only requests use Gemma. Any media routes the request to Gemini.
+Text-only requests use `gemma-4-26b-a4b-it`. The server serializes history and
+the current message into a single user text part, labeled with User/AI roles.
+The client request and response formats stay the same.
+Any media routes the request to Gemini, keeping native multi-message history.
 There is no automatic model fallback, Serper invocation, or catalog write yet.
 
 Success: `{ "ok": true, "data": { "role": "model", "text": "...", "model": "...", "usage": {} } }`.

@@ -10,7 +10,6 @@ import { env } from './config/env.js';
 import { connectDb } from './db/connect.js';
 import apiRoutes from './routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
-import { runAiDiagnostic } from './ai/services/ai-diagnostic.service.js';
 
 async function bootstrap() {
   await connectDb();
@@ -55,7 +54,6 @@ async function bootstrap() {
   app.listen(env.port, () => {
     console.log(`MoviyAI server http://localhost:${env.port}`);
     void connectTelegramBot();
-    void runAiDiagnostic();
   });
 }
 
