@@ -301,6 +301,7 @@ export function SideMenu({ children }: SideMenuProps) {
                 panelStyle,
               ]}
             >
+              <ScrollView style={{flex:1}} contentContainerStyle={{flexGrow:1}} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <Pressable style={styles.profileRow} onPress={goProfile}>
                 {profile ? (
                   <UserAvatar
@@ -383,7 +384,7 @@ export function SideMenu({ children }: SideMenuProps) {
               <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
               <View style={styles.history}>
-                <ScrollView style={styles.historyEmpty}>
+                <View>
                   {!listLoading && conversations.some(chat => chat.pinned) && <View style={{marginBottom:16}}>
                     <View style={{flexDirection:'row',alignItems:'center',gap:8,paddingHorizontal:4,marginBottom:8}}>
                       <Svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke={colors.text} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><Path d="m16 3 5 5-4 1-3 5v3l-3-3-5 5-1-1 5-5-3-3h3l5-3Z"/></Svg>
@@ -407,8 +408,9 @@ export function SideMenu({ children }: SideMenuProps) {
                     menuOpen={historyMenuId === chat.id} onMenu={() => setHistoryMenuId(chat.id)} onClose={() => setHistoryMenuId(null)}
                     onOpen={() => { setHistoryMenuId(null); void openChat(chat.id); closeMenu(); router.replace('/'); }}
                     onDelete={() => { void deleteConversation(chat.id).then(deleted => { if (deleted) setHistoryMenuId(null); }); }}/>) }
-                </ScrollView>
+                </View>
               </View>
+              </ScrollView>
 
               <Pressable style={styles.logout} onPress={onLogout}>
                 <LogoutIcon size={22} color={colors.icon} />
@@ -511,7 +513,7 @@ const styles = StyleSheet.create({
     marginVertical: 14,
   },
   history: {
-    flex: 1,
+    paddingBottom: 12,
   },
   historyTitle: {
     fontSize: 15,
@@ -519,10 +521,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingHorizontal: 4,
   },
-  historyEmpty: {
-    flex: 1,
-  },
+
   logout: {
+    flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,

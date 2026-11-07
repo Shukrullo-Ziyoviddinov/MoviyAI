@@ -271,12 +271,12 @@ function MenuBody({
 
   return (
     <div
-      className={`flex h-full min-h-0 flex-col ${collapsed ? "cursor-pointer items-center px-2" : "px-3"}`}
+      className={`flex h-full min-h-0 flex-col overflow-hidden ${collapsed ? "cursor-pointer items-center px-2" : "px-3"}`}
       style={showClose ? { paddingTop: 12, paddingBottom: 14 } : undefined}
       onClick={collapsed ? onOpen : undefined}
     >
       {showClose ? (
-        <div className={`flex items-center ${collapsed ? "mb-3 w-full justify-center" : "mb-1 justify-between"}`}>
+        <div className={`flex shrink-0 items-center ${collapsed ? "mb-3 w-full justify-center" : "mb-1 justify-between"}`}>
           {collapsed ? (
             <button
               type="button"
@@ -302,6 +302,7 @@ function MenuBody({
         </div>
       ) : null}
 
+      <div className="no-scrollbar min-h-0 w-full flex-1 overflow-y-auto overscroll-contain">
       <RailTip label={profile?.name || t("auth.title")} enabled={collapsed}>
         <button
           type="button"
@@ -389,7 +390,7 @@ function MenuBody({
       ) : (
         <>
           <div className="my-3.5 h-px" style={{ backgroundColor: colors.borderSoft }} />
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div>
             {!listLoading && conversations.some(chat => chat.pinned) && <div className="mb-4">
               <p className="mb-2 flex items-center gap-2 px-1 text-[15px] font-medium" style={{ color: colors.text }}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 3 5 5-4 1-3 5v3l-3-3-5 5-1-1 5-5-3-3h3l5-3Z"/></svg>
@@ -416,6 +417,8 @@ function MenuBody({
         </>
       )}
 
+      </div>
+      <div className="shrink-0">
       <RailTip label={t("common.logout")} enabled={collapsed}>
         <button
           type="button"
@@ -439,6 +442,7 @@ function MenuBody({
           )}
         </button>
       </RailTip>
+      </div>
     </div>
   );
 }
