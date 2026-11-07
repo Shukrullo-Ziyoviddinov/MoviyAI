@@ -23,7 +23,7 @@ export function ChatMessageList({ topInset, bottomInset }: { topInset: number; b
     >
       {messages.map((item) =>
         item.kind === "text" ? (
-          <TextMessageBubble key={item.id} text={item.text} />
+          <TextMessageBubble key={item.id} text={item.text} role={item.role} />
         ) : (
           <MediaGridBlock key={item.id} items={item.items} />
         )

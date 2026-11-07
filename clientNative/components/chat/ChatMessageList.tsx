@@ -38,7 +38,7 @@ export function ChatMessageList({
       showsVerticalScrollIndicator={false}
       renderItem={({ item }) =>
         item.kind === 'text' ? (
-          <TextMessageBubble text={item.text} />
+          <TextMessageBubble text={item.text} role={item.role} />
         ) : (
           <MediaGridBlock items={item.items} />
         )

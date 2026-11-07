@@ -11,10 +11,10 @@ const mediaBtn = "flex h-9 w-9 items-center justify-center rounded-full border";
 
 export function ChatComposer() {
   const { colors } = useTheme();
-  const { selectedMedia, removeMedia, send, pick, picking } = useChat();
+  const { selectedMedia, removeMedia, send, pick, picking, sending, error, retry } = useChat();
   const t = useT();
   const [text, setText] = useState("");
-  const canSend = text.trim().length > 0 || selectedMedia.length > 0;
+  const canSend = !sending && !error && selectedMedia.length === 0 && text.trim().length > 0;
 
   function handleSend() {
     if (!canSend) return;
@@ -27,6 +27,9 @@ export function ChatComposer() {
       className="mx-auto w-full max-w-[430px] rounded-[28px] border-[1.5px] px-3 py-3 md:max-w-[720px]"
       style={{ backgroundColor: colors.panel, borderColor: colors.borderSoft }}
     >
+      {sending && <p role="status" style={{ color: colors.textMuted }}>AI javob tayyorlayapti...</p>}
+      {selectedMedia.length > 0 && <p style={{ color: colors.textMuted }}>Rasm/video tahlili keyingi bosqichda ulanadi. Matn yuborish uchun tanlangan fayllarni olib tashlang.</p>}
+      {error && <div role="alert" style={{ color: colors.textMuted }}>{error} <button type="button" onClick={retry}>Qayta urinish</button></div>}
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
       <div className="flex items-end gap-2.5">
         <textarea
@@ -34,6 +37,7 @@ export function ChatComposer() {
           onChange={(event) => setText(event.target.value)}
           placeholder={t("chat.placeholder")}
           rows={1}
+          maxLength={20000}
           className="max-h-[110px] min-h-12 flex-1 resize-none rounded-3xl border px-[18px] py-3 text-[15px] outline-none"
           style={{
             backgroundColor: colors.panelSoft,
@@ -45,6 +49,7 @@ export function ChatComposer() {
           type="button"
           aria-label="Yuborish"
           onClick={handleSend}
+          disabled={!canSend}
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
           style={{ backgroundColor: colors.accent, opacity: canSend ? 1 : 0.45 }}
         >

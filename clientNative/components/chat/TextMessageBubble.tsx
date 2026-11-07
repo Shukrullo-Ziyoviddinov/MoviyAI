@@ -4,10 +4,13 @@ import Svg, { Path } from 'react-native-svg';
 
 type TextMessageBubbleProps = {
   text: string;
+  role?: 'user' | 'model';
 };
 
-export function TextMessageBubble({ text }: TextMessageBubbleProps) {
+export function TextMessageBubble({ text, role = 'user' }: TextMessageBubbleProps) {
   const { colors } = useTheme();
+
+  if (role === 'model') return <View style={[styles.row, { alignItems: 'flex-start' }]}><View style={[styles.bubble, { maxWidth: '85%', backgroundColor: colors.panelSoft }]}><Text selectable style={[styles.text, { color: colors.text }]}>{text}</Text></View></View>;
 
   return (
     <View style={styles.row}>

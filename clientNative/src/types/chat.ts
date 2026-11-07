@@ -7,6 +7,8 @@ export type ChatMediaItem = {
 };
 
 export type TextChatMessage = {
+  role?: 'user' | 'model';
+  failed?: boolean;
   id: string;
   kind: 'text';
   text: string;

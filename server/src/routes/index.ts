@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import aiRoutes from '../ai/routes/ai.routes.js';
 import aboutRoutes from './about.routes.js';
 import actorRoutes from './actor.routes.js';
 import adminAccessRoutes from './adminAccess.routes.js';
@@ -12,6 +13,8 @@ import privacyRoutes from './privacy.routes.js';
 import wishlistRoutes from './wishlist.routes.js';
 
 const router = Router();
+
+router.use('/ai', aiRoutes);
 
 router.use('/auth', authRoutes);
 router.use('/about', aboutRoutes);

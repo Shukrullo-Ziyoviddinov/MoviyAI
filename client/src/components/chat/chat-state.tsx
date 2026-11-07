@@ -2,8 +2,12 @@
 
 import { createContext, useContext, useRef, useState, type ReactNode } from "react";
 import type { ChatMediaItem, ChatMessage } from "@/types/chat";
+import { sendChatText, type ChatHistory } from '@/api/chat';
 
 type ChatContextValue = {
+  sending: boolean;
+  error: string | null;
+  retry: () => void;
   messages: ChatMessage[];
   selectedMedia: ChatMediaItem[];
   picking: boolean;
@@ -43,6 +47,10 @@ function chunkMedia(items: ChatMediaItem[], size = 4) {
 }
 
 export function ChatProvider({ children }: { children: ReactNode }) {
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const busy = useRef(false);
+  const pending = useRef<{ text: string; history: ChatHistory } | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedMedia, setSelectedMedia] = useState<ChatMediaItem[]>([]);
   const [picking, setPicking] = useState(false);
@@ -89,7 +97,31 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setSelectedMedia((current) => current.filter((item) => item.id !== id));
   }
 
+  async function deliver(payload: { text: string; history: ChatHistory }) {
+    if (busy.current) return;
+    busy.current = true;
+    setSending(true);
+    setError(null);
+    try {
+      const text = await sendChatText(payload.text, payload.history);
+      setMessages(current => [...current, { id: `ai-${Date.now()}`, kind: 'text', role: 'model', text, createdAt: Date.now() }]);
+      pending.current = null;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Javob olinmadi.');
+    } finally {
+      busy.current = false;
+      setSending(false);
+    }
+  }
+
+  function retry() { if (pending.current) void deliver(pending.current); }
+
   function send(text: string) {
+    if (busy.current || pending.current) return;
+    if (selectedMedia.length) {
+      setError('Rasm/video tahlili keyingi bosqichda ulanadi. Hozir faqat matn yuboring.');
+      return;
+    }
     const trimmed = text.trim();
     if (!trimmed && selectedMedia.length === 0) return;
     const now = Date.now();
@@ -112,6 +144,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
     setMessages((current) => [...current, ...next]);
     setSelectedMedia([]);
+    const history: ChatHistory = messages.filter(item => item.kind === 'text').slice(-30)
+      .map(item => ({ role: item.kind === 'text' ? item.role ?? 'user' : 'user', text: item.kind === 'text' ? item.text : '' }));
+    pending.current = { text: trimmed, history };
+    void deliver(pending.current);
   }
 
   function openViewer(item: ChatMediaItem) {
@@ -125,6 +161,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   return (
     <ChatContext.Provider
       value={{
+        sending,
+        error,
+        retry,
         messages,
         selectedMedia,
         picking,

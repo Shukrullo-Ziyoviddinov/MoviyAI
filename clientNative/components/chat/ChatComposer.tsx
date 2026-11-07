@@ -11,11 +11,15 @@ import { useComposerStore } from '@/src/stores/useComposerStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native';
 
 export function ChatComposer() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const sending = useChatStore(state => state.sending);
+  const error = useChatStore(state => state.error);
+  const pending = useChatStore(state => state.pending);
+  const retry = useChatStore(state => state.retry);
   const sendMessage = useChatStore((state) => state.sendMessage);
   const selectedMedia = useComposerStore((state) => state.selectedMedia);
   const picking = useComposerStore((state) => state.picking);
@@ -24,7 +28,7 @@ export function ChatComposer() {
   const clearMedia = useComposerStore((state) => state.clearMedia);
   const [text, setText] = useState('');
 
-  const canSend = text.trim().length > 0 || selectedMedia.length > 0;
+  const canSend = !sending && !pending && selectedMedia.length === 0 && text.trim().length > 0;
 
   const handleSend = () => {
     if (!canSend) return;
@@ -45,6 +49,9 @@ export function ChatComposer() {
         { backgroundColor: colors.panel, borderColor: colors.borderSoft },
       ]}
     >
+      {sending && <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted }}>AI javob tayyorlayapti...</Text>}
+      {selectedMedia.length > 0 && <Text style={{ color: colors.textMuted }}>Rasm/video tahlili keyingi bosqichda ulanadi. Matn yuborish uchun tanlangan fayllarni olib tashlang.</Text>}
+      {error && <View><Text accessibilityRole="alert" style={{ color: colors.textMuted }}>{error}</Text>{pending && <Pressable onPress={retry} disabled={sending}><Text style={{ color: colors.accent }}>Qayta urinish</Text></Pressable>}</View>}
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
 
       <View style={styles.inputRow}>
@@ -61,6 +68,7 @@ export function ChatComposer() {
               color: colors.text,
             },
           ]}
+          maxLength={20000}
           multiline
         />
         <Pressable
