@@ -1,6 +1,7 @@
 import { MediaGridBlock } from '@/components/chat/MediaGridBlock';
 import { TextMessageBubble } from '@/components/chat/TextMessageBubble';
 import { AiWaiting } from '@/components/chat/AiWaiting';
+import { AiError } from '@/components/chat/AiError';
 import { useChatStore } from '@/src/stores/useChatStore';
 import type { ChatMessage } from '@/src/types/chat';
 import { useEffect, useRef } from 'react';
@@ -11,6 +12,9 @@ export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
  const list=useRef<FlatList<ChatMessage>>(null);
  const following=useRef(true);
  const sending=useChatStore(s=>s.sending);
+ const error=useChatStore(s=>s.error);
+ const retry=useChatStore(s=>s.retry);
+ const loading=useChatStore(s=>s.loading);
  const streamingText=useChatStore(s=>s.streamingText);
  const activeId=useChatStore(s=>s.activeId);
  const lastUser=messages.filter(item=>item.kind==='text' && item.role!=='model').at(-1)?.id;
@@ -21,7 +25,7 @@ export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
   scrollEventThrottle={32}
   onScroll={event=>{const {contentSize,contentOffset,layoutMeasurement}=event.nativeEvent;following.current=contentSize.height-contentOffset.y-layoutMeasurement.height<100;}}
   onContentSizeChange={()=>{if(following.current)list.current?.scrollToEnd({animated:false});}}
-  ListFooterComponent={sending ? (streamingText ? <TextMessageBubble text={streamingText} role="model"/> : <AiWaiting/>) : null}
+  ListFooterComponent={sending ? (streamingText ? <TextMessageBubble text={streamingText} role="model"/> : <AiWaiting/>) : error ? <AiError message={error} onRetry={retry} disabled={loading}/> : null}
   renderItem={({item})=>item.kind==='text'?<TextMessageBubble text={item.text} role={item.role}/>:<MediaGridBlock items={item.items}/>}
  />;
 }

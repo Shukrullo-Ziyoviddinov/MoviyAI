@@ -20,7 +20,8 @@ export function ChatComposer() {
   const loading = useChatStore(state => state.loading);
   const error = useChatStore(state => state.error);
   const pending = useChatStore(state => state.pending);
-  const retry = useChatStore(state => state.retry);
+  const pinningId = useChatStore(state => state.pinningId);
+  const deletingId = useChatStore(state => state.deletingId);
   const sendMessage = useChatStore((state) => state.sendMessage);
   const selectedMedia = useComposerStore((state) => state.selectedMedia);
   const picking = useComposerStore((state) => state.picking);
@@ -29,7 +30,7 @@ export function ChatComposer() {
   const clearMedia = useComposerStore((state) => state.clearMedia);
   const [text, setText] = useState('');
 
-  const canSend = !loading && !sending && !error && !pending && selectedMedia.length === 0 && text.trim().length > 0;
+  const canSend = !pinningId && !deletingId && !loading && !sending && !error && !pending && selectedMedia.length === 0 && text.trim().length > 0;
 
   const handleSend = () => {
     if (!canSend) return;
@@ -52,7 +53,6 @@ export function ChatComposer() {
     >
       {selectedMedia.length > 0 && <Text style={{ color: colors.textMuted }}>Rasm/video tahlili keyingi bosqichda ulanadi. Matn yuborish uchun tanlangan fayllarni olib tashlang.</Text>}
       {loading && <Text style={{ color: colors.textMuted }}>Suhbat yuklanmoqda...</Text>}
-      {error && <View><Text accessibilityRole="alert" style={{ color: colors.textMuted }}>{error}</Text><Pressable onPress={retry} disabled={sending || loading}><Text style={{ color: colors.accent }}>Qayta urinish</Text></Pressable></View>}
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
 
       <View style={styles.inputRow}>

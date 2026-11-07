@@ -17,6 +17,13 @@ its owner. MongoDB creates `ai_conversations` (titles/ownership) and
 - `GET /api/ai/conversations`: sidebar summaries, newest activity first.
 - `POST /api/ai/conversations` with `{ "id": "UUID" }`: idempotently create a chat.
 - `GET /api/ai/conversations/:id`: restore saved turns, including failed messages.
+- `PATCH /api/ai/conversations/:id/pin` with `{ "pinned": true }` or `false`:
+  persist the owner's pin state. List/detail responses include `pinned`;
+  clients show pinned conversations separately, without duplicating list items.
+- `DELETE /api/ai/conversations/:id`: delete the owner's saved turns and hide the
+  conversation. A metadata-only tombstone (without title or message text) prevents
+  delayed create requests from resurrecting it. Repeating deletion is safe;
+  active generation returns 409 until finished.
 - `POST /api/ai/conversations/:id/messages` with `{ "requestId": "UUID", "text": "..." }`:
   persist the user message, generate a reply, and persist the answer. Returns
   the saved conversation. Repeat the same request ID/text to retry safely.

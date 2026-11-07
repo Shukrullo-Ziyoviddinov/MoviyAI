@@ -33,7 +33,7 @@ function repository(conversation = false) {
     let row = rows.find(row => matches(row, filter));
     if (!row && upsert) {
       row = { ...filter, _id: filter._id ?? String(rows.length).padStart(8, '0'), createdAt: new Date(),
-        ...(conversation ? { title: 'Yangi chat', lockToken: '', lockUntil: new Date(0) } : { answer: '', model: '' }),
+        ...(conversation ? { title: 'Yangi chat', pinned: false, deletedAt: null, lockToken: '', lockUntil: new Date(0) } : { answer: '', model: '' }),
         ...patch.$setOnInsert };
       rows.push(row);
     }
@@ -48,6 +48,7 @@ function repository(conversation = false) {
     exists: async filter => rows.some(row => matches(row, filter)),
     updateOne: async (filter, patch, options) => update(filter, patch, options?.upsert),
     findOneAndUpdate: async (filter, patch) => update(filter, patch, false),
+    deleteMany: async filter => { for(let i=rows.length-1;i>=0;i--)if(matches(rows[i],filter))rows.splice(i,1); },
   };
 }
 function harness() {
@@ -59,7 +60,7 @@ function harness() {
     return { text: 'Answer', model: 'gemma-4-26b-a4b-it' };
   };
   const service = new Function('Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', source +
-    '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage};')
+    '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage,deleteConversation,pinConversation};')
     (Conversation, ChatTurn, chatWithGemma, randomUUID);
   return { ...service, Conversation, ChatTurn, fail: value => { fail = value; }, hold: value => { hold = value; },
     calls: () => calls, captured: () => captured };
@@ -72,6 +73,39 @@ test('owners can list/reopen their chats; other accounts cannot read or write th
     () => h.sendConversationMessage('bob', id, randomUUID(), 'Private')]) {
     await assert.rejects(action, error => error.status === 404);
   }
+});
+test('pin state persists on list and reopen, and can be explicitly cleared', async () => {
+  const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+  assert.equal((await h.getConversation('alice',id)).pinned,false);
+  await h.pinConversation('alice',id,true);await h.pinConversation('alice',id,true);
+  assert.equal((await h.getConversation('alice',id)).pinned,true);
+  assert.equal((await h.listConversations('alice'))[0].pinned,true);
+  await h.pinConversation('alice',id,false);
+  assert.equal((await h.listConversations('alice'))[0].pinned,false);
+});
+test('pinning another owner or a deleted conversation is rejected', async () => {
+  const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+  await assert.rejects(()=>h.pinConversation('bob',id,true),e=>e.status===404);
+  assert.equal((await h.getConversation('alice',id)).pinned,false);
+  await h.deleteConversation('alice',id);
+  await assert.rejects(()=>h.pinConversation('alice',id,true),e=>e.status===404);
+});
+test('delete removes messages, hides the chat, and cannot be undone by a delayed create retry', async () => {
+  const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+  await h.sendConversationMessage('alice',id,randomUUID(),'Private message');
+  await h.deleteConversation('alice',id);
+  assert.equal(h.ChatTurn.rows.length,0);assert.equal((await h.listConversations('alice')).length,0);
+  assert.equal(h.Conversation.rows[0].title,'');
+  await assert.rejects(()=>h.getConversation('alice',id),error=>error.status===404);
+  await assert.rejects(()=>h.createConversation('alice',id),error=>error.status===404);
+  await h.deleteConversation('alice',id); // safe retry after a lost response
+});
+test('other users cannot delete a chat and active generation prevents deletion', async () => {
+  const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+  await assert.rejects(()=>h.deleteConversation('bob',id),error=>error.status===404);
+  h.Conversation.rows[0].lockUntil=new Date(Date.now()+60000);
+  await assert.rejects(()=>h.deleteConversation('alice',id),error=>error.status===409);
+  assert.equal(h.Conversation.rows[0].deletedAt,null);
 });
 test('user message is saved on failure; retry and completed replay never duplicate turns', async () => {
   const h = harness(), id = randomUUID(), requestId = randomUUID(); await h.createConversation('alice', id); h.fail(true);

@@ -10,12 +10,14 @@ const nativeSource = fs.readFileSync(path.join(__dirname, '../../clientNative/sr
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function harness() {
   const db = new Map(), storage = new Map();
-  let id = 0, fail = false, calls = 0, hold, deltas = [];
+  let id = 0, fail = false, calls = 0, hold, deltas = [], failDelete = false, failPin = false;
   const copy = value => JSON.parse(JSON.stringify(value));
   const api = {
+    pinChat: async (id,pinned) => {if(failPin)throw Error('pin failed');db.get(id).pinned=pinned;return {id,pinned};},
+    deleteChat: async id => { if(failDelete)throw Error('delete failed');db.delete(id);return {id}; },
     listChats: async () => [...db.values()].map(({ turns, ...chat }) => copy(chat)),
     createChat: async id => {
-      if (!db.has(id)) db.set(id, { id, title: 'Yangi chat', updatedAt: new Date().toISOString(), turns: [] });
+      if (!db.has(id)) db.set(id, { id, pinned: false, title: 'Yangi chat', updatedAt: new Date().toISOString(), turns: [] });
       return copy(db.get(id));
     },
     getChat: async id => {
@@ -43,7 +45,7 @@ function harness() {
     { exports, require: name => name.includes('text-reveal') ? revealExports : api, Date, setTimeout, clearTimeout });
   const create = () => exports.createChatSession({ read: async key => storage.get(key) ?? null,
     write: async (key, value) => { storage.set(key, value); }, uuid: () => `id-${++id}` });
-  return { create, db, storage, api, fail: value => { fail = value; }, hold: value => { hold = value; }, deltas: value => { deltas = value; }, calls: () => calls };
+  return { create, db, storage, api, fail: value => { fail = value; }, failPin:value=>{failPin=value;}, failDelete: value => { failDelete=value; }, hold: value => { hold = value; }, deltas: value => { deltas = value; }, calls: () => calls };
 }
 
 test('web and native use identical session behavior', () => assert.equal(source, nativeSource));
@@ -59,6 +61,42 @@ test('send, refresh, new chat, and reopening preserve messages', async () => {
   const blank = h.create(); await blank.actions.initialize('alice');
   assert.equal(blank.getState().activeId, null);
   await blank.actions.openChat(id); assert.equal(blank.getState().messages.length, 2);
+});
+test('pin and unpin survive refresh without duplicating or changing the open conversation', async () => {
+  const h=harness(),session=h.create();await session.actions.initialize('alice');
+  session.actions.sendMessage({text:'Pin me'});await tick();const id=session.getState().activeId;
+  assert.equal(await session.actions.setPinned(id,true),true);
+  assert.equal(session.getState().conversations.length,1);assert.equal(session.getState().conversations[0].pinned,true);
+  assert.equal(session.getState().activeId,id);assert.equal(session.getState().messages.length,2);
+  const restored=h.create();await restored.actions.initialize('alice');assert.equal(restored.getState().conversations[0].pinned,true);
+  assert.equal(await restored.actions.setPinned(id,false),true);assert.equal(restored.getState().conversations[0].pinned,false);
+});
+test('failed pin leaves the previous state intact and can be retried', async () => {
+  const h=harness(),session=h.create();await session.actions.initialize('alice');
+  session.actions.sendMessage({text:'Pin me'});await tick();const id=session.getState().activeId;
+  h.failPin(true);assert.equal(await session.actions.setPinned(id,true),false);
+  assert.equal(session.getState().pinError,id);assert.equal(session.getState().pinningId,null);
+  assert.equal(session.getState().conversations[0].pinned,false);
+  h.failPin(false);assert.equal(await session.actions.setPinned(id,true),true);assert.equal(session.getState().pinError,null);
+});
+test('deleting an older chat preserves the active chat; deleting the active chat resets it', async () => {
+  const h=harness(),session=h.create();await session.actions.initialize('alice');
+  session.actions.sendMessage({text:'First'});await tick();const first=session.getState().activeId;
+  session.actions.newChat();session.actions.sendMessage({text:'Second'});await tick();const second=session.getState().activeId;
+  assert.equal(await session.actions.deleteConversation(first),true);
+  assert.equal(session.getState().activeId,second);assert.equal(session.getState().messages.length,2);
+  assert.equal(await session.actions.deleteConversation(second),true);
+  assert.equal(session.getState().activeId,null);assert.equal(session.getState().messages.length,0);
+  const restored=h.create();await restored.actions.initialize('alice');assert.equal(restored.getState().activeId,null);
+});
+test('failed deletion leaves the conversation intact and can be retried', async () => {
+  const h=harness(),session=h.create();await session.actions.initialize('alice');
+  session.actions.sendMessage({text:'Keep me'});await tick();const id=session.getState().activeId;
+  h.failDelete(true);assert.equal(await session.actions.deleteConversation(id),false);
+  assert.equal(session.getState().deleteError,id);assert.equal(session.getState().messages.length,2);
+  assert.equal(session.getState().deletingId,null);
+  h.failDelete(false);assert.equal(await session.actions.deleteConversation(id),true);
+  assert.equal(session.getState().conversations.length,0);
 });
 test('failed turn survives refresh and retry reuses the request ID', async () => {
   const h = harness(), session = h.create(); await session.actions.initialize('alice'); h.fail(true);

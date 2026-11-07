@@ -18,6 +18,7 @@ import { UserAvatar } from "@/components/common/UserAvatar";
 import { TelegramNav } from "@/components/telegram/TelegramFullscreen";
 import { useTheme } from "@/components/theme/theme-state";
 import { useT } from "@/i18n/useT";
+import { ChatHistoryItem } from './ChatHistoryItem';
 
 const SLIDE = "260ms cubic-bezier(0.33, 1, 0.68, 1)";
 
@@ -238,7 +239,8 @@ function MenuBody({
   const router = useRouter();
   const pathname = usePathname();
   const { profile, openAuthModal, logout } = useAuth();
-  const { conversations, activeId, loading, sending, openChat, newChat } = useChat();
+  const { conversations, activeId, loading, sending, openChat, newChat, deletingId, deleteError, deleteConversation, pinningId, pinError, setPinned } = useChat();
+  const [historyMenuId, setHistoryMenuId] = useState<string | null>(null);
   const t = useT();
 
   useEffect(() => {
@@ -255,6 +257,7 @@ function MenuBody({
   }
 
   function onItem(key: NavKey) {
+    setHistoryMenuId(null);
     if (collapsed) {
       onOpen?.();
       return;
@@ -387,15 +390,28 @@ function MenuBody({
         <>
           <div className="my-3.5 h-px" style={{ backgroundColor: colors.borderSoft }} />
           <div className="min-h-0 flex-1 overflow-y-auto">
+            {conversations.some(chat => chat.pinned) && <div className="mb-4">
+              <p className="mb-2 flex items-center gap-2 px-1 text-[15px] font-medium" style={{ color: colors.text }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 3 5 5-4 1-3 5v3l-3-3-5 5-1-1 5-5-3-3h3l5-3Z"/></svg>
+                {t('menu.pinnedChats')}
+              </p>
+              {conversations.filter(chat => chat.pinned).map(chat => <ChatHistoryItem key={chat.id} pinned={Boolean(chat.pinned)} pinError={pinError === chat.id}
+              onPin={() => { void setPinned(chat.id, !chat.pinned).then(ok => { if (ok) setHistoryMenuId(null); }); }} title={chat.title} active={activeId === chat.id}
+              disabled={sending || loading || Boolean(deletingId || pinningId)} deleting={deletingId === chat.id} error={deleteError === chat.id}
+              menuOpen={historyMenuId === chat.id} onMenu={() => setHistoryMenuId(chat.id)} onClose={() => setHistoryMenuId(null)}
+              onOpen={() => { setHistoryMenuId(null); void openChat(chat.id); go('/'); }}
+              onDelete={() => { void deleteConversation(chat.id).then(deleted => { if (deleted) setHistoryMenuId(null); }); }}/>) }
+            </div>}
             <p className="mb-2 px-1 text-[15px] font-medium" style={{ color: colors.text }}>
               {t("menu.previousChats")}
             </p>
             {loading && <p className="px-2 text-sm" style={{ color: colors.textMuted }}>Yuklanmoqda...</p>}
-            {conversations.map(chat => <button key={chat.id} type="button" disabled={sending || loading}
-              onClick={() => { void openChat(chat.id); go('/'); }}
-              className="mb-1 block w-full truncate rounded-xl px-3 py-2 text-left text-sm"
-              style={{ color: colors.text, backgroundColor: activeId === chat.id ? colors.panelSoft : undefined }}
-              title={chat.title}>{chat.title}</button>)}
+            {conversations.filter(chat => !chat.pinned).map(chat => <ChatHistoryItem key={chat.id} pinned={Boolean(chat.pinned)} pinError={pinError === chat.id}
+              onPin={() => { void setPinned(chat.id, !chat.pinned).then(ok => { if (ok) setHistoryMenuId(null); }); }} title={chat.title} active={activeId === chat.id}
+              disabled={sending || loading || Boolean(deletingId || pinningId)} deleting={deletingId === chat.id} error={deleteError === chat.id}
+              menuOpen={historyMenuId === chat.id} onMenu={() => setHistoryMenuId(chat.id)} onClose={() => setHistoryMenuId(null)}
+              onOpen={() => { setHistoryMenuId(null); void openChat(chat.id); go('/'); }}
+              onDelete={() => { void deleteConversation(chat.id).then(deleted => { if (deleted) setHistoryMenuId(null); }); }}/>) }
           </div>
         </>
       )}

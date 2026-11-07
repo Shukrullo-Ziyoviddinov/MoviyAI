@@ -3,6 +3,8 @@ const schema = new Schema({
     _id: { type: String, required: true },
     userId: { type: String, required: true },
     title: { type: String, default: 'Yangi chat', maxlength: 100 },
+    pinned: { type: Boolean, default: false },
+  deletedAt: { type: Date, default: null },
     lockToken: { type: String, default: '' },
     lockUntil: { type: Date, default: new Date(0) },
 }, { timestamps: true, collection: 'ai_conversations' });

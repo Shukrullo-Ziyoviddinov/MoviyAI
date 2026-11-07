@@ -5,6 +5,7 @@ import { consumeChatStream } from './chat-stream';
 import { apiBaseUrl } from './client';
 import { api } from './client';
 export type ChatSummary = {
+    pinned: boolean;
     id: string;
     title: string;
     updatedAt: string;
@@ -20,9 +21,9 @@ export type SavedTurn = {
 export type SavedConversation = ChatSummary & {
     turns: SavedTurn[];
 };
-async function request<T>(path: string, body?: unknown): Promise<T> {
+async function request<T>(path: string, body?: unknown, method?: string): Promise<T> {
     try {
-        const res = body ? await api.post('/api/ai/conversations' + path, body, { timeout: 75000 }) : await api.get('/api/ai/conversations' + path);
+        const res = method === 'PATCH' ? await api.patch('/api/ai/conversations' + path, body) : method === 'DELETE' ? await api.delete('/api/ai/conversations' + path) : body ? await api.post('/api/ai/conversations' + path, body, { timeout: 75000 }) : await api.get('/api/ai/conversations' + path);
         if (!res.data.ok)
             throw new Error('So\'rov bajarilmadi.');
         return res.data.data;
@@ -43,3 +44,7 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
  });
  return consumeChatStream(response,onDelta);
 }
+
+export const deleteChat = (id: string) => request<{id:string}>('/' + id, undefined, 'DELETE');
+
+export const pinChat = (id:string,pinned:boolean) => request<{id:string;pinned:boolean}>('/'+id+'/pin',{pinned},'PATCH');

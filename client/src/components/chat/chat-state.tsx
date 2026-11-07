@@ -7,6 +7,12 @@ import type { ChatSummary } from '@/api/chat';
 import { useAuth } from '@/components/auth/auth-state';
 
 type ChatContextValue = {
+  pinningId: string | null;
+  pinError: string | null;
+  setPinned: (id: string, pinned: boolean) => Promise<boolean>;
+  deletingId: string | null;
+  deleteError: string | null;
+  deleteConversation: (id: string) => Promise<boolean>;
   streamingText: string;
   conversations: ChatSummary[];
   activeId: string | null;
@@ -54,8 +60,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     uuid: () => crypto.randomUUID(),
   }));
   const snapshot = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
-  const { messages, sending, loading, error, conversations, activeId, streamingText } = snapshot;
-  const { retry, openChat, newChat } = session.actions;
+  const { messages, sending, loading, error, conversations, activeId, streamingText, deletingId, deleteError, pinningId, pinError } = snapshot;
+  const { retry, openChat, newChat, deleteConversation, setPinned } = session.actions;
   const owner = ready ? profile?.id ?? null : null;
   useEffect(() => { void session.actions.initialize(owner); }, [session, owner]);
   const [selectedMedia, setSelectedMedia] = useState<ChatMediaItem[]>([]);
@@ -118,6 +124,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   return (
     <ChatContext.Provider
       value={{
+        pinningId,
+        pinError,
+        setPinned,
+        deletingId,
+        deleteError,
+        deleteConversation,
         streamingText,
         conversations,
         activeId,

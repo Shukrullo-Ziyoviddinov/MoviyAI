@@ -1,3 +1,4 @@
+import Svg, { Path } from 'react-native-svg';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import {
   ChatBubbleIcon,
@@ -10,6 +11,7 @@ import {
 } from '@/components/icons';
 import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useChatStore } from '@/src/stores/useChatStore';
+import { ChatHistoryItem } from './ChatHistoryItem';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -89,6 +91,13 @@ export function SideMenu({ children }: SideMenuProps) {
   const initializeChat = useChatStore(s => s.initialize);
   const openChat = useChatStore(s => s.openChat);
   const newChat = useChatStore(s => s.newChat);
+  const pinningId = useChatStore(s => s.pinningId);
+  const pinError = useChatStore(s => s.pinError);
+  const setPinned = useChatStore(s => s.setPinned);
+  const deletingId = useChatStore(s => s.deletingId);
+  const deleteError = useChatStore(s => s.deleteError);
+  const deleteConversation = useChatStore(s => s.deleteConversation);
+  const [historyMenuId, setHistoryMenuId] = useState<string | null>(null);
   const chatOwner = hydrated ? profile?.id ?? null : null;
   useEffect(() => { void initializeChat(chatOwner); }, [chatOwner, initializeChat]);
   const openAuthModal = useAuthStore((s) => s.openAuthModal);
@@ -164,6 +173,7 @@ export function SideMenu({ children }: SideMenuProps) {
   };
 
   const handleNav = (key: NavKey) => {
+    setHistoryMenuId(null);
     if (key === 'home') {
       goHome();
       return;
@@ -372,16 +382,30 @@ export function SideMenu({ children }: SideMenuProps) {
               <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
               <View style={styles.history}>
+                <ScrollView style={styles.historyEmpty}>
+                  {conversations.some(chat => chat.pinned) && <View style={{marginBottom:16}}>
+                    <View style={{flexDirection:'row',alignItems:'center',gap:8,paddingHorizontal:4,marginBottom:8}}>
+                      <Svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke={colors.text} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><Path d="m16 3 5 5-4 1-3 5v3l-3-3-5 5-1-1 5-5-3-3h3l5-3Z"/></Svg>
+                      <Text style={{color:colors.text,fontSize:15,fontWeight:'500'}}>{t('menu.pinnedChats')}</Text>
+                    </View>
+                    {conversations.filter(chat => chat.pinned).map(chat => <ChatHistoryItem key={chat.id} pinned={Boolean(chat.pinned)} pinError={pinError === chat.id}
+                    onPin={() => { void setPinned(chat.id, !chat.pinned).then(ok => { if (ok) setHistoryMenuId(null); }); }} title={chat.title} active={activeId === chat.id}
+                    disabled={chatSending || chatLoading || Boolean(deletingId || pinningId)} deleting={deletingId === chat.id} error={deleteError === chat.id}
+                    menuOpen={historyMenuId === chat.id} onMenu={() => setHistoryMenuId(chat.id)} onClose={() => setHistoryMenuId(null)}
+                    onOpen={() => { setHistoryMenuId(null); void openChat(chat.id); closeMenu(); router.replace('/'); }}
+                    onDelete={() => { void deleteConversation(chat.id).then(deleted => { if (deleted) setHistoryMenuId(null); }); }}/>) }
+                  </View>}
                 <Text style={[styles.historyTitle, { color: colors.text }]}>
                   {t('menu.previousChats')}
                 </Text>
-                <ScrollView style={styles.historyEmpty}>
+
                   {chatLoading && <Text style={{ color: colors.textMuted }}>Yuklanmoqda...</Text>}
-                  {conversations.map(chat => <Pressable key={chat.id} disabled={chatSending || chatLoading}
-                    onPress={() => { void openChat(chat.id); closeMenu(); router.replace('/'); }}
-                    style={{ padding: 10, borderRadius: 12, backgroundColor: activeId === chat.id ? colors.panelSoft : undefined }}>
-                    <Text numberOfLines={1} style={{ color: colors.text }}>{chat.title}</Text>
-                  </Pressable>)}
+                  {conversations.filter(chat => !chat.pinned).map(chat => <ChatHistoryItem key={chat.id} pinned={Boolean(chat.pinned)} pinError={pinError === chat.id}
+                    onPin={() => { void setPinned(chat.id, !chat.pinned).then(ok => { if (ok) setHistoryMenuId(null); }); }} title={chat.title} active={activeId === chat.id}
+                    disabled={chatSending || chatLoading || Boolean(deletingId || pinningId)} deleting={deletingId === chat.id} error={deleteError === chat.id}
+                    menuOpen={historyMenuId === chat.id} onMenu={() => setHistoryMenuId(chat.id)} onClose={() => setHistoryMenuId(null)}
+                    onOpen={() => { setHistoryMenuId(null); void openChat(chat.id); closeMenu(); router.replace('/'); }}
+                    onDelete={() => { void deleteConversation(chat.id).then(deleted => { if (deleted) setHistoryMenuId(null); }); }}/>) }
                 </ScrollView>
               </View>
 

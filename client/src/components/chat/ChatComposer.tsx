@@ -11,10 +11,10 @@ const mediaBtn = "flex h-9 w-9 items-center justify-center rounded-full border";
 
 export function ChatComposer() {
   const { colors } = useTheme();
-  const { selectedMedia, removeMedia, send, pick, picking, sending, loading, error, retry } = useChat();
+  const { selectedMedia, removeMedia, send, pick, picking, sending, loading, error, deletingId, pinningId } = useChat();
   const t = useT();
   const [text, setText] = useState("");
-  const canSend = !loading && !sending && !error && selectedMedia.length === 0 && text.trim().length > 0;
+  const canSend = !pinningId && !deletingId && !loading && !sending && !error && selectedMedia.length === 0 && text.trim().length > 0;
 
   function handleSend() {
     if (!canSend) return;
@@ -29,7 +29,6 @@ export function ChatComposer() {
     >
       {selectedMedia.length > 0 && <p style={{ color: colors.textMuted }}>Rasm/video tahlili keyingi bosqichda ulanadi. Matn yuborish uchun tanlangan fayllarni olib tashlang.</p>}
       {loading && <p role="status" style={{ color: colors.textMuted }}>Suhbat yuklanmoqda...</p>}
-      {error && <div role="alert" style={{ color: colors.textMuted }}>{error} <button type="button" disabled={sending || loading} onClick={retry}>Qayta urinish</button></div>}
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
       <div className="flex items-end gap-2.5">
         <textarea

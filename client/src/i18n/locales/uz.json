@@ -8,7 +8,11 @@
     "themeLight": "Yorug'",
     "error": "Xato",
     "yes": "Ha",
-    "no": "Yo'q"
+    "no": "Yo'q",
+    "delete": "O'chirish",
+    "deleting": "O'chirilmoqda...",
+    "pin": "Qadash",
+    "unpin": "Qadashdan olish"
   },
   "language": {
     "choose": "Tilni tanlang",
@@ -24,7 +28,11 @@
     "profile": "Profil",
     "settings": "Sozlamalar",
     "newChat": "Yangi chat",
-    "previousChats": "Oldingi suhbatlar"
+    "previousChats": "Oldingi suhbatlar",
+    "deleteChatError": "Suhbatni o'chirib bo'lmadi. Qayta urining.",
+    "chatActionsHint": "Amallarni ochish uchun bosib turing",
+    "pinnedChats": "Qadalgan suhbatlar",
+    "pinChatError": "Qadab bo'lmadi. Qayta urining."
   },
   "search": {
     "placeholder": "Kino, aktyor qidirish...",

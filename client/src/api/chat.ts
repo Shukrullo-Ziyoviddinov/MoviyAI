@@ -1,6 +1,7 @@
 import { consumeChatStream } from './chat-stream';
 import { apiBaseUrl, readAuthToken } from './client';
 export type ChatSummary = {
+    pinned: boolean;
     id: string;
     title: string;
     updatedAt: string;
@@ -16,12 +17,12 @@ export type SavedTurn = {
 export type SavedConversation = ChatSummary & {
     turns: SavedTurn[];
 };
-async function request<T>(path: string, body?: unknown): Promise<T> {
+async function request<T>(path: string, body?: unknown, method?: string): Promise<T> {
     const token = readAuthToken();
     if (!token)
         throw new Error('Hisobingizga kiring.');
     const res = await fetch(apiBaseUrl + '/api/ai/conversations' + path, {
-        method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        method: method ?? (body ? 'POST' : 'GET'), headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(75000), cache: 'no-store',
     });
     if (!res.ok)
@@ -42,3 +43,7 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
  });
  return consumeChatStream(response,onDelta);
 }
+
+export const deleteChat = (id: string) => request<{id:string}>('/' + id, undefined, 'DELETE');
+
+export const pinChat = (id:string,pinned:boolean) => request<{id:string;pinned:boolean}>('/'+id+'/pin',{pinned},'PATCH');

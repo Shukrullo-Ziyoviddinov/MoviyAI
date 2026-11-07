@@ -58,6 +58,8 @@ router.post('/chat', requireAuth, aiLimit, parseMedia, asyncHandler(chat));
 router.get('/conversations', requireAuth, asyncHandler(conversations.list));
 router.post('/conversations', requireAuth, asyncHandler(conversations.create));
 router.get('/conversations/:id', requireAuth, asyncHandler(conversations.get));
+router.delete('/conversations/:id', requireAuth, asyncHandler(conversations.remove));
+router.patch('/conversations/:id/pin', requireAuth, asyncHandler(conversations.pin));
 router.post('/conversations/:id/messages', requireAuth, aiLimit, asyncHandler(conversations.send));
 
 export default router;

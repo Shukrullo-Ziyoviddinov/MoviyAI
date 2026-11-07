@@ -37,6 +37,17 @@ export async function get(req: Request, res: Response) {
     }
     await respond(res, () => service.getConversation((req as AuthRequest).userId, id.data));
 }
+export async function remove(req: Request, res: Response) {
+    const id = idSchema.safeParse(req.params.id);
+    if (!id.success) { res.status(400).json({ ok: false, error: 'Invalid conversation ID' }); return; }
+    await respond(res, () => service.deleteConversation((req as AuthRequest).userId, id.data));
+}
+export async function pin(req: Request, res: Response) {
+    const id = idSchema.safeParse(req.params.id);
+    const input = z.object({ pinned: z.boolean() }).strict().safeParse(req.body);
+    if (!id.success || !input.success) { res.status(400).json({ ok: false, error: 'Invalid pin input' }); return; }
+    await respond(res, () => service.pinConversation((req as AuthRequest).userId, id.data, input.data.pinned));
+}
 export async function send(req: Request, res: Response) {
     const id = idSchema.safeParse(req.params.id);
     const input = z.object({ requestId: idSchema, text: z.string().trim().min(1).max(20000) }).strict().safeParse(req.body);

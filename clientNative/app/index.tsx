@@ -38,8 +38,9 @@ export default function ChatScreen() {
   const [showGuide, setShowGuide] = useState(false);
   const [guideReady, setGuideReady] = useState(false);
   const messages = useChatStore((state) => state.messages);
+  const chatError = useChatStore(state => state.error);
   const viewing = useMediaViewerStore((state) => !!state.item);
-  const hasMessages = messages.length > 0;
+  const hasMessages = messages.length > 0 || Boolean(chatError);
   const topPad = insets.top + HEADER_ROW_HEIGHT;
   const bottomPad = composerH + 8;
 

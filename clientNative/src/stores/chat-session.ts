@@ -7,6 +7,10 @@ type Pending = {
     text: string;
 };
 type State = {
+    pinningId: string | null;
+    pinError: string | null;
+    deletingId: string | null;
+    deleteError: string | null;
     streamingText: string;
     owner: string | null;
     activeId: string | null;
@@ -26,7 +30,7 @@ export function createChatSession(storage: Storage) {
     let revision = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const listeners = new Set<() => void>();
-    let state: State = { streamingText: '', owner: null, activeId: null, conversations: [], messages: [], loading: false, sending: false, error: null, pending: null };
+    let state: State = { pinningId:null, pinError:null, deletingId:null, deleteError:null, streamingText: '', owner: null, activeId: null, conversations: [], messages: [], loading: false, sending: false, error: null, pending: null };
     const emit = (patch: Partial<State>) => { state = { ...state, ...patch }; listeners.forEach(fn => fn()); };
     const key = (owner: string) => 'moviy.activeChat.' + owner;
     const remember = async (id: string) => { if (state.owner)
@@ -48,7 +52,7 @@ export function createChatSession(storage: Storage) {
             emit({ conversations });
     }
     async function openChat(id: string) {
-        if (state.sending)
+        if (state.sending || state.deletingId || state.pinningId)
             return;
         const version = ++revision;
         clearTimeout(timer);
@@ -96,7 +100,7 @@ export function createChatSession(storage: Storage) {
         const version = ++revision;
         clearTimeout(timer);
         timer = undefined;
-        emit({ streamingText: '', owner, activeId: null, conversations: [], messages: [], loading: !!owner, sending: false, error: null, pending: null });
+        emit({ pinningId:null, pinError:null, deletingId:null, deleteError:null, streamingText: '', owner, activeId: null, conversations: [], messages: [], loading: !!owner, sending: false, error: null, pending: null });
         if (!owner)
             return;
         try {
@@ -114,7 +118,7 @@ export function createChatSession(storage: Storage) {
         }
     }
     function newChat() {
-        if (state.sending || state.loading)
+        if (state.sending || state.loading || state.deletingId || state.pinningId)
             return;
         ++revision;
         clearTimeout(timer);
@@ -136,7 +140,7 @@ export function createChatSession(storage: Storage) {
             if (version !== revision)
                 return;
             if (!state.conversations.some(chat => chat.id === payload.conversationId))
-                emit({ conversations: [{ id: payload.conversationId, title: payload.text.slice(0, 100), updatedAt: new Date().toISOString() }, ...state.conversations] });
+                emit({ conversations: [{ id: payload.conversationId, pinned: false, title: payload.text.slice(0, 100), updatedAt: new Date().toISOString() }, ...state.conversations] });
             const chat = await api.sendChat(payload.conversationId, payload.requestId, payload.text, delta => reveal.push(delta));
             await reveal.finish();
             if (version !== revision)
@@ -175,7 +179,7 @@ export function createChatSession(storage: Storage) {
         text?: string;
         media?: unknown[];
     }) {
-        if (state.loading || state.sending || state.pending || state.error)
+        if (state.loading || state.sending || state.pending || state.error || state.deletingId || state.pinningId)
             return;
         if (!state.owner) {
             emit({ error: 'Hisobingizga kiring.' });
@@ -192,7 +196,29 @@ export function createChatSession(storage: Storage) {
         emit({ activeId: payload.conversationId, pending: payload, messages: [...state.messages, { id: payload.requestId, kind: 'text', role: 'user', text: value, createdAt: Date.now() }] });
         void deliver(payload);
     }
-    const actions = { initialize, openChat, newChat, sendMessage, retry: () => { if (state.pending)
+    async function deleteConversation(id:string):Promise<boolean> {
+        if(!state.owner || state.sending || state.loading || state.deletingId || state.pinningId)return false;
+        const version=revision;emit({deletingId:id,deleteError:null});
+        try {
+            await api.deleteChat(id);if(version!==revision)return false;
+            const conversations=state.conversations.filter(chat=>chat.id!==id);
+            if(state.activeId===id){emit({conversations,activeId:null,messages:[],pending:null,error:null,streamingText:''});await remember('');}
+            else emit({conversations});
+            return true;
+        }catch{if(version===revision)emit({deleteError:id});return false;}
+        finally{if(version===revision)emit({deletingId:null});}
+    }
+    async function setPinned(id:string,pinned:boolean):Promise<boolean> {
+        if(!state.owner || state.loading || state.deletingId || state.pinningId)return false;
+        const version=revision;emit({pinningId:id,pinError:null});
+        try {
+            const result=await api.pinChat(id,pinned);if(version!==revision)return false;
+            emit({conversations:state.conversations.map(chat=>chat.id===id?{...chat,pinned:result.pinned}:chat)});
+            return true;
+        }catch{if(version===revision)emit({pinError:id});return false;}
+        finally{if(version===revision)emit({pinningId:null});}
+    }
+    const actions = { setPinned, deleteConversation, initialize, openChat, newChat, sendMessage, retry: () => { if (state.pending)
             void deliver(state.pending);
         else if (state.activeId)
             void openChat(state.activeId);

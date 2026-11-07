@@ -8,7 +8,11 @@
     "themeLight": "Light",
     "error": "Error",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "pin": "Pin",
+    "unpin": "Unpin"
   },
   "language": {
     "choose": "Choose language",
@@ -24,7 +28,11 @@
     "profile": "Profile",
     "settings": "Settings",
     "newChat": "New chat",
-    "previousChats": "Previous chats"
+    "previousChats": "Previous chats",
+    "deleteChatError": "Could not delete this chat. Please try again.",
+    "chatActionsHint": "Press and hold to open chat actions",
+    "pinnedChats": "Pinned chats",
+    "pinChatError": "Could not update pin. Please try again."
   },
   "search": {
     "placeholder": "Search movies, actors...",
