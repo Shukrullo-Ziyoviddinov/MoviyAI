@@ -49,6 +49,30 @@ function harness() {
 }
 
 test('web and native use identical session behavior', () => assert.equal(source, nativeSource));
+test('list loading stops when summaries arrive; opening a chat only loads its messages', async () => {
+  const h=harness(),session=h.create();
+  const list=h.api.listChats;let releaseList;
+  h.api.listChats=async()=>{await new Promise(resolve=>{releaseList=resolve;});return list();};
+  const initialize=session.actions.initialize('alice');
+  assert.equal(session.getState().listLoading,true);
+  releaseList();await initialize;assert.equal(session.getState().listLoading,false);
+  h.api.listChats=list;
+  session.actions.sendMessage({text:'Ready chat'});await tick();const id=session.getState().activeId;
+  const get=h.api.getChat;let releaseChat;
+  h.api.getChat=async id=>{await new Promise(resolve=>{releaseChat=resolve;});return get(id);};
+  const open=session.actions.openChat(id);
+  assert.equal(session.getState().loading,true);assert.equal(session.getState().listLoading,false);
+  assert.equal(session.getState().conversations.length,1);
+  releaseChat();await open;assert.equal(session.getState().loading,false);
+});
+test('refreshing summaries has its own loading flag which clears on completion', async () => {
+  const h=harness(),session=h.create();await session.actions.initialize('alice');
+  const list=h.api.listChats;let release;
+  h.api.listChats=async()=>{await new Promise(resolve=>{release=resolve;});return list();};
+  session.actions.sendMessage({text:'Question'});await tick();
+  assert.equal(session.getState().listLoading,true);
+  release();await tick();assert.equal(session.getState().listLoading,false);
+});
 test('send, refresh, new chat, and reopening preserve messages', async () => {
   const h = harness(), session = h.create(); await session.actions.initialize('alice');
   session.actions.sendMessage({ text: 'First chat' }); await tick();

@@ -86,6 +86,7 @@ export function SideMenu({ children }: SideMenuProps) {
   const hydrated = useAuthStore(s => s.hydrated);
   const conversations = useChatStore(s => s.conversations);
   const activeId = useChatStore(s => s.activeId);
+  const listLoading = useChatStore(s => s.listLoading);
   const chatLoading = useChatStore(s => s.loading);
   const chatSending = useChatStore(s => s.sending);
   const initializeChat = useChatStore(s => s.initialize);
@@ -383,7 +384,7 @@ export function SideMenu({ children }: SideMenuProps) {
 
               <View style={styles.history}>
                 <ScrollView style={styles.historyEmpty}>
-                  {conversations.some(chat => chat.pinned) && <View style={{marginBottom:16}}>
+                  {!listLoading && conversations.some(chat => chat.pinned) && <View style={{marginBottom:16}}>
                     <View style={{flexDirection:'row',alignItems:'center',gap:8,paddingHorizontal:4,marginBottom:8}}>
                       <Svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke={colors.text} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><Path d="m16 3 5 5-4 1-3 5v3l-3-3-5 5-1-1 5-5-3-3h3l5-3Z"/></Svg>
                       <Text style={{color:colors.text,fontSize:15,fontWeight:'500'}}>{t('menu.pinnedChats')}</Text>
@@ -399,8 +400,8 @@ export function SideMenu({ children }: SideMenuProps) {
                   {t('menu.previousChats')}
                 </Text>
 
-                  {chatLoading && <Text style={{ color: colors.textMuted }}>Yuklanmoqda...</Text>}
-                  {conversations.filter(chat => !chat.pinned).map(chat => <ChatHistoryItem key={chat.id} pinned={Boolean(chat.pinned)} pinError={pinError === chat.id}
+                  {listLoading && <Text accessibilityLiveRegion="polite" style={{ color: colors.textMuted, paddingHorizontal: 4 }}>{t('common.loading')}</Text>}
+                  {!listLoading && conversations.filter(chat => !chat.pinned).map(chat => <ChatHistoryItem key={chat.id} pinned={Boolean(chat.pinned)} pinError={pinError === chat.id}
                     onPin={() => { void setPinned(chat.id, !chat.pinned).then(ok => { if (ok) setHistoryMenuId(null); }); }} title={chat.title} active={activeId === chat.id}
                     disabled={chatSending || chatLoading || Boolean(deletingId || pinningId)} deleting={deletingId === chat.id} error={deleteError === chat.id}
                     menuOpen={historyMenuId === chat.id} onMenu={() => setHistoryMenuId(chat.id)} onClose={() => setHistoryMenuId(null)}

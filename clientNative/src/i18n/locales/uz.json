@@ -12,7 +12,8 @@
     "delete": "O'chirish",
     "deleting": "O'chirilmoqda...",
     "pin": "Qadash",
-    "unpin": "Qadashdan olish"
+    "unpin": "Qadashdan olish",
+    "loading": "Yuklanmoqda..."
   },
   "language": {
     "choose": "Tilni tanlang",

@@ -17,6 +17,7 @@ type State = {
     conversations: api.ChatSummary[];
     messages: ChatMessage[];
     loading: boolean;
+    listLoading: boolean;
     sending: boolean;
     error: string | null;
     pending: Pending | null;
@@ -30,7 +31,7 @@ export function createChatSession(storage: Storage) {
     let revision = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const listeners = new Set<() => void>();
-    let state: State = { pinningId:null, pinError:null, deletingId:null, deleteError:null, streamingText: '', owner: null, activeId: null, conversations: [], messages: [], loading: false, sending: false, error: null, pending: null };
+    let state: State = { listLoading:false, pinningId:null, pinError:null, deletingId:null, deleteError:null, streamingText: '', owner: null, activeId: null, conversations: [], messages: [], loading: false, sending: false, error: null, pending: null };
     const emit = (patch: Partial<State>) => { state = { ...state, ...patch }; listeners.forEach(fn => fn()); };
     const key = (owner: string) => 'moviy.activeChat.' + owner;
     const remember = async (id: string) => { if (state.owner)
@@ -47,9 +48,12 @@ export function createChatSession(storage: Storage) {
             error: failed ? 'Javob olinmadi. Qayta urinib ko\'ring.' : null });
     }
     async function refreshList(version: number) {
-        const conversations = await api.listChats();
-        if (version === revision)
-            emit({ conversations });
+        if(version!==revision)return;
+        emit({listLoading:true});
+        try {
+            const conversations=await api.listChats();
+            if(version===revision)emit({conversations});
+        } finally {if(version===revision)emit({listLoading:false});}
     }
     async function openChat(id: string) {
         if (state.sending || state.deletingId || state.pinningId)
@@ -57,7 +61,7 @@ export function createChatSession(storage: Storage) {
         const version = ++revision;
         clearTimeout(timer);
         timer = undefined;
-        emit({ loading: true, error: null, pending: null });
+        emit({ listLoading:false, loading: true, error: null, pending: null });
         try {
             const chat = await api.getChat(id);
             if (version !== revision)
@@ -100,21 +104,21 @@ export function createChatSession(storage: Storage) {
         const version = ++revision;
         clearTimeout(timer);
         timer = undefined;
-        emit({ pinningId:null, pinError:null, deletingId:null, deleteError:null, streamingText: '', owner, activeId: null, conversations: [], messages: [], loading: !!owner, sending: false, error: null, pending: null });
+        emit({ pinningId:null, pinError:null, deletingId:null, deleteError:null, streamingText: '', listLoading:!!owner, owner, activeId: null, conversations: [], messages: [], loading: !!owner, sending: false, error: null, pending: null });
         if (!owner)
             return;
         try {
             const [conversations, selected] = await Promise.all([api.listChats(), storage.read(key(owner)).catch(() => null)]);
             if (version !== revision)
                 return;
-            emit({ conversations, loading: false });
+            emit({ conversations, loading: false, listLoading:false });
             const id = selected === null ? conversations[0]?.id : selected;
             if (id && conversations.some(chat => chat.id === id))
                 await openChat(id);
         }
         catch {
             if (version === revision)
-                emit({ loading: false, error: 'Suhbatlar yuklanmadi. Sahifani qayta oching.' });
+                emit({ listLoading:false, loading: false, error: 'Suhbatlar yuklanmadi. Sahifani qayta oching.' });
         }
     }
     function newChat() {
@@ -123,7 +127,7 @@ export function createChatSession(storage: Storage) {
         ++revision;
         clearTimeout(timer);
         timer = undefined;
-        emit({ streamingText: '', activeId: null, messages: [], pending: null, error: null });
+        emit({ listLoading:false, streamingText: '', activeId: null, messages: [], pending: null, error: null });
         void remember('');
     }
     async function deliver(payload: Pending) {

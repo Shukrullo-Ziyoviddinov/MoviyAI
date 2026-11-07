@@ -239,7 +239,7 @@ function MenuBody({
   const router = useRouter();
   const pathname = usePathname();
   const { profile, openAuthModal, logout } = useAuth();
-  const { conversations, activeId, loading, sending, openChat, newChat, deletingId, deleteError, deleteConversation, pinningId, pinError, setPinned } = useChat();
+  const { conversations, activeId, loading, sending, openChat, newChat, deletingId, deleteError, deleteConversation, pinningId, pinError, setPinned, listLoading } = useChat();
   const [historyMenuId, setHistoryMenuId] = useState<string | null>(null);
   const t = useT();
 
@@ -390,7 +390,7 @@ function MenuBody({
         <>
           <div className="my-3.5 h-px" style={{ backgroundColor: colors.borderSoft }} />
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {conversations.some(chat => chat.pinned) && <div className="mb-4">
+            {!listLoading && conversations.some(chat => chat.pinned) && <div className="mb-4">
               <p className="mb-2 flex items-center gap-2 px-1 text-[15px] font-medium" style={{ color: colors.text }}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m16 3 5 5-4 1-3 5v3l-3-3-5 5-1-1 5-5-3-3h3l5-3Z"/></svg>
                 {t('menu.pinnedChats')}
@@ -405,8 +405,8 @@ function MenuBody({
             <p className="mb-2 px-1 text-[15px] font-medium" style={{ color: colors.text }}>
               {t("menu.previousChats")}
             </p>
-            {loading && <p className="px-2 text-sm" style={{ color: colors.textMuted }}>Yuklanmoqda...</p>}
-            {conversations.filter(chat => !chat.pinned).map(chat => <ChatHistoryItem key={chat.id} pinned={Boolean(chat.pinned)} pinError={pinError === chat.id}
+            {listLoading && <p role="status" className="px-1 text-sm" style={{ color: colors.textMuted }}>{t('common.loading')}</p>}
+            {!listLoading && conversations.filter(chat => !chat.pinned).map(chat => <ChatHistoryItem key={chat.id} pinned={Boolean(chat.pinned)} pinError={pinError === chat.id}
               onPin={() => { void setPinned(chat.id, !chat.pinned).then(ok => { if (ok) setHistoryMenuId(null); }); }} title={chat.title} active={activeId === chat.id}
               disabled={sending || loading || Boolean(deletingId || pinningId)} deleting={deletingId === chat.id} error={deleteError === chat.id}
               menuOpen={historyMenuId === chat.id} onMenu={() => setHistoryMenuId(chat.id)} onClose={() => setHistoryMenuId(null)}

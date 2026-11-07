@@ -12,7 +12,8 @@
     "delete": "Delete",
     "deleting": "Deleting...",
     "pin": "Pin",
-    "unpin": "Unpin"
+    "unpin": "Unpin",
+    "loading": "Loading..."
   },
   "language": {
     "choose": "Choose language",

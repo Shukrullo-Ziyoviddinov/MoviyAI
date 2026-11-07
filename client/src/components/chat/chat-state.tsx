@@ -17,6 +17,7 @@ type ChatContextValue = {
   conversations: ChatSummary[];
   activeId: string | null;
   loading: boolean;
+  listLoading: boolean;
   openChat: (id: string) => Promise<void>;
   newChat: () => void;
   sending: boolean;
@@ -60,7 +61,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     uuid: () => crypto.randomUUID(),
   }));
   const snapshot = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
-  const { messages, sending, loading, error, conversations, activeId, streamingText, deletingId, deleteError, pinningId, pinError } = snapshot;
+  const { messages, sending, loading, error, conversations, activeId, streamingText, deletingId, deleteError, pinningId, pinError, listLoading } = snapshot;
   const { retry, openChat, newChat, deleteConversation, setPinned } = session.actions;
   const owner = ready ? profile?.id ?? null : null;
   useEffect(() => { void session.actions.initialize(owner); }, [session, owner]);
@@ -134,6 +135,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         conversations,
         activeId,
         loading,
+        listLoading,
         openChat: async id => { setSelectedMedia([]); setViewer(null); await openChat(id); },
         newChat: () => { newChat(); setSelectedMedia([]); setViewer(null); },
         sending,
