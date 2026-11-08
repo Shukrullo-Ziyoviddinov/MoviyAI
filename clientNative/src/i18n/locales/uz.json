@@ -170,6 +170,7 @@
     "imageLimit": "3 tagacha JPG, PNG yoki WebP. Har biri 4 MB, jami 8 MB gacha.",
     "videoLater": "Video orqali qidirish keyingi bosqichda ulanadi.",
     "movieTable": {"title":"Kino ma’lumotlari","original":"Original nomi","uz":"O‘zbekcha nomi","ru":"Ruscha nomi","year":"Yili","productionYears":"Ishlab chiqarilgan davri","countries":"Davlati","genres":"Janri","directors":"Rejissyor","writers":"Ssenariy muallifi","runtime":"Davomiyligi","premiere":"Premyera","imdb":"IMDb reytingi","kinopoisk":"Kinopoisk reytingi","budget":"Budjeti","boxOffice":"Kassa tushumi","ageRating":"Yosh chegarasi","minute":"daq."},
+    "movieVideo": {"trailer":"Treyler","related":"Filmga oid video","play":"Videoni ijro etish","open":"YouTube’da ko‘rish","unavailable":"Bu videoni chat ichida ijro etib bo‘lmadi. YouTube’da ochishingiz mumkin."},
     "movieAbout": "Kino haqida",
     "movieConfirm": "Siz izlagan kino shumi?",
     "movieSources": "Manbalar",

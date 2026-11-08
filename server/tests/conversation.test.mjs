@@ -69,7 +69,7 @@ function harness() {
   const findMovieFromImages = async (text, images) => {
     if(fail)throw Error('image search failure');
     assert.ok(images[0].fileUri.startsWith('https://r2.example/'));
-    return {text:'Found movie',model:'gemini-3.5-flash-lite',movie:{title:'Example',sources:[],posters:[]}};
+    return {text:'Found movie',model:'gemini-3.5-flash-lite',movie:{title:'Example',sources:[],posters:[],trailer:{videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Example trailer',channel:'Studio',kind:'trailer'}}};
   };
   const imagePath = (_owner,id,request,index) => `/images/${id}/${request}/${index}`;
   const objects=new Map(); let storageFailure=false;
@@ -106,7 +106,7 @@ test('image turns use Gemini search, save the input/result, and expose paths ins
   const image={mimeType:'image/jpeg',data:Buffer.from([255,216,255])};
   const result=await h.sendConversationMessage('alice',id,requestId,'Find movie',undefined,[image]);
   assert.equal(h.calls(),0);assert.equal(result.turns[0].model,'gemini-3.5-flash-lite');
-  assert.equal(result.turns[0].movie.title,'Example');assert.equal(result.turns[0].images.length,1);
+  assert.equal(result.turns[0].movie.title,'Example');assert.equal((await h.getConversation('alice',id)).turns[0].movie.trailer.videoId,'zSWdZVtXT7E');assert.equal(result.turns[0].images.length,1);
   assert.equal(result.turns[0].images[0].data,undefined);assert.match(result.turns[0].images[0].path,/^https:\/\/r2\.example\//);
   assert.equal(h.ChatTurn.rows[0].images[0].data,undefined);assert.equal(h.objects.size,1);assert.ok(h.ChatTurn.rows[0].images[0].key.startsWith('chatimg/'));
 });

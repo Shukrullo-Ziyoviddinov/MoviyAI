@@ -37,3 +37,8 @@ export interface SerperImagesResponse {
   images?: SerperImageResult[];
   credits?: number;
 }
+export interface SerperVideoResult {
+  title: string; link: string; snippet?: string; channel?: string; date?: string;
+  duration?: string; imageUrl?: string; position?: number;
+}
+export interface SerperVideosResponse {videos?:SerperVideoResult[];credits?:number}

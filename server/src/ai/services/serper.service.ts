@@ -3,6 +3,7 @@ import type {
   SerperImagesResponse,
   SerperSearchOptions,
   SerperSearchResponse,
+  SerperVideosResponse,
 } from '../types/serper.types.js';
 
 const SERPER_BASE_URL = 'https://google.serper.dev';
@@ -16,7 +17,7 @@ export class SerperError extends Error {
 }
 
 async function request<T>(
-  endpoint: 'search' | 'images',
+  endpoint: 'search' | 'images' | 'videos',
   query: string,
   options: SerperSearchOptions,
 ): Promise<T> {
@@ -76,4 +77,7 @@ export function searchImages(
   options: SerperSearchOptions = {},
 ): Promise<SerperImagesResponse> {
   return request('images', query, options);
+}
+export function searchVideos(query:string,options:SerperSearchOptions={}):Promise<SerperVideosResponse>{
+  return request('videos',query,options);
 }

@@ -27,8 +27,8 @@ function harness({ searchable = true, badSource = false, posterError = false, de
   const searchImages = async (_query, options) => { posters++; if(options.num===15)throw Object.assign(Error('Unsupported Serper image result count'),{status:400}); if (posterError) throw Error('unavailable'); return { images: manyPosters ? [{imageUrl:'https://example.com/tiny.jpg',imageWidth:80,imageHeight:100},{imageUrl:'https://example.com/wrong.jpg',title:'Interstellar 2025'},...Array.from({length:10},(_,index)=>({imageUrl:'https://example.com/poster-'+index+'.jpg',title:'Interstellar 2014',imageWidth:1000,imageHeight:1500})),{imageUrl:'https://example.com/poster-0.jpg'}] : [
     { imageUrl: 'https://example.com/poster.jpg', link: 'https://example.com/movie' }, { imageUrl: 'http://127.0.0.1/private' },
   ] }; };
-  const api = new Function('GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
-    (GoogleGenAI, z, { apiKey: 'test', models: { image: 'gemini-3.5-flash-lite' } }, AiServiceError, searchWeb, searchImages, dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier);
+  const api = new Function('GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
+    (GoogleGenAI, z, { apiKey: 'test', models: { image: 'gemini-3.5-flash-lite' } }, AiServiceError, searchWeb, searchImages, dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier, async()=>({videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Interstellar trailer',channel:'Warner Bros.',kind:'trailer'}));
   return { ...api, calls, searches: () => searches, posters: () => posters };
 }
 const images = [{ mimeType: 'image/jpeg', data: Buffer.from([255, 216, 255]) }];
@@ -78,4 +78,4 @@ test('optional dossier and evidence failures keep identification and mark missin
  }
 });
 
-test('poster search returns up to seven unique images and skips small images or wrong years',async()=>{const result=await harness({manyPosters:true}).findMovieFromImages('Find',images);assert.equal(result.movie.posters.length,7);assert.equal(new Set(result.movie.posters.map(item=>item.url)).size,7);assert.ok(result.movie.posters.every(item=>item.url.includes('poster-')));});
+test('poster search returns up to two unique images and skips small images or wrong years',async()=>{const result=await harness({manyPosters:true}).findMovieFromImages('Find',images);assert.equal(result.movie.posters.length,2);assert.equal(new Set(result.movie.posters.map(item=>item.url)).size,2);assert.ok(result.movie.posters.every(item=>item.url.includes('poster-')));});

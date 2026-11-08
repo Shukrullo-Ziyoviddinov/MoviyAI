@@ -1,35 +1,28 @@
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
-import { useContext, type ReactNode } from 'react';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { SideMenuGestureContext } from '@/components/menu/side-menu-gesture';
+import { Linking, Pressable, Text, View } from 'react-native';
+import type { ReactNode } from 'react';
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import type { MovieSearchResult } from '@/src/types/chat';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
+import {MovieTrailer} from './MovieTrailer';
 import { MovieDetailsTable } from './MovieDetailsTable';
 
 export function MovieSearchCard({ movie,children,confirmation }: { movie: MovieSearchResult;children?:ReactNode;confirmation?:string }) {
   const { colors } = useTheme(); const { t } = useTranslation(); const open = useMediaViewerStore(state => state.open);
-  const drawerGesture = useContext(SideMenuGestureContext);
-  const posterGesture = Gesture.Native();
-  if (drawerGesture) posterGesture.blocksExternalGesture(drawerGesture);
   return <View style={{ width: '100%', marginTop: 12 }}>
     <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>{movie.title}{movie.year ? ` (${movie.year})` : ''}</Text>
     {movie.titleUz && <Text style={{ color: colors.textMuted, marginTop: 4 }}>UZ: {movie.titleUz}</Text>}
     {movie.titleRu && <Text style={{ color: colors.textMuted, marginTop: 4 }}>RU: {movie.titleRu}</Text>}
     <Text style={{color:colors.textMuted,marginTop:4}}>EN: {movie.title}</Text>
-    {movie.posters.length > 0 && <View style={{ marginTop: 12, backgroundColor: colors.panelSoft, borderColor: colors.borderSoft, borderWidth: 1, borderRadius: 16, overflow: 'hidden' }}>
-      <GestureDetector gesture={posterGesture}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, padding: 12 }} accessibilityLabel={t('chat.moviePosters')}>
-      {movie.posters.map((poster, index) => <Pressable key={poster.url} accessibilityRole="button" accessibilityLabel={movie.title}
+    {movie.posters.length > 0 && <View accessibilityLabel={t('chat.moviePosters')} style={{ marginTop: 12, flexDirection:'row', gap:8, padding:8, backgroundColor: colors.panelSoft, borderColor: colors.borderSoft, borderWidth: 1, borderRadius: 16, overflow: 'hidden' }}>
+      {movie.posters.slice(0,2).map((poster, index) => <Pressable key={poster.url} accessibilityRole="button" accessibilityLabel={movie.title}
         onPress={() => open({ id: `${movie.title}-${index}`, type: 'image', uri: poster.url })}
-        style={{ width: 112, height: 176, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: colors.borderSoft }}>
+        style={{ flex:1,minWidth:0,aspectRatio:2/3, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: colors.borderSoft }}>
         <Image source={{ uri: poster.url }} contentFit="cover" style={{ width: '100%', height: '100%' }} />
       </Pressable>)}
-      </ScrollView>
-      </GestureDetector>
     </View>}
+    <MovieTrailer trailer={movie.trailer}/>
     <MovieDetailsTable movie={movie}/>
     {children}
     <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 16, marginBottom: 4 }}>{t('chat.movieSources')}</Text>

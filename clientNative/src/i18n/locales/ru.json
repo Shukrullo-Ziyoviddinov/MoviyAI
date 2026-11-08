@@ -170,6 +170,7 @@
     "imageLimit": "До 3 JPG, PNG или WebP. 4 MB каждый, 8 MB всего.",
     "videoLater": "Поиск по видео будет добавлен позже.",
     "movieTable": {"title":"Информация о фильме","original":"Оригинальное название","uz":"Название на узбекском","ru":"Название на русском","year":"Год","productionYears":"Период производства","countries":"Страна","genres":"Жанр","directors":"Режиссёр","writers":"Сценарист","runtime":"Продолжительность","premiere":"Премьера","imdb":"Рейтинг IMDb","kinopoisk":"Рейтинг Кинопоиска","budget":"Бюджет","boxOffice":"Кассовые сборы","ageRating":"Возрастное ограничение","minute":"мин."},
+    "movieVideo": {"trailer":"Трейлер","related":"Видео о фильме","play":"Воспроизвести видео","open":"Смотреть на YouTube","unavailable":"Не удалось воспроизвести видео в чате. Откройте его на YouTube."},
     "movieAbout": "О фильме",
     "movieConfirm": "Это тот фильм, который вы искали?",
     "movieSources": "Источники",

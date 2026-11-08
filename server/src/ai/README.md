@@ -1,5 +1,25 @@
 # AI chat API
 
+## Automatic YouTube video
+
+Once an uploaded image has a supported film match, `movie-trailer.service.ts`
+searches Serper `/videos` for a YouTube trailer. Matching studio-channel trailers
+are preferred; a second search can select another video about the same film if
+no studio trailer was found. A non-trailer is labelled as a related video. Exact
+YouTube hosts/IDs are validated; explicit wrong years, obvious sequels, fake/fan
+trailers and unrelated titles are rejected. Channel-name ranking is a preference,
+not a verified-channel guarantee, and the UI does not claim verified official status.
+The optional `movie.trailer` metadata is saved with the turn, along with its source
+link; no video bytes pass through Render/R2. This adds at most two Serper requests
+and no model calls. Search failure leaves the rest of the movie answer usable.
+
+Web/native `MovieTrailer` components appear below posters and above the table.
+Only a preview image is loaded initially. User interaction mounts the YouTube player;
+playback is inline with fullscreen controls and an always-available Watch on YouTube
+link. Player errors switch to an external-watch fallback. Actual embed availability
+depends on the uploader and YouTube restrictions, and cannot be guaranteed by search.
+Old conversations without video metadata are not searched again when opened.
+
 ## Image-based movie search
 
 Web/native upload directly to R2: authenticated `POST /conversations/:id/uploads`
