@@ -10,7 +10,8 @@ export function MovieSearchCard({ movie }: { movie: MovieSearchResult }) {
     <p className="text-base font-semibold" style={{ color: colors.text }}>{movie.title}{movie.year ? ` (${movie.year})` : ''}</p>
     {movie.titleUz && <p className="mt-1 text-sm" style={{ color: colors.textMuted }}>UZ: {movie.titleUz}</p>}
     {movie.titleRu && <p className="mt-1 text-sm" style={{ color: colors.textMuted }}>RU: {movie.titleRu}</p>}
-    {movie.posters.length > 0 && <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto" aria-label={t('chat.moviePosters')}>
+    {movie.posters.length > 0 && <div data-media-strip className="no-scrollbar mt-3 flex gap-3 overflow-x-auto rounded-2xl border p-3"
+      style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft, overscrollBehaviorX: 'contain' }} aria-label={t('chat.moviePosters')}>
       {movie.posters.map((poster, index) => <button key={poster.url} type="button" className="h-44 w-28 shrink-0 overflow-hidden rounded-xl border" style={{ borderColor: colors.borderSoft }}
         onClick={() => openViewer({ id: `${movie.title}-${index}`, type: 'image', uri: poster.url })}>
         <img src={poster.url} alt={movie.title} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" />

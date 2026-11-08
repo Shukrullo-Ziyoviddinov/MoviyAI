@@ -12,6 +12,7 @@ import {
 import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useChatStore } from '@/src/stores/useChatStore';
 import { ChatHistoryItem } from './ChatHistoryItem';
+import { SideMenuGestureContext } from './side-menu-gesture';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -276,7 +277,7 @@ export function SideMenu({ children }: SideMenuProps) {
   return (
     <GestureDetector gesture={openGesture}>
       <View style={[styles.shell, (layerOn || open) && styles.shellRaised]}>
-        {children}
+        <SideMenuGestureContext.Provider value={openGesture}>{children}</SideMenuGestureContext.Provider>
 
         <View
           style={[StyleSheet.absoluteFill, styles.overlay]}
