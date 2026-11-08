@@ -1,5 +1,19 @@
 // Small, text-only Markdown subset. HTML is always rendered as literal text.
 export type InlinePart = { kind: 'text' | 'bold' | 'italic' | 'code' | 'link'; text: string; href?: string };
+export function isCharacterHeading(text: string) {
+  return /^(?:asosiy qahramonlar|main characters|главные герои|основные персонажи)\s*[:：]?$/i.test(text.trim());
+}
+export function characterForItem<T extends {label: string}>(item: string, images: T[]) {
+  const label = /^(?:\*\*|__)([^*_]+)(?:\*\*|__)/.exec(item)?.[1]?.replace(/[:：]\s*$/, '').trim().toLowerCase();
+  return label ? images.find(image => image.label.trim().toLowerCase() === label) : undefined;
+}
+export function answerSections(text: string) {
+  let characterSection = false;
+  return answerBlocks(text).map(block => {
+    if (block.kind === 'heading') characterSection = isCharacterHeading(block.text);
+    return { block, characterSection };
+  });
+}
 export type AnswerBlock =
   | { kind: 'heading' | 'paragraph' | 'quote' | 'code'; text: string; level?: number }
   | { kind: 'rule' }

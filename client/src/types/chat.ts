@@ -1,3 +1,4 @@
+export type CharacterImage = { label: string; imageUrl: string; sourceUrl: string | null };
 export type MovieSearchResult = {
     title: string;
     titleUz: string | null;
@@ -26,6 +27,7 @@ export type ChatMediaItem = {
     height?: number;
 };
 export type TextChatMessage = {
+    characterImages?: CharacterImage[];
     movie?: MovieSearchResult | null;
     role?: 'user' | 'model';
     failed?: boolean;

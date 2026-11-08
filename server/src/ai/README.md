@@ -54,6 +54,18 @@ Saved turns include `images` (private image paths) and optional `movie`
 
 ## Topic scope
 
+Main-character sections in new saved answers can include optional `characterImages`
+metadata (`label`, `imageUrl`, `sourceUrl`). After text generation, only a recognized
+Uzbek/Russian/English main-character heading, one explicit film-title/year heading,
+and explicit original character names trigger at most six parallel Serper image searches. Searches include
+the film version; ambiguous versions, mismatched labels/years, or provider errors
+leave the original text intact. Small HTTPS thumbnails are preferred and loaded
+directly by web/native (56 × 56 next to the matching character description).
+Results persist in chat turns and do not write to the movie/actor catalog.
+This enrichment adds no model calls and up to six search credits to such answers;
+ordinary answers incur no character-image calls. Existing saved answers are not
+searched automatically when reopened.
+
 `config/ai-policy.ts` supplies shared system instructions to both Gemma text chat
 and Gemini media analysis. The assistant covers cinema, series, cinema-related
 people/topics, Moviy AI usage and natural social exchanges. Unrelated tasks are

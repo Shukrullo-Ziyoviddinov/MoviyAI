@@ -1,8 +1,18 @@
 import { Linking, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/src/stores/useThemeStore';
-import { answerBlocks, inlineParts } from './answer-format';
+import { answerSections, inlineParts, characterForItem } from './answer-format';
+import { useState } from 'react';
+import { Image } from 'expo-image';
+import type { CharacterImage } from '@/src/types/chat';
 
-export function FormattedAnswer({ text }: { text: string }) {
+function CharacterPortrait({ image }: { image: CharacterImage }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return <Image source={{ uri: image.imageUrl }} accessibilityLabel={image.label} contentFit="cover" onError={()=>setFailed(true)}
+    style={{ width: 56, height: 56, flexShrink: 0, borderRadius: 12, marginTop: 3 }}/>;
+}
+
+export function FormattedAnswer({ text, characterImages = [] }: { text: string; characterImages?: CharacterImage[] }) {
   const { colors } = useTheme();
   function inline(value: string) {
     return inlineParts(value).map((part, index) => <Text key={index}
@@ -13,18 +23,18 @@ export function FormattedAnswer({ text }: { text: string }) {
         : part.kind === 'link' ? { color: colors.accentBright, textDecorationLine: 'underline' } : undefined}>{part.text}</Text>);
   }
   return <View style={styles.content}>
-    {answerBlocks(text).map((block, index) => {
+    {answerSections(text).map(({ block, characterSection }, index) => {
       if (block.kind === 'rule') return <View key={index} style={{ height: 1, backgroundColor: colors.borderSoft, marginVertical: 4 }}/>;
-      if (block.kind === 'heading') return <View key={index} style={styles.headingRow}>
+      if (block.kind === 'heading') { return <View key={index} style={styles.headingRow}>
         <View style={{ width: 3, height: block.level! <= 2 ? 21 : 18, borderRadius: 3, marginTop: 5, backgroundColor: colors.accentBright }}/>
         <Text selectable accessibilityRole="header" style={[styles.body, styles.heading, { color: colors.text, fontSize: block.level! <= 2 ? 21 : 18 }]}>{inline(block.text)}</Text>
-      </View>;
+      </View>; }
       if (block.kind === 'list') return <View key={index} style={styles.list}>
-        {block.items.map((item, position) => <View key={position} style={styles.listRow}>
-          {block.ordered ? <View style={[styles.number, { backgroundColor: colors.panelSoft }]}><Text style={{ color: colors.accentBright, fontSize: 11, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{block.start + position}</Text></View>
+        {block.items.map((item, position) => { const portrait = characterSection ? characterForItem(item, characterImages) : undefined; return <View key={position} style={styles.listRow}>
+          {portrait ? <CharacterPortrait key={portrait.imageUrl} image={portrait}/> : block.ordered ? <View style={[styles.number, { backgroundColor: colors.panelSoft }]}><Text style={{ color: colors.accentBright, fontSize: 11, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{block.start + position}</Text></View>
             : <View style={{ width: 6, height: 6, borderRadius: 3, marginTop: 11, backgroundColor: colors.accentBright }}/>}
           <Text selectable style={[styles.body, { flex: 1, color: colors.text }]}>{inline(item)}</Text>
-        </View>)}
+        </View>; })}
       </View>;
       if (block.kind === 'quote') return <View key={index} style={{ borderLeftWidth: 2, borderLeftColor: colors.accentBright, paddingLeft: 16 }}><Text selectable style={[styles.body, styles.italic, { color: colors.textMuted }]}>{inline(block.text)}</Text></View>;
       if (block.kind === 'code') return <ScrollView key={index} horizontal style={{ borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft, backgroundColor: colors.panelSoft }} contentContainerStyle={{ padding: 12 }}><Text selectable style={[styles.codeInline, { color: colors.text, lineHeight: 22 }]}>{block.text}</Text></ScrollView>;

@@ -1,4 +1,4 @@
-import type { ChatMediaItem, MovieSearchResult } from '../types/chat';
+import type { ChatMediaItem, MovieSearchResult, CharacterImage } from '../types/chat';
 import { consumeChatStream } from './chat-stream';
 import { apiBaseUrl, readAuthToken } from './client';
 export type ChatSummary = {
@@ -8,6 +8,7 @@ export type ChatSummary = {
     updatedAt: string;
 };
 export type SavedTurn = {
+    characterImages?: CharacterImage[];
     images?: Array<{
         id: string;
         type: 'image';
@@ -67,7 +68,7 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
     const body = JSON.stringify({requestId,text,...(localImages.length ? {directImages:true} : {})});
     const headers: Record<string,string> = {Accept:'text/event-stream',Authorization:'Bearer '+token,'Content-Type':'application/json'};
     const response = await fetch(apiBaseUrl + '/api/ai/conversations/' + id + '/messages', {
-        method: 'POST', headers, body, signal: AbortSignal.timeout(media.length ? 180000 : 90000),
+        method: 'POST', headers, body, signal: AbortSignal.timeout(240000),
     });
     return consumeChatStream(response, onDelta);
 }

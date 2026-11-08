@@ -1,6 +1,6 @@
 import { File as LocalFile } from 'expo-file-system';
 import * as Crypto from 'expo-crypto';
-import type { ChatMediaItem, MovieSearchResult } from '../types/chat';
+import type { ChatMediaItem, MovieSearchResult, CharacterImage } from '../types/chat';
 import { fetch } from 'expo/fetch';
 import { getAuthTokenKey, getAuthTokenSync } from '@/src/utils/authToken';
 import { getSecureItem } from '@/src/utils/storage';
@@ -14,6 +14,7 @@ export type ChatSummary = {
     updatedAt: string;
 };
 export type SavedTurn = {
+    characterImages?: CharacterImage[];
     images?: Array<{
         id: string;
         type: 'image';
@@ -68,7 +69,7 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
     const body = JSON.stringify({requestId,text,...(localImages.length ? {directImages:true} : {})});
     const headers: Record<string,string> = {Accept:'text/event-stream',Authorization:'Bearer '+token,'Content-Type':'application/json'};
     const response = await fetch(apiBaseUrl + '/api/ai/conversations/' + id + '/messages', {
-        method: 'POST', headers, body, signal: AbortSignal.timeout(media.length ? 180000 : 90000),
+        method: 'POST', headers, body, signal: AbortSignal.timeout(240000),
     });
     return consumeChatStream(response, onDelta);
 }

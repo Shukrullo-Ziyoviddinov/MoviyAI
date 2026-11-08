@@ -32,7 +32,7 @@ export function ChatMessageList({topInset,bottomInset}:{topInset:number;bottomIn
  },[messages,streamingText,sending,error,bottomInset,loading]);
  if(loading) return <div ref={root} aria-busy="true" className="min-h-full w-full" style={{paddingTop:topInset+8,paddingBottom:bottomInset}}><ChatSkeleton/></div>;
  return <div ref={root} aria-busy={sending} className="flex min-h-full w-full flex-col justify-start" style={{paddingTop:topInset+8,paddingBottom:bottomInset}}>
-  {messages.map(item=>item.kind==='text'?<TextMessageBubble key={item.id} text={item.text} role={item.role} movie={item.movie}/>:<MediaGridBlock key={item.id} items={item.items}/>)}
+  {messages.map(item=>item.kind==='text'?<TextMessageBubble key={item.id} text={item.text} role={item.role} movie={item.movie} characterImages={item.characterImages}/>:<MediaGridBlock key={item.id} items={item.items}/>)}
   {sending && (streamingText ? <TextMessageBubble text={streamingText} role="model"/> : <AiWaiting/>)}
   {!sending && error && <AiError message={error} onRetry={retry} disabled={loading}/>}
  </div>;

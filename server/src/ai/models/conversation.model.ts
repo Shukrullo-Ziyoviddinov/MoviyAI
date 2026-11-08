@@ -26,6 +26,7 @@ const turnSchema = new Schema({
         data: { type: Buffer, select: false },
     }, { _id: false })], default: [] },
     movie: { type: Schema.Types.Mixed, default: null },
+    characterImages: { type: Schema.Types.Mixed, default: [] },
     answer: { type: String, default: '' },
     model: { type: String, default: '' },
     status: { type: String, enum: ['processing', 'completed', 'failed'], required: true },

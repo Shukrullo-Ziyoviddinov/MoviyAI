@@ -30,7 +30,7 @@ export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
   onScroll={event=>{const {contentSize,contentOffset,layoutMeasurement}=event.nativeEvent;following.current=contentSize.height-contentOffset.y-layoutMeasurement.height<100;}}
   onContentSizeChange={()=>{if(following.current)list.current?.scrollToEnd({animated:false});}}
   ListFooterComponent={sending ? (streamingText ? <TextMessageBubble text={streamingText} role="model"/> : <AiWaiting/>) : error ? <AiError message={error} onRetry={retry} disabled={loading}/> : null}
-  renderItem={({item})=>item.kind==='text'?<TextMessageBubble text={item.text} role={item.role} movie={item.movie}/>:<MediaGridBlock items={item.items}/>}
+  renderItem={({item})=>item.kind==='text'?<TextMessageBubble text={item.text} role={item.role} movie={item.movie} characterImages={item.characterImages}/>:<MediaGridBlock items={item.items}/>}
  />;
 }
 const styles=StyleSheet.create({list:{flex:1},content:{flexGrow:1,justifyContent:'flex-start'}});

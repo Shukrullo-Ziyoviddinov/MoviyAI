@@ -29,3 +29,5 @@ test('wrapped lists, numbered starts and incomplete streamed text retain their c
  assert.equal(inlineParts('Hello **unfinished')[0].text,'Hello **unfinished');
  assert.equal(answerBlocks('```text\n**literal**\n```')[0].text,'**literal**');
 });
+
+test('portraits match exact character labels only inside the main character section',()=>{const {answerSections,characterForItem}=exportsObject;const sections=answerSections('### Main characters\n- **Belle:** Heroine.\n### Music\n- **Belle:** Song title.');assert.equal(sections[1].characterSection,true);assert.equal(sections[3].characterSection,false);assert.equal(characterForItem('**Belle:** Heroine.',[{label:'Belle',imageUrl:'belle.jpg'}]).imageUrl,'belle.jpg');assert.equal(characterForItem('**Beast:** Prince.',[{label:'Belle'}]),undefined);});

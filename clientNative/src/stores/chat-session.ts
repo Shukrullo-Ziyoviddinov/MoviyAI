@@ -49,7 +49,7 @@ export function createChatSession(storage: Storage) {
                 if (turn.text)
                     messages.push({ id: turn.requestId, kind: 'text', role: 'user', text: turn.text, createdAt: Date.parse(turn.createdAt) });
                 if (turn.answer)
-                    messages.push({ id: turn.requestId + '-ai', kind: 'text', role: 'model', text: turn.answer, movie: turn.movie, createdAt: Date.parse(turn.createdAt) + 1 });
+                    messages.push({ id: turn.requestId + '-ai', kind: 'text', role: 'model', text: turn.answer, movie: turn.movie, characterImages: turn.characterImages, createdAt: Date.parse(turn.createdAt) + 1 });
                 return messages;
             }), sending: chat.turns.some(turn => turn.status === 'processing'),
             pending: failed ? { conversationId: chat.id, requestId: failed.requestId, text: failed.text, media: (failed.images ?? []).map(image => ({ id: image.id, type: 'image' as const, uri: api.chatMediaUrl(image.path), stored: true })) } : null,

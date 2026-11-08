@@ -6,6 +6,7 @@ import type { ChatImageInput } from '../types/movie-search.types.js';
 import { findMovieFromImages } from './image-movie.service.js';
 import { imageReferences, uploadChatImages, chatImageUrls, cleanupConversationImages } from './chat-image-storage.service.js';
 import { resolveDirectImages } from './direct-image.service.js';
+import { findCharacterImages } from './character-image.service.js';
 export class ConversationError extends Error {
     constructor(message: string, public readonly status: number) { super(message); }
 }
@@ -41,6 +42,7 @@ export async function getConversation(userId: string, id: string) {
             requestId: turn.requestId, text: turn.text, answer: turn.answer,
             images: (await chatImageUrls(userId, id, turn.requestId, turn.images)).map((image, index) => ({ id: `${turn.requestId}-${index}`, type: 'image' as const, path: image.fileUri })),
             movie: turn.movie ?? null,
+            characterImages: turn.characterImages ?? [],
             status: turn.status === 'processing' && row.lockUntil <= new Date() ? 'failed' : turn.status,
             createdAt: turn.createdAt, model: turn.model,
         }))),
@@ -58,7 +60,7 @@ export async function sendConversationMessage(userId: string, id: string, reques
     const lockToken = randomUUID();
     const locked = await Conversation.findOneAndUpdate({
         _id: id, userId, deletedAt: null, lockUntil: { $lte: new Date() },
-    }, { $set: { lockToken, lockUntil: new Date(Date.now() + (directImages || images.length || existing?.images?.length ? 180000 : 90000)) } }, { returnDocument: 'after' });
+    }, { $set: { lockToken, lockUntil: new Date(Date.now() + 240000) } }, { returnDocument: 'after' });
     if (!locked) {
         if (!await Conversation.exists({ _id: id, userId, deletedAt: null }))
             throw new ConversationError('Conversation not found', 404);
@@ -94,8 +96,9 @@ export async function sendConversationMessage(userId: string, id: string, reques
         const result = searchImages.length
             ? await findMovieFromImages(text, searchImages, onDelta)
             : await chatWithGemma({ text, history }, onDelta);
+        const characterImages = await findCharacterImages(result.text);
         await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken }, {
-            $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null },
+            $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages },
         });
     }
     catch (error) {

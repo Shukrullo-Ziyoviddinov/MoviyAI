@@ -78,9 +78,9 @@ function harness() {
   const getChatImage=async key=>objects.get(key)??null;
   const deleteChatImage=async key=>{if(storageFailure)throw Error('R2 unavailable');objects.delete(key);};
   const storage=new Function('ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{});
-  const service = new Function('Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', source +
+  const service = new Function('Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', source +
     '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage,deleteConversation,pinConversation};')
-    (Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');});
+    (Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}]);
   return { ...service, ...storage, objects, storageFailure: value=>{storageFailure=value;}, Conversation, ChatTurn, fail: value => { fail = value; }, hold: value => { hold = value; },
     calls: () => calls, captured: () => captured };
 }
@@ -194,3 +194,5 @@ test('history is built from saved turns and an expired processing turn can be re
  await assert.rejects(()=>h.sendConversationMessage('alice',id,requestId,'Find',undefined,images));assert.equal(h.ChatTurn.rows[0].images[0].data,undefined);
  h.storageFailure(false);await h.sendConversationMessage('alice',id,requestId,'Find',undefined,images);assert.equal(h.ChatTurn.rows[0].status,'completed');assert.equal(h.objects.size,1);
  });
+
+test('character portraits are stored and restored with the AI answer',async()=>{const h=harness(),id=randomUUID();await h.createConversation('alice',id);await h.sendConversationMessage('alice',id,randomUUID(),'Characters');const chat=await h.getConversation('alice',id);assert.equal(chat.turns[0].characterImages[0].label,'Belle');assert.equal(h.ChatTurn.rows[0].characterImages[0].imageUrl,'https://example.com/belle.jpg');});
