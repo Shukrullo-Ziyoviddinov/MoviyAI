@@ -28,7 +28,6 @@ export function ChatComposer() {
       style={{ backgroundColor: colors.panel, borderColor: colors.borderSoft }}
     >
       {selectedMedia.length > 0 && <p style={{ color: colors.textMuted }}>Rasm/video tahlili keyingi bosqichda ulanadi. Matn yuborish uchun tanlangan fayllarni olib tashlang.</p>}
-      {loading && <p role="status" style={{ color: colors.textMuted }}>Suhbat yuklanmoqda...</p>}
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
       <div className="flex items-end gap-2.5">
         <textarea

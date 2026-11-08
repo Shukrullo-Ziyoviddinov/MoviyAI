@@ -18,7 +18,7 @@ const GUIDE_KEY = "moviy-chat-guide-understood";
 
 function ChatScreen() {
   const { colors } = useTheme();
-  const { messages, viewer, error } = useChat();
+  const { messages, viewer, error, loading } = useChat();
   const t = useT();
   const [showGuide, setShowGuide] = useState(false);
   const [guideReady, setGuideReady] = useState(false);
@@ -26,7 +26,7 @@ function ChatScreen() {
   const dockRef = useRef<HTMLDivElement>(null);
   const { active: telegram, back } = useTelegramChrome();
   const topInset = telegram ? back + HEADER_ROW_HEIGHT : HEADER_ROW_HEIGHT;
-  const hasMessages = messages.length > 0 || Boolean(error);
+  const hasMessages = loading || messages.length > 0 || Boolean(error);
 
   useEffect(() => {
     const understood = window.localStorage.getItem(GUIDE_KEY) === "1";

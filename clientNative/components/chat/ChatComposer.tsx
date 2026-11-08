@@ -52,7 +52,6 @@ export function ChatComposer() {
       ]}
     >
       {selectedMedia.length > 0 && <Text style={{ color: colors.textMuted }}>Rasm/video tahlili keyingi bosqichda ulanadi. Matn yuborish uchun tanlangan fayllarni olib tashlang.</Text>}
-      {loading && <Text style={{ color: colors.textMuted }}>Suhbat yuklanmoqda...</Text>}
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
 
       <View style={styles.inputRow}>

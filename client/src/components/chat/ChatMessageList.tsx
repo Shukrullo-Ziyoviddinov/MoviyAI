@@ -5,6 +5,7 @@ import { MediaGridBlock } from '@/components/chat/MediaGridBlock';
 import { TextMessageBubble } from '@/components/chat/TextMessageBubble';
 import { AiWaiting } from '@/components/chat/AiWaiting';
 import { AiError } from '@/components/chat/AiError';
+import { ChatSkeleton } from '@/components/chat/ChatSkeleton';
 import { useChat } from '@/components/chat/chat-state';
 
 export function ChatMessageList({topInset,bottomInset}:{topInset:number;bottomInset:number}) {
@@ -20,14 +21,15 @@ export function ChatMessageList({topInset,bottomInset}:{topInset:number;bottomIn
   const onWheel=(event:WheelEvent)=>{if(event.deltaY<0)following.current=false;};
   scroller.addEventListener('scroll',onScroll,{passive:true});
   scroller.addEventListener('wheel',onWheel,{passive:true});
-  scroller.scrollTop=scroller.scrollHeight;
+  scroller.scrollTop=loading ? 0 : scroller.scrollHeight;
   return()=>{scroller.removeEventListener('scroll',onScroll);scroller.removeEventListener('wheel',onWheel);};
- },[activeId]);
+ },[activeId,loading]);
  useEffect(()=>{following.current=true;},[lastUser]);
  useEffect(()=>{
-  const frame=requestAnimationFrame(()=>{const scroller=root.current?.parentElement;if(scroller && following.current)scroller.scrollTop=scroller.scrollHeight;});
+  const frame=requestAnimationFrame(()=>{const scroller=root.current?.parentElement;if(scroller && following.current)scroller.scrollTop=loading ? 0 : scroller.scrollHeight;});
   return()=>cancelAnimationFrame(frame);
- },[messages,streamingText,sending,error,bottomInset]);
+ },[messages,streamingText,sending,error,bottomInset,loading]);
+ if(loading) return <div ref={root} aria-busy="true" className="min-h-full w-full" style={{paddingTop:topInset+8,paddingBottom:bottomInset}}><ChatSkeleton/></div>;
  return <div ref={root} aria-busy={sending} className="flex min-h-full w-full flex-col justify-start" style={{paddingTop:topInset+8,paddingBottom:bottomInset}}>
   {messages.map(item=>item.kind==='text'?<TextMessageBubble key={item.id} text={item.text} role={item.role}/>:<MediaGridBlock key={item.id} items={item.items}/>)}
   {sending && (streamingText ? <TextMessageBubble text={streamingText} role="model"/> : <AiWaiting/>)}

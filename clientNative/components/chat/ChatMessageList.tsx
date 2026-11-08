@@ -2,10 +2,11 @@ import { MediaGridBlock } from '@/components/chat/MediaGridBlock';
 import { TextMessageBubble } from '@/components/chat/TextMessageBubble';
 import { AiWaiting } from '@/components/chat/AiWaiting';
 import { AiError } from '@/components/chat/AiError';
+import { ChatSkeleton } from '@/components/chat/ChatSkeleton';
 import { useChatStore } from '@/src/stores/useChatStore';
 import type { ChatMessage } from '@/src/types/chat';
 import { useEffect, useRef } from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, ScrollView, StyleSheet } from 'react-native';
 
 type Props={messages:ChatMessage[];topInset?:number;bottomInset?:number};
 export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
@@ -18,7 +19,8 @@ export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
  const streamingText=useChatStore(s=>s.streamingText);
  const activeId=useChatStore(s=>s.activeId);
  const lastUser=messages.filter(item=>item.kind==='text' && item.role!=='model').at(-1)?.id;
- useEffect(()=>{following.current=true;const frame=requestAnimationFrame(()=>list.current?.scrollToEnd({animated:false}));return()=>cancelAnimationFrame(frame);},[activeId,lastUser]);
+ useEffect(()=>{following.current=true;const frame=requestAnimationFrame(()=>list.current?.scrollToEnd({animated:false}));return()=>cancelAnimationFrame(frame);},[activeId,lastUser,loading]);
+ if(loading) return <ScrollView style={styles.list} contentContainerStyle={{paddingTop:topInset+8,paddingBottom:bottomInset}} showsVerticalScrollIndicator={false}><ChatSkeleton/></ScrollView>;
  return <FlatList ref={list} data={messages} keyExtractor={item=>item.id} style={styles.list}
   contentContainerStyle={[styles.content,{paddingTop:topInset+8,paddingBottom:bottomInset}]}
   keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
