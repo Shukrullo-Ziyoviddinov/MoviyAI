@@ -1,15 +1,20 @@
-import { Linking, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { answerSections, inlineParts, characterForItem, withoutSourceCitations } from './answer-format';
 import { useState } from 'react';
 import { Image } from 'expo-image';
 import type { CharacterImage } from '@/src/types/chat';
+import {useMediaViewerStore} from '@/src/stores/useMediaViewerStore';
 
 function CharacterPortrait({ image }: { image: CharacterImage }) {
   const [failed, setFailed] = useState(false);
+  const open=useMediaViewerStore(state=>state.open);
   if (failed) return null;
-  return <Image source={{ uri: image.imageUrl }} accessibilityLabel={image.label} contentFit="cover" onError={()=>setFailed(true)}
-    style={{ width: 56, height: 56, flexShrink: 0, borderRadius: 12, marginTop: 3 }}/>;
+  return <Pressable accessibilityRole="button" accessibilityLabel={image.label}
+    onPress={()=>open({id:`${image.kind??'character'}-${image.label}-${image.imageUrl}`,type:'image',uri:image.imageUrl})}
+    style={{width:56,height:56,flexShrink:0,borderRadius:12,marginTop:3,overflow:'hidden'}}>
+    <Image source={{ uri: image.imageUrl }} accessibilityLabel={image.label} contentFit="cover" onError={()=>setFailed(true)} style={{width:'100%',height:'100%'}}/>
+  </Pressable>;
 }
 
 export function FormattedAnswer({ text, characterImages = [], hideCitations = false }: { text: string; characterImages?: CharacterImage[]; hideCitations?: boolean }) {

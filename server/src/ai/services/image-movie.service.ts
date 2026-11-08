@@ -113,7 +113,7 @@ export function createImageMovieSearch(deps = { searchWeb, searchImages }) {
       ].filter((item,index,all)=>all.findIndex(other=>other.url===item.url)===index);
       let posters: MovieSearchResult['posters'] = [];
       try {
-        const results = await deps.searchImages(`${match.title} ${match.year ?? ''} movie official theatrical poster -fanart -site:ebay.com -site:etsy.com`, { num: 15 });
+        const results = await deps.searchImages(`${match.title} ${match.year ?? ''} movie official theatrical poster -fanart -site:ebay.com -site:etsy.com`, { num: 10 });
         posters = (results.images ?? []).flatMap(item => {
           const url = publicHttpsUrl(item.imageUrl);
           if ((item.imageWidth && item.imageWidth < 250) || (item.imageHeight && item.imageHeight < 350)) return [];
@@ -121,7 +121,10 @@ export function createImageMovieSearch(deps = { searchWeb, searchImages }) {
           if (match.year && years.length && !years.includes(String(match.year))) return [];
           return url ? [{ url, sourceUrl: item.link ? publicHttpsUrl(item.link) : null }] : [];
         }).filter((item, index, all) => all.findIndex(other => other.url === item.url) === index).slice(0, 7);
-      } catch { /* A poster search failure must not discard a sourced identification. */ }
+      } catch (error) {
+        // Keep identification, but make provider failures visible without logging user data.
+        console.warn('[MOVIE_POSTERS] Search failed', {status:(error as {status?:number}).status??null});
+      }
       movie = { title: match.title, titleUz: match.titleUz, titleRu: match.titleRu, year: match.year,
         confidence: match.confidence, sources: usedSources, posters, details };
       detailedAnswer = renderMovieDossier(movie, details, match.language, true);

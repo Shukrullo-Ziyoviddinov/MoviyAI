@@ -3,12 +3,17 @@ import { Fragment, useState } from 'react';
 import { useTheme } from '@/components/theme/theme-state';
 import { answerSections, inlineParts, characterForItem, withoutSourceCitations } from './answer-format';
 import type { CharacterImage } from '@/types/chat';
+import { useChat } from './chat-state';
 
 function CharacterPortrait({ image }: { image: CharacterImage }) {
   const [failed, setFailed] = useState(false);
+  const {openViewer}=useChat();
   if (failed) return null;
-  return <img src={image.imageUrl} alt={image.label} width={56} height={56} loading="lazy" referrerPolicy="no-referrer"
-    onError={() => setFailed(true)} className="mt-1 h-14 w-14 shrink-0 rounded-xl object-cover"/>;
+  return <button type="button" aria-label={image.label} className="mt-1 h-14 w-14 shrink-0 overflow-hidden rounded-xl"
+    onClick={()=>openViewer({id:`${image.kind??'character'}-${image.label}-${image.imageUrl}`,type:'image',uri:image.imageUrl})}>
+    <img src={image.imageUrl} alt={image.label} width={56} height={56} loading="lazy" referrerPolicy="no-referrer"
+      onError={() => setFailed(true)} className="h-full w-full object-cover"/>
+  </button>;
 }
 
 export function FormattedAnswer({ text, characterImages = [], hideCitations = false }: { text: string; characterImages?: CharacterImage[]; hideCitations?: boolean }) {
