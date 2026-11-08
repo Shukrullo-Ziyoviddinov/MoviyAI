@@ -1,4 +1,5 @@
 import { AI_CONFIG } from '../config/ai.config.js';
+import { MEDIA_ANALYSIS_POLICY } from '../config/ai-policy.js';
 import type { AiMediaRequest, AiResult } from '../types/ai.types.js';
 import { AiServiceError, generateAiResponse, historyContents } from './google-ai.service.js';
 
@@ -33,5 +34,5 @@ export function analyzeWithGemini(request: AiMediaRequest): Promise<AiResult> {
         mimeType: item.mimeType, data: item.data.toString('base64'),
       } })),
     ] },
-  ], 'Siz Moviy AI media tahlilchisisiz. Foydalanuvchi tilida javob bering. Kuzatilgan belgilar va kino haqidagi taxminlarni ajrating. Ishonchsiz kino nomini tasdiqlangan deb aytmang. Internet qidiruvi bu bosqichda ulanmagan.');
+  ], MEDIA_ANALYSIS_POLICY);
 }

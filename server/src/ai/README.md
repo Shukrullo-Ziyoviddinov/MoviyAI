@@ -1,5 +1,15 @@
 # AI chat API
 
+## Topic scope
+
+`config/ai-policy.ts` supplies shared system instructions to both Gemma text chat
+and Gemini media analysis. The assistant covers cinema, series, cinema-related
+people/topics, Moviy AI usage and natural social exchanges. Unrelated tasks are
+redirected toward movie/series discovery in the user's language. Greetings
+include a natural invitation to find or choose a film. Product explanations use
+the verified facts in this policy; update them when additional features ship.
+No classifier model or additional search call is introduced for this policy.
+
 ## Saved conversations (web and native)
 
 Send `Accept: text/event-stream` on the saved-message POST endpoint to receive
