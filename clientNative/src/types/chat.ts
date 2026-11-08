@@ -1,5 +1,8 @@
 export type CharacterImage = { label: string; imageUrl: string; sourceUrl: string | null };
+export type MovieTableFact = { value: string | number | string[] | null; sources: Array<{title:string;url:string}> };
+export type MovieTableDetails = Partial<Record<'productionYears'|'countries'|'genres'|'directors'|'writers'|'runtimeMinutes'|'premiere'|'imdb'|'kinopoisk'|'budget'|'boxOffice'|'ageRating', MovieTableFact>> & {checkedAt?:string};
 export type MovieSearchResult = {
+    details?: MovieTableDetails;
     title: string;
     titleUz: string | null;
     titleRu: string | null;

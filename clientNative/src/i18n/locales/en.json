@@ -169,6 +169,7 @@
     "imagePrompt": "Find the movie in this image.",
     "imageLimit": "Up to 3 JPG, PNG or WebP images. 4 MB each, 8 MB total.",
     "videoLater": "Video search is coming in the next stage.",
+    "movieTable": {"title":"Film details","original":"Original title","uz":"Uzbek title","ru":"Russian title","year":"Year","productionYears":"Production period","countries":"Country","genres":"Genre","directors":"Director","writers":"Screenwriter","runtime":"Runtime","premiere":"Premiere","imdb":"IMDb rating","kinopoisk":"Kinopoisk rating","budget":"Budget","boxOffice":"Box office","ageRating":"Age rating","minute":"min."},
     "movieSources": "Sources",
     "moviePosters": "Movie images"
   }

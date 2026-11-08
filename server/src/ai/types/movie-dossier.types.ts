@@ -1,0 +1,11 @@
+export type MovieSource = { title: string; url: string; snippet?: string };
+export type MovieFact<T> = { value: T | null; sources: MovieSource[] };
+export interface MovieDetails {
+  productionYears: MovieFact<string>; countries: MovieFact<string[]>; genres: MovieFact<string[]>;
+  runtimeMinutes: MovieFact<number>; ageRating: MovieFact<string>; synopsis: MovieFact<string>;
+  directors: MovieFact<string[]>; budget: MovieFact<string>; boxOffice: MovieFact<string>;
+  writers: MovieFact<string[]>; premiere: MovieFact<string>;
+  imdb: MovieFact<number>; kinopoisk: MovieFact<number>;
+  cast: Array<{ name: string; role: string | null; sources: MovieSource[] }>;
+  checkedAt: string;
+}

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import type { MovieSearchResult } from '@/src/types/chat';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
+import { MovieDetailsTable } from './MovieDetailsTable';
 
 export function MovieSearchCard({ movie }: { movie: MovieSearchResult }) {
   const { colors } = useTheme(); const { t } = useTranslation(); const open = useMediaViewerStore(state => state.open);
@@ -28,6 +29,7 @@ export function MovieSearchCard({ movie }: { movie: MovieSearchResult }) {
       </ScrollView>
       </GestureDetector>
     </View>}
+    <MovieDetailsTable movie={movie}/>
     <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 16, marginBottom: 4 }}>{t('chat.movieSources')}</Text>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       {movie.sources.map(source => <Pressable key={source.url} accessibilityRole="link" onPress={() => { void Linking.openURL(source.url).catch(() => undefined); }}

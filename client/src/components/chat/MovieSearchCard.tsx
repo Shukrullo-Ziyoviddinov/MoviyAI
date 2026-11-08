@@ -3,6 +3,7 @@ import type { MovieSearchResult } from '@/types/chat';
 import { useChat } from './chat-state';
 import { useTheme } from '@/components/theme/theme-state';
 import { useT } from '@/i18n/useT';
+import { MovieDetailsTable } from './MovieDetailsTable';
 
 export function MovieSearchCard({ movie }: { movie: MovieSearchResult }) {
   const { colors } = useTheme(); const { openViewer } = useChat(); const t = useT();
@@ -17,6 +18,7 @@ export function MovieSearchCard({ movie }: { movie: MovieSearchResult }) {
         <img src={poster.url} alt={movie.title} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
       </button>)}
     </div>}
+    <MovieDetailsTable movie={movie}/>
     <p className="mt-4 mb-1 text-xs font-medium" style={{ color: colors.textMuted }}>{t('chat.movieSources')}</p>
     <div className="flex flex-wrap gap-2">
       {movie.sources.map(source => <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer"

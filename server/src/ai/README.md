@@ -33,7 +33,23 @@ The existing JSON text-chat contract is unchanged. Videos are not enabled here.
 Images route to `gemini-3.5-flash-lite` for visual clues, then bounded Serper
 web/localized-name searches, Gemini source matching, and a poster search.
 An inconclusive match asks for another frame instead of inventing a movie.
-One successful lookup can use 2 Gemini calls and up to 3 Serper searches.
+One successful lookup can use 3 Gemini calls and up to 9 Serper searches:
+identification, localized-name search, six parallel fact searches, and posters.
+After identification, a sourced dossier includes release/production years, countries,
+genres, runtime, age rating, spoiler-free plot, directors, up to five main actors/roles,
+budget, worldwide grosses and IMDb/Kinopoisk ratings. `movie.details` keeps each
+fact's value and supporting source links plus a server-generated `checkedAt` date.
+Ratings additionally require a matching explicit score from their own official film
+page in the search snippets; unsupported fields stay null and are omitted from the table.
+Web/native render a separate two-column facts table with its own film-title header,
+different column backgrounds, single-line values and horizontal scrolling. Table
+gestures are isolated from the sidebar. Verified screenplay writers and premiere
+dates are also extracted; a premiere day is never inferred from a release year.
+New image answers keep plot and cast in prose and factual metadata in the table.
+The answer is formatted in Uzbek, Russian or English with citations and a confirmation
+question. Detail-search or extraction failure preserves identification and posters.
+This only applies to uploaded-image identification; ordinary text chat is unchanged.
+Catalog movie/actor writes remain deferred.
 Poster failure does not discard a sourced identification.
 
 User image files are stored in the existing R2 bucket under `chatimg/`.
