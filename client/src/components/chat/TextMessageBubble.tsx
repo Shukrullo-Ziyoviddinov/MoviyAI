@@ -2,13 +2,13 @@
 
 import { useTheme } from "@/components/theme/theme-state";
 import type { MovieSearchResult, CharacterImage } from '@/types/chat';
-import { MovieSearchCard } from './MovieSearchCard';
+import { MovieAnswer } from './MovieAnswer';
 import { FormattedAnswer } from './FormattedAnswer';
 
 export function TextMessageBubble({ text, role = "user", movie, characterImages }: { text: string; role?: "user" | "model"; movie?: MovieSearchResult | null; characterImages?: CharacterImage[] }) {
   const { colors } = useTheme();
 
-  if (role === "model") return <div className="mb-5 w-full px-3.5 py-2" style={{ color: colors.text }}><FormattedAnswer text={text} characterImages={characterImages} hideCitations={!!movie?.sources.length}/>{movie && <MovieSearchCard movie={movie}/>}</div>;
+  if (role === "model") return <div className="mb-5 w-full px-3.5 py-2" style={{ color: colors.text }}>{movie ? <MovieAnswer text={text} movie={movie} characterImages={characterImages}/> : <FormattedAnswer text={text} characterImages={characterImages}/>}</div>;
 
   return (
     <div className="mb-2.5 flex w-full justify-end px-3.5">

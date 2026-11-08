@@ -2,7 +2,7 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import type { MovieSearchResult, CharacterImage } from '@/src/types/chat';
-import { MovieSearchCard } from './MovieSearchCard';
+import { MovieAnswer } from './MovieAnswer';
 import { FormattedAnswer } from './FormattedAnswer';
 
 type TextMessageBubbleProps = {
@@ -15,7 +15,7 @@ type TextMessageBubbleProps = {
 export function TextMessageBubble({ text, role = 'user', movie, characterImages }: TextMessageBubbleProps) {
   const { colors } = useTheme();
 
-  if (role === 'model') return <View style={styles.answer}><FormattedAnswer text={text} characterImages={characterImages} hideCitations={!!movie?.sources.length}/>{movie && <MovieSearchCard movie={movie}/>}</View>;
+  if (role === 'model') return <View style={styles.answer}>{movie ? <MovieAnswer text={text} movie={movie} characterImages={characterImages}/> : <FormattedAnswer text={text} characterImages={characterImages}/>}</View>;
 
   return (
     <View style={styles.row}>
