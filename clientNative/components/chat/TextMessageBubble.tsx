@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import type { MovieSearchResult } from '@/src/types/chat';
 import { MovieSearchCard } from './MovieSearchCard';
+import { FormattedAnswer } from './FormattedAnswer';
 
 type TextMessageBubbleProps = {
   text: string;
@@ -13,7 +14,7 @@ type TextMessageBubbleProps = {
 export function TextMessageBubble({ text, role = 'user', movie }: TextMessageBubbleProps) {
   const { colors } = useTheme();
 
-  if (role === 'model') return <View style={styles.answer}><Text selectable style={[styles.text, { color: colors.text, lineHeight: 27 }]}>{text}</Text>{movie && <MovieSearchCard movie={movie}/>}</View>;
+  if (role === 'model') return <View style={styles.answer}><FormattedAnswer text={text}/>{movie && <MovieSearchCard movie={movie}/>}</View>;
 
   return (
     <View style={styles.row}>
