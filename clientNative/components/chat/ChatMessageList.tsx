@@ -29,4 +29,4 @@ export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
   renderItem={({item})=>item.kind==='text'?<TextMessageBubble text={item.text} role={item.role}/>:<MediaGridBlock items={item.items}/>}
  />;
 }
-const styles=StyleSheet.create({list:{flex:1},content:{flexGrow:1,justifyContent:'flex-end'}});
+const styles=StyleSheet.create({list:{flex:1},content:{flexGrow:1,justifyContent:'flex-start'}});

@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { ChatMediaItem, ChatMessage } from "@/types/chat";
 import { createChatSession } from '@/stores/chat-session';
+import { webChatStorage } from '@/stores/web-chat-storage';
 import type { ChatSummary } from '@/api/chat';
 import { useAuth } from '@/components/auth/auth-state';
 
@@ -55,16 +56,22 @@ function measureFile(type: "image" | "video", uri: string) {
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { profile, ready } = useAuth();
-  const [session] = useState(() => createChatSession({
-    read: async key => window.localStorage.getItem(key),
-    write: async (key,value) => { window.localStorage.setItem(key,value); },
-    uuid: () => crypto.randomUUID(),
-  }));
+  const [session] = useState(() => createChatSession(webChatStorage));
   const snapshot = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const { messages, sending, loading, error, conversations, activeId, streamingText, deletingId, deleteError, pinningId, pinError, listLoading } = snapshot;
   const { retry, openChat, newChat, deleteConversation, setPinned } = session.actions;
   const owner = ready ? profile?.id ?? null : null;
   useEffect(() => { void session.actions.initialize(owner); }, [session, owner]);
+  useEffect(() => {
+    const onReturn = (event: PageTransitionEvent) => {
+      if (!event.persisted || !owner) return;
+      // A browser back/forward cache return is a new visit, even after a reload.
+      try { window.sessionStorage.removeItem(`moviy.activeChat.${owner}`); } catch { /* Storage can be disabled. */ }
+      void session.actions.initialize(owner);
+    };
+    window.addEventListener('pageshow', onReturn);
+    return () => window.removeEventListener('pageshow', onReturn);
+  }, [owner, session]);
   const [selectedMedia, setSelectedMedia] = useState<ChatMediaItem[]>([]);
   const [picking, setPicking] = useState(false);
   const [viewer, setViewer] = useState<ChatMediaItem | null>(null);

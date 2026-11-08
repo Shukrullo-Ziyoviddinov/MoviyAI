@@ -28,7 +28,7 @@ export function ChatMessageList({topInset,bottomInset}:{topInset:number;bottomIn
   const frame=requestAnimationFrame(()=>{const scroller=root.current?.parentElement;if(scroller && following.current)scroller.scrollTop=scroller.scrollHeight;});
   return()=>cancelAnimationFrame(frame);
  },[messages,streamingText,sending,error,bottomInset]);
- return <div ref={root} aria-busy={sending} className="flex min-h-full w-full flex-col justify-end" style={{paddingTop:topInset+8,paddingBottom:bottomInset}}>
+ return <div ref={root} aria-busy={sending} className="flex min-h-full w-full flex-col justify-start" style={{paddingTop:topInset+8,paddingBottom:bottomInset}}>
   {messages.map(item=>item.kind==='text'?<TextMessageBubble key={item.id} text={item.text} role={item.role}/>:<MediaGridBlock key={item.id} items={item.items}/>)}
   {sending && (streamingText ? <TextMessageBubble text={streamingText} role="model"/> : <AiWaiting/>)}
   {!sending && error && <AiError message={error} onRetry={retry} disabled={loading}/>}
