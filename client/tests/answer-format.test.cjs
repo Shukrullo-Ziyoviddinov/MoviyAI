@@ -31,3 +31,8 @@ test('wrapped lists, numbered starts and incomplete streamed text retain their c
 });
 
 test('portraits match exact character labels only inside the main character section',()=>{const {answerSections,characterForItem}=exportsObject;const sections=answerSections('### Main characters\n- **Belle:** Heroine.\n### Music\n- **Belle:** Song title.');assert.equal(sections[1].characterSection,true);assert.equal(sections[3].characterSection,false);assert.equal(characterForItem('**Belle:** Heroine.',[{label:'Belle',imageUrl:'belle.jpg'}]).imageUrl,'belle.jpg');assert.equal(characterForItem('**Beast:** Prince.',[{label:'Belle'}]),undefined);});
+test('actors use the actor portrait section and old movie citations disappear without removing normal prose',()=>{
+ const {answerSections,withoutSourceCitations}=exportsObject;
+ assert.equal(answerSections('### Asosiy aktyorlar\n1. **Actor**')[1].portraitKind,'actor');
+ assert.equal(withoutSourceCitations('Story. [2](https://example.com/film) [4](https://en.wikipedia.org/wiki/Film_(1991))'),'Story.');
+});

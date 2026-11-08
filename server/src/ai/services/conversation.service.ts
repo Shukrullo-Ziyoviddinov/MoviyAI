@@ -96,7 +96,11 @@ export async function sendConversationMessage(userId: string, id: string, reques
         const result = searchImages.length
             ? await findMovieFromImages(text, searchImages, onDelta)
             : await chatWithGemma({ text, history }, onDelta);
-        const characterImages = await findCharacterImages(result.text);
+        const characterImages = await findCharacterImages(result.text, 'movie' in result ? result.movie : undefined);
+        if ('movie' in result && result.movie) for (const portrait of characterImages) {
+            if (portrait.sourceUrl && !result.movie.sources.some(source=>source.url===portrait.sourceUrl))
+                result.movie.sources.push({title:portrait.label,url:portrait.sourceUrl});
+        }
         await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken }, {
             $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages },
         });

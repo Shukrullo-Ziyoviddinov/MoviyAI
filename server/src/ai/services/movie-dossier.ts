@@ -10,7 +10,8 @@ export const dossierSchema = z.object({
   directors: fact(z.array(z.string().max(120)).max(5)), budget: fact(z.string().max(180)), boxOffice: fact(z.string().max(180)),
   writers: fact(z.array(z.string().max(120)).max(8)).optional(), premiere: fact(z.string().max(180)).optional(),
   imdb: fact(z.number().min(0).max(10)), kinopoisk: fact(z.number().min(0).max(10)),
-  cast: z.array(z.object({ name: z.string().max(120), role: z.string().max(160).nullable(), sourceIndexes: indexes })).max(5),
+  cast: z.array(z.object({ name: z.string().max(120), originalName:z.string().max(120), role: z.string().max(160).nullable(), sourceIndexes: indexes })).max(5),
+  characters: z.array(z.object({name:z.string().max(100),originalName:z.string().max(100),description:z.string().max(500).nullable(),sourceIndexes:indexes})).max(5),
 });
 export function verifiedDossier(raw: z.infer<typeof dossierSchema>, sources: MovieSource[]): MovieDetails {
   const refs = (ids: number[], domain?: string) => [...new Set(ids)].filter(index => {
@@ -41,7 +42,11 @@ export function verifiedDossier(raw: z.infer<typeof dossierSchema>, sources: Mov
     imdb: rating(raw.imdb, 'imdb.com'), kinopoisk: rating(raw.kinopoisk, 'kinopoisk.ru'),
     cast: raw.cast.filter(actor=>actor.name.trim() && refs(actor.sourceIndexes).length)
       .filter((actor,index,all)=>all.findIndex(other=>other.name.toLowerCase()===actor.name.toLowerCase())===index)
-      .map(actor=>({ name: actor.name, role: actor.role, sources: refs(actor.sourceIndexes) })),
+      .map(actor=>({ name: actor.name, originalName:actor.originalName, role: actor.role, sources: refs(actor.sourceIndexes) })),
+    characters: [...(raw.characters ?? []), ...raw.cast.filter(actor=>actor.role?.trim() && !/\b(and|narrator|self|himself|herself)\b|[,/]/i.test(actor.role) && refs(actor.sourceIndexes).length && !(raw.characters ?? []).some(item=>item.originalName.toLowerCase()===actor.role!.toLowerCase()))
+      .map(actor=>({name:actor.role!,originalName:actor.role!,description:null,sourceIndexes:actor.sourceIndexes}))].filter(item=>item.name.trim() && item.originalName.trim() && refs(item.sourceIndexes).length)
+      .filter((item,index,all)=>all.findIndex(other=>other.originalName.toLowerCase()===item.originalName.toLowerCase())===index)
+      .slice(0,5).map(item=>({name:item.name,originalName:item.originalName,description:item.description,sources:refs(item.sourceIndexes)})),
     checkedAt: new Date().toISOString(),
   };
 }
@@ -49,7 +54,7 @@ export function emptyDossier(): MovieDetails {
   const missing = { value: null, sourceIndexes: [] };
   return verifiedDossier({ productionYears: missing, countries: missing, genres: missing, runtimeMinutes: missing,
     ageRating: missing, synopsis: missing, directors: missing, budget: missing, boxOffice: missing,
-    imdb: missing, kinopoisk: missing, cast: [] }, []);
+    imdb: missing, kinopoisk: missing, cast: [], characters:[] }, []);
 }
 const labels = {
   uz: { names: 'Kino nomlari', original: 'Original nomi', uz: 'O‘zbekcha nomi', ru: 'Ruscha nomi', info: 'Kino haqida', year: 'Chiqarilgan yil', productionYears: 'Ishlab chiqarilgan davri', countries: 'Davlatlar', genres: 'Janrlar', runtimeMinutes: 'Davomiyligi', ageRating: 'Yosh chegarasi', synopsis: 'Mazmuni — spoylerlarsiz', directors: 'Rejissyor', cast: 'Asosiy aktyorlar', money: 'Budjet va kassa tushumi', budget: 'Budjet', boxOffice: 'Dunyo bo‘yicha kassa tushumi', ratings: 'Reytinglar', checked: 'Qidiruvda tekshirilgan sana', unknown: 'Ishonchli manbada topilmadi', minute: 'daq.', confirm: 'Siz izlagan kino shumi?', uncertain: 'Bu taxminiy moslik. Tasdiqlash uchun kadrni solishtiring.' },
@@ -64,8 +69,10 @@ export function renderMovieDossier(movie: { title: string; titleUz: string | nul
     `- **${label}:** ${item.value === null ? l.unknown : clean(Array.isArray(item.value) ? item.value.join(', ') : String(item.value)) + suffix} ${citations(item.sources)}`.trim();
   if (tablePresentation) return [
     movie.confidence === 'medium' ? l.uncertain : '',
-    details.synopsis.value ? `### ${l.synopsis}\n\n${clean(details.synopsis.value)} ${citations(details.synopsis.sources)}` : '',
-    details.cast.length ? `### ${l.cast}\n\n` + details.cast.map((actor,index)=>`${index+1}. **${clean(actor.name)}**${actor.role ? ` — ${clean(actor.role)}` : ''} ${citations(actor.sources)}`).join('\n') : '',
+    details.synopsis.value ? `### ${l.synopsis}\n\n${clean(details.synopsis.value)}` : '',
+    `### ${{uz:'Asosiy qahramonlar',ru:'Главные герои',en:'Main characters'}[language]}\n\n` +
+      ((details.characters ?? []).length ? details.characters!.map(item=>`- **${clean(item.name)} (${clean(item.originalName)}):** ${item.description ? clean(item.description) : ''}`).join('\n') : l.unknown),
+    details.cast.length ? `### ${l.cast}\n\n` + details.cast.map((actor,index)=>`${index+1}. **${clean(actor.name)}**${actor.role ? ` — ${clean(actor.role)}` : ''}`).join('\n') : '',
     l.confirm,
   ].filter(Boolean).join('\n\n');
   return [

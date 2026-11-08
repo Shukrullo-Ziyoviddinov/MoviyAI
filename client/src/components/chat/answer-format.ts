@@ -9,10 +9,17 @@ export function characterForItem<T extends {label: string}>(item: string, images
 }
 export function answerSections(text: string) {
   let characterSection = false;
+  let portraitKind: 'character'|'actor'|undefined;
   return answerBlocks(text).map(block => {
-    if (block.kind === 'heading') characterSection = isCharacterHeading(block.text);
-    return { block, characterSection };
+    if (block.kind === 'heading') {
+      portraitKind = isCharacterHeading(block.text) ? 'character' : /^(?:asosiy aktyorlar|main cast|главные акт[её]ры)\s*[:：]?$/i.test(block.text.trim()) ? 'actor' : undefined;
+      characterSection = !!portraitKind;
+    }
+    return { block, characterSection, portraitKind };
   });
+}
+export function withoutSourceCitations(text:string){
+  return text.replace(/\s*\[\d+\]\(https:\/\/(?:[^()\s]|\([^()\s]*\))*\)/g,'');
 }
 export type AnswerBlock =
   | { kind: 'heading' | 'paragraph' | 'quote' | 'code'; text: string; level?: number }

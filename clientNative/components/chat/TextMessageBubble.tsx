@@ -15,7 +15,7 @@ type TextMessageBubbleProps = {
 export function TextMessageBubble({ text, role = 'user', movie, characterImages }: TextMessageBubbleProps) {
   const { colors } = useTheme();
 
-  if (role === 'model') return <View style={styles.answer}><FormattedAnswer text={text} characterImages={characterImages}/>{movie && <MovieSearchCard movie={movie}/>}</View>;
+  if (role === 'model') return <View style={styles.answer}><FormattedAnswer text={text} characterImages={characterImages} hideCitations={!!movie?.sources.length}/>{movie && <MovieSearchCard movie={movie}/>}</View>;
 
   return (
     <View style={styles.row}>

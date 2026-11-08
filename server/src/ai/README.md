@@ -33,8 +33,9 @@ The existing JSON text-chat contract is unchanged. Videos are not enabled here.
 Images route to `gemini-3.5-flash-lite` for visual clues, then bounded Serper
 web/localized-name searches, Gemini source matching, and a poster search.
 An inconclusive match asks for another frame instead of inventing a movie.
-One successful lookup can use 3 Gemini calls and up to 9 Serper searches:
-identification, localized-name search, six parallel fact searches, and posters.
+One successful lookup can use 3 Gemini calls and up to 10 Serper searches before
+portraits: identification, localized-name search, seven parallel fact searches, and posters.
+Optional portraits add at most 10 searches (five fictional characters and five actors).
 After identification, a sourced dossier includes release/production years, countries,
 genres, runtime, age rating, spoiler-free plot, directors, up to five main actors/roles,
 budget, worldwide grosses and IMDb/Kinopoisk ratings. `movie.details` keeps each
@@ -45,7 +46,15 @@ Web/native render a separate two-column facts table with its own film-title head
 different column backgrounds, single-line values and horizontal scrolling. Table
 gestures are isolated from the sidebar. Verified screenplay writers and premiere
 dates are also extracted; a premiere day is never inferred from a release year.
-New image answers keep plot and cast in prose and factual metadata in the table.
+New image answers automatically include a main-character section as well as plot
+and cast prose. Character descriptions are sourced separately from actor credits;
+missing descriptions are not invented. Plot/descriptions are explicitly translated
+to the request language. Inline numeric citations are omitted from the prose/table;
+fact and portrait source links remain in the Sources area. Older numeric citations
+are hidden when displaying saved movie answers in updated clients.
+The image pipeline's structured character/cast data drives 56 × 56 thumbnails,
+tagged as character or actor to prevent mixing a voice actor with their character.
+Both kinds load external HTTPS thumbnails directly and persist with the turn.
 The answer is formatted in Uzbek, Russian or English with citations and a confirmation
 question. Detail-search or extraction failure preserves identification and posters.
 This only applies to uploaded-image identification; ordinary text chat is unchanged.

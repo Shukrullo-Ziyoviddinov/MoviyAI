@@ -6,6 +6,7 @@ export interface MovieDetails {
   directors: MovieFact<string[]>; budget: MovieFact<string>; boxOffice: MovieFact<string>;
   writers: MovieFact<string[]>; premiere: MovieFact<string>;
   imdb: MovieFact<number>; kinopoisk: MovieFact<number>;
-  cast: Array<{ name: string; role: string | null; sources: MovieSource[] }>;
+  cast: Array<{ name: string; originalName?: string; role: string | null; sources: MovieSource[] }>;
+  characters?: Array<{ name: string; originalName: string; description: string | null; sources: MovieSource[] }>;
   checkedAt: string;
 }

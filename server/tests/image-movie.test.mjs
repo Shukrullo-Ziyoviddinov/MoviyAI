@@ -11,7 +11,7 @@ function harness({ searchable = true, badSource = false, posterError = false, de
     { query: 'Interstellar 2014 movie', clues: ['Spacesuit', 'Interstellar title'], searchable },
     { matched: searchable, title: 'Interstellar', titleUz: null, titleRu: null, year: 2014, confidence: 'high',
       answer: searchable ? 'Interstellar (2014). Siz izlagan kino shumi?' : 'Boshqa kadr yuboring.', sourceIndexes: badSource ? [9] : [0], language:'uz' },
-    {productionYears:{value:'2013',sourceIndexes:[1]},countries:{value:['AQSH'],sourceIndexes:[1]},genres:{value:['Ilmiy fantastika'],sourceIndexes:[1]},runtimeMinutes:{value:169,sourceIndexes:[1]},ageRating:{value:'PG-13 (US)',sourceIndexes:[1]},synopsis:{value:'Kosmik sayohat haqida film.',sourceIndexes:[1]},directors:{value:['Christopher Nolan'],sourceIndexes:[0]},budget:{value:'USD 165 million',sourceIndexes:[2]},boxOffice:{value:'USD 700 million',sourceIndexes:[2]},imdb:{value:8.7,sourceIndexes:[0]},kinopoisk:{value:8.6,sourceIndexes:wrongRatingSource?[0]:[3]},cast:['Matthew McConaughey','Anne Hathaway','Jessica Chastain','Michael Caine','Mackenzie Foy'].map(name=>({name,role:'Role',sourceIndexes:[0]}))},
+    {productionYears:{value:'2013',sourceIndexes:[1]},countries:{value:['AQSH'],sourceIndexes:[1]},genres:{value:['Ilmiy fantastika'],sourceIndexes:[1]},runtimeMinutes:{value:169,sourceIndexes:[1]},ageRating:{value:'PG-13 (US)',sourceIndexes:[1]},synopsis:{value:'Kosmik sayohat haqida film.',sourceIndexes:[1]},directors:{value:['Christopher Nolan'],sourceIndexes:[0]},budget:{value:'USD 165 million',sourceIndexes:[2]},boxOffice:{value:'USD 700 million',sourceIndexes:[2]},imdb:{value:8.7,sourceIndexes:[0]},kinopoisk:{value:8.6,sourceIndexes:wrongRatingSource?[0]:[3]},characters:[],cast:['Matthew McConaughey','Anne Hathaway','Jessica Chastain','Michael Caine','Mackenzie Foy'].map(name=>({name,originalName:name,role:'Role',sourceIndexes:[0]}))},
   ];
   let searches = 0, posters = 0;const calls=[];
   class GoogleGenAI { models = { generateContent: async request => {calls.push(request);if(detailError&&calls.length===3)throw Error('dossier unavailable');return { text: JSON.stringify(answers.shift()) };} }; }
@@ -34,7 +34,7 @@ function harness({ searchable = true, badSource = false, posterError = false, de
 const images = [{ mimeType: 'image/jpeg', data: Buffer.from([255, 216, 255]) }];
 test('image clues drive search and only supplied sources/posters are returned', async () => {
   const h = harness(), result = await h.findMovieFromImages('Bu qaysi kino?', images);
-  assert.equal(result.model, 'gemini-3.5-flash-lite'); assert.equal(h.searches(), 8); assert.equal(h.posters(), 1);
+  assert.equal(result.model, 'gemini-3.5-flash-lite'); assert.equal(h.searches(), 9); assert.equal(h.posters(), 1);
   assert.equal(result.movie.title, 'Interstellar'); assert.equal(result.movie.titleUz, null);
   assert.equal(result.movie.sources[0].url, 'https://www.imdb.com/title/tt0816692/'); assert.equal(result.movie.posters.length, 1);
 });

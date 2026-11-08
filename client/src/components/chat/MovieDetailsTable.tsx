@@ -18,7 +18,7 @@ export function MovieDetailsTable({movie}:{movie:MovieSearchResult}) {
         <tbody>{rows.map(row=><tr key={row.key} className="border-b last:border-b-0" style={{borderColor:colors.borderSoft}}>
           <th scope="row" className="w-[190px] whitespace-nowrap border-r px-4 py-3 font-medium" style={{backgroundColor:colors.panelSoft,borderColor:colors.borderSoft,color:colors.textMuted}}>{t('chat.movieTable.'+row.key)}</th>
           <td className="whitespace-nowrap px-4 py-3 font-medium" style={{color:colors.text}}>
-            {row.value} {row.source&&<a href={row.source} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer" aria-label={t('chat.movieSources')} className="ml-2 inline-flex px-1 text-sm" style={{color:colors.accentBright}}>↗</a>}
+            {row.value}
           </td>
         </tr>)}</tbody>
       </table>

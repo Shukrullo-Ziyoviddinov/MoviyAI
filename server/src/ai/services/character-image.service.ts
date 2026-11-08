@@ -1,8 +1,9 @@
 import { AI_CONFIG } from '../config/ai.config.js';
 import { searchImages } from './serper.service.js';
 import { publicHttpsUrl } from './image-movie.service.js';
+import type {MovieSearchResult} from '../types/movie-search.types.js';
 
-export type CharacterImage = { label: string; imageUrl: string; sourceUrl: string | null };
+export type CharacterImage = { label: string; imageUrl: string; sourceUrl: string | null; kind?: 'character'|'actor' };
 export function mainCharacterLabels(answer: string) {
   const labels: string[] = []; let inside = false;
   for (const line of answer.split('\n')) {
@@ -17,9 +18,26 @@ export function mainCharacterLabels(answer: string) {
   }
   return labels.slice(0, 6);
 }
-function normalized(value: string) { return value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase(); }
+function normalized(value: string) { return value.normalize('NFD').replace(/\p{M}/gu, '').replace(/[’‘]/g,"'").replace(/\s+/g,' ').toLowerCase(); }
 export function createCharacterImageSearch(deps = { searchImages }) {
-  return async function findCharacterImages(answer: string): Promise<CharacterImage[]> {
+  return async function findCharacterImages(answer: string, movie?:MovieSearchResult): Promise<CharacterImage[]> {
+    if(movie?.details && movie.year && AI_CONFIG.serperApiKey){
+      const requests=[
+        ...(movie.details.characters??[]).slice(0,5).map(item=>({label:`${item.name} (${item.originalName})`,name:item.originalName,kind:'character' as const})),
+        ...movie.details.cast.slice(0,5).map(item=>({label:item.name,name:item.originalName??item.name,kind:'actor' as const})),
+      ];
+      return (await Promise.all(requests.map(async item=>{
+        try{
+          const result=await deps.searchImages(item.kind==='actor'?`"${item.name}" ${movie.title} actor portrait headshot`:`${movie.title} ${movie.year} ${item.name} character portrait -actor -cosplay -merchandise`,{num:5});
+          const name=normalized(item.name).replace(/^the\s+/,'').trim();
+          const image=result.images?.find(image=>{
+            const title=normalized(image.title??'');const years:string[]=title.match(/\b(?:19|20)\d{2}\b/g)??[];
+            return title.includes(name)&&(item.kind==='actor'||!years.length||years.includes(String(movie.year)))&&!!publicHttpsUrl(image.imageUrl);
+          });
+          return image?{label:item.label,kind:item.kind,imageUrl:publicHttpsUrl(image.thumbnailUrl??'')??publicHttpsUrl(image.imageUrl)!,sourceUrl:image.link?publicHttpsUrl(image.link):null}:null;
+        }catch{return null;}
+      }))).filter((item):item is NonNullable<typeof item>=>item!==null);
+    }
     const labels = mainCharacterLabels(answer);
     if (!labels.length || !AI_CONFIG.serperApiKey) return [];
     // Use explicit film/year and original character names from the answer. No

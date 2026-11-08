@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {dossierSchema,emptyDossier,verifiedDossier,renderMovieDossier} from '../dist/ai/services/movie-dossier.js';
-function raw(){return Object.fromEntries(Object.keys(emptyDossier()).filter(key=>key!=='checkedAt').map(key=>[key,key==='cast'?[]:{value:null,sourceIndexes:[]}]))}
+function raw(){return Object.fromEntries(Object.keys(emptyDossier()).filter(key=>key!=='checkedAt').map(key=>[key,(key==='cast'||key==='characters')?[]:{value:null,sourceIndexes:[]}]))}
 test('ratings require the correct official film page and an explicit matching score',()=>{
  const sources=[
   {title:'Film',url:'https://www.imdb.com/title/tt1234567/',snippet:'IMDb RATING 8.7/10'},
@@ -37,4 +37,10 @@ test('a release year alone cannot be used as a premiere date',()=>{
  const sources=[{title:'Film credits',url:'https://example.com/film'}];
  const details=verifiedDossier(input,sources);assert.equal(details.premiere.value,null);assert.equal(details.writers.value[0],'Writer');
  input.premiere.value='2014-10-26 (USA)';assert.equal(verifiedDossier(input,sources).premiere.value,'2014-10-26 (USA)');
+});
+test('image narrative automatically contains sourced characters and omits inline citation links',()=>{
+ const input=raw();input.characters=[{name:'Bell',originalName:'Belle',description:'Kitobsevar qahramon.',sourceIndexes:[0]}];input.synopsis={value:'Mazmun.',sourceIndexes:[0]};
+ const sources=[{title:'Film',url:'https://example.com/film'}];const details=verifiedDossier(input,sources);
+ const answer=renderMovieDossier({title:'Film',titleUz:null,titleRu:null,year:1991,confidence:'high',sources},details,'uz',true);
+ assert.match(answer,/Asosiy qahramonlar/);assert.match(answer,/Bell \(Belle\)/);assert.doesNotMatch(answer,/\[\d+\]\(/);assert.equal(details.characters[0].sources.length,1);
 });

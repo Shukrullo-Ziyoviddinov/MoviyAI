@@ -1,5 +1,5 @@
 import {useContext} from 'react';
-import {Linking,Pressable,ScrollView,Text,View} from 'react-native';
+import {ScrollView,Text,View} from 'react-native';
 import {Gesture,GestureDetector} from 'react-native-gesture-handler';
 import {useTranslation} from 'react-i18next';
 import {SideMenuGestureContext} from '@/components/menu/side-menu-gesture';
@@ -26,9 +26,6 @@ export function MovieDetailsTable({movie}:{movie:MovieSearchResult}){
      </View>
      <View style={{minWidth:350,flexGrow:1,paddingHorizontal:16,paddingVertical:12,flexDirection:'row',alignItems:'center',gap:8}}>
       <Text selectable numberOfLines={1} style={{color:colors.text,fontSize:13,lineHeight:24,fontWeight:'500'}}>{row.value}</Text>
-      {row.source&&<Pressable accessibilityRole="link" accessibilityLabel={t('chat.movieSources')} hitSlop={8} onPress={()=>{void Linking.openURL(row.source!).catch(()=>undefined);}}>
-       <Text style={{color:colors.accentBright,fontSize:17}}>↗</Text>
-      </Pressable>}
      </View>
     </View>)}</View>
    </ScrollView>
