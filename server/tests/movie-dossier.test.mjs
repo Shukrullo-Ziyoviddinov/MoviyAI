@@ -44,3 +44,17 @@ test('image narrative automatically contains sourced characters and omits inline
  const answer=renderMovieDossier({title:'Film',titleUz:null,titleRu:null,year:1991,confidence:'high',sources},details,'uz',true);
  assert.match(answer,/Asosiy qahramonlar/);assert.match(answer,/Bell \(Belle\)/);assert.doesNotMatch(answer,/\[\d+\]\(/);assert.equal(details.characters[0].sources.length,1);
 });
+test('explicit Kinopoisk ages are preferred and retain their country/system',()=>{
+ for(const age of ['0+','6+','12+','16+','18+']){
+  const input=raw();input.ageRating={value:'PG-13 (US)',sourceIndexes:[0]};input.kinopoisk={value:8.7,sourceIndexes:[1]};
+  const details=verifiedDossier(input,[{title:'Film',url:'https://www.imdb.com/title/tt123/',snippet:'Rated PG-13'},{title:'Film',url:'https://www.kinopoisk.ru/film/123/',snippet:'Возраст: '+age}]);
+  assert.equal(details.ageRating.value,age+' (RU)');assert.equal(details.ageRating.country,'RU');assert.equal(details.ageRating.system,'Kinopoisk');
+ }
+});
+test('age cannot be invented, converted from MPAA, or resolved from conflicting classifications',()=>{
+ const input=raw();input.ageRating={value:'12+ (RU)',sourceIndexes:[0]};const source={title:'Film rating',url:'https://www.kinopoisk.ru/film/123/',snippet:'IMDb 8.7/10'};
+ assert.equal(verifiedDossier(input,[source]).ageRating.value,null);
+ input.ageRating.value='G';assert.equal(verifiedDossier(input,[source]).ageRating.value,null);
+ input.ageRating.value='PG-13 (US)';source.snippet='Rated PG-13';assert.equal(verifiedDossier(input,[source]).ageRating.value,'PG-13 (US)');
+ source.snippet='Возраст: 12+ 16+';assert.equal(verifiedDossier(input,[source]).ageRating.value,null);
+});

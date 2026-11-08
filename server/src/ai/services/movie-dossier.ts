@@ -33,9 +33,35 @@ export function verifiedDossier(raw: z.infer<typeof dossierSchema>, sources: Mov
     const explicitScore = new RegExp(`(?:rating|рейтинг|оценка)\\D{0,24}${number}(?!\\d)|\\b${number}\\s*(?:/|из|out of)\\s*10\\b`, 'i');
     return verified({ ...item, sourceIndexes: item.sourceIndexes.filter(index=>sources[index] && explicitScore.test(sources[index].title + ' ' + (sources[index].snippet ?? ''))) }, domain);
   }
+  function ageRating(): MovieDetails['ageRating'] {
+    // Only inspect sources attached to this film's age/rating by the extractor.
+    const ids=[...new Set([...raw.ageRating.sourceIndexes,...raw.kinopoisk.sourceIndexes])];
+    const candidates=ids.filter(index=>{
+      const source=sources[index];if(!source)return false;
+      const url=new URL(source.url);
+      return (url.hostname==='kinopoisk.ru'||url.hostname.endsWith('.kinopoisk.ru'))&&/^\/(film|series)\/\d+/.test(url.pathname);
+    }).flatMap(index=>{
+      const text=sources[index].title+' '+(sources[index].snippet??'');
+      const tokens=[...text.matchAll(/(?:^|[^\d])((?:0|6|12|16|18)\s*\+)(?=$|[^\p{L}\p{N}+])/gu)].map(match=>match[1].replace(/\s/g,''));
+      return tokens.map(value=>({value,index}));
+    });
+    const values=[...new Set(candidates.map(item=>item.value))];
+    if(values.length===1)return {value:values[0]+' (RU)',country:'RU',system:'Kinopoisk',sources:refs(candidates.map(item=>item.index))};
+    // Conflicting numeric classifications must not be silently resolved.
+    if(values.length>1)return {value:null,sources:[]};
+    const value=raw.ageRating.value;
+    if(!value)return {value:null,sources:[]};
+    const token=/\b(?:PG-13|NC-17|PG|G|R)\b|\b\d{1,2}\s*\+/.exec(value)?.[0];
+    if(!token)return {value:null,sources:[]};
+    const pattern=token.includes('+')?`${parseInt(token,10)}\\s*\\+`:token;
+    const explicit=new RegExp(`(?:^|[^\\p{L}\\p{N}])${pattern}(?=$|[^\\p{L}\\p{N}])`,'iu');
+    const result=verified({...raw.ageRating,sourceIndexes:raw.ageRating.sourceIndexes.filter(index=>sources[index]&&explicit.test(sources[index].title+' '+(sources[index].snippet??'')))});
+    const country=result.value&&/\(([A-Z]{2})\)/.exec(result.value)?.[1];
+    return country?{...result,country}:result;
+  }
   return {
     productionYears: verified(raw.productionYears), countries: verified(raw.countries), genres: verified(raw.genres),
-    runtimeMinutes: verified(raw.runtimeMinutes), ageRating: verified(raw.ageRating), synopsis: verified(raw.synopsis),
+    runtimeMinutes: verified(raw.runtimeMinutes), ageRating: ageRating(), synopsis: verified(raw.synopsis),
     directors: verified(raw.directors), budget: verified(raw.budget), boxOffice: verified(raw.boxOffice),
     writers: verified(raw.writers ?? {value:null,sourceIndexes:[]}),
     premiere: verified(raw.premiere?.value && /^\d{4}$/.test(raw.premiere.value.trim()) ? {value:null,sourceIndexes:[]} : raw.premiere ?? {value:null,sourceIndexes:[]}),

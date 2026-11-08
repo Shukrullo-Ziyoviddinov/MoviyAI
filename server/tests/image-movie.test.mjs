@@ -34,7 +34,7 @@ function harness({ searchable = true, badSource = false, posterError = false, de
 const images = [{ mimeType: 'image/jpeg', data: Buffer.from([255, 216, 255]) }];
 test('image clues drive search and only supplied sources/posters are returned', async () => {
   const h = harness(), result = await h.findMovieFromImages('Bu qaysi kino?', images);
-  assert.equal(result.model, 'gemini-3.5-flash-lite'); assert.equal(h.searches(), 9); assert.equal(h.posters(), 1);
+  assert.equal(result.model, 'gemini-3.5-flash-lite'); assert.equal(h.searches(), 10); assert.equal(h.posters(), 1);
   assert.equal(result.movie.title, 'Interstellar'); assert.equal(result.movie.titleUz, null);
   assert.equal(result.movie.sources[0].url, 'https://www.imdb.com/title/tt0816692/'); assert.equal(result.movie.posters.length, 1);
 });

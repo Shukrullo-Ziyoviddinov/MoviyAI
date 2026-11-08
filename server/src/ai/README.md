@@ -33,8 +33,8 @@ The existing JSON text-chat contract is unchanged. Videos are not enabled here.
 Images route to `gemini-3.5-flash-lite` for visual clues, then bounded Serper
 web/localized-name searches, Gemini source matching, and a poster search.
 An inconclusive match asks for another frame instead of inventing a movie.
-One successful lookup can use 3 Gemini calls and up to 10 Serper searches before
-portraits: identification, localized-name search, seven parallel fact searches, and posters.
+One successful lookup can use 3 Gemini calls and up to 11 Serper searches before
+portraits: identification, localized-name search, eight parallel fact searches, and posters.
 Optional portraits add at most 10 searches (five fictional characters and five actors).
 After identification, a sourced dossier includes release/production years, countries,
 genres, runtime, age rating, spoiler-free plot, directors, up to five main actors/roles,
@@ -168,3 +168,5 @@ There is no automatic model fallback, Serper invocation, or catalog write yet.
 Success: `{ "ok": true, "data": { "role": "model", "text": "...", "model": "...", "usage": {} } }`.
 Errors use `{ "ok": false, "error": "..." }` with 400 (input), 401 (auth),
 413 (size), 415 (format), 429 (rate limit), or 502 (AI provider failure).
+
+Age classification: a dedicated Kinopoisk age search prioritizes explicit 0+/6+/12+/16+/18+ values from the identified film page. Verified numeric values retain country RU and system Kinopoisk (displayed as e.g. 12+ (RU)). Conflicting or unsupported values stay null. MPAA labels are never converted into numeric ages.
