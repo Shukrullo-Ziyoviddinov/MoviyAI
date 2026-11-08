@@ -39,4 +39,6 @@ test('render order is about, names, posters, table, characters, cast, sources, t
  let previous=-1;for(const marker of markers){const position=html.indexOf(marker);assert.ok(position>previous,marker+' must follow preceding section');previous=position;}
  assert.equal(html.split('Siz izlagan kino shumi?').length-1,1);
  assert.match(html,/i.ytimg.com/);assert.doesNotMatch(html,/<iframe/);assert.match(html,/YouTube/);
+ const followup=renderToStaticMarkup(React.createElement(MovieAnswer,{text:'Found Uzbek links',movie:{...movie,linksOnly:true}}));
+ assert.match(followup,/Uzbek movie detail/);assert.match(followup,/Found Uzbek links/);assert.doesNotMatch(followup,/<table|i.ytimg.com|Siz izlagan kino shumi/);
 });

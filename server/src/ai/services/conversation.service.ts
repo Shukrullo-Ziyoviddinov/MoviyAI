@@ -1,8 +1,9 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { Conversation, ChatTurn } from '../models/conversation.model.js';
 import { chatWithGemma } from './gemma.service.js';
-import type { AiHistoryMessage } from '../types/ai.types.js';
-import type { ChatImageInput } from '../types/movie-search.types.js';
+import type { AiHistoryMessage, AiResult } from '../types/ai.types.js';
+import type { ChatImageInput, MovieSearchResult } from '../types/movie-search.types.js';
+import {findUzbekMovieLinks,isUzbekMovieRequest,uzbekLookupReply} from './uzbek-movie.service.js';
 import { findMovieFromImages } from './image-movie.service.js';
 import { imageReferences, uploadChatImages, chatImageUrls, cleanupConversationImages } from './chat-image-storage.service.js';
 import { resolveDirectImages } from './direct-image.service.js';
@@ -93,10 +94,16 @@ export async function sendConversationMessage(userId: string, id: string, reques
         ]);
         if (images.length) await uploadChatImages(id, requestId, images);
         const searchImages = await chatImageUrls(userId, id, requestId);
-        const result = searchImages.length
+        const previousMovie=[...previous].reverse().find(turn=>turn.movie?.title)?.movie as MovieSearchResult|undefined;
+        let result:AiResult&{movie?:MovieSearchResult};
+        if(!searchImages.length&&previousMovie&&isUzbekMovieRequest(text)) {
+            const uzbekLinks=await findUzbekMovieLinks(previousMovie);
+            result={text:uzbekLookupReply(text,uzbekLinks.length>0),model:'uzbek-movie-search',movie:{...previousMovie,uzbekLinks,linksOnly:true}};
+            onDelta?.(result.text);
+        } else result = searchImages.length
             ? await findMovieFromImages(text, searchImages, onDelta)
             : await chatWithGemma({ text, history }, onDelta);
-        const characterImages = await findCharacterImages(result.text, 'movie' in result ? result.movie : undefined);
+        const characterImages = result.movie?.linksOnly?[]:await findCharacterImages(result.text, result.movie);
         if ('movie' in result && result.movie) for (const portrait of characterImages) {
             if (portrait.sourceUrl && !result.movie.sources.some(source=>source.url===portrait.sourceUrl))
                 result.movie.sources.push({title:portrait.label,url:portrait.sourceUrl});

@@ -4,9 +4,11 @@ import type {CharacterImage,MovieSearchResult} from '@/src/types/chat';
 import {FormattedAnswer} from './FormattedAnswer';
 import {MovieSearchCard} from './MovieSearchCard';
 import {splitMovieAnswer} from './movie-answer-order';
+import {UzbekMovieLinks} from './UzbekMovieLinks';
 
 export function MovieAnswer({text,movie,characterImages}:{text:string;movie:MovieSearchResult;characterImages?:CharacterImage[]}){
  const {t}=useTranslation();const parts=splitMovieAnswer(text);
+ if(movie.linksOnly)return <View><FormattedAnswer text={text}/><UzbekMovieLinks links={movie.uzbekLinks}/></View>;
  return <View style={{gap:16}}>
   {!!parts.about&&<FormattedAnswer text={`### ${t('chat.movieAbout')}\n\n${parts.about}`} hideCitations/>}
   <MovieSearchCard movie={movie} confirmation={parts.confirmation||t('chat.movieConfirm')}>

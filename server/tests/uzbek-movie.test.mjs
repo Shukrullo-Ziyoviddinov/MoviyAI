@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {z} from 'zod';
-import {readUzbekPage,uzbekDetailUrl} from '../dist/ai/services/uzbek-movie.service.js';
+import {readUzbekPage,uzbekDetailUrl,discoverUzbekDetails,isUzbekMovieRequest,uzbekLookupReply} from '../dist/ai/services/uzbek-movie.service.js';
 
 const valid='https://uzmovi.net/tarjima-kinolar/123-interstellar.html';
 test('Uzbek detail URL boundary excludes other hosts, lists, files and credentials',()=>{
@@ -20,11 +20,23 @@ test('reader requires movie heading with Uzbek language and rejects oversize and
  assert.match(page.text,/2014/);assert.doesNotMatch(page.text,/dangerous/);
  assert.equal(await readUzbekPage(valid,fetchHtml('x'.repeat(300001))),null);
  assert.equal(await readUzbekPage(valid,async()=>new Response('binary',{headers:{'content-type':'image/jpeg'}})),null);
+ assert.ok(await readUzbekPage(valid,fetchHtml('<title>Interstellar Uzbek tilida</title><h1>Interstellar</h1><p>2014</p>')));
+});
+test('indexed collection links lead to detail pages, never become watch recommendations themselves',async()=>{
+ const collection='https://asilmedia.org/xfsearch/year/2011/';assert.equal(uzbekDetailUrl(collection),null);
+ const detail='https://asilmedia.org/9067-garri-potter-8-ajal-tuhfasi-2.html';
+ const fetcher=async()=>new Response(`<a href="${detail}">Garri Potter: Ajal tuhfasi 2 2011</a><a href="https://evil.example/garri-potter.html">Garri Potter</a><a href="/xfsearch/actors/garri-potter/">Garri Potter</a>`,{headers:{'content-type':'text/html'}});
+ assert.deepEqual(await discoverUzbekDetails(collection,'Garri Potter Ajal tuhfasi 2 2011',fetcher),[detail]);
+});
+test('Uzbek dub follow-ups request a real lookup; general social replies do not',()=>{
+ for(const text of ['uzbekcha dublaji ham top',"o'zbek tilidagini qidir",'uzb link ber','find Uzbek dubbed version','havolasini ber'])assert.equal(isUzbekMovieRequest(text),true,text);
+ for(const text of ['salom',"o'zbek aktyorlari haqida gapir",'Interstellar haqida gapir'])assert.equal(isUzbekMovieRequest(text),false,text);
+ assert.match(uzbekLookupReply('uzbekcha dublaji ham top',false),/qayta tekshirdim/);
 });
 const source=readFileSync(new URL('../dist/ai/services/uzbek-movie.service.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/\bexport /g,'');
 function harness({badYear=false,wrongFilm=false,unavailable=false,imageError=false}={}){
  const calls=[];let queries=0;
- class GoogleGenAI{models={generateContent:async request=>{calls.push(request);if(imageError&&request.contents[0].parts.some(part=>part.fileData))throw Error('Poster inaccessible');return {text:JSON.stringify({matches:[{index:0,title:'Interstellar',sameFilm:!wrongFilm,yearConfirmed:!badYear,identityEvidence:'Interstellar, 2014, Christopher Nolan'},{index:99,title:'Invented',sameFilm:true,yearConfirmed:true,identityEvidence:'Invented evidence string'}]})};}};}
+ class GoogleGenAI{models={generateContent:async request=>{if(request.config.maxOutputTokens===300)return {text:JSON.stringify({queries:['Interstellar 2014 uzbek']})};calls.push(request);if(imageError&&request.contents[0].parts.some(part=>part.fileData))throw Error('Poster inaccessible');return {text:JSON.stringify({matches:[{index:0,title:'Interstellar',sameFilm:!wrongFilm,yearConfirmed:!badYear,identityEvidence:'Interstellar, 2014, Christopher Nolan'},{index:99,title:'Invented',sameFilm:true,yearConfirmed:true,identityEvidence:'Invented evidence string'}]})};}};}
  const searchWeb=async query=>{queries++;return {organic:[{title:'Movie',link:query.includes('site:uzmovi.net')?valid:'https://untrusted.example/film'}]};};
  const readPage=async url=>unavailable?null:{url,title:'Interstellar Uzbek tilida',text:'Interstellar, 2014, Christopher Nolan',posterUrl:'https://uzmovi.net/uploads/poster.jpg'};
  const api=new Function('GoogleGenAI','z','AI_CONFIG','searchWeb',source+'\nreturn createUzbekMovieSearch;')(GoogleGenAI,z,{apiKey:'fake',models:{image:'image-model'}},searchWeb)({searchWeb,readPage});
