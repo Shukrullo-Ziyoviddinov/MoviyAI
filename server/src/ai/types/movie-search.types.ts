@@ -1,6 +1,7 @@
 export interface ChatImageInput { mimeType: string; data: Buffer }
 export interface ChatImageUrl { mimeType: string; fileUri: string }
 export interface MovieSearchResult {
+  uzbekLinks?:import('../services/uzbek-movie.service.js').UzbekMovieLink[];
   trailer?:import('./movie-trailer.types.js').MovieTrailer|null;
   details?: import('./movie-dossier.types.js').MovieDetails;
   title: string;

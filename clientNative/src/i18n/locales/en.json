@@ -169,11 +169,41 @@
     "imagePrompt": "Find the movie in this image.",
     "imageLimit": "Up to 3 JPG, PNG or WebP images. 4 MB each, 8 MB total.",
     "videoLater": "Video search is coming in the next stage.",
-    "movieTable": {"title":"Film details","original":"Original title","uz":"Uzbek title","ru":"Russian title","year":"Year","productionYears":"Production period","countries":"Country","genres":"Genre","directors":"Director","writers":"Screenwriter","runtime":"Runtime","premiere":"Premiere","imdb":"IMDb rating","kinopoisk":"Kinopoisk rating","budget":"Budget","boxOffice":"Box office","ageRating":"Age rating","minute":"min."},
-    "movieVideo": {"trailer":"Trailer","related":"Related film video","play":"Play video","open":"Watch on YouTube","unavailable":"This video could not play in chat. You can open it on YouTube."},
+    "movieTable": {
+      "title": "Film details",
+      "original": "Original title",
+      "uz": "Uzbek title",
+      "ru": "Russian title",
+      "year": "Year",
+      "productionYears": "Production period",
+      "countries": "Country",
+      "genres": "Genre",
+      "directors": "Director",
+      "writers": "Screenwriter",
+      "runtime": "Runtime",
+      "premiere": "Premiere",
+      "imdb": "IMDb rating",
+      "kinopoisk": "Kinopoisk rating",
+      "budget": "Budget",
+      "boxOffice": "Box office",
+      "ageRating": "Age rating",
+      "minute": "min."
+    },
+    "movieVideo": {
+      "trailer": "Trailer",
+      "related": "Related film video",
+      "play": "Play video",
+      "open": "Watch on YouTube",
+      "unavailable": "This video could not play in chat. You can open it on YouTube."
+    },
     "movieAbout": "About the film",
     "movieConfirm": "Is this the film you were looking for?",
     "movieSources": "Sources",
-    "moviePosters": "Movie images"
+    "moviePosters": "Movie images",
+    "uzbekMovies": {
+      "heading": "Watch in Uzbek",
+      "note": "External sites. Language is stated by the site; playback availability is not guaranteed.",
+      "open": "Open movie page"
+    }
   }
 }

@@ -32,10 +32,10 @@ test('render order is about, names, posters, table, characters, cast, sources, t
   });return exports;
  }
  const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
- const movie={title:'Example',titleUz:'Misol',titleRu:'Пример',year:1991,posters:[{url:'https://example.com/poster.jpg'}],sources:[{title:'Manba sahifasi',url:'https://example.com/source'}],trailer:{videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Example film trailer',channel:'Film studio',kind:'trailer'}};
+ const movie={uzbekLinks:[{title:'Uzbek movie detail',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],title:'Example',titleUz:'Misol',titleRu:'Пример',year:1991,posters:[{url:'https://example.com/poster.jpg'}],sources:[{title:'Manba sahifasi',url:'https://example.com/source'}],trailer:{videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Example film trailer',channel:'Film studio',kind:'trailer'}};
  const {MovieAnswer}=load(path.join(base,'MovieAnswer.tsx'));
  const html=renderToStaticMarkup(React.createElement(MovieAnswer,{text,movie}));
- const markers=['Kino haqida','UZ:','poster.jpg','Example film trailer','<table','Asosiy qahramonlar','Asosiy aktyorlar','Manbalar','Siz izlagan kino shumi?'];
+ const markers=['Kino haqida','UZ:','poster.jpg','Example film trailer','<table','Asosiy qahramonlar','Asosiy aktyorlar','Uzbek movie detail','Manbalar','Siz izlagan kino shumi?'];
  let previous=-1;for(const marker of markers){const position=html.indexOf(marker);assert.ok(position>previous,marker+' must follow preceding section');previous=position;}
  assert.equal(html.split('Siz izlagan kino shumi?').length-1,1);
  assert.match(html,/i.ytimg.com/);assert.doesNotMatch(html,/<iframe/);assert.match(html,/YouTube/);

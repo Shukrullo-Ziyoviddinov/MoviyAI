@@ -6,6 +6,7 @@ import { searchWeb, searchImages } from './serper.service.js';
 import type { ChatImageInput, ChatImageUrl, MovieSearchResult } from '../types/movie-search.types.js';
 import { dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier } from './movie-dossier.js';
 import { findMovieTrailer } from './movie-trailer.service.js';
+import { findUzbekMovieLinks } from './uzbek-movie.service.js';
 
 const clueSchema = z.object({
   query: z.string().max(350),
@@ -73,6 +74,7 @@ export function createImageMovieSearch(deps = { searchWeb, searchImages }) {
     let detailedAnswer: string | undefined;
     if (match.matched && match.title.trim() && selectedSources.length && match.confidence !== 'low') {
       const trailerTask=findMovieTrailer(match).catch(()=>null);
+      const uzbekLinksTask=findUzbekMovieLinks(match,mediaParts).catch(()=>[]);
       const identity = `${match.title} ${match.year ?? ''}`;
       const queries = [
         `${identity} film production filming years countries genres runtime age rating`,
@@ -127,8 +129,9 @@ export function createImageMovieSearch(deps = { searchWeb, searchImages }) {
         // Keep identification, but make provider failures visible without logging user data.
         console.warn('[MOVIE_POSTERS] Search failed', {status:(error as {status?:number}).status??null});
       }
-      movie = { title: match.title, titleUz: match.titleUz, titleRu: match.titleRu, year: match.year,
-        confidence: match.confidence, sources: usedSources, posters, details, trailer:await trailerTask };
+      const uzbekLinks=await uzbekLinksTask;
+      movie = { title: match.title, titleUz: match.titleUz??uzbekLinks[0]?.title??null, titleRu: match.titleRu, year: match.year,
+        confidence: match.confidence, sources: usedSources, posters, details, trailer:await trailerTask, uzbekLinks };
       if(movie.trailer&&!movie.sources.some(source=>source.url===movie!.trailer!.url))movie.sources.push({title:movie.trailer.title,url:movie.trailer.url});
       detailedAnswer = renderMovieDossier(movie, details, match.language, true);
     }

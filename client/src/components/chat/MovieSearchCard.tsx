@@ -4,6 +4,7 @@ import { useChat } from './chat-state';
 import { useTheme } from '@/components/theme/theme-state';
 import { useT } from '@/i18n/useT';
 import {MovieTrailer} from './MovieTrailer';
+import {UzbekMovieLinks} from './UzbekMovieLinks';
 import { MovieDetailsTable } from './MovieDetailsTable';
 import type {ReactNode} from 'react';
 
@@ -24,6 +25,7 @@ export function MovieSearchCard({ movie,children,confirmation }: { movie: MovieS
     <MovieTrailer trailer={movie.trailer}/>
     <MovieDetailsTable movie={movie}/>
     {children}
+    <UzbekMovieLinks links={movie.uzbekLinks}/>
     <p className="mt-4 mb-1 text-xs font-medium" style={{ color: colors.textMuted }}>{t('chat.movieSources')}</p>
     <div className="flex flex-wrap gap-2">
       {movie.sources.map(source => <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer"

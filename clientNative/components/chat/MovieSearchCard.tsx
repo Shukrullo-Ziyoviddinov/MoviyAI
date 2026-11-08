@@ -6,6 +6,7 @@ import type { MovieSearchResult } from '@/src/types/chat';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import {MovieTrailer} from './MovieTrailer';
+import {UzbekMovieLinks} from './UzbekMovieLinks';
 import { MovieDetailsTable } from './MovieDetailsTable';
 
 export function MovieSearchCard({ movie,children,confirmation }: { movie: MovieSearchResult;children?:ReactNode;confirmation?:string }) {
@@ -25,6 +26,7 @@ export function MovieSearchCard({ movie,children,confirmation }: { movie: MovieS
     <MovieTrailer trailer={movie.trailer}/>
     <MovieDetailsTable movie={movie}/>
     {children}
+    <UzbekMovieLinks links={movie.uzbekLinks}/>
     <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 16, marginBottom: 4 }}>{t('chat.movieSources')}</Text>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       {movie.sources.map(source => <Pressable key={source.url} accessibilityRole="link" onPress={() => { void Linking.openURL(source.url).catch(() => undefined); }}
