@@ -18,6 +18,8 @@ export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
  const loading=useChatStore(s=>s.loading);
  const streamingText=useChatStore(s=>s.streamingText);
  const activeId=useChatStore(s=>s.activeId);
+ const refreshMedia=useChatStore(s=>s.refreshMedia);
+ useEffect(()=>{const timer=setInterval(()=>{void refreshMedia();},60000);return()=>clearInterval(timer);},[refreshMedia]);
  const lastUser=messages.filter(item=>item.kind==='text' && item.role!=='model').at(-1)?.id;
  useEffect(()=>{following.current=true;const frame=requestAnimationFrame(()=>list.current?.scrollToEnd({animated:false}));return()=>cancelAnimationFrame(frame);},[activeId,lastUser,loading]);
  if(loading) return <ScrollView style={styles.list} contentContainerStyle={{paddingTop:topInset+8,paddingBottom:bottomInset}} showsVerticalScrollIndicator={false}><ChatSkeleton/></ScrollView>;
@@ -28,7 +30,7 @@ export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
   onScroll={event=>{const {contentSize,contentOffset,layoutMeasurement}=event.nativeEvent;following.current=contentSize.height-contentOffset.y-layoutMeasurement.height<100;}}
   onContentSizeChange={()=>{if(following.current)list.current?.scrollToEnd({animated:false});}}
   ListFooterComponent={sending ? (streamingText ? <TextMessageBubble text={streamingText} role="model"/> : <AiWaiting/>) : error ? <AiError message={error} onRetry={retry} disabled={loading}/> : null}
-  renderItem={({item})=>item.kind==='text'?<TextMessageBubble text={item.text} role={item.role}/>:<MediaGridBlock items={item.items}/>}
+  renderItem={({item})=>item.kind==='text'?<TextMessageBubble text={item.text} role={item.role} movie={item.movie}/>:<MediaGridBlock items={item.items}/>}
  />;
 }
 const styles=StyleSheet.create({list:{flex:1},content:{flexGrow:1,justifyContent:'flex-start'}});

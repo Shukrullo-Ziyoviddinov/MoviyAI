@@ -3,6 +3,8 @@ import { z } from 'zod';
 import type { AuthRequest } from '../../middleware/requireAuth.js';
 import * as service from '../services/conversation.service.js';
 import { AiServiceError } from '../services/google-ai.service.js';
+import { readChatImage } from '../services/chat-image.service.js';
+import { reserveImages } from '../services/direct-image.service.js';
 const idSchema = z.string().uuid();
 async function respond(res: Response, work: () => Promise<unknown>) {
     res.setHeader('Cache-Control', 'no-store');
@@ -50,10 +52,22 @@ export async function pin(req: Request, res: Response) {
 }
 export async function send(req: Request, res: Response) {
     const id = idSchema.safeParse(req.params.id);
-    const input = z.object({ requestId: idSchema, text: z.string().trim().min(1).max(20000) }).strict().safeParse(req.body);
+    const input = z.object({ requestId: idSchema, text: z.string().trim().min(1).max(20000), directImages: z.boolean().optional() }).strict().safeParse(req.body);
     if (!id.success || !input.success) {
         res.status(400).json({ ok: false, error: 'Invalid chat input' });
         return;
+    }
+    const files = Array.isArray(req.files) ? req.files : [];
+    const images = files.map(file => ({ mimeType: file.mimetype, data: file.buffer }));
+    if (images.reduce((sum, image) => sum + image.data.length, 0) > 8 * 1024 * 1024) {
+        res.status(413).json({ ok: false, error: 'Images exceed 8 MB total' }); return;
+    }
+    for (const image of images) {
+        const bytes = image.data;
+        const valid = image.mimeType === 'image/jpeg' ? bytes.subarray(0, 3).equals(Buffer.from([255, 216, 255]))
+            : image.mimeType === 'image/png' ? bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+            : image.mimeType === 'image/webp' && bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP';
+        if (!valid) { res.status(415).json({ ok: false, error: 'Invalid image content' }); return; }
     }
     if (req.get('Accept')?.includes('text/event-stream')) {
         res.status(200).set({
@@ -71,7 +85,7 @@ export async function send(req: Request, res: Response) {
         res.once('close', () => clearInterval(heartbeat));
         try {
             const chat = await service.sendConversationMessage((req as AuthRequest).userId, id.data,
-                input.data.requestId, input.data.text, text => write({ type: 'delta', text }));
+                input.data.requestId, input.data.text, text => write({ type: 'delta', text }), images, input.data.directImages);
             write({ type: 'done', data: chat });
         } catch (error) {
             const status = error instanceof service.ConversationError ? error.status
@@ -83,5 +97,31 @@ export async function send(req: Request, res: Response) {
         }
         return;
     }
-    await respond(res, () => service.sendConversationMessage((req as AuthRequest).userId, id.data, input.data.requestId, input.data.text));
+    await respond(res, () => service.sendConversationMessage((req as AuthRequest).userId, id.data, input.data.requestId, input.data.text, undefined, images, input.data.directImages));
+}
+
+export async function image(req: Request, res: Response) {
+    const id = idSchema.safeParse(req.params.id), requestId = idSchema.safeParse(req.params.requestId);
+    const index = Number(req.params.index);
+    if (!id.success || !requestId.success || !Number.isInteger(index) || index < 0 || index > 2 || typeof req.query.token !== 'string') {
+        res.status(404).end(); return;
+    }
+    const result = await readChatImage(id.data, requestId.data, index, req.query.token);
+    if (!result) { res.status(404).end(); return; }
+    res.set({ 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer' });
+    res.redirect(302, result.fileUri);
+}
+export async function prepareImages(req: Request, res: Response) {
+    const id = idSchema.safeParse(req.params.id);
+    const input = z.object({ requestId: idSchema, images: z.array(z.object({
+        hash: z.string().regex(/^[a-f0-9]{64}$/), size: z.number().int().min(12).max(4 * 1024 * 1024),
+        mimeType: z.enum(['image/jpeg','image/png','image/webp']),
+    }).strict()).min(1).max(3) }).strict().safeParse(req.body);
+    if (!id.success || !input.success || input.data.images.reduce((sum,image)=>sum+image.size,0)>8*1024*1024) {
+        res.status(400).json({ ok:false, error:'Invalid image metadata' }); return;
+    }
+    try {
+        const data = await reserveImages((req as AuthRequest).userId,id.data,input.data.requestId,input.data.images);
+        res.set('Cache-Control','no-store').json({ok:true,data});
+    } catch { res.status(409).json({ok:false,error:'Could not prepare upload. Reopen the chat and retry.'}); }
 }

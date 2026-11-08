@@ -30,15 +30,16 @@ export function ChatComposer() {
   const clearMedia = useComposerStore((state) => state.clearMedia);
   const [text, setText] = useState('');
 
-  const canSend = !pinningId && !deletingId && !loading && !sending && !error && !pending && selectedMedia.length === 0 && text.trim().length > 0;
+  const canSend = !pinningId && !deletingId && !loading && !sending && !error && !pending && selectedMedia.every(item => item.type === 'image') && (text.trim().length > 0 || selectedMedia.length > 0);
 
   const handleSend = () => {
     if (!canSend) return;
 
-    sendMessage({
-      text,
+    const sent = sendMessage({
+      text: text.trim() || t('chat.imagePrompt'),
       media: selectedMedia,
     });
+    if (!sent) return;
 
     setText('');
     clearMedia();
@@ -51,7 +52,7 @@ export function ChatComposer() {
         { backgroundColor: colors.panel, borderColor: colors.borderSoft },
       ]}
     >
-      {selectedMedia.length > 0 && <Text style={{ color: colors.textMuted }}>Rasm/video tahlili keyingi bosqichda ulanadi. Matn yuborish uchun tanlangan fayllarni olib tashlang.</Text>}
+      {selectedMedia.length > 0 && <Text style={{ color: colors.textMuted, fontSize: 12 }}>{t(selectedMedia.some(item => item.type === 'video') ? 'chat.videoLater' : 'chat.imageLimit')}</Text>}
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
 
       <View style={styles.inputRow}>

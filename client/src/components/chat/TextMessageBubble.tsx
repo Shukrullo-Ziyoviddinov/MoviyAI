@@ -1,11 +1,13 @@
 "use client";
 
 import { useTheme } from "@/components/theme/theme-state";
+import type { MovieSearchResult } from '@/types/chat';
+import { MovieSearchCard } from './MovieSearchCard';
 
-export function TextMessageBubble({ text, role = "user" }: { text: string; role?: "user" | "model" }) {
+export function TextMessageBubble({ text, role = "user", movie }: { text: string; role?: "user" | "model"; movie?: MovieSearchResult | null }) {
   const { colors } = useTheme();
 
-  if (role === "model") return <div className="mb-5 w-full whitespace-pre-wrap break-words px-3.5 py-2 text-[15px] leading-7" style={{ color: colors.text, overflowWrap: 'anywhere' }}>{text}</div>;
+  if (role === "model") return <div className="mb-5 w-full px-3.5 py-2" style={{ color: colors.text }}><div className="whitespace-pre-wrap break-words text-[15px] leading-7" style={{ overflowWrap: 'anywhere' }}>{text}</div>{movie && <MovieSearchCard movie={movie}/>}</div>;
 
   return (
     <div className="mb-2.5 flex w-full justify-end px-3.5">

@@ -3,13 +3,7 @@ import { Image } from 'expo-image';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 
-export type SelectedMedia = {
-  id: string;
-  uri: string;
-  type: 'image' | 'video';
-  width?: number;
-  height?: number;
-};
+export type SelectedMedia = import('@/src/types/chat').ChatMediaItem;
 
 type SelectedMediaStripProps = {
   items: SelectedMedia[];

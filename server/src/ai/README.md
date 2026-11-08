@@ -1,5 +1,57 @@
 # AI chat API
 
+## Image-based movie search
+
+Web/native upload directly to R2: authenticated `POST /conversations/:id/uploads`
+accepts `{requestId,images:[{hash,size,mimeType}]}` (SHA-256 hex, at most 3 images,
+4 MB each / 8 MB total). It reserves owned object keys and returns five-minute
+PUT URLs plus the exact headers to send. Clients PUT the raw file to R2, then
+send JSON `{requestId,text,directImages:true}` to the messages endpoint.
+The server checks R2 HEAD metadata and only 12 signature bytes using a range GET;
+Gemini receives signed R2 GET URLs through `fileData`, and fetches the image itself.
+Restored-message retries reuse saved object keys without uploading again.
+Conversation responses contain one-hour signed R2 URLs, so chat image bodies also
+bypass Render. Open chats renew expiring links in the background.
+
+Deployment: Cloudflare R2 → bucket → Settings → CORS Policy → JSON.
+Merge `config/r2-chat-cors.example.json` with existing rules, preserving other
+applications' origins/methods; adjust origins to the actual web deployment.
+The browser needs PUT plus Content-Type/Cache-Control allowed. CORS does not make
+objects public. Existing object-only R2 keys may not have permission to manage CORS.
+The Express `CLIENT_ORIGIN` must separately include the web frontend origin.
+
+`ai_chat_uploads` tracks reservations and expires abandoned uploads through the
+cleanup worker after one hour. Records remain until R2 cleanup succeeds (no TTL).
+Deleting a chat also deletes its reserved objects immediately; reservations stay
+until expiry so late writes with an already-issued URL are cleaned again.
+
+Saved-message POST requests accept `multipart/form-data`: `requestId`, `text`
+and up to three files named `images`. Supported formats: JPEG, PNG, WebP;
+4 MB per file and 8 MB combined. File signatures are checked before AI calls.
+The existing JSON text-chat contract is unchanged. Videos are not enabled here.
+
+Images route to `gemini-3.5-flash-lite` for visual clues, then bounded Serper
+web/localized-name searches, Gemini source matching, and a poster search.
+An inconclusive match asks for another frame instead of inventing a movie.
+One successful lookup can use 2 Gemini calls and up to 3 Serper searches.
+Poster failure does not discard a sourced identification.
+
+User image files are stored in the existing R2 bucket under `chatimg/`.
+MongoDB chat turns store only the object key, MIME type, size and hash, alongside
+the search result. Movie/actor catalog collections are not written.
+Images are served through one-hour signed R2 links; reopening a chat renews links.
+The compatibility signed API image route redirects to R2 instead of proxying bytes.
+The chat prefix is excluded from the public image-folder routes.
+The bucket must prevent public access to chat objects if it also has a public domain.
+Legacy MongoDB image bytes migrate to R2 when an image is viewed or retried;
+the bytes are removed only after a successful upload.
+Deleting a conversation removes its R2 images before deleting the turns.
+Failed deletions retain a hidden tombstone and object references; a cleanup worker
+retries on startup and every minute while the server is running.
+Media requests have a longer lock/timeout than text requests.
+Saved turns include `images` (private image paths) and optional `movie`
+(title, supported localized names/year, source links, and poster URLs).
+
 ## Topic scope
 
 `config/ai-policy.ts` supplies shared system instructions to both Gemma text chat

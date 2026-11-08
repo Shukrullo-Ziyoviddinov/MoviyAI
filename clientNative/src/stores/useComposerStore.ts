@@ -23,8 +23,9 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: type === 'image' ? ['images'] : ['videos'],
         allowsMultipleSelection: true,
-        quality: 1,
-        selectionLimit: 20,
+        quality: type === 'image' ? 0.9 : 1,
+        ...(type === 'image' ? { preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible } : {}),
+        selectionLimit: type === 'image' ? 3 : 20,
       });
 
       if (result.canceled) return;
@@ -33,6 +34,10 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
         id: asset.assetId ?? `${asset.uri}-${Date.now()}-${index}`,
         uri: asset.uri,
         type,
+        mimeType: asset.mimeType ?? undefined,
+        file: asset.file,
+        fileName: asset.fileName ?? undefined,
+        fileSize: asset.fileSize ?? undefined,
         width: asset.width,
         height: asset.height,
       }));

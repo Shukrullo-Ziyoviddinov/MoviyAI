@@ -51,3 +51,10 @@ test('invalid input is rejected before opening a stream or invoking AI', async (
   await controller(async () => { throw Error('must not invoke'); })(req, res);
   assert.equal(res.statusCode, 400); assert.equal(res.flushed, false);
 });
+test('fake image bytes and oversized batches never reach AI', async () => {
+  const send = controller(async () => { throw Error('must not invoke'); });
+  let res=response(),req=request();req.files=[{mimetype:'image/png',buffer:Buffer.from('not an image')}];
+  await send(req,res);assert.equal(res.statusCode,415);assert.equal(res.flushed,false);
+  res=response();req=request();req.files=[{mimetype:'image/jpeg',buffer:Buffer.alloc(9*1024*1024)}];
+  await send(req,res);assert.equal(res.statusCode,413);assert.equal(res.flushed,false);
+});

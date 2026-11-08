@@ -14,11 +14,11 @@ export function ChatComposer() {
   const { selectedMedia, removeMedia, send, pick, picking, sending, loading, error, deletingId, pinningId } = useChat();
   const t = useT();
   const [text, setText] = useState("");
-  const canSend = !pinningId && !deletingId && !loading && !sending && !error && selectedMedia.length === 0 && text.trim().length > 0;
+  const canSend = !pinningId && !deletingId && !loading && !sending && !error && selectedMedia.every(item => item.type === 'image') && (text.trim().length > 0 || selectedMedia.length > 0);
 
   function handleSend() {
     if (!canSend) return;
-    send(text);
+    if (!send(text.trim() || t('chat.imagePrompt'))) return;
     setText("");
   }
 
@@ -27,7 +27,7 @@ export function ChatComposer() {
       className="mx-auto w-full max-w-[430px] rounded-[28px] border-[1.5px] px-3 py-3 md:max-w-[720px]"
       style={{ backgroundColor: colors.panel, borderColor: colors.borderSoft }}
     >
-      {selectedMedia.length > 0 && <p style={{ color: colors.textMuted }}>Rasm/video tahlili keyingi bosqichda ulanadi. Matn yuborish uchun tanlangan fayllarni olib tashlang.</p>}
+      {selectedMedia.length > 0 && <p className="text-xs" style={{ color: colors.textMuted }}>{t(selectedMedia.some(item => item.type === 'video') ? 'chat.videoLater' : 'chat.imageLimit')}</p>}
       <SelectedMediaStrip items={selectedMedia} onRemove={removeMedia} />
       <div className="flex items-end gap-2.5">
         <textarea

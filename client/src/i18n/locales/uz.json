@@ -165,6 +165,11 @@
     "downloadUnavailable": "Yuklab olish bu qurilmada mavjud emas.",
     "downloadFailed": "Rasmni yuklab bo‘lmadi.",
     "guideText": "MoviyAI chat orqali qiziqqan kino va seriallaringizni oson toping. Rasm yoki videoni chatga yuboring; imkon bo‘lsa kino haqida qisqacha ta’riflang — AI topishiga yordam sifatida. AI chat orqali qiziqqan kino va seriallaringiz bo‘yicha suhbat quring.",
-    "guideGotIt": "Tushundim"
+    "guideGotIt": "Tushundim",
+    "imagePrompt": "Rasmdagi kinoni toping.",
+    "imageLimit": "3 tagacha JPG, PNG yoki WebP. Har biri 4 MB, jami 8 MB gacha.",
+    "videoLater": "Video orqali qidirish keyingi bosqichda ulanadi.",
+    "movieSources": "Manbalar",
+    "moviePosters": "Kino rasmlari"
   }
 }

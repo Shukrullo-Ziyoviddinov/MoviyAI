@@ -1,11 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 
 // Exercise the built service with isolated repositories; never connect to the live DB.
 const source = readFileSync(new URL('../dist/ai/services/conversation.service.js', import.meta.url), 'utf8')
   .replace(/^import .*;$/gm, '').replace(/\bexport /g, '');
+const storageSource = readFileSync(new URL('../dist/ai/services/chat-image-storage.service.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, '').replace(/\bexport /g, '');
 function repository(conversation = false) {
   const rows = [];
   function matches(row, filter) {
@@ -37,7 +38,13 @@ function repository(conversation = false) {
         ...patch.$setOnInsert };
       rows.push(row);
     }
-    if (row) Object.assign(row, patch.$set, { updatedAt: new Date() });
+    if (row) {
+      for (const [key,value] of Object.entries(patch.$set ?? {})) {
+        const path=key.split('.');let target=row;for(const part of path.slice(0,-1))target=target[part];target[path.at(-1)]=value;
+      }
+      for(const key of Object.keys(patch.$unset ?? {})){const path=key.split('.');let target=row;for(const part of path.slice(0,-1))target=target[part];delete target[path.at(-1)];}
+      row.updatedAt=new Date();
+    }
     return row;
   }
   return {
@@ -59,10 +66,22 @@ function harness() {
     if (fail) throw Error('provider failure');
     return { text: 'Answer', model: 'gemma-4-26b-a4b-it' };
   };
-  const service = new Function('Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', source +
+  const findMovieFromImages = async (text, images) => {
+    if(fail)throw Error('image search failure');
+    assert.ok(images[0].fileUri.startsWith('https://r2.example/'));
+    return {text:'Found movie',model:'gemini-3.5-flash-lite',movie:{title:'Example',sources:[],posters:[]}};
+  };
+  const imagePath = (_owner,id,request,index) => `/images/${id}/${request}/${index}`;
+  const objects=new Map(); let storageFailure=false;
+  const chatImageKey=(id,request,index,hash)=>`chatimg/${id}/${request}/${index}-${hash}`;
+  const putChatImage=async(key,data)=>{if(storageFailure)throw Error('R2 unavailable');objects.set(key,Buffer.from(data));};
+  const getChatImage=async key=>objects.get(key)??null;
+  const deleteChatImage=async key=>{if(storageFailure)throw Error('R2 unavailable');objects.delete(key);};
+  const storage=new Function('ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{});
+  const service = new Function('Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', source +
     '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage,deleteConversation,pinConversation};')
-    (Conversation, ChatTurn, chatWithGemma, randomUUID);
-  return { ...service, Conversation, ChatTurn, fail: value => { fail = value; }, hold: value => { hold = value; },
+    (Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');});
+  return { ...service, ...storage, objects, storageFailure: value=>{storageFailure=value;}, Conversation, ChatTurn, fail: value => { fail = value; }, hold: value => { hold = value; },
     calls: () => calls, captured: () => captured };
 }
 test('owners can list/reopen their chats; other accounts cannot read or write them', async () => {
@@ -73,6 +92,23 @@ test('owners can list/reopen their chats; other accounts cannot read or write th
     () => h.sendConversationMessage('bob', id, randomUUID(), 'Private')]) {
     await assert.rejects(action, error => error.status === 404);
   }
+});
+test('failed image lookup retries saved bytes and does not create duplicate turns', async () => {
+  const h=harness(),id=randomUUID(),requestId=randomUUID();await h.createConversation('alice',id);
+  h.fail(true);await assert.rejects(()=>h.sendConversationMessage('alice',id,requestId,'Find',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,255])}]));
+  assert.equal(h.ChatTurn.rows[0].status,'failed');h.fail(false);
+  await h.sendConversationMessage('alice',id,requestId,'Find');
+  assert.equal(h.ChatTurn.rows.length,1);assert.equal(h.ChatTurn.rows[0].status,'completed');assert.equal(h.calls(),0);
+  await assert.rejects(()=>h.sendConversationMessage('alice',id,requestId,'Find',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,254])}]),e=>e.status===409);
+});
+test('image turns use Gemini search, save the input/result, and expose paths instead of image bytes', async () => {
+  const h=harness(),id=randomUUID(),requestId=randomUUID();await h.createConversation('alice',id);
+  const image={mimeType:'image/jpeg',data:Buffer.from([255,216,255])};
+  const result=await h.sendConversationMessage('alice',id,requestId,'Find movie',undefined,[image]);
+  assert.equal(h.calls(),0);assert.equal(result.turns[0].model,'gemini-3.5-flash-lite');
+  assert.equal(result.turns[0].movie.title,'Example');assert.equal(result.turns[0].images.length,1);
+  assert.equal(result.turns[0].images[0].data,undefined);assert.match(result.turns[0].images[0].path,/^https:\/\/r2\.example\//);
+  assert.equal(h.ChatTurn.rows[0].images[0].data,undefined);assert.equal(h.objects.size,1);assert.ok(h.ChatTurn.rows[0].images[0].key.startsWith('chatimg/'));
 });
 test('pin state persists on list and reopen, and can be explicitly cleared', async () => {
   const h=harness(),id=randomUUID();await h.createConversation('alice',id);
@@ -136,3 +172,25 @@ test('history is built from saved turns and an expired processing turn can be re
   await h.sendConversationMessage('alice', id, chat.turns[1].requestId, 'What is my name?');
   assert.equal(h.ChatTurn.rows.length, 2);
 });
+
+ test('R2 deletion failure retains keys until a successful cleanup retry',async()=>{
+ const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+ await h.sendConversationMessage('alice',id,randomUUID(),'Find',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,255])}]);
+ h.storageFailure(true);await assert.rejects(()=>h.deleteConversation('alice',id));
+ assert.equal(h.ChatTurn.rows.length,1);assert.equal(h.objects.size,1);assert.equal(h.Conversation.rows[0].cleanupPending,true);
+ h.storageFailure(false);await h.deleteConversation('alice',id);
+ assert.equal(h.objects.size,0);assert.equal(h.ChatTurn.rows.length,0);assert.equal(h.Conversation.rows[0].cleanupPending,false);
+ });
+ test('legacy bytes migrate only after successful R2 upload',async()=>{
+ const h=harness(),id=randomUUID(),requestId=randomUUID();await h.createConversation('alice',id);
+ const data=Buffer.from([255,216,255]);h.ChatTurn.rows.push({userId:'alice',conversationId:id,requestId,images:[{data,mimeType:'image/jpeg',hash:createHash('sha256').update(data).digest('hex')} ]});
+ h.storageFailure(true);await assert.rejects(()=>h.loadChatImages('alice',id,requestId));assert.ok(h.ChatTurn.rows[0].images[0].data);
+ h.storageFailure(false);const images=await h.loadChatImages('alice',id,requestId);assert.deepEqual(images[0].data,data);
+ assert.equal(h.ChatTurn.rows[0].images[0].data,undefined);assert.equal(h.objects.size,1);
+ });
+ test('failed upload stores metadata only and can retry the same attachment',async()=>{
+ const h=harness(),id=randomUUID(),requestId=randomUUID();await h.createConversation('alice',id);
+ const images=[{mimeType:'image/jpeg',data:Buffer.from([255,216,255])}];h.storageFailure(true);
+ await assert.rejects(()=>h.sendConversationMessage('alice',id,requestId,'Find',undefined,images));assert.equal(h.ChatTurn.rows[0].images[0].data,undefined);
+ h.storageFailure(false);await h.sendConversationMessage('alice',id,requestId,'Find',undefined,images);assert.equal(h.ChatTurn.rows[0].status,'completed');assert.equal(h.objects.size,1);
+ });

@@ -13,6 +13,7 @@ function harness() {
   let id = 0, fail = false, calls = 0, hold, deltas = [], failDelete = false, failPin = false;
   const copy = value => JSON.parse(JSON.stringify(value));
   const api = {
+    chatMediaUrl: path => 'https://test.invalid'+path,
     pinChat: async (id,pinned) => {if(failPin)throw Error('pin failed');db.get(id).pinned=pinned;return {id,pinned};},
     deleteChat: async id => { if(failDelete)throw Error('delete failed');db.delete(id);return {id}; },
     listChats: async () => [...db.values()].map(({ turns, ...chat }) => copy(chat)),
@@ -24,11 +25,11 @@ function harness() {
       if (!db.has(id)) throw Error('not found');
       return copy(db.get(id));
     },
-    sendChat: async (id, requestId, text, onDelta) => {
+    sendChat: async (id, requestId, text, onDelta, media = []) => {
       calls++;
       const chat = db.get(id);
       let turn = chat.turns.find(turn => turn.requestId === requestId);
-      if (!turn) { turn = { requestId, text, answer: '', status: 'processing', createdAt: new Date().toISOString() }; chat.turns.push(turn); }
+      if (!turn) { turn = { requestId, text, images:media.map((item,index)=>({id:item.id,type:'image',path:'/image-'+index+'.jpg'})), answer: '', status: 'processing', createdAt: new Date().toISOString() }; chat.turns.push(turn); }
       chat.title = text;
       for (const delta of deltas) onDelta(delta);
       if (hold) await hold;
@@ -42,7 +43,7 @@ function harness() {
   vm.runInNewContext(ts.transpileModule(revealSource, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText,
     { exports: revealExports, setTimeout, clearTimeout });
   vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText,
-    { exports, require: name => name.includes('text-reveal') ? revealExports : api, Date, setTimeout, clearTimeout });
+    { exports, require: name => name.includes('text-reveal') ? revealExports : api, Date, URL, setTimeout, clearTimeout });
   const create = () => exports.createChatSession({ read: async key => storage.get(key) ?? null,
     write: async (key, value) => { storage.set(key, value); }, uuid: () => `id-${++id}` });
   return { create, db, storage, api, fail: value => { fail = value; }, failPin:value=>{failPin=value;}, failDelete: value => { failDelete=value; }, hold: value => { hold = value; }, deltas: value => { deltas = value; }, calls: () => calls };
@@ -64,6 +65,21 @@ test('list loading stops when summaries arrive; opening a chat only loads its me
   assert.equal(session.getState().loading,true);assert.equal(session.getState().listLoading,false);
   assert.equal(session.getState().conversations.length,1);
   releaseChat();await open;assert.equal(session.getState().loading,false);
+});
+test('image sending preserves the preview and restores saved images after refresh', async () => {
+  const h=harness(),session=h.create();await session.actions.initialize('alice');
+  assert.equal(session.actions.sendMessage({media:[{id:'img',type:'image',uri:'file://frame.jpg',mimeType:'image/jpeg',fileSize:100}]}),true);
+  await tick();assert.equal(session.getState().messages[0].kind,'media');assert.equal(session.getState().messages.length,3);
+  const restored=h.create();await restored.actions.initialize('alice');
+  assert.equal(restored.getState().messages[0].items[0].stored,true);
+  assert.equal(restored.getState().messages[0].items[0].uri,'https://test.invalid/image-0.jpg');
+});
+test('videos and oversized image batches are rejected before API submission', async () => {
+  const h=harness(),session=h.create();await session.actions.initialize('alice');
+  assert.equal(session.actions.sendMessage({media:[{id:'v',type:'video',uri:'file://video.mp4'}]}),false);
+  assert.equal(h.calls(),0);session.actions.newChat();
+  assert.equal(session.actions.sendMessage({media:[{id:'i',type:'image',uri:'file://big.jpg',fileSize:5*1024*1024}]}),false);
+  assert.equal(h.calls(),0);
 });
 test('refreshing summaries has its own loading flag which clears on completion', async () => {
   const h=harness(),session=h.create();await session.actions.initialize('alice');
@@ -158,4 +174,14 @@ test('live text is visible while sending and is replaced once by the saved answe
   release(); await tick();
   assert.equal(session.getState().streamingText, ''); assert.equal(session.getState().messages.length, 2);
   assert.equal(session.getState().messages[1].text, 'Answer'); assert.equal(session.getState().sending, false);
+});
+
+test('expiring R2 links renew without clearing chat messages or showing a loading skeleton',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');
+ session.actions.sendMessage({text:'Find',media:[{id:'img',type:'image',uri:'blob:frame',mimeType:'image/jpeg',fileSize:100}]});await tick();
+ const id=session.getState().activeId;h.api.chatMediaUrl=path=>path;
+ h.db.get(id).turns[0].images[0].path='https://r2.example/image?X-Amz-Date=20200101T000000Z&X-Amz-Expires=3600';
+ await session.actions.openChat(id);const count=session.getState().messages.length;
+ h.db.get(id).turns[0].images[0].path='https://r2.example/renewed';
+ await session.actions.refreshMedia();assert.equal(session.getState().loading,false);assert.equal(session.getState().messages.length,count);assert.equal(session.getState().messages[0].items[0].uri,'https://r2.example/renewed');
 });

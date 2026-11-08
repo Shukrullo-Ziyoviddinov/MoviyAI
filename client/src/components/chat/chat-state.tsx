@@ -8,6 +8,7 @@ import type { ChatSummary } from '@/api/chat';
 import { useAuth } from '@/components/auth/auth-state';
 
 type ChatContextValue = {
+  refreshMedia: () => Promise<void>;
   pinningId: string | null;
   pinError: string | null;
   setPinned: (id: string, pinned: boolean) => Promise<boolean>;
@@ -30,7 +31,7 @@ type ChatContextValue = {
   viewer: ChatMediaItem | null;
   pick: (type: "image" | "video") => void;
   removeMedia: (id: string) => void;
-  send: (text: string) => void;
+  send: (text: string) => boolean;
   openViewer: (item: ChatMediaItem) => void;
   closeViewer: () => void;
 };
@@ -59,7 +60,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [session] = useState(() => createChatSession(webChatStorage));
   const snapshot = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const { messages, sending, loading, error, conversations, activeId, streamingText, deletingId, deleteError, pinningId, pinError, listLoading } = snapshot;
-  const { retry, openChat, newChat, deleteConversation, setPinned } = session.actions;
+  const { refreshMedia, retry, openChat, newChat, deleteConversation, setPinned } = session.actions;
   const owner = ready ? profile?.id ?? null : null;
   useEffect(() => { void session.actions.initialize(owner); }, [session, owner]);
   useEffect(() => {
@@ -101,6 +102,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           id: `${file.name}-${file.lastModified}-${Date.now()}-${index}`,
           uri,
           type,
+          file, mimeType: file.type, fileName: file.name, fileSize: file.size,
           width: size.width || undefined,
           height: size.height || undefined,
         };
@@ -118,7 +120,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }
 
   function send(text: string) {
-    session.actions.sendMessage({text,media:selectedMedia});
+    const sent = session.actions.sendMessage({text,media:selectedMedia});
+    if (sent) setSelectedMedia([]);
+    return sent;
   }
 
   function openViewer(item: ChatMediaItem) {
@@ -132,6 +136,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   return (
     <ChatContext.Provider
       value={{
+        refreshMedia,
         pinningId,
         pinError,
         setPinned,

@@ -165,6 +165,11 @@
     "downloadUnavailable": "Download is not available on this device.",
     "downloadFailed": "Could not download the image.",
     "guideText": "With MoviyAI chat, find movies and series you’re interested in easily. Send a photo or video to the chat; if possible, briefly describe the movie to help AI find it. Chat with AI about the movies and series you care about.",
-    "guideGotIt": "Got it"
+    "guideGotIt": "Got it",
+    "imagePrompt": "Find the movie in this image.",
+    "imageLimit": "Up to 3 JPG, PNG or WebP images. 4 MB each, 8 MB total.",
+    "videoLater": "Video search is coming in the next stage.",
+    "movieSources": "Sources",
+    "moviePosters": "Movie images"
   }
 }

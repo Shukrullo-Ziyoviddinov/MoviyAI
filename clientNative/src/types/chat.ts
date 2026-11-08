@@ -1,25 +1,43 @@
+export type MovieSearchResult = {
+    title: string;
+    titleUz: string | null;
+    titleRu: string | null;
+    year: number | null;
+    confidence: 'high' | 'medium' | 'low';
+    sources: {
+        title: string;
+        url: string;
+    }[];
+    posters: {
+        url: string;
+        sourceUrl: string | null;
+    }[];
+};
 export type ChatMediaItem = {
-  id: string;
-  uri: string;
-  type: 'image' | 'video';
-  width?: number;
-  height?: number;
+    mimeType?: string;
+    fileName?: string;
+    fileSize?: number;
+    file?: Blob;
+    stored?: boolean;
+    id: string;
+    uri: string;
+    type: 'image' | 'video';
+    width?: number;
+    height?: number;
 };
-
 export type TextChatMessage = {
-  role?: 'user' | 'model';
-  failed?: boolean;
-  id: string;
-  kind: 'text';
-  text: string;
-  createdAt: number;
+    movie?: MovieSearchResult | null;
+    role?: 'user' | 'model';
+    failed?: boolean;
+    id: string;
+    kind: 'text';
+    text: string;
+    createdAt: number;
 };
-
 export type MediaChatMessage = {
-  id: string;
-  kind: 'media';
-  items: ChatMediaItem[];
-  createdAt: number;
+    id: string;
+    kind: 'media';
+    items: ChatMediaItem[];
+    createdAt: number;
 };
-
 export type ChatMessage = TextChatMessage | MediaChatMessage;

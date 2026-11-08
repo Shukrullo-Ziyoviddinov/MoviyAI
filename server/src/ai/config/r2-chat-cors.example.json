@@ -1,0 +1,15 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://www.moviyai.uz",
+      "https://moviyai.uz",
+      "https://moviyai-admin.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:8081"
+    ],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedHeaders": ["Content-Type", "Cache-Control"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]

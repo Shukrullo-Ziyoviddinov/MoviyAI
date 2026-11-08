@@ -1,9 +1,11 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '../config/env.js';
 
 const SAFE_NAME = /^[a-zA-Z0-9._-]+$/;
@@ -98,4 +100,55 @@ export async function deleteImageKey(key: string) {
       Key: key,
     })
   );
+}
+
+// Chat objects are intentionally excluded from the public IMAGE_FOLDERS routes.
+export function chatImageKey(conversationId: string, requestId: string, index: number, hash: string) {
+  if (!/^[a-zA-Z0-9-]+$/.test(conversationId) || !/^[a-zA-Z0-9-]+$/.test(requestId) ||
+      !Number.isInteger(index) || index < 0 || index > 2 || !/^[a-f0-9]{64}$/.test(hash)) throw new Error('INVALID_CHAT_IMAGE_KEY');
+  return `chatimg/${conversationId}/${requestId}/${index}-${hash}`;
+}
+function validateChatKey(key: string) {
+  if (!/^chatimg\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\/[0-2]-[a-f0-9]{64}$/.test(key)) throw new Error('INVALID_CHAT_IMAGE_KEY');
+}
+export async function putChatImage(key: string, body: Buffer, contentType: string) {
+  validateChatKey(key);
+  await r2().send(new PutObjectCommand({ Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key,
+    Body: body, ContentType: contentType, CacheControl: 'private, no-store' }), { abortSignal: AbortSignal.timeout(20000) });
+}
+export async function getChatImage(key: string) {
+  validateChatKey(key);
+  try {
+    const object = await r2().send(new GetObjectCommand({ Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key }), { abortSignal: AbortSignal.timeout(20000) });
+    return object.Body ? Buffer.from(await object.Body.transformToByteArray()) : null;
+  } catch (error) {
+    const e = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+    if (e.$metadata?.httpStatusCode === 404 || e.name === 'NoSuchKey' || e.name === 'NotFound') return null;
+    throw error;
+  }
+}
+export async function deleteChatImage(key: string) {
+  validateChatKey(key);
+  await r2().send(new DeleteObjectCommand({ Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key }), { abortSignal: AbortSignal.timeout(20000) });
+}
+export async function signChatImage(key: string, method: 'GET' | 'PUT', mimeType?: string, size?: number, expiresIn?: number) {
+  validateChatKey(key);
+  const input = { Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key };
+  const command = method === 'PUT'
+    ? new PutObjectCommand({ ...input, ContentType: mimeType, ContentLength: size, CacheControl: 'private, no-store' })
+    : new GetObjectCommand(input);
+  return getSignedUrl(r2(), command, { expiresIn: expiresIn ?? (method === 'PUT' ? 300 : 3600) });
+}
+export async function inspectChatImage(key: string) {
+  validateChatKey(key);
+  const input = { Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key };
+  const meta = await r2().send(new HeadObjectCommand(input), { abortSignal: AbortSignal.timeout(10000) });
+  if (!meta.ContentLength || meta.ContentLength > 4 * 1024 * 1024) throw new Error('INVALID_CHAT_IMAGE_SIZE');
+  // Inspect only the signature bytes; the image body never passes through Render.
+  const sample = await r2().send(new GetObjectCommand({ ...input, Range: 'bytes=0-11' }), { abortSignal: AbortSignal.timeout(10000) });
+  if (!sample.Body || sample.ContentLength === undefined || sample.ContentLength > 12 || !sample.ContentRange?.startsWith('bytes 0-')) {
+    (sample.Body as { destroy?: () => void } | undefined)?.destroy?.();
+    throw new Error('INVALID_CHAT_IMAGE_RANGE');
+  }
+  return { size: meta.ContentLength, mimeType: meta.ContentType, bytes: Buffer.from(await sample.Body!.transformToByteArray()) };
 }
