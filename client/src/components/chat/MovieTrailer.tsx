@@ -21,7 +21,7 @@ function TrailerPlayer({trailer}:{trailer:MovieTrailerData}){
   return()=>{cancelled=true;player?.destroy();};
  },[active,failed,trailer.videoId]);
  const url=`https://www.youtube.com/watch?v=${trailer.videoId}`;
- return <section className="mt-4 w-full max-w-[640px] overflow-hidden rounded-2xl border" style={{backgroundColor:colors.panel,borderColor:colors.borderSoft}}>
+ return <section className="mt-4 w-full min-w-0 max-w-full overflow-hidden rounded-2xl border" style={{backgroundColor:colors.panel,borderColor:colors.borderSoft}}>
   <div className="px-4 py-3"><p className="text-xs font-semibold" style={{color:colors.accentBright}}>{t(trailer.kind==='trailer'?'chat.movieVideo.trailer':'chat.movieVideo.related')}</p><p className="mt-1 text-sm font-semibold" style={{color:colors.text}}>{trailer.title}</p>{trailer.channel&&<p className="mt-1 text-xs" style={{color:colors.textMuted}}>{trailer.channel}</p>}</div>
   {failed?<p className="px-4 py-5 text-sm" style={{color:colors.textMuted}}>{t('chat.movieVideo.unavailable')}</p>:active?<div ref={host} className="relative aspect-video min-h-[200px] bg-black [&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:h-full [&_iframe]:w-full"/>:
    <button type="button" onClick={()=>setActive(true)} aria-label={t('chat.movieVideo.play')} className="relative block aspect-video min-h-[200px] w-full overflow-hidden bg-black">

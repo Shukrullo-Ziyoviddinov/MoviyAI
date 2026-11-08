@@ -8,8 +8,8 @@ import type {MovieTrailerData} from '@/src/types/chat';
 
 function TrailerPlayer({trailer}:{trailer:MovieTrailerData}){
  const {colors}=useTheme();const {t}=useTranslation();const [active,setActive]=useState(false);const [failed,setFailed]=useState(false);const [width,setWidth]=useState(300);
- const height=Math.max(200,width*9/16);
- return <View onLayout={event=>setWidth(event.nativeEvent.layout.width)} style={{marginTop:16,width:'100%',maxWidth:640,borderWidth:1,borderColor:colors.borderSoft,borderRadius:16,overflow:'hidden',backgroundColor:colors.panel}}>
+ const height=Math.max(200,Math.max(1,width-2)*9/16);
+ return <View onLayout={event=>setWidth(event.nativeEvent.layout.width)} style={{marginTop:16,width:'100%',minWidth:0,borderWidth:1,borderColor:colors.borderSoft,borderRadius:16,overflow:'hidden',backgroundColor:colors.panel}}>
   <View style={{paddingHorizontal:16,paddingVertical:12}}><Text style={{color:colors.accentBright,fontSize:12,fontWeight:'600'}}>{t(trailer.kind==='trailer'?'chat.movieVideo.trailer':'chat.movieVideo.related')}</Text><Text style={{color:colors.text,fontSize:14,fontWeight:'600',marginTop:4}}>{trailer.title}</Text>{!!trailer.channel&&<Text style={{color:colors.textMuted,fontSize:12,marginTop:4}}>{trailer.channel}</Text>}</View>
   {failed?<Text style={{color:colors.textMuted,padding:16}}>{t('chat.movieVideo.unavailable')}</Text>:active?
    <YoutubePlayer height={height} width={Math.max(1,width-2)} videoId={trailer.videoId} play onError={()=>setFailed(true)} webViewProps={{allowsInlineMediaPlayback:true,mediaPlaybackRequiresUserAction:false,onError:()=>setFailed(true)}} initialPlayerParams={{controls:true,rel:false,preventFullScreen:false}}/>:
