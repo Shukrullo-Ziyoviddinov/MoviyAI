@@ -113,11 +113,14 @@ export function createImageMovieSearch(deps = { searchWeb, searchImages }) {
       ].filter((item,index,all)=>all.findIndex(other=>other.url===item.url)===index);
       let posters: MovieSearchResult['posters'] = [];
       try {
-        const results = await deps.searchImages(`${match.title} ${match.year ?? ''} movie official poster -site:ebay.com -site:etsy.com`, { num: 6 });
+        const results = await deps.searchImages(`${match.title} ${match.year ?? ''} movie official theatrical poster -fanart -site:ebay.com -site:etsy.com`, { num: 15 });
         posters = (results.images ?? []).flatMap(item => {
           const url = publicHttpsUrl(item.imageUrl);
+          if ((item.imageWidth && item.imageWidth < 250) || (item.imageHeight && item.imageHeight < 350)) return [];
+          const years: string[] = item.title?.match(/\b(?:19|20)\d{2}\b/g) ?? [];
+          if (match.year && years.length && !years.includes(String(match.year))) return [];
           return url ? [{ url, sourceUrl: item.link ? publicHttpsUrl(item.link) : null }] : [];
-        }).filter((item, index, all) => all.findIndex(other => other.url === item.url) === index).slice(0, 3);
+        }).filter((item, index, all) => all.findIndex(other => other.url === item.url) === index).slice(0, 7);
       } catch { /* A poster search failure must not discard a sourced identification. */ }
       movie = { title: match.title, titleUz: match.titleUz, titleRu: match.titleRu, year: match.year,
         confidence: match.confidence, sources: usedSources, posters, details };

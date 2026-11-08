@@ -6,7 +6,7 @@ import { dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier } from
 
 const source = readFileSync(new URL('../dist/ai/services/image-movie.service.js', import.meta.url), 'utf8')
   .replace(/^import .*;$/gm, '').replace(/\bexport /g, '');
-function harness({ searchable = true, badSource = false, posterError = false, detailError = false, evidenceError = false, wrongRatingSource = false } = {}) {
+function harness({ searchable = true, badSource = false, posterError = false, detailError = false, evidenceError = false, wrongRatingSource = false, manyPosters = false } = {}) {
   const answers = [
     { query: 'Interstellar 2014 movie', clues: ['Spacesuit', 'Interstellar title'], searchable },
     { matched: searchable, title: 'Interstellar', titleUz: null, titleRu: null, year: 2014, confidence: 'high',
@@ -24,7 +24,7 @@ function harness({ searchable = true, badSource = false, posterError = false, de
     if(query.includes('film production')||query.includes('director plot'))return {organic:[{title:'Interstellar (2014)',link:'https://en.wikipedia.org/wiki/Interstellar_(film)',snippet:'2013 production, 169 minutes, USA, Science fiction. PG-13. Space journey.'}]};
     return {organic:[{title:'Interstellar (2014)',link:'https://www.imdb.com/title/tt0816692/',snippet:query.includes('IMDb rating')?'IMDb RATING 8.7/10':query.includes('top 5 cast')?'Matthew McConaughey, Anne Hathaway, Jessica Chastain, Michael Caine, Mackenzie Foy.':'Directed by Christopher Nolan.'}]};
   };
-  const searchImages = async () => { posters++; if (posterError) throw Error('unavailable'); return { images: [
+  const searchImages = async () => { posters++; if (posterError) throw Error('unavailable'); return { images: manyPosters ? [{imageUrl:'https://example.com/tiny.jpg',imageWidth:80,imageHeight:100},{imageUrl:'https://example.com/wrong.jpg',title:'Interstellar 2025'},...Array.from({length:10},(_,index)=>({imageUrl:'https://example.com/poster-'+index+'.jpg',title:'Interstellar 2014',imageWidth:1000,imageHeight:1500})),{imageUrl:'https://example.com/poster-0.jpg'}] : [
     { imageUrl: 'https://example.com/poster.jpg', link: 'https://example.com/movie' }, { imageUrl: 'http://127.0.0.1/private' },
   ] }; };
   const api = new Function('GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
@@ -77,3 +77,5 @@ test('optional dossier and evidence failures keep identification and mark missin
  if(options.detailError)assert.equal(result.movie.details.cast.length,0);
  }
 });
+
+test('poster search returns up to seven unique images and skips small images or wrong years',async()=>{const result=await harness({manyPosters:true}).findMovieFromImages('Find',images);assert.equal(result.movie.posters.length,7);assert.equal(new Set(result.movie.posters.map(item=>item.url)).size,7);assert.ok(result.movie.posters.every(item=>item.url.includes('poster-')));});
