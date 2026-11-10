@@ -44,7 +44,7 @@ test('unknown values never become fabricated ratings, translations, dictionary n
   const result = input(); result.titleRu = null; result.details.imdb = { value: 8.7, sources: [] }; result.details.kinopoisk = fact(null);
   const report = assessCatalogDraft(prepareCatalogDraft(result, { language: 'en' }));
   assert.equal(report.ready, false); assert.equal(report.payload, null);
-  for (const path of ['ratingImdb', 'ratingKinopoisk', 'title.ru', 'homeImgPoster', 'categoryName', 'actorIds', 'actors.0.actorImg', 'actors.0.actorAbout.uz'])
+  for (const path of ['ratingImdb', 'ratingKinopoisk', 'title.ru', 'homeImgPoster', 'categoryName', 'actors.0.actorImg', 'actors.0.actorAbout.uz'])
     assert.ok(report.issues.some(issue => issue.path === path && issue.blocking), path);
 });
 

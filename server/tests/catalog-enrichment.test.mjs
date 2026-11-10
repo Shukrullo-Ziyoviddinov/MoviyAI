@@ -51,9 +51,8 @@ test('real actor enrichment boundaries distinguish Google 503 from Serper 503',a
    searchWeb:async()=>{if(provider==='serper')throw Object.assign(Error('SECRET API key'),{status:503});return {organic:[]};},
    searchImages:async()=>({images:[]}),matcher:{actor:notFound,movie:notFound},
   });
-  await assert.rejects(()=>enrich(prepareCatalogDraft(input.movie,{language:'uz'}),input,AbortSignal.timeout(1000),async()=>{}),error=>{
-   const info=catalogFailureDetails(error);assert.equal(info.provider,provider);assert.equal(info.stage,provider==='google'?'actor-facts':'actor-evidence');assert.equal(info.providerStatus,503);assert.doesNotMatch(JSON.stringify(error),/SECRET/);return true;
-  });
+  const result=await enrich(prepareCatalogDraft(input.movie,{language:'uz'}),input,AbortSignal.timeout(1000),async()=>{});
+  const info=result.actors[0].enrichmentIssue;assert.equal(info.provider,provider);assert.equal(info.stage,provider==='google'?'actor-facts':'actor-evidence');assert.equal(info.providerStatus,503);assert.doesNotMatch(JSON.stringify(info),/SECRET/);
  }
 });
 

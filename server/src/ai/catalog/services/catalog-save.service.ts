@@ -1,12 +1,13 @@
 import { catalogSaveRepository } from '../repositories/catalog-save.repository.js';
 import { catalogMediaService } from './catalog-media.service.js';
-import { movieMatchInput, actorMatchInput, movieIdentityForInsert, actorIdentityForInsert } from './catalog-match.service.js';
+import { movieMatchInput, movieIdentityForInsert } from './catalog-match.service.js';
 import { resolveCatalogReferences } from './catalog-reference.service.js';
 import { assessCatalogDraft } from '../mappers/movie.mapper.js';
-import { catalogActorPayloadSchema, isPublicHttpsUrl } from '../validators/catalog.validator.js';
+import { isPublicHttpsUrl } from '../validators/catalog.validator.js';
 import type { CatalogDraft, CatalogIssue } from '../types/catalog.types.js';
 import type { CatalogMatchResult } from '../types/catalog-match.types.js';
-import type { CatalogSaveMedia, CatalogSaveRepository, CatalogSaveResult, CatalogStagedMedia, CatalogSaveTransaction } from '../types/catalog-save.types.js';
+import type { CatalogSaveMedia, CatalogSaveRepository, CatalogSaveResult, CatalogSaveTransaction } from '../types/catalog-save.types.js';
+import {stageCatalogActors,commitCatalogActors} from './catalog-actor-save.service.js';
 
 class SaveBlocked extends Error {
   constructor(public issues: CatalogIssue[]) { super('CATALOG_ENRICHMENT_REQUIRED'); }
@@ -19,9 +20,9 @@ function requireKnown(match: CatalogMatchResult, path: string): void {
 }
 function preflight(draft: CatalogDraft) {
   if (draft.research.linksOnly) block('research.linksOnly', 'A link-only follow-up is not a new film result.');
-  if (!draft.actors.length || draft.actors.length > 5) block('actors', 'Research one to five main actors before saving.', 'resolve-actor');
-  const allowedLater = (path: string) => path === 'homeImgPoster' || path === 'actorIds' || path === 'actors' || /^actors\.\d+\.(existingId|actorImg)$/.test(path);
-  const issues = assessCatalogDraft(draft).issues.filter(issue => issue.blocking && !allowedLater(issue.path));
+  const allowedLater = (path: string) => path === 'homeImgPoster';
+  const movieOnly=structuredClone(draft);movieOnly.actors=[];movieOnly.movie.actorIds=[];
+  const issues = assessCatalogDraft(movieOnly).issues.filter(issue => issue.blocking && !allowedLater(issue.path));
   if (issues.length) throw new SaveBlocked(issues);
 }
 async function resolveFranchise(draft: CatalogDraft, tx: Pick<CatalogSaveTransaction, 'matcher'>): Promise<number[]> {
@@ -56,22 +57,13 @@ export function createCatalogSaver(deps: { repository: CatalogSaveRepository; me
       if (!references.ready) throw new SaveBlocked(references.issues);
       const draft = references.draft;
       draft.movie.actorIds = [];
-      for (const actor of draft.actors) {
-        const match = await repository.matcher.actor(actorMatchInput(actor)); requireKnown(match, 'actors');
-        actor.existingId = match.status === 'existing' ? match.id : null;
-        if (actor.existingId && !draft.movie.actorIds.includes(actor.existingId)) draft.movie.actorIds.push(actor.existingId);
-        if (!actor.existingId && !actor.imageCandidates?.length) block('actors.imageCandidates', 'Research the new actor portrait before saving.', 'store-media');
-      }
       preflight(draft);
       await resolveFranchise(draft, repository);
       if (!draft.posterCandidates.length) block('posterCandidates', 'A verified film poster is required.', 'store-media');
       const signal = AbortSignal.timeout(90000);
       const track = (key: string) => tracked.push(key);
-      const staged: CatalogStagedMedia = { posters: await media.store('movieimg', draft.posterCandidates.map(item => item.url), 2, track, signal), actors: new Map() };
-      for (const [index, actor] of draft.actors.entries()) if (!actor.existingId) {
-        const images = await media.store('actorimg', actor.imageCandidates!.map(item => item.url), 1, track, signal);
-        staged.actors.set(index, images[0]);
-      }
+      const staged = { posters: await media.store('movieimg', draft.posterCandidates.map(item => item.url), 2, track, signal) };
+      const stagedActors=await stageCatalogActors(draft.actors,repository.matcher,media,track,signal);
 
       const result = await repository.transaction<CatalogSaveResult>(async tx => {
         const duplicate = await tx.matcher.movie(movieMatchInput(draft)); requireKnown(duplicate, 'identity');
@@ -81,27 +73,19 @@ export function createCatalogSaver(deps: { repository: CatalogSaveRepository; me
         const ready = freshReferences.draft;
         ready.movie.homeImgPoster = staged.posters[0].path; ready.movie.actorIds = [];
         ready.movie.franchiseMovieIds = await resolveFranchise(ready, tx);
-        for (const [index, actor] of ready.actors.entries()) {
-          const match = await tx.matcher.actor(actorMatchInput(actor)); requireKnown(match, `actors.${index}`);
-          let id: number;
-          if (match.status === 'existing') id = match.id;
-          else {
-            const image = staged.actors.get(index);
-            if (!image) block(`actors.${index}`, 'Actor identity changed during saving; retry enrichment.', 'resolve-actor');
-            const payload = catalogActorPayloadSchema.parse({ actorName: actor.actorName, actorAbout: actor.actorAbout, actorImg: image.path });
-            id = await tx.nextId('actor');
-            await tx.insertActor({ id, payload, identity: actorIdentityForInsert(actorMatchInput(actor)), research: { ...actor, actorImg: image.path, storedAsset: image }, mediaKeys: [image.key] });
-          }
-          actor.existingId = id; if (!ready.movie.actorIds.includes(id)) ready.movie.actorIds.push(id);
-        }
+        const allActors=ready.actors;
+        ready.actors=await commitCatalogActors(stagedActors,tx);
+        ready.movie.actorIds=[...new Set(ready.actors.map(actor=>actor.existingId!))];
+        const pendingActors=allActors.filter(actor=>!ready.actors.some(saved=>saved.actorName===actor.actorName&&saved.originalName===actor.originalName));
         const assessment = assessCatalogDraft(ready);
         if (!assessment.ready || !assessment.payload) throw new SaveBlocked(assessment.issues.filter(issue => issue.blocking));
         const movieId = await tx.nextId('movie');
         ready.movie.franchiseMovieIds = ready.movie.franchiseMovieIds.filter(id => id !== movieId);
         const payload = { ...assessment.payload, franchiseMovieIds: ready.movie.franchiseMovieIds };
-        await tx.insertMovie({ id: movieId, payload, identity: movieIdentityForInsert(movieMatchInput(ready)), research: { result: ready.research, localizedFacts: ready.localizedFacts ?? null, franchiseCandidates: ready.franchiseCandidates ?? [], storedAssets: staged.posters },
+        await tx.insertMovie({ id: movieId, payload, identity: movieIdentityForInsert(movieMatchInput(ready)), research: { result: ready.research, pendingActors, localizedFacts: ready.localizedFacts ?? null, franchiseCandidates: ready.franchiseCandidates ?? [], storedAssets: staged.posters },
           posters: staged.posters.map(image => image.path), mediaKeys: staged.posters.map(image => image.key) });
         await tx.linkFranchise(movieId, payload.franchiseMovieIds);
+        if((pendingActors.length||!allActors.length)&&tx.enqueueActors)await tx.enqueueActors(movieId,{...ready,actors:pendingActors});
         return { status: 'created', movieId, actorIds: payload.actorIds, posters: staged.posters.map(image => image.path) };
       });
       await cleanup(tracked);

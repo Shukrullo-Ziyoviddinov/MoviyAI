@@ -7,13 +7,17 @@ export interface StoredMovieIdentity {
 export interface StoredActorIdentity {
   originalName?: string; nameKeys?: string[];
   imdbId?: string; kinopoiskId?: string; birthDate?: string;
+  profileKey?: string; creditKeys?: string[];
 }
+export interface ActorCreditProof { filmTitle:string; year:number; role:string; sources:MovieSource[] }
 export interface MovieMatchInput {
   originalTitle: string; aliases: string[]; year: number | null;
   imdbId: string | null; kinopoiskId: string | null;
   sources: MovieSource[]; directors?: string[];
 }
 export interface ActorMatchInput {
+  credit?: ActorCreditProof;
+  profile?: MovieSource;
   name: string; originalName: string | null; aliases?: string[];
   imdbId: string | null; kinopoiskId: string | null;
   birthDate?: MovieFact<string> | null;
@@ -27,9 +31,10 @@ export interface MovieMatchRecord {
 }
 export interface ActorMatchRecord {
   id: number; actorName: string; catalogIdentity?: StoredActorIdentity;
+  actorAbout?: {uz?:string;ru?:string};
 }
 export type CatalogMatchResult =
-  | { status: 'existing'; id: number; method: 'external-id' | 'title-year' | 'name-birth-date' }
+  | { status: 'existing'; id: number; method: 'external-id' | 'title-year' | 'name-birth-date' | 'name-film-role' | 'verified-profile' }
   | { status: 'not-found'; method: 'checked-candidates' }
   | { status: 'needs-research' | 'conflict'; reason: string; candidateIds: number[] };
 export interface CandidatePage<T> { records: T[]; truncated: boolean }

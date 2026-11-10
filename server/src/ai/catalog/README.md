@@ -28,7 +28,7 @@ field/action issues. A draft is never itself a Movie insert payload.
 | `specs.ageRating` | Required source classification, including its country/system where supplied. Never convert MPAA to a guessed numeric age. |
 | `like`, `dislike` | Server-controlled string `"0"` for a newly created film, not imported search-site reactions. |
 | `franchiseMovieIds` | Existing internal movie IDs only. Empty is valid if no verified existing relation is found. Relation lookup remains a later stage. |
-| `actorIds` | Nonempty, unique positive integer IDs, each linked to a researched actor resolved/created by the actor stage. Never reuse movie cast position as actor ID. |
+| `actorIds` | Unique positive integer IDs linked to verified actors. May be empty: unresolved cast is deferred independently instead of blocking the film. Never reuse movie cast position as actor ID. |
 | Actor `actorName`, `actorImg`, `actorAbout.uz/ru` | Required for a new actor. Image must be stored in R2; biographies must be researched/translated. An existing resolved actor needs only its existing ID and is not recreated. |
 
 Trailer/watch searches must be attempted. If no verified link exists, the search
@@ -73,9 +73,12 @@ save pipeline. The outbox and enrichment preserve this boundary. Old snapshots
 without identitySources still use their original sources conservatively; real
 conflicting film IDs are never silently ignored.
 
-Actor matching requires an official IMDb `nm…` / Kinopoisk person ID, or a sourced
-full birth date plus exact normalized name. Cast credits, film IDs, character
-names, portraits and an identical name alone do not establish person identity.
+Actor matching accepts an official IMDb `nm…` / Kinopoisk person ID, a sourced
+full birth date plus exact normalized name, or a verified public actor profile
+with two independent named film-role sources. A unique legacy name can be
+reused when its stored biography matches that same verified film and role.
+Namesakes, conflicting identities and name-only matches remain unresolved.
+Accepted legacy identities are enriched under the same write transaction.
 A legacy namesake without identity metadata blocks creation/reuse until research
 can distinguish it. A valid external ID with a changed display name still matches.
 
@@ -229,8 +232,10 @@ existing movie). It checks actual genre/country dictionaries before expensive
 enrichment. Missing verified facts use bounded Serper results and structured
 source-index extraction. Derived UZ/RU display titles and description translations
 retain the underlying sources; they are not claims of official dubbed titles.
-Actor research needs an official person page, name support and matching film
-credit evidence. Unsourced biographies and guessed person IDs are never filled.
+Actor research prefers official person pages but also accepts public actor/studio
+biographies and film-role evidence from other sources. IMDb is not mandatory.
+Unsourced biographies and guessed person IDs are never filled. Per-actor provider
+errors defer that actor without failing the completed film research.
 Existing legacy namesakes without enough identity metadata remain blocked; this
 worker does not automatically overwrite their identities. Only actor portraits
 are reused, not character pictures. Missing posters can be searched again.
@@ -262,6 +267,23 @@ definitions and worker startup ship with the server deployment. Tests cover
 outbox replay, job fencing, restart/backoff, checkpoints, enrichment provenance,
 conversation deletion and chat-answer independence using isolated dependencies.
 # Catalogue-first image replies
+
+## Independent cast completion
+
+Actor uncertainty, missing biographies/photos and per-actor provider failures no
+longer block movie insertion. Movie-specific mandatory facts and a valid poster
+are still required. The saver stages only verified actors and inserts the film
+with their IDs, including `actorIds: []` if none can be resolved safely.
+
+Unresolved cast is preserved privately in `catalogResearch.pendingActors` and
+atomically queued in `ai_actor_enrichment_jobs` with the movie insert. This is
+independent of the completed movie-save job. The first backfill is due after 15
+minutes, later attempts after one hour; at most five attempts then status `paused`
+retains the draft for review. Jobs use expiring leases and fenced checkpoints.
+The worker resumes stored actor research, uploads only actor assets, rechecks
+identities under the shared transaction gate and `$addToSet`s IDs to the existing
+movie. It does not recreate deleted movies. Unreferenced staged assets are cleaned
+using the same uncertain-commit-safe ownership checks as movie saves.
 
 Actor enrichment searches biography, official person profile and exact film
 credits separately. If profile/credit evidence is missing, it performs bounded

@@ -3,6 +3,7 @@ import { catalogNameKeys, identityIdEvidence, validBirthDate } from '../utils/ca
 import { isPublicHttpsUrl } from '../validators/catalog.validator.js';
 import type { ActorMatchInput, ActorMatchRecord, CatalogMatchRepository, CatalogMatchResult, MovieMatchInput, MovieMatchRecord, StoredActorIdentity, StoredMovieIdentity } from '../types/catalog-match.types.js';
 import type { CatalogDraft } from '../types/catalog.types.js';
+import {actorProfileKey,actorCreditKey,verifiedActorCredit,legacyActorRoleMatches} from '../utils/catalog-actor-identity.js';
 
 type ExternalIds = { imdbId?: string | null; kinopoiskId?: string | null };
 function sameId(input: ExternalIds, stored?: ExternalIds): boolean {
@@ -67,6 +68,15 @@ export function matchActorCandidates(input: ActorMatchInput, rows: ActorMatchRec
   const names = catalogNameKeys([input.name, input.originalName, ...(input.aliases ?? [])]);
   if (!names.length) return unresolved('needs-research', 'Actor name is missing.');
   const named = rows.filter(row => overlaps(names, actorNames(row)));
+  const profileKey=actorProfileKey(input);
+  const byProfile=profileKey?rows.filter(row=>row.catalogIdentity?.profileKey===profileKey):[];
+  if(byProfile.length>1)return unresolved('conflict','Profile identifies multiple actors.',byProfile);
+  if(byProfile.length===1){
+    if(conflictingId(input,byProfile[0].catalogIdentity)||verifiedBirth&&byProfile[0].catalogIdentity?.birthDate&&byProfile[0].catalogIdentity.birthDate!==birthDate)return unresolved('conflict','Profile contradicts stored identity.',byProfile);
+    return {status:'existing',id:byProfile[0].id,method:'verified-profile'};
+  }
+  const credited=named.filter(row=>!conflictingId(input,row.catalogIdentity)&&!(verifiedBirth&&row.catalogIdentity?.birthDate&&row.catalogIdentity.birthDate!==birthDate)&&legacyActorRoleMatches(input,row));
+  if(credited.length===1&&named.length===1)return {status:'existing',id:credited[0].id,method:'name-film-role'};
   const matches = verifiedBirth ? named.filter(row => row.catalogIdentity?.birthDate === birthDate && !conflictingId(input, row.catalogIdentity)) : [];
   if (matches.length > 1) return unresolved('needs-research', 'Name and birth date still identify more than one actor.', matches);
   if (matches.length === 1) {
@@ -76,7 +86,7 @@ export function matchActorCandidates(input: ActorMatchInput, rows: ActorMatchRec
   }
   if (named.some(row => !conflictingId(input, row.catalogIdentity) && (!verifiedBirth || !row.catalogIdentity?.birthDate || row.catalogIdentity.birthDate === birthDate)))
     return unresolved('needs-research', 'A namesake exists but person identity is not established; never merge by name alone.', named);
-  if (!(input.imdbId || input.kinopoiskId) && !verifiedBirth) return unresolved('needs-research', 'Research an official person ID or a sourced full birth date before creating an actor.');
+  if (!(input.imdbId || input.kinopoiskId) && !verifiedBirth && !(verifiedActorCredit(input)&&profileKey)) return unresolved('needs-research', 'Research a person ID, sourced birth date, or verified public profile with film-role evidence.');
   return { status: 'not-found', method: 'checked-candidates' };
 }
 
@@ -99,7 +109,7 @@ export function movieMatchInput(draft: CatalogDraft): MovieMatchInput {
     sources: structuredClone(draft.research.identitySources ?? draft.research.sources), directors: draft.research.details?.directors.sources.some(source => isPublicHttpsUrl(source.url)) ? [...(draft.research.details.directors.value ?? [])] : [] };
 }
 export function actorMatchInput(actor: CatalogDraft['actors'][number]): ActorMatchInput {
-  return { name: actor.actorName, originalName: actor.originalName, ...structuredClone(actor.identity), sources: structuredClone(actor.sources) };
+  return { name: actor.actorName, originalName: actor.originalName, ...structuredClone(actor.identity), sources: structuredClone(actor.sources),credit:structuredClone(actor.credit),profile:structuredClone(actor.profile) };
 }
 
 /** Metadata for future insert stages; never accepts AI numeric IDs or unsourced person IDs. */
@@ -111,6 +121,7 @@ export function movieIdentityForInsert(input: MovieMatchInput): StoredMovieIdent
 export function actorIdentityForInsert(input: ActorMatchInput): StoredActorIdentity {
   if (matchActorCandidates(input, []).status !== 'not-found') throw new Error('UNVERIFIED_ACTOR_IDENTITY');
   return { originalName: input.originalName?.trim() || input.name.trim(), nameKeys: catalogNameKeys([input.name, input.originalName, ...(input.aliases ?? [])]),
+    ...(actorProfileKey(input)?{profileKey:actorProfileKey(input)!}:{}),...(actorCreditKey(input)?{creditKeys:[actorCreditKey(input)!]}:{}),
     ...(input.imdbId ? { imdbId: input.imdbId } : {}), ...(input.kinopoiskId ? { kinopoiskId: input.kinopoiskId } : {}),
     ...(input.birthDate?.value ? { birthDate: input.birthDate.value } : {}) };
 }

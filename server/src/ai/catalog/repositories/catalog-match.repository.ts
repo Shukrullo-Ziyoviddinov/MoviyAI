@@ -3,6 +3,7 @@ import { Actor } from '../../../models/Actor.js';
 import type { ClientSession } from 'mongoose';
 import { catalogNameKeys } from '../utils/catalog-identity.js';
 import type { CatalogMatchRepository, CandidatePage, MovieMatchRecord, ActorMatchRecord } from '../types/catalog-match.types.js';
+import {actorProfileKey} from '../utils/catalog-actor-identity.js';
 
 const LIMIT = 100;
 function page<T>(records: T[]): CandidatePage<T> { return { records: records.slice(0, LIMIT), truncated: records.length > LIMIT }; }
@@ -27,7 +28,8 @@ export function createCatalogMatchRepository(session: ClientSession | null = nul
     ];
     if (input.imdbId) clauses.push({ 'catalogIdentity.imdbId': input.imdbId });
     if (input.kinopoiskId) clauses.push({ 'catalogIdentity.kinopoiskId': input.kinopoiskId });
-    const records = await Actor.find({ $or: clauses }).select('id actorName catalogIdentity').sort({ id: 1 }).limit(LIMIT + 1).session(session).lean();
+    const profileKey=actorProfileKey(input);if(profileKey)clauses.push({'catalogIdentity.profileKey':profileKey});
+    const records = await Actor.find({ $or: clauses }).select('id actorName actorAbout catalogIdentity').sort({ id: 1 }).limit(LIMIT + 1).session(session).lean();
     return page(records as ActorMatchRecord[]);
   },
 }; }

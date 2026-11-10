@@ -4,6 +4,7 @@ import { catalogDispatcher } from './catalog-dispatch.service.js';
 import { processCatalogChatSave } from './catalog-chat-save.service.js';
 import type { CatalogJobProcessor, CatalogJobRepository } from '../types/catalog-job.types.js';
 import { catalogFailureDetails, catalogOperation } from '../utils/catalog-diagnostics.js';
+import {runActorBackfillOnce} from './catalog-actor-backfill.service.js';
 
 const LEASE_MS = 10 * 60 * 1000;
 export function createCatalogWorker(deps: { jobs: CatalogJobRepository; dispatch: () => Promise<number>; process: CatalogJobProcessor; now: () => Date } = {
@@ -55,7 +56,7 @@ let timer: ReturnType<typeof setInterval> | undefined;
 export function wakeCatalogWorker(): void {
   if (scheduled) return;
   scheduled = true;
-  setImmediate(() => { scheduled = false; void worker.runOnce(); });
+  setImmediate(() => { scheduled = false; void worker.runOnce(); void runActorBackfillOnce(); });
 }
 export function startCatalogWorker(): void {
   if (timer) return;

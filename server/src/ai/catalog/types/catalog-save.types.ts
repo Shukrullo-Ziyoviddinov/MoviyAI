@@ -1,10 +1,15 @@
 import type { CatalogActorPayload, CatalogDraft, CatalogIssue, CatalogMoviePayload } from './catalog.types.js';
 import type { StoredActorIdentity, StoredMovieIdentity } from './catalog-match.types.js';
+import type {ActorMatchInput} from './catalog-match.types.js';
 import type { createCatalogMatcher } from '../services/catalog-match.service.js';
 import type { CatalogReferenceSnapshot } from './catalog-reference.types.js';
 import type { CatalogAsset } from '../services/catalog-media.service.js';
 
 export interface CatalogSaveTransaction {
+  verifyActorIdentity?(id:number,input:ActorMatchInput):Promise<void>;
+  enqueueActors?(movieId:number,draft:CatalogDraft):Promise<void>;
+  movieExists?(movieId:number):Promise<boolean>;
+  linkActors?(movieId:number,actorIds:number[],pending:CatalogDraft['actors']):Promise<void>;
   matcher: ReturnType<typeof createCatalogMatcher>;
   references(): Promise<CatalogReferenceSnapshot>;
   nextId(kind: 'movie' | 'actor'): Promise<number>;

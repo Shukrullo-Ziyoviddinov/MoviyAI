@@ -49,7 +49,7 @@ export const catalogMoviePayloadSchema = z.object({
   dislike: z.literal('0'),
   specs: z.object({ duration, ageRating: text, year, countries: z.array(text).min(1) }).strict(),
   franchiseMovieIds: ids,
-  actorIds: ids.min(1),
+  actorIds: ids,
 }).strict().superRefine((movie, ctx) => {
   for (const locale of ['uz', 'ru'] as const) {
     if (movie.description[locale].year !== movie.specs.year) ctx.addIssue({ code: 'custom', path: ['description', locale, 'year'], message: 'Release year must match specs.year' });

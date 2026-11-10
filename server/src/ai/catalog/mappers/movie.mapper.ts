@@ -97,7 +97,7 @@ export function assessCatalogDraft(draft: CatalogDraft): CatalogAssessment {
       }
     }
   }
-  if (!draft.actors.length || draft.movie.actorIds.some(id => !draft.actors.some(actor => actor.existingId === id)))
+  if (draft.movie.actorIds.some(id => !draft.actors.some(actor => actor.existingId === id)))
     issues.push({ path: 'actors', action: 'resolve-actor', blocking: true, message: 'Movie actor IDs must correspond to the researched cast.' });
   for (const field of ['productionYears', 'budget', 'boxOffice', 'writers', 'premiere'] as const) {
     if (sourced<string | string[]>(draft.research.details?.[field]) === null)

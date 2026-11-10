@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createCatalogSaver } from '../dist/ai/catalog/services/catalog-save.service.js';
 import { createCatalogMatcher } from '../dist/ai/catalog/services/catalog-match.service.js';
+import {createActorBackfillProcessor} from '../dist/ai/catalog/services/catalog-actor-backfill.service.js';
 import { prepareCatalogDraft } from '../dist/ai/catalog/mappers/movie.mapper.js';
 import { emptyDossier } from '../dist/ai/services/movie-dossier.js';
 import { Movie } from '../dist/models/Movie.js';
@@ -25,7 +26,7 @@ const references = { genres: [{ name: 'Dramma', nameRu: 'Драма' }], countri
 // Transaction fake snapshots/rollbacks plus a shared gate across independent
 // saver instances. Tests never contact the real MongoDB, R2 or image servers.
 function harness() {
-  let state = { movies: [], actors: [], movie: 8000, actor: 9000 };
+  let state = { movies: [], actors: [], actorJobs:[], movie: 8000, actor: 9000 };
   let gate = Promise.resolve(); let imageNumber = 0, writes = 0;
   const files = new Set(), removed = [], hooks = {};
   const matcher = current => createCatalogMatcher({ findMovies: async () => ({ records: current().movies, truncated: false }), findActors: async () => ({ records: current().actors, truncated: false }) });
@@ -38,6 +39,9 @@ function harness() {
         const next = structuredClone(state);
         const result = await work({ matcher: matcher(() => next), references: async () => structuredClone(hooks.changedReferences ?? references),
           nextId: async kind => ++next[kind],
+          enqueueActors:async(movieId,draft)=>{next.actorJobs.push({movieId,draft:structuredClone(draft)});},
+          movieExists:async movieId=>next.movies.some(row=>row.id===movieId),
+          linkActors:async(movieId,ids,pending)=>{const row=next.movies.find(row=>row.id===movieId);if(row){row.actorIds=[...new Set([...row.actorIds,...ids])];row.research.pendingActors=pending;}},
           insertActor: async item => { writes++; if (hooks.failActor) throw Error('actor insert failed'); await new Actor({ ...item.payload, id: item.id, catalogIdentity: item.identity }).validate(); next.actors.push({ id: item.id, ...item.payload, catalogIdentity: item.identity, mediaKeys: item.mediaKeys, research: item.research }); },
           insertMovie: async item => { writes++; if (hooks.failMovie) throw Error('movie insert failed'); await new Movie({ ...item.payload, id: item.id, catalogIdentity: item.identity }).validate(); next.movies.push({ id: item.id, ...item.payload, catalogIdentity: item.identity, mediaKeys: item.mediaKeys, posters: item.posters, research: item.research }); },
           linkFranchise: async (id, related) => { if (hooks.failFranchise) throw Error('franchise update failed'); for (const movie of next.movies) if (related.includes(movie.id)) movie.franchiseMovieIds = [...new Set([...(movie.franchiseMovieIds ?? []), id])]; },
@@ -53,6 +57,7 @@ function harness() {
     async store(folder, urls, count, track) {
       if (hooks.beforeMedia) await hooks.beforeMedia();
       const assets = urls.slice(0, count).map(sourceUrl => { const key = `${folder}/test-${++imageNumber}.jpg`; track(key); files.add(key); return { key, path: `/img/test-${imageNumber}.jpg`, sourceUrl }; });
+      if(hooks.failActorMedia&&folder==='actorimg')throw Error('Actor image source failed');
       if (hooks.failMedia) throw Error('R2 failure'); return assets;
     },
     async remove(key) { removed.push(key); files.delete(key); },
@@ -91,11 +96,36 @@ test('different movies sharing an actor reuse that actor after the transactional
   assert.deepEqual(h.state().movies.map(movie => movie.actorIds), [[9001], [9001]]); assert.equal(h.files.size, 5);
 });
 
-test('missing fields, missing actor research and unknown reference values block before any upload', async () => {
-  for (const change of [input => { input.movie.title.ru = null; }, input => { input.actors[0].actorAbout.ru = null; }, input => { input.actors[0].imageCandidates = []; }, input => { input.research.details.countries = fact(['United Kingdom']); }]) {
+test('missing mandatory movie facts and unknown reference values still block before any upload', async () => {
+  for (const change of [input => { input.movie.title.ru = null; }, input => { input.research.details.countries = fact(['United Kingdom']); }]) {
     const h = harness(), input = draft(); change(input); const result = await h.save(input);
     assert.equal(result.status, 'needs-enrichment'); assert.equal(h.files.size, 0); assert.equal(h.writes(), 0);
   }
+});
+
+test('unknown actors or missing actor biographies/photos do not prevent the movie from saving',async()=>{
+ for(const change of [input=>{input.actors[0].actorAbout.ru=null;},input=>{input.actors[0].imageCandidates=[];},input=>{input.actors=[];}]){
+  const h=harness(),input=draft();change(input);const result=await h.save(input);
+  assert.equal(result.status,'created');assert.deepEqual(result.actorIds,[]);assert.equal(h.state().movies.length,1);assert.equal(h.state().actors.length,0);assert.equal(h.state().actorJobs.length,1);assert.equal(h.files.size,2);
+ }
+});
+test('available actors save now and unresolved cast is durably queued inside the movie transaction',async()=>{
+ const h=harness(),input=draft();const missing=structuredClone(input.actors[0]);missing.actorName='Unknown actor';missing.originalName='Unknown actor';missing.identity={imdbId:null,kinopoiskId:null,birthDate:null};missing.actorAbout={uz:null,ru:null};input.actors.push(missing);
+ const result=await h.save(input);assert.equal(result.status,'created');assert.equal(result.actorIds.length,1);assert.equal(h.state().actorJobs[0].draft.actors[0].actorName,'Unknown actor');assert.equal(h.state().actorJobs[0].movieId,result.movieId);
+});
+test('actor image failures defer only actors and clean unused media while the movie remains saved',async()=>{
+ const h=harness();h.hooks.failActorMedia=true;const result=await h.save(draft());assert.equal(result.status,'created');assert.deepEqual(result.actorIds,[]);assert.equal(h.state().actorJobs.length,1);assert.equal(h.files.size,2);assert.equal(h.removed.length,1);
+});
+test('later actor backfill adds actors to the saved movie without replacing or duplicating it',async()=>{
+ const h=harness(),input=draft();input.actors[0].actorAbout.ru=null;const saved=await h.save(input);const queued=h.state().actorJobs[0];
+ const backfill=createActorBackfillProcessor({repository:h.repository,media:h.media,enrich:async draft=>{const next=structuredClone(draft);next.actors[0].actorAbout.ru='Researched RU biography';return next;}});
+ const result=await backfill(saved.movieId,queued.draft,AbortSignal.timeout(1000),async()=>{});
+ assert.equal(result.completed,true);assert.equal(h.state().movies.length,1);assert.equal(h.state().actors.length,1);assert.equal(h.state().movies[0].actorIds.length,1);assert.deepEqual(h.state().movies[0].research.pendingActors,[]);
+ const repeat=await backfill(saved.movieId,queued.draft,AbortSignal.timeout(1000),async()=>{});assert.equal(repeat.completed,true);assert.equal(h.state().actors.length,1);assert.equal(h.state().movies[0].actorIds.length,1);
+});
+test('backfill does not recreate a deleted movie or add orphan actors',async()=>{
+ const h=harness();let called=false;const backfill=createActorBackfillProcessor({repository:h.repository,media:h.media,enrich:async draft=>{called=true;return draft;}});
+ const result=await backfill(9999,draft(),AbortSignal.timeout(1000),async()=>{});assert.equal(result.completed,true);assert.equal(called,false);assert.equal(h.state().actors.length,0);
 });
 
 test('movie insert or reciprocal franchise failure rolls back actors and counters, removing only unused media', async () => {

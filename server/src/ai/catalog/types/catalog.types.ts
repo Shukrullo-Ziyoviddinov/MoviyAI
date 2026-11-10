@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { MovieSearchResult } from '../../types/movie-search.types.js';
 import type { MovieFact, MovieSource } from '../../types/movie-dossier.types.js';
 import type { catalogActorPayloadSchema, catalogMoviePayloadSchema } from '../validators/catalog.validator.js';
-import type { MovieMatchInput } from './catalog-match.types.js';
+import type { MovieMatchInput, ActorCreditProof } from './catalog-match.types.js';
 
 export type CatalogMoviePayload = z.infer<typeof catalogMoviePayloadSchema>;
 export type CatalogActorPayload = z.infer<typeof catalogActorPayloadSchema>;
@@ -33,6 +33,9 @@ export interface CatalogMovieDraft {
 export interface CatalogActorDraft {
   imageCandidates?: Array<{ url: string; sourceUrl: string | null }>;
   identity: { imdbId: string | null; kinopoiskId: string | null; birthDate: MovieFact<string> | null };
+  credit?: ActorCreditProof;
+  profile?: MovieSource;
+  enrichmentIssue?: {provider:string;stage:string|null;providerStatus:number|null;errorKind:string};
   existingId: number | null;
   actorName: string; originalName: string | null; role: string | null;
   actorImg: string | null; actorAbout: { uz: string | null; ru: string | null };

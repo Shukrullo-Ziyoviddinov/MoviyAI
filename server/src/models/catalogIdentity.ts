@@ -8,6 +8,8 @@ export const movieCatalogIdentitySchema = new Schema({
 }, { _id: false });
 
 export const actorCatalogIdentitySchema = new Schema({
+  profileKey: {type:String,match:/^[a-f0-9]{64}$/},
+  creditKeys: {type:[String],default:undefined},
   originalName: { type: String, trim: true },
   nameKeys: { type: [String], default: undefined },
   imdbId: { type: String, match: /^nm\d+$/ },

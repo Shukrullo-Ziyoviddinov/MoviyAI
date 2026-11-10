@@ -28,6 +28,7 @@ const actorSchema = new Schema(
 actorSchema.index({ 'catalogIdentity.imdbId': 1 }, { unique: true, partialFilterExpression: { 'catalogIdentity.imdbId': { $type: 'string' } } });
 actorSchema.index({ 'catalogIdentity.kinopoiskId': 1 }, { unique: true, partialFilterExpression: { 'catalogIdentity.kinopoiskId': { $type: 'string' } } });
 actorSchema.index({ 'catalogIdentity.nameKeys': 1 });
+actorSchema.index({'catalogIdentity.profileKey':1},{unique:true,partialFilterExpression:{'catalogIdentity.profileKey':{$type:'string'}}});
 
 export type ActorDocument = InferSchemaType<typeof actorSchema> & {
   _id: Schema.Types.ObjectId;
