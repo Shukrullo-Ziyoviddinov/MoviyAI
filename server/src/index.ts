@@ -11,6 +11,7 @@ import { connectDb } from './db/connect.js';
 import apiRoutes from './routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
 import { startChatImageCleanup } from './ai/services/chat-image-storage.service.js';
+import { startCatalogWorker } from './ai/catalog/services/catalog-worker.service.js';
 
 async function bootstrap() {
   await connectDb();
@@ -56,6 +57,7 @@ async function bootstrap() {
     console.log(`MoviyAI server http://localhost:${env.port}`);
     void connectTelegramBot();
     startChatImageCleanup();
+    startCatalogWorker();
   });
 }
 

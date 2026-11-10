@@ -1,4 +1,5 @@
 import { Schema, model, type InferSchemaType } from 'mongoose';
+import { actorCatalogIdentitySchema } from './catalogIdentity.js';
 
 const localizedPairSchema = new Schema(
   {
@@ -14,12 +15,19 @@ const actorSchema = new Schema(
     actorName: { type: String, required: true },
     actorImg: { type: String, required: true },
     actorAbout: { type: localizedPairSchema, required: true },
+    catalogIdentity: { type: actorCatalogIdentitySchema, default: undefined },
+    catalogResearch: { type: Schema.Types.Mixed, default: undefined, select: false },
+    catalogMediaKeys: { type: [String], default: undefined, select: false },
   },
   {
     timestamps: true,
     collection: 'actors',
   }
 );
+
+actorSchema.index({ 'catalogIdentity.imdbId': 1 }, { unique: true, partialFilterExpression: { 'catalogIdentity.imdbId': { $type: 'string' } } });
+actorSchema.index({ 'catalogIdentity.kinopoiskId': 1 }, { unique: true, partialFilterExpression: { 'catalogIdentity.kinopoiskId': { $type: 'string' } } });
+actorSchema.index({ 'catalogIdentity.nameKeys': 1 });
 
 export type ActorDocument = InferSchemaType<typeof actorSchema> & {
   _id: Schema.Types.ObjectId;

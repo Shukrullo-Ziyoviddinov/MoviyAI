@@ -27,10 +27,12 @@ const turnSchema = new Schema({
     }, { _id: false })], default: [] },
     movie: { type: Schema.Types.Mixed, default: null },
     characterImages: { type: Schema.Types.Mixed, default: [] },
+    catalogDispatch: { type: String, enum: ['none', 'pending', 'queued'], default: 'none', select: false },
     answer: { type: String, default: '' },
     model: { type: String, default: '' },
     status: { type: String, enum: ['processing', 'completed', 'failed'], required: true },
 }, { timestamps: true, collection: 'ai_chat_turns' });
 turnSchema.index({ conversationId: 1, requestId: 1 }, { unique: true });
 turnSchema.index({ userId: 1, conversationId: 1, createdAt: 1 });
+turnSchema.index({ catalogDispatch: 1, status: 1, createdAt: 1 });
 export const ChatTurn = model('AiChatTurn', turnSchema);

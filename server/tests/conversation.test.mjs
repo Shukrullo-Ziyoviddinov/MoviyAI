@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { randomUUID, createHash } from 'node:crypto';
 import {isUzbekMovieRequest,uzbekLookupReply} from '../dist/ai/services/uzbek-movie.service.js';
+import {isCatalogEligible} from '../dist/ai/catalog/utils/catalog-chat-input.js';
 
 // Exercise the built service with isolated repositories; never connect to the live DB.
 const source = readFileSync(new URL('../dist/ai/services/conversation.service.js', import.meta.url), 'utf8')
@@ -61,7 +62,7 @@ function repository(conversation = false) {
 }
 function harness() {
   const Conversation = repository(true), ChatTurn = repository();
-  let fail = false, calls = 0, captured, hold;
+  let fail = false, calls = 0, captured, hold, wakes=0, wakeError=false;
   const chatWithGemma = async request => {
     calls++; captured = request; if (hold) await hold;
     if (fail) throw Error('provider failure');
@@ -70,7 +71,7 @@ function harness() {
   const findMovieFromImages = async (text, images) => {
     if(fail)throw Error('image search failure');
     assert.ok(images[0].fileUri.startsWith('https://r2.example/'));
-    return {text:'Found movie',model:'gemini-3.5-flash-lite',movie:{uzbekLinks:[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],title:'Example',sources:[],posters:[],trailer:{videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Example trailer',channel:'Studio',kind:'trailer'}}};
+    return {text:'Found movie',model:'gemini-3.5-flash-lite',movie:{uzbekLinks:[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],title:'Example',titleUz:'Example',titleRu:null,year:2014,confidence:'high',sources:[{title:'Film',url:'https://example.com/film'}],posters:[],trailer:{videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Example trailer',channel:'Studio',kind:'trailer'}}};
   };
   const imagePath = (_owner,id,request,index) => `/images/${id}/${request}/${index}`;
   const objects=new Map(); let storageFailure=false;
@@ -78,12 +79,12 @@ function harness() {
   const putChatImage=async(key,data)=>{if(storageFailure)throw Error('R2 unavailable');objects.set(key,Buffer.from(data));};
   const getChatImage=async key=>objects.get(key)??null;
   const deleteChatImage=async key=>{if(storageFailure)throw Error('R2 unavailable');objects.delete(key);};
-  const storage=new Function('ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{});
-  const service = new Function('Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', source +
+  const storage=new Function('ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages','catalogDispatcher',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{},{preserveConversation:async()=>{}});
+  const service = new Function('Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', 'isCatalogEligible', 'wakeCatalogWorker', source +
     '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage,deleteConversation,pinConversation};')
-    (Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}],async()=>[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],isUzbekMovieRequest,uzbekLookupReply);
+    (Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}],async()=>[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],isUzbekMovieRequest,uzbekLookupReply,isCatalogEligible,()=>{wakes++;if(wakeError)throw Error('scheduler failure');});
   return { ...service, ...storage, objects, storageFailure: value=>{storageFailure=value;}, Conversation, ChatTurn, fail: value => { fail = value; }, hold: value => { hold = value; },
-    calls: () => calls, captured: () => captured };
+    wakes:()=>wakes,wakeError:value=>{wakeError=value;},calls: () => calls, captured: () => captured };
 }
 test('owners can list/reopen their chats; other accounts cannot read or write them', async () => {
   const h = harness(), id = randomUUID(); await h.createConversation('alice', id);
@@ -110,6 +111,13 @@ test('image turns use Gemini search, save the input/result, and expose paths ins
   assert.equal(result.turns[0].movie.title,'Example');assert.equal((await h.getConversation('alice',id)).turns[0].movie.uzbekLinks[0].title,'Misol');assert.equal((await h.getConversation('alice',id)).turns[0].movie.trailer.videoId,'zSWdZVtXT7E');assert.equal(result.turns[0].images.length,1);
   assert.equal(result.turns[0].images[0].data,undefined);assert.match(result.turns[0].images[0].path,/^https:\/\/r2\.example\//);
   assert.equal(h.ChatTurn.rows[0].images[0].data,undefined);assert.equal(h.objects.size,1);assert.ok(h.ChatTurn.rows[0].images[0].key.startsWith('chatimg/'));
+  assert.equal(h.ChatTurn.rows[0].catalogDispatch,'pending');assert.equal(h.wakes(),1);
+});
+test('a catalogue scheduler failure cannot erase a completed answer; replay does not regenerate or duplicate the turn',async()=>{
+ const h=harness(),id=randomUUID(),requestId=randomUUID();await h.createConversation('alice',id);h.wakeError(true);
+ const result=await h.sendConversationMessage('alice',id,requestId,'Find movie',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,255])}]);
+ assert.equal(result.turns[0].status,'completed');assert.equal(result.turns[0].answer,'Found movie');assert.equal(h.ChatTurn.rows[0].catalogDispatch,'pending');
+ const replay=await h.sendConversationMessage('alice',id,requestId,'Find movie');assert.equal(replay.turns.length,1);assert.equal(replay.turns[0].answer,'Found movie');assert.equal(h.calls(),0);
 });
 test('Uzbek dub follow-up searches the previously identified film instead of sending it to plain Gemma',async()=>{
  const h=harness(),id=randomUUID();await h.createConversation('alice',id);

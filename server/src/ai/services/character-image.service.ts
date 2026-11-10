@@ -21,6 +21,7 @@ export function mainCharacterLabels(answer: string) {
 function normalized(value: string) { return value.normalize('NFD').replace(/\p{M}/gu, '').replace(/[’‘]/g,"'").replace(/\s+/g,' ').toLowerCase(); }
 export function createCharacterImageSearch(deps = { searchImages }) {
   return async function findCharacterImages(answer: string, movie?:MovieSearchResult): Promise<CharacterImage[]> {
+    if (movie?.catalogId) return movie.catalogPortraits ?? [];
     if(movie?.details && movie.year && AI_CONFIG.serperApiKey){
       const requests=[
         ...(movie.details.characters??[]).slice(0,5).map(item=>({label:`${item.name} (${item.originalName})`,name:item.originalName,kind:'character' as const})),

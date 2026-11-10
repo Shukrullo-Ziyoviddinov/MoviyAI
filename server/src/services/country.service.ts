@@ -1,5 +1,6 @@
 import { Country } from '../models/Country.js';
 import { Movie } from '../models/Movie.js';
+import { withCatalogTransaction } from './catalog-transaction.service.js';
 
 export async function getAllCountries() {
   return Country.find().sort({ name: 1 }).lean();
@@ -31,27 +32,33 @@ export async function createCountry(name: string) {
 }
 
 export async function updateCountry(id: string, name: string) {
-  const current = await Country.findById(id);
-  if (!current) return null;
-  if (current.name === name) return current;
+  return withCatalogTransaction(async session => {
+    const current = await Country.findById(id).session(session);
+    if (!current) return null;
+    if (current.name === name) return current;
 
-  const clash = await Country.findOne({ name, _id: { $ne: current._id } }).lean();
-  if (clash) {
-    const error = new Error('Bu davlat allaqachon bor');
-    (error as Error & { status?: number }).status = 409;
-    throw error;
-  }
+    const clash = await Country.findOne({ name, _id: { $ne: current._id } }).session(session).lean();
+    if (clash) {
+      const error = new Error('Bu davlat allaqachon bor');
+      (error as Error & { status?: number }).status = 409;
+      throw error;
+    }
 
-  const previous = current.name;
-  current.name = name;
-  await current.save();
-  await Movie.updateMany({ filterCountry: previous }, { $set: { filterCountry: name } });
-  return current;
+    const previous = current.name;
+    current.name = name;
+    await current.save({ session });
+    await Movie.updateMany({ filterCountry: previous }, { $set: { filterCountry: name } }, { session });
+    await Movie.updateMany({ 'specs.countries': previous }, { $set: { 'specs.countries.$[item]': name } }, { arrayFilters: [{ item: previous }], session });
+    return current;
+  });
 }
 
 export async function deleteCountry(id: string) {
-  const current = await Country.findByIdAndDelete(id).lean();
-  if (!current) return null;
-  await Movie.updateMany({ filterCountry: current.name }, { $set: { filterCountry: '' } });
-  return current;
+  return withCatalogTransaction(async session => {
+    const current = await Country.findByIdAndDelete(id, { session }).lean();
+    if (!current) return null;
+    await Movie.updateMany({ filterCountry: current.name }, { $set: { filterCountry: '' } }, { session });
+    await Movie.updateMany({ 'specs.countries': current.name }, { $pull: { 'specs.countries': current.name } }, { session });
+    return current;
+  });
 }

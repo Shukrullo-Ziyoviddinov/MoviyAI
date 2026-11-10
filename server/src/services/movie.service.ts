@@ -2,6 +2,7 @@ import { Movie } from '../models/Movie.js';
 import { MovieComment } from '../models/MovieComment.js';
 import { MovieReaction } from '../models/MovieReaction.js';
 import { Wishlist } from '../models/Wishlist.js';
+import { withCatalogTransaction, allocateCatalogId } from './catalog-transaction.service.js';
 
 export async function getAllMovies() {
   return Movie.find().sort({ id: 1 }).lean();
@@ -12,10 +13,11 @@ export async function getMovieById(id: number) {
 }
 
 export async function createMovie(input: Record<string, unknown>) {
-  const last = await Movie.findOne().sort({ id: -1 }).select({ id: 1 }).lean();
-  const lastId = typeof last?.id === 'number' ? last.id : 8000;
-  const doc = await Movie.create({ ...input, id: lastId + 1 });
-  return doc.toObject();
+  return withCatalogTransaction(async session => {
+    const id = await allocateCatalogId('movie', session);
+    const [doc] = await Movie.create([{ ...input, id }], { session });
+    return doc.toObject();
+  });
 }
 
 export async function updateMovie(id: number, input: Record<string, unknown>) {
@@ -23,13 +25,15 @@ export async function updateMovie(id: number, input: Record<string, unknown>) {
 }
 
 export async function deleteMovie(id: number) {
-  const doc = await Movie.findOneAndDelete({ id }).lean();
-  if (!doc) return null;
-  await Movie.updateMany({ franchiseMovieIds: id }, { $pull: { franchiseMovieIds: id } });
-  await MovieComment.deleteMany({ movieId: id });
-  await MovieReaction.deleteMany({ movieId: id });
-  await Wishlist.deleteMany({ movieId: id });
-  return doc;
+  return withCatalogTransaction(async session => {
+    const doc = await Movie.findOneAndDelete({ id }, { session }).lean();
+    if (!doc) return null;
+    await Movie.updateMany({ franchiseMovieIds: id }, { $pull: { franchiseMovieIds: id } }, { session });
+    await MovieComment.deleteMany({ movieId: id }, { session });
+    await MovieReaction.deleteMany({ movieId: id }, { session });
+    await Wishlist.deleteMany({ movieId: id }, { session });
+    return doc;
+  });
 }
 
 export async function getMoviesByActorId(actorId: number) {

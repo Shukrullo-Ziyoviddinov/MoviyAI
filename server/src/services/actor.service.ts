@@ -1,5 +1,6 @@
 import { Actor } from '../models/Actor.js';
 import { Movie } from '../models/Movie.js';
+import { withCatalogTransaction, allocateCatalogId } from './catalog-transaction.service.js';
 
 export async function getAllActors() {
   return Actor.find().sort({ id: 1 }).lean();
@@ -10,10 +11,11 @@ export async function getActorById(id: number) {
 }
 
 export async function createActor(input: Record<string, unknown>) {
-  const last = await Actor.findOne().sort({ id: -1 }).select({ id: 1 }).lean();
-  const lastId = typeof last?.id === 'number' ? last.id : 9000;
-  const doc = await Actor.create({ ...input, id: lastId + 1 });
-  return doc.toObject();
+  return withCatalogTransaction(async session => {
+    const id = await allocateCatalogId('actor', session);
+    const [doc] = await Actor.create([{ ...input, id }], { session });
+    return doc.toObject();
+  });
 }
 
 export async function updateActor(id: number, input: Record<string, unknown>) {
@@ -21,10 +23,12 @@ export async function updateActor(id: number, input: Record<string, unknown>) {
 }
 
 export async function deleteActor(id: number) {
-  const doc = await Actor.findOneAndDelete({ id }).lean();
-  if (!doc) return null;
-  await Movie.updateMany({ actorIds: id }, { $pull: { actorIds: id } });
-  return doc;
+  return withCatalogTransaction(async session => {
+    const doc = await Actor.findOneAndDelete({ id }, { session }).lean();
+    if (!doc) return null;
+    await Movie.updateMany({ actorIds: id }, { $pull: { actorIds: id } }, { session });
+    return doc;
+  });
 }
 
 export async function getActorsByIds(ids: number[]) {

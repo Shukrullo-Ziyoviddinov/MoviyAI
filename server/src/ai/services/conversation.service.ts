@@ -8,6 +8,11 @@ import { findMovieFromImages } from './image-movie.service.js';
 import { imageReferences, uploadChatImages, chatImageUrls, cleanupConversationImages } from './chat-image-storage.service.js';
 import { resolveDirectImages } from './direct-image.service.js';
 import { findCharacterImages } from './character-image.service.js';
+import { isCatalogEligible } from '../catalog/utils/catalog-chat-input.js';
+import { wakeCatalogWorker } from '../catalog/services/catalog-worker.service.js';
+function notifyCatalogWorker() {
+    try { wakeCatalogWorker(); } catch { console.warn('[AI_CATALOG] Chat saved; background dispatch will retry'); }
+}
 export class ConversationError extends Error {
     constructor(message: string, public readonly status: number) { super(message); }
 }
@@ -57,7 +62,7 @@ export async function sendConversationMessage(userId: string, id: string, reques
     if (existing && images.length && JSON.stringify((existing.images ?? []).map(image => image.hash)) !== JSON.stringify(images.map(image => image.hash))) {
         throw new ConversationError('Request ID already used for different images', 409);
     }
-    if (existing?.status === 'completed') return getConversation(userId, id);
+    if (existing?.status === 'completed') { notifyCatalogWorker(); return getConversation(userId, id); }
     const lockToken = randomUUID();
     const locked = await Conversation.findOneAndUpdate({
         _id: id, userId, deletedAt: null, lockUntil: { $lte: new Date() },
@@ -72,8 +77,10 @@ export async function sendConversationMessage(userId: string, id: string, reques
         const replay = await ChatTurn.findOne({ userId, conversationId: id, requestId }).lean();
         if (replay && replay.text !== text)
             throw new ConversationError('Request ID already used for another message', 409);
-        if (replay?.status === 'completed')
+        if (replay?.status === 'completed') {
+            notifyCatalogWorker();
             return getConversation(userId, id);
+        }
         // A later message must not bypass an unanswered earlier message.
         if (await ChatTurn.exists({ userId, conversationId: id, requestId: { $ne: requestId }, status: { $ne: 'completed' } })) {
             throw new ConversationError('Retry the unanswered message before sending another', 409);
@@ -109,8 +116,12 @@ export async function sendConversationMessage(userId: string, id: string, reques
                 result.movie.sources.push({title:portrait.label,url:portrait.sourceUrl});
         }
         await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken }, {
-            $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages },
+            $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages,
+                catalogDispatch: isCatalogEligible(result.movie) ? 'pending' : 'none' },
         });
+        // The outbox flag is committed with the answer. Worker/R2/AI failures
+        // cannot change a completed chat turn into a failed generation.
+        if (isCatalogEligible(result.movie)) notifyCatalogWorker();
     }
     catch (error) {
         await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken, status: 'processing' }, { $set: { status: 'failed' } });

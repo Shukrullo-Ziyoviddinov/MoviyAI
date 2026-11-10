@@ -48,7 +48,8 @@ export async function putImage(
   folder: string,
   fileName: string,
   body: Buffer,
-  contentType: string
+  contentType: string,
+  signal?: AbortSignal
 ) {
   const key = imageObjectKey(folder, fileName);
   if (!key || !isImageFolder(folder)) throw new Error('INVALID_FILENAME');
@@ -58,7 +59,7 @@ export async function putImage(
       Key: key,
       Body: body,
       ContentType: contentType,
-    })
+    }), { abortSignal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000) }
   );
   const name = key.slice(folder.length + 1);
   return { key, folder, fileName: name, path: `/img/${name}` };
@@ -98,7 +99,7 @@ export async function deleteImageKey(key: string) {
     new DeleteObjectCommand({
       Bucket: requireR2('R2_BUCKET', env.r2Bucket),
       Key: key,
-    })
+    }), { abortSignal: AbortSignal.timeout(20000) }
   );
 }
 
