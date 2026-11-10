@@ -64,6 +64,20 @@ test('unsupported person identity or missing film credits never become an invent
   }
 });
 
+test('actor research obtains film credits separately when biography snippets omit the film title',async()=>{
+ const input=fixture();const queries=[];
+ const profile={title:'An Actor - IMDb',link:'https://www.imdb.com/name/nm1234567/',snippet:'An Actor is an actor, born January 1, 1980.'};
+ const credit={title:'Example (2014)',link:source.url,snippet:'With An Actor as Hero.'};
+ const enrich=createCatalogEnricher({
+  searchWeb:async query=>{queries.push(query);return {organic:query.includes(' cast ')?[credit]:[profile]};},
+  searchImages:async()=>({images:[]}),matcher:{actor:notFound,movie:notFound},
+  generate:async(_schema,payload)=>payload.actor?{samePerson:true,personIndex:0,creditSourceIndexes:[1],biographyUz:{value:'Sourced biography UZ',sourceIndexes:[0]},biographyRu:{value:'Sourced biography RU',sourceIndexes:[0]},birthDate:{value:'1980-01-01',sourceIndexes:[0]}}:translated,
+ });
+ const result=await enrich(prepareCatalogDraft(input.movie,{language:'uz'}),input,AbortSignal.timeout(1000),async()=>{});
+ assert.equal(result.actors[0].identity.imdbId,'nm1234567');assert.ok(result.actors[0].actorAbout.uz);
+ assert.ok(queries.some(query=>query.includes('"Example"')&&query.includes(' cast ')));
+});
+
 test('translation output cannot fill source facts that remain unverified after research', async () => {
   const input = fixture(); input.movie.details.countries = { value: null, sources: [] };
   const raw = Object.fromEntries(Object.keys(emptyDossier()).filter(key => key !== 'checkedAt').map(key => [key, ['cast', 'characters'].includes(key) ? [] : { value: null, sourceIndexes: [] }]));

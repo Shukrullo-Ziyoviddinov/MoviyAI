@@ -255,6 +255,14 @@ outbox replay, job fencing, restart/backoff, checkpoints, enrichment provenance,
 conversation deletion and chat-answer independence using isolated dependencies.
 # Catalogue-first image replies
 
+Actor enrichment searches biography, official person profile and exact film
+credits separately. If profile/credit evidence is missing, it performs bounded
+Kinopoisk-person/IMDb-film searches before generating sourced biographies.
+The official profile heading must match the actor name (a namesake's snippet
+mention is insufficient). Credit matching preserves sequel/version identity,
+accepting punctuation and explicit part numeral variants only. Unrelated
+official person IDs are excluded from the selected actor's identity sources.
+
 Diagnostics: `[AI_CATALOG]` job events include `jobId`. Failed operations
 include `provider`, `stage`, `providerStatus`, safe `errorKind`, and `model`
 for structured Google enrichment calls. For example `google / actor-facts /
