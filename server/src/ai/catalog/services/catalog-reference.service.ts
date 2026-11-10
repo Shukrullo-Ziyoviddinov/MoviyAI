@@ -20,7 +20,7 @@ function concepts(value: string, aliases: Aliases): string[] {
   }
   return index.get(catalogNameKey(value)) ?? [];
 }
-function findRows<T>(value: string, rows: T[], names: (row: T) => string[], aliases: Aliases): T[] {
+export function findReferenceRows<T>(value: string, rows: T[], names: (row: T) => string[], aliases: Aliases): T[] {
   const key = catalogNameKey(value);
   if (!key) return [];
   const exact = rows.filter(row => names(row).some(name => catalogNameKey(name) === key));
@@ -32,6 +32,12 @@ function issue(path: string, kind: CatalogReferenceIssue['kind'], value: string 
   return { path, kind, value, message, action: kind === 'unverified' ? 'research' : 'resolve-reference', blocking: true };
 }
 function canonical(value: string): boolean { return !!value && value === value.trim(); }
+function genreCategory(genres: CatalogReferenceSnapshot['genres']) {
+  const groups=genres.flatMap(row=>[row.name,row.nameRu,...(row.catalogAliases??[])].flatMap(name=>concepts(name,GENRE_ALIASES)));
+  const configured=CATEGORY_RULES.find(rule=>groups.includes(rule.genre))?.category;
+  const candidates=[configured,...genres.map(row=>row.catalogCategory)];
+  return CATEGORY_RULES.map(rule=>rule.category).find(category=>candidates.includes(category))??null;
+}
 
 /** Pure resolution: return actual dictionary labels; never persist aliases or partially drop unknown values. */
 export function resolveCatalogReferences(draft: CatalogDraft, snapshot: CatalogReferenceSnapshot): CatalogReferenceResult {
@@ -48,7 +54,7 @@ export function resolveCatalogReferences(draft: CatalogDraft, snapshot: CatalogR
   const genres: CatalogReferenceSnapshot['genres'] = [], countries: string[] = [];
   if (verified(genreFact)) for (const [index, value] of genreFact!.value!.entries()) {
     const path = `research.details.genres.${index}`;
-    const rows = findRows(value, snapshot.genres, row => [row.name, row.nameRu], GENRE_ALIASES);
+    const rows = findReferenceRows(value, snapshot.genres, row => [row.name, row.nameRu,...(row.catalogAliases??[])], GENRE_ALIASES);
     if (!rows.length) issues.push(issue(path, 'missing', value, 'Genre is absent from the current dictionary; add/resolve it explicitly.'));
     else if (rows.length > 1) issues.push(issue(path, 'ambiguous', value, 'Several dictionary genres match; do not select arbitrarily.'));
     else if (!canonical(rows[0].name) || !canonical(rows[0].nameRu)) issues.push(issue(path, 'invalid-dictionary', value, 'The dictionary genre needs valid Uzbek and Russian labels.'));
@@ -56,14 +62,13 @@ export function resolveCatalogReferences(draft: CatalogDraft, snapshot: CatalogR
   }
   if (verified(countryFact)) for (const [index, value] of countryFact!.value!.entries()) {
     const path = `research.details.countries.${index}`;
-    const rows = findRows(value, snapshot.countries, row => [row.name], COUNTRY_ALIASES);
+    const rows = findReferenceRows(value, snapshot.countries, row => [row.name,...(row.catalogAliases??[])], COUNTRY_ALIASES);
     if (!rows.length) issues.push(issue(path, 'missing', value, 'Production country is absent from the current dictionary; never substitute another country.'));
     else if (rows.length > 1) issues.push(issue(path, 'ambiguous', value, 'Several dictionary countries match; do not select arbitrarily.'));
     else if (!canonical(rows[0].name)) issues.push(issue(path, 'invalid-dictionary', value, 'The dictionary country needs a valid canonical name.'));
     else if (!countries.includes(rows[0].name)) countries.push(rows[0].name);
   }
-  const genreConcepts = genres.flatMap(row => [row.name, row.nameRu].flatMap(name => concepts(name, GENRE_ALIASES)));
-  const categoryName = CATEGORY_RULES.find(rule => genreConcepts.includes(rule.genre))?.category ?? null;
+  const categoryName = genreCategory(genres);
   if (verified(genreFact) && genres.length && !categoryName)
     issues.push(issue('categoryName', 'unsupported-category', null, 'These verified genres have no configured active section; an explicit editorial rule is required.'));
   if (issues.length || !categoryName || !genres.length || !countries.length) return { ready: false, references: null, issues, draft: next };
@@ -88,8 +93,8 @@ export function validateCatalogReferenceValues(movie: CatalogReferenceFields, sn
     if (snapshot.genres.filter(row => canonical(row.name) && canonical(row.nameRu) && row.name === name && row.nameRu === movie.genre.ru[index]).length !== 1)
       issues.push(issue(`genre.uz.${index}`, 'stale-reference', name, 'Genre pair no longer uniquely matches the dictionary.'));
   });
-  const genreConcepts = [...movie.genre.uz, ...movie.genre.ru].flatMap(name => concepts(name, GENRE_ALIASES));
-  if (movie.categoryName && CATEGORY_RULES.find(rule => genreConcepts.includes(rule.genre))?.category !== movie.categoryName)
+  const genres=snapshot.genres.filter(row=>movie.genre.uz.includes(row.name));
+  if (movie.categoryName && genreCategory(genres) !== movie.categoryName)
     issues.push(issue('categoryName', 'stale-reference', movie.categoryName, 'Section does not match the configured genre classification.'));
   if (new Set(movie.genre.uz).size !== movie.genre.uz.length || new Set(movie.filterGenre).size !== movie.filterGenre.length)
     issues.push(issue('genre', 'stale-reference', null, 'Duplicate genre values must be resolved.'));

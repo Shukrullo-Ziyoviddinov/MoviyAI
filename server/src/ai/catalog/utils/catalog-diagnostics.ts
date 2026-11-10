@@ -2,7 +2,7 @@ export type CatalogProvider = 'google' | 'serper' | 'r2' | 'image-source' | 'mon
 export type CatalogStage = 'movie-evidence' | 'movie-facts' | 'translation' | 'poster-search' |
   'actor-evidence' | 'actor-facts' | 'actor-image-search' | 'franchise-search' | 'franchise-facts' |
   'trailer-search' | 'watch-search' | 'image-download' | 'image-upload' | 'duplicate-check' |
-  'reference-load' | 'enrichment' | 'franchise' | 'links' | 'save' | 'checkpoint';
+  'reference-load' | 'dictionary-search' | 'dictionary-verify' | 'dictionary-write' | 'enrichment' | 'franchise' | 'links' | 'save' | 'checkpoint';
 interface Context { provider: CatalogProvider; stage: CatalogStage; model?: string }
 type Kind = 'http' | 'timeout' | 'aborted' | 'invalid-response' | 'unknown';
 function httpStatus(error: unknown): number | null {

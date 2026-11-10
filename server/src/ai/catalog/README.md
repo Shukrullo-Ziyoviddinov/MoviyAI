@@ -115,18 +115,26 @@ All sourced production countries are retained in first-occurrence source order;
 the first resolved country supplies the single-valued `filterCountry`. This is a
 deterministic filter policy, not an inferred claim about primary financing. Every
 matched genre supplies the paired UZ/RU arrays and `filterGenre`. Duplicate aliases
-collapse to one dictionary value. Localized description text is not overwritten
-with English dictionary country labels.
+collapse to one dictionary value. Description country fields use the same
+canonical DB labels as country filters and specs.
 
 Section precedence is explicit: animation, horror, science fiction, action,
-romance, comedy, family, drama. It uses only the resolved sourced genres. There is
-no automatic action/drama catch-all for thriller, documentary or other unsupported
-sections. Fantasy is not silently converted to science fiction; countries such as
-USSR/Russia and North/South Korea remain distinct.
+romance, comedy, family, drama. Explicit additional genre rules and verified
+dynamic genre categories route into these eight sections. A fantasy genre keeps
+its own label even when routed into sciFiMovies; USSR/Russia and North/South Korea
+remain distinct.
 
-Missing, ambiguous or incomplete dictionary rows block the whole resolution.
-No row is auto-created, unknown country is substituted, or unsupported genre
-silently dropped. Old/stale reference fields are cleared in the returned draft
+The pure resolver never writes data. Before pausing for missing rows, the chat
+processor calls `catalog-dictionary.service.ts`: existing synonyms are reused;
+new genres require a verified Gemini proposal, literal supporting search evidence
+on two source domains and exact-movie evidence, canonical UZ/RU labels and an
+existing UI category. Countries must map to the bundled country/territory/historical
+reference; known absent entries do not need AI. New spellings are stored as aliases
+so future requests use the current DB value without new search. Ambiguous or
+unsupported proposals remain blocked, never substituted or silently dropped.
+The dictionary repository uses the shared MongoDB transaction gate, a fresh
+snapshot and unique normalized multikey indexes to prevent concurrent duplicates.
+Source evidence for new rows is private. Old/stale reference fields are cleared in the returned draft
 on failure so a partially resolved film cannot pass as complete. Issues identify
 the original requested value and exact research field requiring attention.
 
@@ -240,7 +248,7 @@ duplicate/reference checks and transaction locking from the previous stages.
 
 Job states: `pending`, `processing`, `retry`, `needs-enrichment`, `failed`,
 `completed`. Provider/storage errors back off from 30 seconds exponentially, with
-at most five automatic attempts. Missing verified facts/dictionary rows pause for
+at most five automatic attempts. Missing verified facts or unresolved dictionary proposals pause for
 six hours between checks (also subject to the attempt cap). Exact blocking fields
 are stored privately in `issues`; success records `movieId`. Internal maintenance
 hook `retryCatalogJob(id)` can requeue a blocked/failed job; no unauthenticated HTTP

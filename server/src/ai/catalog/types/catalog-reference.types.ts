@@ -1,8 +1,8 @@
 import type { CatalogDraft, CatalogIssue, CatalogMovieDraft, CatalogResolvedReferences } from './catalog.types.js';
 
 export interface CatalogReferenceSnapshot {
-  genres: Array<{ name: string; nameRu: string }>;
-  countries: Array<{ name: string }>;
+  genres: Array<{ name: string; nameRu: string; catalogAliases?: string[]; catalogCategory?: string }>;
+  countries: Array<{ name: string; catalogAliases?: string[] }>;
 }
 export interface CatalogReferenceRepository { load(): Promise<CatalogReferenceSnapshot> }
 export type CatalogReferenceIssue = CatalogIssue & {
