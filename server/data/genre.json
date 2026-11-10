@@ -46,5 +46,61 @@
   {
     "name": "Triller",
     "nameRu": "Триллер"
+  },
+  {
+    "name": "Fentezi",
+    "nameRu": "Фэнтези"
+  },
+  {
+    "name": "Kriminal",
+    "nameRu": "Криминал"
+  },
+  {
+    "name": "Detektiv",
+    "nameRu": "Детектив"
+  },
+  {
+    "name": "Sirli",
+    "nameRu": "Тайна"
+  },
+  {
+    "name": "Biografiya",
+    "nameRu": "Биография"
+  },
+  {
+    "name": "Hujjatli",
+    "nameRu": "Документальный"
+  },
+  {
+    "name": "Ijtimoiy",
+    "nameRu": "Социальный"
+  },
+  {
+    "name": "Harbiy",
+    "nameRu": "Военный"
+  },
+  {
+    "name": "Vestern",
+    "nameRu": "Вестерн"
+  },
+  {
+    "name": "Myuzikl",
+    "nameRu": "Мюзикл"
+  },
+  {
+    "name": "Musiqiy",
+    "nameRu": "Музыкальный"
+  },
+  {
+    "name": "Qisqa metrajli",
+    "nameRu": "Короткометражный"
+  },
+  {
+    "name": "Bolalar uchun",
+    "nameRu": "Детский"
+  },
+  {
+    "name": "Film-nuar",
+    "nameRu": "Фильм-нуар"
   }
 ]

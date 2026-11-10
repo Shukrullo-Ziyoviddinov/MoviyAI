@@ -255,6 +255,13 @@ outbox replay, job fencing, restart/backoff, checkpoints, enrichment provenance,
 conversation deletion and chat-answer independence using isolated dependencies.
 # Catalogue-first image replies
 
+Genre dictionary maintenance: after building, run `npm run genres:sync` for a
+preview or `npm run genres:sync -- --apply` to add reviewed missing rows from
+`server/data/genre.json`. This does not seed movies/actors, overwrite existing
+labels, or run automatically from chat. Conflicting concept aliases abort the
+maintenance command. All 26 listed genres have explicit routing into the eight
+existing UI categories; genres retain their own canonical UZ/RU labels.
+
 Image recognition extracts tentative title aliases/year, then reads catalogue
 candidates before Serper. Exact normalized names/year form the shortlist;
 Gemini must confidently verify the frame against that shortlist. A verified hit

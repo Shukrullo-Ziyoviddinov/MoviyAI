@@ -6,7 +6,8 @@ import { prepareCatalogDraft } from '../dist/ai/catalog/mappers/movie.mapper.js'
 import { emptyDossier } from '../dist/ai/services/movie-dossier.js';
 
 const read = name => JSON.parse(readFileSync(new URL(`../data/${name}.json`, import.meta.url), 'utf8').replace(/^\uFEFF/, ''));
-const snapshot = { genres: read('genre'), countries: read('country') };
+// Keep the original small dictionary fixture for missing/ambiguous cases.
+const snapshot = { genres: read('genre').slice(0,12), countries: read('country') };
 const source = { title: 'Film production facts', url: 'https://example.com/film' };
 function draft(genres = ['Science fiction', 'Drama'], countries = ['United States']) {
   const details = emptyDossier(); details.genres = { value: genres, sources: [source] }; details.countries = { value: countries, sources: [source] };
@@ -80,7 +81,20 @@ test('different concepts stay distinct: fantasy is not science fiction, USSR is 
 test('category follows explicit multi-genre precedence; unsupported categories have no broad default', () => {
   assert.equal(resolveCatalogReferences(draft(['Family', 'Comedy', 'Animation']), snapshot).draft.movie.categoryName, 'animationMovies');
   assert.equal(resolveCatalogReferences(draft(['Comedy', 'Horror']), snapshot).draft.movie.categoryName, 'horrorMovies');
-  assert.ok(resolveCatalogReferences(draft(['Thriller']), snapshot).issues.some(issue => issue.kind === 'unsupported-category'));
+  assert.equal(resolveCatalogReferences(draft(['Thriller']), snapshot).draft.movie.categoryName, 'actionMovies');
+});
+
+test('every supported dictionary genre has an explicit existing category and preserves its own labels', () => {
+  const full = { genres: read('genre'), countries: read('country') };
+  for (const genre of full.genres) {
+    const result = resolveCatalogReferences(draft([genre.name]), full);
+    assert.equal(result.ready, true, genre.name);
+    assert.deepEqual(result.draft.movie.genre, {uz:[genre.name],ru:[genre.nameRu]});
+    assert.deepEqual(validateCatalogReferenceValues(result.draft.movie,full),[]);
+  }
+  const fantasy = resolveCatalogReferences(draft(['Fantasy','Detective']),full);
+  assert.equal(fantasy.draft.movie.categoryName,'sciFiMovies');
+  assert.deepEqual(fantasy.draft.movie.genre.uz,['Fentezi','Detektiv']);
 });
 
 test('unsourced genres/countries are research issues; a DB error cannot fall back to seed JSON', async () => {
