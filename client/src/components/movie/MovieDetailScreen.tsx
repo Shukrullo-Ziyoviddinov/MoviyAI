@@ -1,4 +1,6 @@
 "use client";
+import { displayMovieTitle } from "@/utils/movieDisplay";
+
 
 import { useEffect, useState, type ReactNode } from "react";
 import { Oswald } from "next/font/google";
@@ -106,7 +108,7 @@ export function MovieDetailScreen({
   }, [movie, token]);
 
   const lang = language === "en" ? "uz" : language;
-  const title = current ? (current.title?.[lang] ?? current.title?.uz ?? "") : "";
+  const title = current ? displayMovieTitle(current, lang) : "";
   const description: MovieDescription | null = current?.description
     ? (current.description[lang] ?? current.description.uz ?? null)
     : null;

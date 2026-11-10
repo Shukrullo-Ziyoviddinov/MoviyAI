@@ -1,3 +1,4 @@
+import { displayMovieTitle } from "@/src/utils/movieDisplay";
 import { BookmarkIcon } from '@/components/icons';
 import { resolveMoviePoster } from '@/src/utils/moviePosters';
 import { useAuthStore } from '@/src/stores/useAuthStore';
@@ -32,7 +33,7 @@ export function WishlistCard({
   const requireAuth = useAuthStore((s) => s.requireAuth);
   const [busy, setBusy] = useState(false);
   const lang = language === 'en' ? 'uz' : language;
-  const title = movie.title[lang] ?? movie.title.uz;
+  const title = displayMovieTitle(movie, lang);
   const poster = resolveMoviePoster(movie.homeImgPoster);
   const posterH = Math.round(width * 1.3);
 
@@ -82,7 +83,7 @@ export function WishlistCard({
         <View style={styles.ratingBadge}>
           <Text style={styles.ratingLabel}>IMDb</Text>
           <Text style={styles.ratingValue}>
-            {Number(movie.ratingImdb).toFixed(1)}
+            {movie.ratingImdb == null ? "\u2014" : Number(movie.ratingImdb).toFixed(1)}
           </Text>
         </View>
       </View>

@@ -51,7 +51,7 @@ export function prepareCatalogDraft(result: MovieSearchResult, options: {
       ratingImdb: sourced(details?.imdb), ratingKinopoisk: sourced(details?.kinopoisk),
       genre: { uz: references?.genres.map(genre => genre.name) ?? [], ru: references?.genres.map(genre => genre.nameRu) ?? [] },
       description: { uz: descriptions('uz'), ru: descriptions('ru') },
-      trailers: selectedTrailer, watchUrl: watch,
+      trailers: selectedTrailer||null, watchUrl: watch||null,
       filterCountry: references?.primaryCountry ?? null, filterGenre: references?.genres.map(genre => genre.name) ?? [],
       like: '0', dislike: '0',
       specs: { duration: runtime, ageRating: sourced(details?.ageRating), year: result.year, countries: [...(references?.countries ?? [])] },
@@ -71,7 +71,7 @@ export function prepareCatalogDraft(result: MovieSearchResult, options: {
 /** Every unresolved field has a concrete next action; only a complete payload can pass. */
 export function assessCatalogDraft(draft: CatalogDraft): CatalogAssessment {
   const issues: CatalogIssue[] = [];
-  if (!draft.identity.originalTitle || !draft.identity.year || draft.research.confidence === 'low' || !draft.research.sources.some(source => isPublicHttpsUrl(source.url)))
+  if (!draft.identity.originalTitle || draft.research.confidence === 'low' || !draft.research.sources.some(source => isPublicHttpsUrl(source.url)))
     issues.push({ path: 'identity', action: 'research', blocking: true, message: 'A sourced, supported film identity and release year are required.' });
   if (draft.identity.originalTitle !== draft.research.title.trim() || draft.identity.year !== draft.research.year || draft.movie.specs.year !== draft.identity.year)
     issues.push({ path: 'identity', action: 'correct', blocking: true, message: 'Research identity and catalogue release year must agree.' });
@@ -85,7 +85,7 @@ export function assessCatalogDraft(draft: CatalogDraft): CatalogAssessment {
     issues.push({ path, action, blocking: true, message: issue.message });
   }
   for (const field of ['trailers', 'watchUrl'] as const) if (!draft.movie[field] && !draft.confirmedUnavailable.includes(field))
-    issues.push({ path: field, action: 'research', blocking: true, message: 'Search must complete before this optional link may remain empty.' });
+    issues.push({ path: field, action: 'research', blocking: false, message: 'Link not found; retain null without guessing a URL.' });
   for (const [index, actor] of draft.actors.entries()) {
     if (!Number.isSafeInteger(actor.existingId) || !actor.existingId || actor.existingId < 1 || !draft.movie.actorIds.includes(actor.existingId))
       issues.push({ path: `actors.${index}.existingId`, action: 'resolve-actor', blocking: true, message: 'Reuse a verified existing actor ID or finish creating the new actor first.' });

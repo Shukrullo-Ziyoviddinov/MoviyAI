@@ -1,3 +1,4 @@
+import {parseMovieFields} from '../utils/movie-fields.js';
 import type { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
 import type { AuthRequest } from '../middleware/requireAuth.js';
@@ -226,37 +227,6 @@ function text(value: unknown) {
   return String(value ?? '').trim();
 }
 
-function words(value: unknown) {
-  if (Array.isArray(value)) return value.map((item) => text(item)).filter(Boolean);
-  return text(value)
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function numbers(value: unknown) {
-  if (!Array.isArray(value)) return [];
-  return value.map(Number).filter((item) => Number.isFinite(item));
-}
-
-function amount(value: unknown) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : Number.NaN;
-}
-
-function readDescription(value: unknown, label: string) {
-  const row = (value ?? {}) as Record<string, unknown>;
-  const body = text(row.text);
-  const country = text(row.country);
-  const director = text(row.director);
-  const year = amount(row.year);
-  const duration = amount(row.duration);
-  if (!body || !country || !director || !Number.isFinite(year) || !Number.isFinite(duration)) {
-    return { error: `${label} to‘liq emas` as const };
-  }
-  return { value: { text: body, year, country, duration, director } };
-}
-
 function posterName(file: Express.Multer.File) {
   const raw = (file.originalname.split(/[/\\]/).pop() ?? '').replace(/[^a-zA-Z0-9._-]/g, '');
   if (/^[a-zA-Z0-9._-]+$/.test(raw) && raw.includes('.')) return raw;
@@ -264,62 +234,8 @@ function posterName(file: Express.Multer.File) {
   return `poster-${Date.now()}.${ext}`;
 }
 
-function readMovieFields(payload: Record<string, unknown>, res: Response) {
-  const title = (payload.title ?? {}) as Record<string, unknown>;
-  const titleUz = text(title.uz);
-  const titleRu = text(title.ru);
-  const categoryName = text(payload.categoryName);
-  if (!categoryName || !titleUz || !titleRu) {
-    res.status(400).json({ ok: false, error: 'Bo‘lim va kino nomi kerak' });
-    return null;
-  }
-
-  const description = (payload.description ?? {}) as Record<string, unknown>;
-  const uz = readDescription(description.uz, 'O‘zbekcha ma’lumot');
-  const ru = readDescription(description.ru, 'Ruscha ma’lumot');
-  if ('error' in uz) {
-    res.status(400).json({ ok: false, error: uz.error });
-    return null;
-  }
-  if ('error' in ru) {
-    res.status(400).json({ ok: false, error: ru.error });
-    return null;
-  }
-
-  const specs = (payload.specs ?? {}) as Record<string, unknown>;
-  const specsYear = amount(specs.year);
-  const specsDuration = amount(specs.duration);
-  const ageRating = text(specs.ageRating);
-  if (!Number.isFinite(specsYear) || !Number.isFinite(specsDuration) || !ageRating) {
-    res.status(400).json({ ok: false, error: 'Specs maydonlari to‘liq emas' });
-    return null;
-  }
-
-  return {
-    categoryName,
-    title: { uz: titleUz, ru: titleRu },
-    ratingImdb: Number.isFinite(amount(payload.ratingImdb)) ? amount(payload.ratingImdb) : 0,
-    ratingKinopoisk: Number.isFinite(amount(payload.ratingKinopoisk)) ? amount(payload.ratingKinopoisk) : 0,
-    genre: {
-      uz: words((payload.genre as { uz?: unknown } | undefined)?.uz),
-      ru: words((payload.genre as { ru?: unknown } | undefined)?.ru),
-    },
-    description: { uz: uz.value, ru: ru.value },
-    trailers: text(payload.trailers),
-    watchUrl: text(payload.watchUrl),
-    filterCountry: text(payload.filterCountry),
-    filterGenre: words(payload.filterGenre),
-    like: text(payload.like) || '0',
-    dislike: text(payload.dislike) || '0',
-    specs: {
-      duration: specsDuration,
-      ageRating,
-      year: specsYear,
-      countries: words(specs.countries),
-    },
-    franchiseMovieIds: numbers(payload.franchiseMovieIds),
-    actorIds: numbers(payload.actorIds),
-  };
+function readMovieFields(payload:Record<string,unknown>,res:Response,allowMissingTitle=false){
+ try{return parseMovieFields(payload,allowMissingTitle);}catch{res.status(400).json({ok:false,error:'Kino nomi yoki sonli maydonlar noto‘g‘ri'});return null;}
 }
 
 async function storePoster(file: Express.Multer.File, res: Response) {
@@ -349,20 +265,15 @@ export async function createMovie(req: Request, res: Response) {
   if (!payload) return;
 
   const file = req.file;
-  if (!file) {
-    res.status(400).json({ ok: false, error: 'Poster kerak' });
-    return;
-  }
-
   const fields = readMovieFields(payload, res);
   if (!fields) return;
 
-  const poster = await storePoster(file, res);
-  if (!poster) return;
+  const poster = file ? await storePoster(file, res) : null;
+  if (file && !poster) return;
 
   const doc = await movieService.createMovie({
     ...fields,
-    homeImgPoster: poster.path,
+    homeImgPoster: poster?.path??null,
   });
 
   res.status(201).json({ ok: true, data: doc });
@@ -392,7 +303,9 @@ export async function updateMovie(req: Request, res: Response) {
   const payload = readPayload(req, res);
   if (!payload) return;
 
-  const fields = readMovieFields(payload, res);
+  const existing=await movieService.getMovieById(id);
+  if(!existing){res.status(404).json({ok:false,error:'Movie not found'});return;}
+  const fields = readMovieFields(payload, res,Boolean(existing.catalogIdentity?.originalTitle));
   if (!fields) return;
 
   const input: Record<string, unknown> = { ...fields };

@@ -18,9 +18,10 @@ async function wishlistFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 export type WishlistMovie = {
   id: number;
-  title: { uz: string; ru: string };
-  homeImgPoster: string;
-  ratingImdb: number;
+  title: { uz: string | null; ru: string | null };
+  catalogIdentity?: {originalTitle?:string | null};
+  homeImgPoster: string | null;
+  ratingImdb: number | null;
 };
 
 export async function fetchWishlistIds(): Promise<number[]> {
@@ -52,7 +53,7 @@ export async function fetchWishlistMovies(): Promise<WishlistMovie[]> {
   return data.data;
 }
 
-export function moviePosterUrl(path?: string) {
+export function moviePosterUrl(path?: string | null) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
   const file = path.split("/").pop() ?? "";

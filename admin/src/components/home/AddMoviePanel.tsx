@@ -287,10 +287,6 @@ export function AddMoviePanel({
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
-    if (!poster && !movie) {
-      setError("Poster kerak");
-      return;
-    }
     setSaving(true);
     uploadingRef.current = true;
     setPosterLoading(true);

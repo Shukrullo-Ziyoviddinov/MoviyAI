@@ -1,6 +1,7 @@
 import type { MovieFact, MovieSource } from '../../types/movie-dossier.types.js';
 
 export interface StoredMovieIdentity {
+  sourceKeys?:string[];
   originalTitle?: string; nameKeys?: string[];
   imdbId?: string; kinopoiskId?: string;
 }
@@ -25,7 +26,7 @@ export interface ActorMatchInput {
 }
 export interface MovieMatchRecord {
   id: number; title?: { uz?: string; ru?: string };
-  specs?: { year?: number };
+  specs?: { year?: number|null };
   description?: { uz?: { director?: string }; ru?: { director?: string } };
   catalogIdentity?: StoredMovieIdentity;
 }
@@ -34,7 +35,7 @@ export interface ActorMatchRecord {
   actorAbout?: {uz?:string;ru?:string};
 }
 export type CatalogMatchResult =
-  | { status: 'existing'; id: number; method: 'external-id' | 'title-year' | 'name-birth-date' | 'name-film-role' | 'verified-profile' }
+  | { status: 'existing'; id: number; method: 'external-id' | 'title-year' | 'film-source' | 'name-birth-date' | 'name-film-role' | 'verified-profile' }
   | { status: 'not-found'; method: 'checked-candidates' }
   | { status: 'needs-research' | 'conflict'; reason: string; candidateIds: number[] };
 export interface CandidatePage<T> { records: T[]; truncated: boolean }

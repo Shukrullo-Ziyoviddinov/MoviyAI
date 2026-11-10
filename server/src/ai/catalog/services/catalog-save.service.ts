@@ -8,6 +8,7 @@ import type { CatalogDraft, CatalogIssue } from '../types/catalog.types.js';
 import type { CatalogMatchResult } from '../types/catalog-match.types.js';
 import type { CatalogSaveMedia, CatalogSaveRepository, CatalogSaveResult, CatalogSaveTransaction } from '../types/catalog-save.types.js';
 import {stageCatalogActors,commitCatalogActors} from './catalog-actor-save.service.js';
+import {catalogFailureDetails} from '../utils/catalog-diagnostics.js';
 
 class SaveBlocked extends Error {
   constructor(public issues: CatalogIssue[]) { super('CATALOG_ENRICHMENT_REQUIRED'); }
@@ -26,12 +27,11 @@ function preflight(draft: CatalogDraft) {
   if (issues.length) throw new SaveBlocked(issues);
 }
 async function resolveFranchise(draft: CatalogDraft, tx: Pick<CatalogSaveTransaction, 'matcher'>): Promise<number[]> {
-  if (draft.movie.franchiseMovieIds.length && !draft.franchiseCandidates?.length) block('franchiseMovieIds', 'Internal IDs alone do not prove a franchise relationship.');
+  if (draft.movie.franchiseMovieIds.length && !draft.franchiseCandidates?.length) return [];
   const ids: number[] = [];
-  if ((draft.franchiseCandidates?.length ?? 0) > 20) block('franchiseCandidates', 'Too many franchise candidates.');
-  for (const candidate of draft.franchiseCandidates ?? []) {
-    if (!candidate.relation.value?.trim() || !candidate.relation.sources.some(source => isPublicHttpsUrl(source.url))) block('franchiseCandidates', 'A sourced franchise relationship is required.');
-    const match = await tx.matcher.movie(candidate.film); requireKnown(match, 'franchiseCandidates');
+  for (const candidate of (draft.franchiseCandidates ?? []).slice(0,20)) {
+    if (!candidate.relation.value?.trim() || !candidate.relation.sources.some(source => isPublicHttpsUrl(source.url))) continue;
+    const match = await tx.matcher.movie(candidate.film);
     if (match.status === 'existing' && !ids.includes(match.id)) ids.push(match.id);
   }
   return ids;
@@ -53,25 +53,26 @@ export function createCatalogSaver(deps: { repository: CatalogSaveRepository; me
     try {
       const initial = await repository.matcher.movie(movieMatchInput(input)); requireKnown(initial, 'identity');
       if (initial.status === 'existing') return { status: 'existing', movieId: initial.id };
-      const references = resolveCatalogReferences(input, await repository.references());
+      const references = resolveCatalogReferences(input, await repository.references(),{allowMissing:true});
       if (!references.ready) throw new SaveBlocked(references.issues);
       const draft = references.draft;
       draft.movie.actorIds = [];
       preflight(draft);
       await resolveFranchise(draft, repository);
-      if (!draft.posterCandidates.length) block('posterCandidates', 'A verified film poster is required.', 'store-media');
       const signal = AbortSignal.timeout(90000);
       const track = (key: string) => tracked.push(key);
-      const staged = { posters: await media.store('movieimg', draft.posterCandidates.map(item => item.url), 2, track, signal) };
+      const staged:{posters:Awaited<ReturnType<CatalogSaveMedia['store']>>}={posters:[]};
+      if(draft.posterCandidates.length)try{staged.posters=await media.store('movieimg',draft.posterCandidates.map(item=>item.url),2,track,signal);}
+      catch(error){console.warn('[AI_CATALOG]',{event:'poster-unavailable',...catalogFailureDetails(error)});}
       const stagedActors=await stageCatalogActors(draft.actors,repository.matcher,media,track,signal);
 
       const result = await repository.transaction<CatalogSaveResult>(async tx => {
         const duplicate = await tx.matcher.movie(movieMatchInput(draft)); requireKnown(duplicate, 'identity');
         if (duplicate.status === 'existing') return { status: 'existing', movieId: duplicate.id };
-        const freshReferences = resolveCatalogReferences(draft, await tx.references());
+        const freshReferences = resolveCatalogReferences(draft, await tx.references(),{allowMissing:true});
         if (!freshReferences.ready) throw new SaveBlocked(freshReferences.issues);
         const ready = freshReferences.draft;
-        ready.movie.homeImgPoster = staged.posters[0].path; ready.movie.actorIds = [];
+        ready.movie.homeImgPoster = staged.posters[0]?.path??null; ready.movie.actorIds = [];
         ready.movie.franchiseMovieIds = await resolveFranchise(ready, tx);
         const allActors=ready.actors;
         ready.actors=await commitCatalogActors(stagedActors,tx);
@@ -82,7 +83,13 @@ export function createCatalogSaver(deps: { repository: CatalogSaveRepository; me
         const movieId = await tx.nextId('movie');
         ready.movie.franchiseMovieIds = ready.movie.franchiseMovieIds.filter(id => id !== movieId);
         const payload = { ...assessment.payload, franchiseMovieIds: ready.movie.franchiseMovieIds };
-        await tx.insertMovie({ id: movieId, payload, identity: movieIdentityForInsert(movieMatchInput(ready)), research: { result: ready.research, pendingActors, localizedFacts: ready.localizedFacts ?? null, franchiseCandidates: ready.franchiseCandidates ?? [], storedAssets: staged.posters },
+        function missing(value:unknown,path=''):string[]{
+          if(value===null||Array.isArray(value)&&!value.length)return [path];
+          if(value&&typeof value==='object'&&!Array.isArray(value))return Object.entries(value).flatMap(([key,item])=>missing(item,path?`${path}.${key}`:key));
+          return [];
+        }
+        const missingFields=missing(payload);
+        await tx.insertMovie({ id: movieId, payload, identity: movieIdentityForInsert(movieMatchInput(ready)), research: { result: ready.research, pendingActors, missingFields, localizedFacts: ready.localizedFacts ?? null, franchiseCandidates: ready.franchiseCandidates ?? [], storedAssets: staged.posters },
           posters: staged.posters.map(image => image.path), mediaKeys: staged.posters.map(image => image.key) });
         await tx.linkFranchise(movieId, payload.franchiseMovieIds);
         if((pendingActors.length||!allActors.length)&&tx.enqueueActors)await tx.enqueueActors(movieId,{...ready,actors:pendingActors});

@@ -1,3 +1,4 @@
+import { displayMovieTitle } from "@/src/utils/movieDisplay";
 import { useTheme } from '@/src/stores/useThemeStore';
 import type { Movie } from '@/src/types/movie';
 import { buildYoutubeThumbnailUrl } from '@/src/utils/youtubeEmbed';
@@ -16,7 +17,7 @@ export function SimilarTrailerCard({
   onPress,
 }: SimilarTrailerCardProps) {
   const { colors } = useTheme();
-  const title = movie.title[language] ?? movie.title.uz;
+  const title = displayMovieTitle(movie, language);
   const text =
     movie.description?.[language]?.text ?? movie.description?.uz?.text ?? '';
   const thumb = buildYoutubeThumbnailUrl(movie.trailers);

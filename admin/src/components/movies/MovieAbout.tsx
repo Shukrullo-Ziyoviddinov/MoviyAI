@@ -4,11 +4,11 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { GlobalModal } from "@/components/GlobalModal";
 
 type MovieAboutProps = {
-  text?: string;
-  year?: number;
-  country?: string;
-  duration?: number;
-  director?: string;
+  text?: string|null;
+  year?: number|null;
+  country?: string|null;
+  duration?: number|null;
+  director?: string|null;
 };
 
 export function MovieAbout({
@@ -85,7 +85,7 @@ export function MovieAbout({
           onClick={() => setOpen(true)}
           className="font-medium text-[#2A5FE0]"
         >
-          Ko'proq
+          Ko&apos;proq
         </button>
       </p>
       <GlobalModal open={open} title="Film haqida" onClose={() => setOpen(false)}>

@@ -1,3 +1,4 @@
+import { displayMovieTitle } from "@/src/utils/movieDisplay";
 import { BookmarkIcon, PlayIcon } from '@/components/icons';
 import { MovieDescriptionModal } from '@/components/movie/MovieDescriptionModal';
 import { SimilarTrailerCard } from '@/components/movie/SimilarTrailerCard';
@@ -363,7 +364,7 @@ export function TrailerModal({
     setActiveId(movie.id);
     setActiveTrailerUrl(movie.trailers ?? '');
     setActiveWatchUrl(movie.watchUrl ?? '');
-    setActiveTitle(movie.title[lang] ?? movie.title.uz);
+    setActiveTitle(displayMovieTitle(movie, lang));
     setActiveDescription(nextDesc);
     setActiveDurationLabel(durationLabelFor(nextDesc, language));
     setReady(false);

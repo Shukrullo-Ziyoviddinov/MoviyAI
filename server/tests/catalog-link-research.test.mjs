@@ -25,7 +25,7 @@ test('actual trailer and verified movie-page URLs map to distinct fields; relate
   const result = await links({ video: trailer, found })(draft(), AbortSignal.timeout(1000));
   assert.equal(result.movie.trailers, trailer.url); assert.equal(result.movie.watchUrl, found[0].url); assert.deepEqual(result.confirmedUnavailable, []);
   const related = await links({ video: { ...trailer, kind: 'related' } })(draft(), AbortSignal.timeout(1000));
-  assert.equal(related.movie.trailers, ''); assert.ok(related.confirmedUnavailable.includes('trailers'));
+  assert.equal(related.movie.trailers, null); assert.ok(related.confirmedUnavailable.includes('trailers'));
 });
 test('franchise research retains only explicitly cited member titles/years and checkpoints avoid repeated paid queries', async () => {
   let queries = 0;

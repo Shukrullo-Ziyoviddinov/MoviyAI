@@ -1,7 +1,7 @@
 import { apiBaseUrl } from '@/src/api/client';
 import type { ImageSource } from 'expo-image';
 
-function remoteImage(path?: string): ImageSource | null {
+function remoteImage(path?: string | null): ImageSource | null {
   if (!path) return null;
   if (/^https?:\/\//i.test(path)) return { uri: path };
   const file = path.split('/').pop() ?? '';
@@ -9,6 +9,6 @@ function remoteImage(path?: string): ImageSource | null {
   return { uri: `${apiBaseUrl}/api/media/movieimg/${encodeURIComponent(file)}` };
 }
 
-export function resolveMoviePoster(path?: string): ImageSource | null {
+export function resolveMoviePoster(path?: string | null): ImageSource | null {
   return remoteImage(path);
 }

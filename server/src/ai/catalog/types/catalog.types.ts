@@ -15,7 +15,7 @@ export interface CatalogResolvedReferences {
   categoryName: CatalogMoviePayload['categoryName'];
   genres: Array<{ name: string; nameRu: string }>;
   countries: string[];
-  primaryCountry: string;
+  primaryCountry: string|null;
 }
 export interface CatalogMovieDraft {
   categoryName: CatalogMoviePayload['categoryName'] | null;
@@ -24,7 +24,7 @@ export interface CatalogMovieDraft {
   ratingImdb: number | null; ratingKinopoisk: number | null;
   genre: { uz: string[]; ru: string[] };
   description: Record<'uz' | 'ru', { text: string | null; year: number | null; country: string | null; duration: number | null; director: string | null }>;
-  trailers: string; watchUrl: string;
+  trailers: string|null; watchUrl: string|null;
   filterCountry: string | null; filterGenre: string[];
   like: '0'; dislike: '0';
   specs: { duration: number | null; ageRating: string | null; year: number | null; countries: string[] };

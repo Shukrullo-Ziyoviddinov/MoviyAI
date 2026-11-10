@@ -3,19 +3,19 @@ import { movieCatalogIdentitySchema } from './catalogIdentity.js';
 
 const localizedPairSchema = new Schema(
   {
-    uz: { type: String, required: true },
-    ru: { type: String, required: true },
+    uz: { type: String, default: null },
+    ru: { type: String, default: null },
   },
   { _id: false }
 );
 
 const descriptionLocaleSchema = new Schema(
   {
-    text: { type: String, required: true },
-    year: { type: Number, required: true },
-    country: { type: String, required: true },
-    duration: { type: Number, required: true },
-    director: { type: String, required: true },
+    text: { type: String, default: null },
+    year: { type: Number, default: null },
+    country: { type: String, default: null },
+    duration: { type: Number, default: null },
+    director: { type: String, default: null },
   },
   { _id: false }
 );
@@ -23,11 +23,11 @@ const descriptionLocaleSchema = new Schema(
 const movieSchema = new Schema(
   {
     id: { type: Number, required: true, unique: true, index: true },
-    categoryName: { type: String, required: true, index: true },
+    categoryName: { type: String, default: null, index: true },
     title: { type: localizedPairSchema, required: true },
-    homeImgPoster: { type: String, required: true },
-    ratingImdb: { type: Number, default: 0 },
-    ratingKinopoisk: { type: Number, default: 0 },
+    homeImgPoster: { type: String, default: null },
+    ratingImdb: { type: Number, default: null },
+    ratingKinopoisk: { type: Number, default: null },
     genre: {
       uz: { type: [String], default: [] },
       ru: { type: [String], default: [] },
@@ -36,16 +36,16 @@ const movieSchema = new Schema(
       uz: { type: descriptionLocaleSchema, required: true },
       ru: { type: descriptionLocaleSchema, required: true },
     },
-    trailers: { type: String, default: '' },
-    watchUrl: { type: String, default: '' },
-    filterCountry: { type: String, default: '' },
+    trailers: { type: String, default: null },
+    watchUrl: { type: String, default: null },
+    filterCountry: { type: String, default: null },
     filterGenre: { type: [String], default: [] },
     like: { type: String, default: '0' },
     dislike: { type: String, default: '0' },
     specs: {
-      duration: { type: Number, required: true },
-      ageRating: { type: String, required: true },
-      year: { type: Number, required: true },
+      duration: { type: Number, default: null },
+      ageRating: { type: String, default: null },
+      year: { type: Number, default: null },
       countries: { type: [String], default: [] },
     },
     franchiseMovieIds: { type: [Number], default: [] },
@@ -64,6 +64,7 @@ const movieSchema = new Schema(
 movieSchema.index({ 'catalogIdentity.imdbId': 1 }, { unique: true, partialFilterExpression: { 'catalogIdentity.imdbId': { $type: 'string' } } });
 movieSchema.index({ 'catalogIdentity.kinopoiskId': 1 }, { unique: true, partialFilterExpression: { 'catalogIdentity.kinopoiskId': { $type: 'string' } } });
 movieSchema.index({ 'catalogIdentity.nameKeys': 1 });
+movieSchema.index({'catalogIdentity.sourceKeys':1},{unique:true,partialFilterExpression:{'catalogIdentity.sourceKeys':{$exists:true}}});
 
 export type MovieDocument = InferSchemaType<typeof movieSchema> & {
   _id: Schema.Types.ObjectId;

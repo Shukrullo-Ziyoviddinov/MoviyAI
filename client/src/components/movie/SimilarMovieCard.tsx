@@ -1,4 +1,6 @@
 "use client";
+import { displayMovieTitle } from "@/utils/movieDisplay";
+
 
 import Link from "next/link";
 import { moviePosterUrl, type Movie } from "@/api/movies";
@@ -10,7 +12,7 @@ import { useTheme } from "@/components/theme/theme-state";
 export function SimilarMovieCard({ movie, language }: { movie: Movie; language: AppLanguage }) {
   const { colors, isDark } = useTheme();
   const lang = language === "en" ? "uz" : language;
-  const title = movie.title[lang] ?? movie.title.uz;
+  const title = displayMovieTitle(movie, lang);
   const poster = moviePosterUrl(movie.homeImgPoster);
   const image = useImageReady(poster);
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
@@ -39,7 +41,7 @@ export function SimilarMovieCard({ movie, language }: { movie: Movie; language: 
             </span>
             <span className="absolute right-2 bottom-2 flex items-center gap-1 rounded-lg bg-black/[0.72] px-2 py-1">
               <span className="text-[10px] font-bold text-[#F5C518]">IMDb</span>
-              <span className="text-[12px] font-bold text-white">{Number(movie.ratingImdb || 0).toFixed(1)}</span>
+              <span className="text-[12px] font-bold text-white">{(movie.ratingImdb == null ? "\u2014" : Number(movie.ratingImdb).toFixed(1))}</span>
             </span>
           </>
         ) : null}

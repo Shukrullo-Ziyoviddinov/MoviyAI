@@ -1,23 +1,24 @@
 export type LocalizedPair = {
-  uz: string;
-  ru: string;
+  uz: string | null;
+  ru: string | null;
 };
 
 export type MovieDescriptionLocale = {
-  text: string;
-  year: number;
-  country: string;
-  duration: number;
-  director: string;
+  text: string | null;
+  year: number | null;
+  country: string | null;
+  duration: number | null;
+  director: string | null;
 };
 
 export type Movie = {
+  catalogIdentity?: { originalTitle?: string | null };
   id: number;
-  categoryName: string;
+  categoryName: string | null;
   title: LocalizedPair;
-  homeImgPoster: string;
-  ratingImdb: number;
-  ratingKinopoisk: number;
+  homeImgPoster: string | null;
+  ratingImdb: number | null;
+  ratingKinopoisk: number | null;
   genre: {
     uz: string[];
     ru: string[];
@@ -26,18 +27,18 @@ export type Movie = {
     uz: MovieDescriptionLocale;
     ru: MovieDescriptionLocale;
   };
-  trailers: string;
-  watchUrl: string;
-  filterCountry: string;
+  trailers: string | null;
+  watchUrl: string | null;
+  filterCountry: string | null;
   filterGenre: string[];
   like: string;
   dislike: string;
   userReaction?: 'like' | 'dislike' | null;
   commentCount?: number;
   specs: {
-    duration: number;
-    ageRating: string;
-    year: number;
+    duration: number | null;
+    ageRating: string | null;
+    year: number | null;
     countries: string[];
   };
   franchiseMovieIds: number[];
@@ -49,7 +50,7 @@ export type MovieComment = {
   id: string;
   movieId: number;
   userId: string;
-  text: string;
+  text: string | null;
   createdAt: string;
   parentId?: string | null;
   replyToUserId?: string | null;

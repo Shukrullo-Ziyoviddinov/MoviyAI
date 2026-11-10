@@ -10,7 +10,7 @@ const year = z.number().int().min(1880).max(new Date().getUTCFullYear() + 5);
 const duration = z.number().int().positive().max(10000);
 const rating = z.number().min(0).max(10);
 const pair = z.object({ uz: text, ru: text }).strict();
-const description = z.object({ text, year, country: text, duration, director: text }).strict();
+const description = z.object({ text:text.nullable(), year:year.nullable(), country: text.nullable(), duration:duration.nullable(), director: text.nullable() }).strict();
 
 export function isPublicHttpsUrl(value: string): boolean {
   try {
@@ -34,20 +34,20 @@ const watchUrl = z.string().refine(value => value === '' || !!uzbekDetailUrl(val
 
 export const catalogActorPayloadSchema = z.object({ actorName: text, actorImg: storedImage, actorAbout: pair }).strict();
 export const catalogMoviePayloadSchema = z.object({
-  categoryName: z.enum(CATALOG_CATEGORIES),
-  title: pair,
-  homeImgPoster: storedImage,
-  ratingImdb: rating,
-  ratingKinopoisk: rating,
-  genre: z.object({ uz: z.array(text).min(1), ru: z.array(text).min(1) }).strict(),
+  categoryName: z.enum(CATALOG_CATEGORIES).nullable(),
+  title: z.object({uz:text.nullable(),ru:text.nullable()}).strict(),
+  homeImgPoster: storedImage.nullable(),
+  ratingImdb: rating.nullable(),
+  ratingKinopoisk: rating.nullable(),
+  genre: z.object({ uz: z.array(text), ru: z.array(text) }).strict(),
   description: z.object({ uz: description, ru: description }).strict(),
-  trailers: trailer,
-  watchUrl,
-  filterCountry: text,
-  filterGenre: z.array(text).min(1),
+  trailers: trailer.nullable(),
+  watchUrl:watchUrl.nullable(),
+  filterCountry: text.nullable(),
+  filterGenre: z.array(text),
   like: z.literal('0'),
   dislike: z.literal('0'),
-  specs: z.object({ duration, ageRating: text, year, countries: z.array(text).min(1) }).strict(),
+  specs: z.object({ duration:duration.nullable(), ageRating: text.nullable(), year:year.nullable(), countries: z.array(text) }).strict(),
   franchiseMovieIds: ids,
   actorIds: ids,
 }).strict().superRefine((movie, ctx) => {
@@ -57,5 +57,5 @@ export const catalogMoviePayloadSchema = z.object({
   }
   if (movie.genre.uz.length !== movie.genre.ru.length) ctx.addIssue({ code: 'custom', path: ['genre'], message: 'Each genre requires both locales' });
   if (movie.filterGenre.some(value => !movie.genre.uz.includes(value))) ctx.addIssue({ code: 'custom', path: ['filterGenre'], message: 'Filters must use resolved genre names' });
-  if (!movie.specs.countries.includes(movie.filterCountry)) ctx.addIssue({ code: 'custom', path: ['filterCountry'], message: 'Primary country must belong to specs.countries' });
+  if (movie.filterCountry!==null&&!movie.specs.countries.includes(movie.filterCountry)) ctx.addIssue({ code: 'custom', path: ['filterCountry'], message: 'Primary country must belong to specs.countries' });
 });

@@ -40,7 +40,7 @@ function genreCategory(genres: CatalogReferenceSnapshot['genres']) {
 }
 
 /** Pure resolution: return actual dictionary labels; never persist aliases or partially drop unknown values. */
-export function resolveCatalogReferences(draft: CatalogDraft, snapshot: CatalogReferenceSnapshot): CatalogReferenceResult {
+export function resolveCatalogReferences(draft: CatalogDraft, snapshot: CatalogReferenceSnapshot, options:{allowMissing?:boolean}={}): CatalogReferenceResult {
   const next = structuredClone(draft);
   next.movie.categoryName = null; next.movie.genre = { uz: [], ru: [] }; next.movie.filterGenre = [];
   next.movie.filterCountry = null; next.movie.specs.countries = [];
@@ -71,24 +71,24 @@ export function resolveCatalogReferences(draft: CatalogDraft, snapshot: CatalogR
   const categoryName = genreCategory(genres);
   if (verified(genreFact) && genres.length && !categoryName)
     issues.push(issue('categoryName', 'unsupported-category', null, 'These verified genres have no configured active section; an explicit editorial rule is required.'));
-  if (issues.length || !categoryName || !genres.length || !countries.length) return { ready: false, references: null, issues, draft: next };
-  const references = { categoryName, genres, countries, primaryCountry: countries[0] };
+  if (!options.allowMissing&&(issues.length || !categoryName || !genres.length || !countries.length)) return { ready: false, references: null, issues, draft: next };
+  const references = { categoryName, genres, countries, primaryCountry: countries[0]??null };
   next.movie.categoryName = categoryName;
   next.movie.genre = { uz: genres.map(row => row.name), ru: genres.map(row => row.nameRu) };
   next.movie.filterGenre = genres.map(row => row.name);
-  next.movie.filterCountry = countries[0]; next.movie.specs.countries = [...countries];
+  next.movie.filterCountry = countries[0]??null; next.movie.specs.countries = [...countries];
   // Description uses the same canonical dictionary labels as filters/specs.
   // Model translations remain research evidence, never another stored spelling.
-  next.movie.description.uz.country = countries.join(', ');
-  next.movie.description.ru.country = countries.join(', ');
-  return { ready: true, references, issues: [], draft: next };
+  next.movie.description.uz.country = countries.length?countries.join(', '):null;
+  next.movie.description.ru.country = countries.length?countries.join(', '):null;
+  return { ready: true, references, issues: options.allowMissing?issues.map(issue=>({...issue,blocking:false})):[], draft: next };
 }
 
 /** Recheck canonical values against a fresh snapshot before a later insert (e.g. after admin edits). */
 export function validateCatalogReferenceValues(movie: CatalogReferenceFields, snapshot: CatalogReferenceSnapshot): CatalogReferenceIssue[] {
   const issues: CatalogReferenceIssue[] = [];
-  if (!movie.categoryName || !CATALOG_CATEGORIES.some(category => category === movie.categoryName)) issues.push(issue('categoryName', 'stale-reference', movie.categoryName, 'Unknown active catalogue section.'));
-  if (!movie.genre.uz.length || movie.genre.uz.length !== movie.genre.ru.length) issues.push(issue('genre', 'stale-reference', null, 'Resolved genre pairs are required.'));
+  if (movie.categoryName!==null&&!CATALOG_CATEGORIES.some(category => category === movie.categoryName)) issues.push(issue('categoryName', 'stale-reference', movie.categoryName, 'Unknown active catalogue section.'));
+  if (movie.genre.uz.length !== movie.genre.ru.length) issues.push(issue('genre', 'stale-reference', null, 'Resolved genre pairs are required.'));
   movie.genre.uz.forEach((name, index) => {
     if (snapshot.genres.filter(row => canonical(row.name) && canonical(row.nameRu) && row.name === name && row.nameRu === movie.genre.ru[index]).length !== 1)
       issues.push(issue(`genre.uz.${index}`, 'stale-reference', name, 'Genre pair no longer uniquely matches the dictionary.'));
@@ -98,13 +98,12 @@ export function validateCatalogReferenceValues(movie: CatalogReferenceFields, sn
     issues.push(issue('categoryName', 'stale-reference', movie.categoryName, 'Section does not match the configured genre classification.'));
   if (new Set(movie.genre.uz).size !== movie.genre.uz.length || new Set(movie.filterGenre).size !== movie.filterGenre.length)
     issues.push(issue('genre', 'stale-reference', null, 'Duplicate genre values must be resolved.'));
-  if (!movie.filterGenre.length || movie.filterGenre.some(name => !movie.genre.uz.includes(name))) issues.push(issue('filterGenre', 'stale-reference', null, 'Genre filters must use the resolved genre names.'));
-  if (!movie.specs.countries.length) issues.push(issue('specs.countries', 'stale-reference', null, 'Resolved production countries are required.'));
+  if (movie.filterGenre.some(name => !movie.genre.uz.includes(name))) issues.push(issue('filterGenre', 'stale-reference', null, 'Genre filters must use the resolved genre names.'));
   movie.specs.countries.forEach((name, index) => {
     if (snapshot.countries.filter(row => canonical(row.name) && row.name === name).length !== 1) issues.push(issue(`specs.countries.${index}`, 'stale-reference', name, 'Country no longer uniquely matches the dictionary.'));
   });
   if (new Set(movie.specs.countries).size !== movie.specs.countries.length) issues.push(issue('specs.countries', 'stale-reference', null, 'Duplicate countries must be resolved.'));
-  if (!movie.filterCountry || !movie.specs.countries.includes(movie.filterCountry)) issues.push(issue('filterCountry', 'stale-reference', movie.filterCountry, 'Primary country must be one of the resolved production countries.'));
+  if (movie.filterCountry!==null&&!movie.specs.countries.includes(movie.filterCountry)) issues.push(issue('filterCountry', 'stale-reference', movie.filterCountry, 'Primary country must be one of the resolved production countries.'));
   return issues;
 }
 

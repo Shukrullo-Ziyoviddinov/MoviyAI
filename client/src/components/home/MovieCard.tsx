@@ -71,7 +71,7 @@ export function MovieCard({
             <span className="absolute right-2 bottom-2 flex items-center gap-1 rounded-lg bg-black/[0.72] px-2 py-1">
               <span className="text-[10px] font-bold text-[#F5C518] md:text-[11px]">IMDb</span>
               <span className="text-[12px] font-bold text-white md:text-[13px]">
-                {Number(movie.ratingImdb || 0).toFixed(1)}
+                {(movie.ratingImdb == null ? "\u2014" : Number(movie.ratingImdb).toFixed(1))}
               </span>
             </span>
           ) : null}

@@ -1,3 +1,4 @@
+import { displayMovieTitle } from "@/src/utils/movieDisplay";
 import {
   AgeRatingIcon,
   BookmarkIcon,
@@ -190,7 +191,7 @@ export default function MovieDetailScreen() {
   }, [movieId]);
 
   const lang = language === 'en' ? 'uz' : language;
-  const title = movie ? movie.title[lang] ?? movie.title.uz : '';
+  const title = movie ? displayMovieTitle(movie, lang) : '';
   const poster = movie ? resolveMoviePoster(movie.homeImgPoster) : null;
   const posterKey = movie?.homeImgPoster ?? '';
   const posterReady = posterKey.length > 0 && readyPoster === posterKey;
@@ -230,9 +231,9 @@ export default function MovieDetailScreen() {
           ? `${duration} min`
           : `${duration} daq`;
     const items: SpecItem[] = [
-      { key: 'year', label: String(year), Icon: CalendarIcon },
-      { key: 'duration', label: durationLabel, Icon: ClockIcon },
-      { key: 'age', label: ageRating, Icon: AgeRatingIcon },
+      ...(year!=null?[{ key: 'year', label: String(year), Icon: CalendarIcon }]:[]),
+      ...(duration!=null?[{ key: 'duration', label: durationLabel, Icon: ClockIcon }]:[]),
+      ...(ageRating?[{ key: 'age', label: ageRating, Icon: AgeRatingIcon }]:[]),
       ...(countries ?? []).map((country, index) => ({
         key: `country-${index}-${country}`,
         label: country,
@@ -599,7 +600,8 @@ export default function MovieDetailScreen() {
             <View style={styles.actionRow}>
               <Pressable
                 style={[styles.actionBtn, { backgroundColor: colors.accentBright }]}
-                onPress={() => openExternalUrl(movie.watchUrl)}
+                disabled={!movie.watchUrl}
+                onPress={() => openExternalUrl(movie.watchUrl??undefined)}
               >
                 <PlayIcon size={16} color="#FFFFFF" />
                 <Text style={styles.actionBtnText}>{t('movie.watch')}</Text>

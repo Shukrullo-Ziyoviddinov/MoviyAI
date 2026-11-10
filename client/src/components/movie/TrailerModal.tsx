@@ -1,4 +1,6 @@
 "use client";
+import { displayMovieTitle } from "@/utils/movieDisplay";
+
 
 import { useEffect, useRef, useState } from "react";
 import { type Movie, type MovieDescription } from "@/api/movies";
@@ -224,7 +226,7 @@ export function TrailerModal({
     </p>
   );
   const activeDescription = active.id === movie?.id ? description : (active.description?.[lang] ?? active.description?.uz ?? null);
-  const title = active.title[lang] ?? active.title.uz;
+  const title = displayMovieTitle(active, lang);
   const motion =
     dragging || !sheet.ready
       ? "none"
@@ -362,7 +364,7 @@ function SimilarTrailerRow({
   onPress: (movie: Movie) => void;
 }) {
   const { colors } = useTheme();
-  const title = movie.title[language] ?? movie.title.uz;
+  const title = displayMovieTitle(movie, language);
   const text = movie.description?.[language]?.text ?? movie.description?.uz?.text ?? "";
   const thumb = youtubeThumbnailUrl(movie.trailers);
 

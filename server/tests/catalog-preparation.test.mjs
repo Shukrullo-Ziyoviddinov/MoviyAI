@@ -42,9 +42,10 @@ test('preparation maps trailer and watch page to separate fields, preserving eve
 
 test('unknown values never become fabricated ratings, translations, dictionary names or R2 paths', () => {
   const result = input(); result.titleRu = null; result.details.imdb = { value: 8.7, sources: [] }; result.details.kinopoisk = fact(null);
-  const report = assessCatalogDraft(prepareCatalogDraft(result, { language: 'en' }));
+  const prepared=prepareCatalogDraft(result,{language:'en'});const report = assessCatalogDraft(prepared);
   assert.equal(report.ready, false); assert.equal(report.payload, null);
-  for (const path of ['ratingImdb', 'ratingKinopoisk', 'title.ru', 'homeImgPoster', 'categoryName', 'actors.0.actorImg', 'actors.0.actorAbout.uz'])
+  for (const value of [prepared.movie.ratingImdb,prepared.movie.ratingKinopoisk,prepared.movie.title.ru,prepared.movie.homeImgPoster,prepared.movie.categoryName])assert.equal(value,null);
+  for (const path of ['actors.0.actorImg', 'actors.0.actorAbout.uz'])
     assert.ok(report.issues.some(issue => issue.path === path && issue.blocking), path);
 });
 
@@ -69,15 +70,15 @@ test('every Movie payload key is required; drifted runtime, dictionary filters a
   const wrongYear = complete(); wrongYear.identity.year = 2015; assert.equal(assessCatalogDraft(wrongYear).ready, false);
 });
 
-test('missing optional links require completed searches; related videos and media-file URLs are not saved as watch/trailer pages', () => {
+test('missing optional links remain null; related videos and media-file URLs are not saved as watch/trailer pages', () => {
   const result = input(); result.trailer.kind = 'related'; result.uzbekLinks[0].url = 'https://kinochilar.com/movie.mp4';
   const prepared = prepareCatalogDraft(result, { language: 'en' });
-  assert.equal(prepared.movie.trailers, ''); assert.equal(prepared.movie.watchUrl, '');
+  assert.equal(prepared.movie.trailers, null); assert.equal(prepared.movie.watchUrl, null);
   const draft = complete(); draft.movie.trailers = ''; draft.movie.watchUrl = '';
-  assert.equal(assessCatalogDraft(draft).ready, false);
+  assert.equal(assessCatalogDraft(draft).ready, true);
   draft.confirmedUnavailable = ['trailers', 'watchUrl']; assert.equal(assessCatalogDraft(draft).ready, true);
   const spoofed = input(); spoofed.trailer.url = 'https://evil.example/watch?v=zSWdZVtXT7E';
-  assert.equal(prepareCatalogDraft(spoofed, { language: 'en' }).movie.trailers, '');
+  assert.equal(prepareCatalogDraft(spoofed, { language: 'en' }).movie.trailers, null);
 });
 
 test('conflicting official external IDs are left unresolved, and unsupported facts remain research tasks', () => {

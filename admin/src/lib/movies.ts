@@ -2,46 +2,47 @@ export const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_URL ?? "https://moviyai.onrender.com";
 
 export type Movie = {
+  catalogIdentity?:{originalTitle?:string|null};
   id: number;
-  categoryName?: string;
-  title?: { uz?: string; ru?: string };
-  homeImgPoster?: string;
-  ratingImdb?: number;
-  ratingKinopoisk?: number;
+  categoryName?: string | null;
+  title?: { uz?: string | null; ru?: string | null };
+  homeImgPoster?: string | null;
+  ratingImdb?: number | null;
+  ratingKinopoisk?: number | null;
   genre?: { uz?: string[]; ru?: string[] };
   description?: {
     uz?: {
-      text?: string;
-      director?: string;
-      country?: string;
-      year?: number;
-      duration?: number;
+      text?: string | null;
+      director?: string | null;
+      country?: string | null;
+      year?: number | null;
+      duration?: number | null;
     };
     ru?: {
-      text?: string;
-      director?: string;
-      country?: string;
-      year?: number;
-      duration?: number;
+      text?: string | null;
+      director?: string | null;
+      country?: string | null;
+      year?: number | null;
+      duration?: number | null;
     };
   };
-  trailers?: string;
-  watchUrl?: string;
-  filterCountry?: string;
+  trailers?: string | null;
+  watchUrl?: string | null;
+  filterCountry?: string | null;
   filterGenre?: string[];
   like?: string;
   dislike?: string;
   specs?: {
-    duration?: number;
-    ageRating?: string;
-    year?: number;
+    duration?: number | null;
+    ageRating?: string | null;
+    year?: number | null;
     countries?: string[];
   };
   franchiseMovieIds?: number[];
   actorIds?: number[];
 };
 
-export function mediaImageUrl(folder: "movieimg" | "actorimg" | "banner" | "adminimg", path?: string) {
+export function mediaImageUrl(folder: "movieimg" | "actorimg" | "banner" | "adminimg", path?: string | null) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
   const file = path.split("/").pop() ?? "";
@@ -49,15 +50,15 @@ export function mediaImageUrl(folder: "movieimg" | "actorimg" | "banner" | "admi
   return `${apiBaseUrl}/api/media/${folder}/${encodeURIComponent(file)}`;
 }
 
-export function moviePosterUrl(path?: string) {
+export function moviePosterUrl(path?: string | null) {
   return mediaImageUrl("movieimg", path);
 }
 
-export function actorImageUrl(path?: string) {
+export function actorImageUrl(path?: string | null) {
   return mediaImageUrl("actorimg", path);
 }
 
-export function bannerImageUrl(path?: string) {
+export function bannerImageUrl(path?: string | null) {
   return mediaImageUrl("banner", path);
 }
 
@@ -84,7 +85,7 @@ export type Actor = {
 };
 
 export function movieTitle(movie: Movie) {
-  return movie.title?.uz || movie.title?.ru || "Kino";
+  return movie.title?.uz || movie.title?.ru || movie.catalogIdentity?.originalTitle || "Kino";
 }
 
 export async function fetchMovies(): Promise<Movie[]> {

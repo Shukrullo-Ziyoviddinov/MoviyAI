@@ -25,6 +25,7 @@ export function MovieCards({ movies }: { movies: Movie[] }) {
   const { query } = usePageSearch();
   const visible = movies.filter((movie) =>
     matchesQuery(query, [
+      movieTitle(movie),
       movie.title?.uz,
       movie.title?.ru,
       movie.categoryName,

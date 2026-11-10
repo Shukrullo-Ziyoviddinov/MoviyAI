@@ -27,3 +27,8 @@ test('an unrelated host with a YouTube-looking query cannot become a stored trai
  const [movie]=await harness([{...row,trailers:'https://example.com/watch?v=zSWdZVtXT7E'}])(['Interstellar'],2014,'uz');
  assert.equal(movie.trailer,null);
 });
+test('a stored sparse movie returns null facts and no broken poster/trailer links',async()=>{
+ const emptyDescription={text:null,director:null,year:null,country:null,duration:null};
+ const sparse={...row,title:{uz:null,ru:null},catalogIdentity:{originalTitle:'Interstellar'},homeImgPoster:null,catalogPosters:[],ratingImdb:null,ratingKinopoisk:null,actorIds:[],trailers:null,watchUrl:null,description:{uz:emptyDescription,ru:emptyDescription},specs:{year:null,duration:null,ageRating:null,countries:[]}};
+ const [movie]=await harness([sparse])(['Interstellar'],null,'uz');assert.equal(movie.title,'Interstellar');assert.equal(movie.details.imdb.value,null);assert.equal(movie.details.runtimeMinutes.value,null);assert.deepEqual(movie.posters,[]);assert.equal(movie.trailer,null);assert.deepEqual(movie.details.cast,[]);
+});

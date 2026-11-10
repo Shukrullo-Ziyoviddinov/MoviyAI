@@ -1,13 +1,13 @@
 import { apiBaseUrl, apiFetch } from "@/api/client";
 
-export type LocalizedPair = { uz: string; ru: string };
+export type LocalizedPair = { uz: string | null; ru: string };
 
 export type MovieDescription = {
-  text: string;
-  year: number;
-  country: string;
-  duration: number;
-  director: string;
+  text: string | null;
+  year: number | null;
+  country: string | null;
+  duration: number | null;
+  director: string | null;
 };
 
 export type MovieActor = {
@@ -20,7 +20,7 @@ export type MovieComment = {
   id: string;
   movieId: number;
   userId: string;
-  text: string;
+  text: string | null;
   createdAt: string;
   parentId?: string | null;
   replyToUserId?: string | null;
@@ -31,30 +31,31 @@ export type MovieComment = {
 };
 
 export type Movie = {
+  catalogIdentity?: { originalTitle?: string | null };
   id: number;
-  categoryName: string;
+  categoryName: string | null;
   title: LocalizedPair;
-  homeImgPoster: string;
-  ratingImdb: number;
-  ratingKinopoisk: number;
+  homeImgPoster: string | null;
+  ratingImdb: number | null;
+  ratingKinopoisk: number | null;
   genre: { uz: string[]; ru: string[] };
   description: { uz: MovieDescription; ru: MovieDescription };
-  trailers: string;
-  watchUrl: string;
+  trailers: string | null;
+  watchUrl: string | null;
   like: string;
   dislike: string;
   userReaction?: "like" | "dislike" | null;
   commentCount?: number;
   specs: {
-    duration: number;
-    ageRating: string;
-    year: number;
+    duration: number | null;
+    ageRating: string | null;
+    year: number | null;
     countries: string[];
   };
   actors?: MovieActor[];
 };
 
-export type HomeMovie = Pick<Movie, "id" | "categoryName" | "title" | "homeImgPoster" | "ratingImdb">;
+export type HomeMovie = Pick<Movie, "id" | "categoryName" | "title" | "homeImgPoster" | "ratingImdb" | "catalogIdentity">;
 
 export type MovieCommentsResult = {
   comments: MovieComment[];
@@ -134,7 +135,7 @@ export async function createMovieComment(id: number, text: string, parentId?: st
   return data.data;
 }
 
-export function moviePosterUrl(path?: string) {
+export function moviePosterUrl(path?: string | null) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
   const file = path.split("/").pop() ?? "";

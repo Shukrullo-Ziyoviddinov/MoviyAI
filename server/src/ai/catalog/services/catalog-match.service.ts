@@ -4,6 +4,7 @@ import { isPublicHttpsUrl } from '../validators/catalog.validator.js';
 import type { ActorMatchInput, ActorMatchRecord, CatalogMatchRepository, CatalogMatchResult, MovieMatchInput, MovieMatchRecord, StoredActorIdentity, StoredMovieIdentity } from '../types/catalog-match.types.js';
 import type { CatalogDraft } from '../types/catalog.types.js';
 import {actorProfileKey,actorCreditKey,verifiedActorCredit,legacyActorRoleMatches} from '../utils/catalog-actor-identity.js';
+import {movieSourceKeys} from '../utils/catalog-movie-source.js';
 
 type ExternalIds = { imdbId?: string | null; kinopoiskId?: string | null };
 function sameId(input: ExternalIds, stored?: ExternalIds): boolean {
@@ -30,13 +31,25 @@ export function matchMovieCandidates(input: MovieMatchInput, rows: MovieMatchRec
   if (exact.length > 1) return unresolved('conflict', 'External IDs identify multiple catalogue records.', exact);
   if (exact.length === 1) {
     const row = exact[0];
-    if (conflictingId(input, row.catalogIdentity) || input.year !== null && row.specs?.year !== undefined && input.year !== row.specs.year)
+    if (conflictingId(input, row.catalogIdentity) || input.year !== null && row.specs?.year != null && input.year !== row.specs.year)
       return unresolved('conflict', 'External identity contradicts another ID or the release year.', exact);
     return { status: 'existing', id: row.id, method: 'external-id' };
   }
   const names = catalogNameKeys([input.originalTitle, ...input.aliases]);
-  if (!names.length || input.year === null || !Number.isInteger(input.year) || input.year < 1880 || !input.sources.some(source => isPublicHttpsUrl(source.url)))
+  if (!names.length || input.year!==null&&(!Number.isInteger(input.year)||input.year<1880) || !input.sources.some(source => isPublicHttpsUrl(source.url)))
     return unresolved('needs-research', 'Title/year fallback requires a sourced film title and exact release year.');
+  const sourceKeys=movieSourceKeys(input);
+  const sourced=rows.filter(row=>overlaps(sourceKeys,row.catalogIdentity?.sourceKeys??[])&&overlaps(names,movieNames(row)));
+  if(sourced.length>1)return unresolved('conflict','Film page identifies multiple catalogue entries.',sourced);
+  if(sourced.length===1){
+    const row=sourced[0];if(conflictingId(input,row.catalogIdentity)||input.year!==null&&row.specs?.year!=null&&input.year!==row.specs.year)return unresolved('conflict','Film source contradicts stored version.',sourced);
+    return {status:'existing',id:row.id,method:'film-source'};
+  }
+  if(input.year===null){
+    const named=rows.filter(row=>overlaps(names,movieNames(row)));
+    if(named.length)return unresolved('needs-research','Unknown release year requires more evidence to distinguish existing versions.',named);
+    return input.imdbId||input.kinopoiskId||sourceKeys.length?{status:'not-found',method:'checked-candidates'}:unresolved('needs-research','A dedicated film page is required when the release year is unknown.');
+  }
   const matches = rows.filter(row => row.specs?.year === input.year && overlaps(names, movieNames(row)));
   if (matches.length > 1) return unresolved('needs-research', 'Several films have the same title and year.', matches);
   if (matches.length === 1) {
@@ -116,6 +129,7 @@ export function actorMatchInput(actor: CatalogDraft['actors'][number]): ActorMat
 export function movieIdentityForInsert(input: MovieMatchInput): StoredMovieIdentity {
   if (matchMovieCandidates(input, []).status !== 'not-found') throw new Error('UNVERIFIED_MOVIE_IDENTITY');
   return { originalTitle: input.originalTitle.trim(), nameKeys: catalogNameKeys([input.originalTitle, ...input.aliases]),
+    ...(!input.imdbId&&!input.kinopoiskId&&movieSourceKeys(input).length?{sourceKeys:movieSourceKeys(input)}:{}),
     ...(input.imdbId ? { imdbId: input.imdbId } : {}), ...(input.kinopoiskId ? { kinopoiskId: input.kinopoiskId } : {}) };
 }
 export function actorIdentityForInsert(input: ActorMatchInput): StoredActorIdentity {

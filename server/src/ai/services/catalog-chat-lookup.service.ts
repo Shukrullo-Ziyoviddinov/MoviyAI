@@ -25,14 +25,14 @@ export async function findCatalogChatCandidates(titles: string[], year: number |
     const description = row.description![locale];
     const details = structuredClone(saved?.details ?? emptyDossier());
     const fact = <T>(value: T) => ({ value, sources: [] });
-    details.synopsis = fact(description.text);
+    details.synopsis = fact(description.text??null);
     details.countries = fact(row.specs!.countries);
     details.genres = fact(row.genre?.[locale] ?? []);
-    details.directors = fact([description.director]);
-    details.runtimeMinutes = fact(row.specs!.duration);
-    details.ageRating = fact(row.specs!.ageRating);
-    details.imdb = fact(row.ratingImdb || null);
-    details.kinopoisk = fact(row.ratingKinopoisk || null);
+    details.directors = fact(description.director?[description.director]:null);
+    details.runtimeMinutes = fact(row.specs!.duration??null);
+    details.ageRating = fact(row.specs!.ageRating??null);
+    details.imdb = fact(row.ratingImdb ?? null);
+    details.kinopoisk = fact(row.ratingKinopoisk ?? null);
     const orderedActors = row.actorIds.flatMap(id => {
       const actor = actors.find(actor => actor.id === id);
       return actor ? [actor] : [];
@@ -43,16 +43,16 @@ export async function findCatalogChatCandidates(titles: string[], year: number |
     });
     const media = (path: string, folder: string) => /^https:\/\//i.test(path) ? path : `${env.publicUrl}/api/media/${folder}/${encodeURIComponent(path.split('/').pop() ?? '')}`;
     const movie: MovieSearchResult = {
-      title: row.catalogIdentity?.originalTitle ?? saved?.title ?? row.title.uz,
-      titleUz: row.title.uz, titleRu: row.title.ru, year: row.specs!.year, language,
+      title: row.catalogIdentity?.originalTitle ?? saved?.title ?? row.title.uz??row.title.ru??'',
+      titleUz: row.title.uz??null, titleRu: row.title.ru??null, year: row.specs!.year??null, language,
       confidence: 'high', sources: saved?.sources ?? [], identitySources: saved?.identitySources ?? [],
-      posters: [...new Set([row.homeImgPoster, ...(row.catalogPosters ?? [])])].filter(Boolean).slice(0, 2).map(path => ({ url: media(path, 'movieimg'), sourceUrl: null })),
+      posters: [...new Set([row.homeImgPoster, ...(row.catalogPosters ?? [])])].filter((path):path is string=>!!path).slice(0, 2).map(path => ({ url: media(path, 'movieimg'), sourceUrl: null })),
       details, trailer: null, uzbekLinks: [], catalogId: row.id,
       catalogPortraits: orderedActors.map(actor => ({ label: actor.actorName, kind: 'actor', imageUrl: media(actor.actorImg, 'actorimg'), sourceUrl: null })),
     };
-    const videoId = youtubeVideoId(row.trailers);
+    const videoId = youtubeVideoId(row.trailers??'');
     if (videoId) movie.trailer = { videoId, url: `https://www.youtube.com/watch?v=${videoId}`, title: saved?.trailer?.title ?? movie.title, channel: saved?.trailer?.channel ?? null, kind: 'trailer' };
-    try { const url = new URL(row.watchUrl); if (url.protocol === 'https:') movie.uzbekLinks = [{ title: row.title.uz, url: url.href, site: url.hostname }]; } catch { /* No stored watching link. */ }
+    try { const url = new URL(row.watchUrl??''); if (url.protocol === 'https:') movie.uzbekLinks = [{ title: row.title.uz??movie.title, url: url.href, site: url.hostname }]; } catch { /* No stored watching link. */ }
     return movie;
   }));
 }

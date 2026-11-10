@@ -1,3 +1,4 @@
+import { displayMovieTitle } from "@/utils/movieDisplay";
 import type { HomeMovie } from "@/api/movies";
 import type { AppLanguage } from "@/components/language/language-state";
 import { translate } from "@/i18n";
@@ -35,5 +36,5 @@ export function groupMoviesByCategory(movies: HomeMovie[]): MovieCategoryGroup[]
 
 export function movieTitle(movie: HomeMovie, language: AppLanguage) {
   const lang = language === "en" ? "uz" : language;
-  return movie.title[lang] ?? movie.title.uz ?? "";
+  return displayMovieTitle(movie, lang);
 }

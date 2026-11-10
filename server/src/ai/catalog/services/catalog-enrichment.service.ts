@@ -57,11 +57,11 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
     const results = await Promise.all(queries.map(query => catalogOperation({provider:'serper',stage},()=>deps.searchWeb(query, { num: 5 }))));
     return mergeSources(...results.map(result => (result.organic ?? []).flatMap(item => isPublicHttpsUrl(item.link) ? [{ title: item.title, url: item.link, snippet: (item.snippet ?? '').slice(0, 1600) }] : [])));
   }
-  return async function enrichCatalogDraft(input: CatalogDraft, chat: CatalogChatInput, signal: AbortSignal, checkpoint: (draft: CatalogDraft) => Promise<void>, researchMissingCast=false): Promise<CatalogDraft> {
+  return async function enrichCatalogDraft(input: CatalogDraft, chat: CatalogChatInput, signal: AbortSignal, checkpoint: (draft: CatalogDraft) => Promise<void>, actorBackfill=false): Promise<CatalogDraft> {
     const draft = structuredClone(input);
     signal.throwIfAborted();
     const required = ['genres', 'countries', 'runtimeMinutes', 'ageRating', 'synopsis', 'directors', 'imdb', 'kinopoisk'] as const;
-    if (!draft.identity.year || researchMissingCast&&!draft.actors.length || required.some(field => !known<unknown>(draft.research.details?.[field]))) {
+    if (actorBackfill?!draft.actors.length:!draft.identity.year||required.some(field => !known<unknown>(draft.research.details?.[field]))) {
       const identity = `${draft.identity.originalTitle} ${draft.identity.year ?? ''}`;
       const evidence = await webEvidence([`${identity} film release year runtime plot production countries genres director main cast`,
         `site:imdb.com/title/ ${identity} IMDb rating`, `site:kinopoisk.ru/film/ ${draft.research.titleRu ?? identity} рейтинг возраст`]);
@@ -93,7 +93,7 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
     }
 
     const details = draft.research.details;
-    if (['uz', 'ru'].some(lang => !draft.movie.title[lang as 'uz' | 'ru'] || ['text', 'country', 'director'].some(field => !draft.movie.description[lang as 'uz' | 'ru'][field as 'text' | 'country' | 'director']))) {
+    if (!actorBackfill&&['uz', 'ru'].some(lang => !draft.movie.title[lang as 'uz' | 'ru'] || ['text', 'country', 'director'].some(field => !draft.movie.description[lang as 'uz' | 'ru'][field as 'text' | 'country' | 'director']))) {
       signal.throwIfAborted();
       const translated = translationSchema.parse(await deps.generate(translationSchema, { originalTitle: draft.identity.originalTitle, localizedTitles: draft.movie.title,
         synopsis: known(details?.synopsis) ? details.synopsis.value : null, countries: known(details?.countries) ? details.countries.value : null,
@@ -116,8 +116,8 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
       await checkpoint(draft);
     }
 
-    if (deps.references && !resolveCatalogReferences(draft, await deps.references()).ready) return draft;
-    if (!draft.posterCandidates.length) {
+    if (!actorBackfill&&deps.references && !resolveCatalogReferences(draft, await deps.references(),{allowMissing:true}).ready) return draft;
+    if (!actorBackfill&&!draft.posterCandidates.length) {
       signal.throwIfAborted();
       const images = await catalogOperation({provider:'serper',stage:'poster-search'},()=>deps.searchImages(`${draft.identity.originalTitle} ${draft.identity.year ?? ''} official movie poster -fanart`, { num: 10 }));
       draft.posterCandidates = (images.images ?? []).filter(image => {

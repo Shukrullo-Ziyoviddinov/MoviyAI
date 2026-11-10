@@ -1,3 +1,4 @@
+import { displayMovieTitle } from "@/src/utils/movieDisplay";
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { BookmarkIcon } from '@/components/icons';
 import { resolveMoviePoster } from '@/src/utils/moviePosters';
@@ -36,7 +37,7 @@ export function SimilarMovieCard({
   const [busy, setBusy] = useState(false);
   const [readyPoster, setReadyPoster] = useState<string | null>(null);
   const lang = language === 'en' ? 'uz' : language;
-  const title = movie.title[lang] ?? movie.title.uz;
+  const title = displayMovieTitle(movie, lang);
   const poster = resolveMoviePoster(movie.homeImgPoster);
   const posterKey = movie.homeImgPoster ?? '';
   const posterH = Math.round(width * 1.35);
@@ -108,7 +109,7 @@ export function SimilarMovieCard({
             <View style={styles.ratingBadge}>
               <Text style={styles.ratingLabel}>IMDb</Text>
               <Text style={styles.ratingValue}>
-                {Number(movie.ratingImdb).toFixed(1)}
+                {movie.ratingImdb == null ? "\u2014" : Number(movie.ratingImdb).toFixed(1)}
               </Text>
             </View>
           </>

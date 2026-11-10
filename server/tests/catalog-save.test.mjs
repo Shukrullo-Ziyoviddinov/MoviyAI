@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createCatalogSaver } from '../dist/ai/catalog/services/catalog-save.service.js';
 import { createCatalogMatcher } from '../dist/ai/catalog/services/catalog-match.service.js';
 import {createActorBackfillProcessor} from '../dist/ai/catalog/services/catalog-actor-backfill.service.js';
+import {validateCatalogReferenceValues} from '../dist/ai/catalog/services/catalog-reference.service.js';
 import { prepareCatalogDraft } from '../dist/ai/catalog/mappers/movie.mapper.js';
 import { emptyDossier } from '../dist/ai/services/movie-dossier.js';
 import { Movie } from '../dist/models/Movie.js';
@@ -96,10 +97,10 @@ test('different movies sharing an actor reuse that actor after the transactional
   assert.deepEqual(h.state().movies.map(movie => movie.actorIds), [[9001], [9001]]); assert.equal(h.files.size, 5);
 });
 
-test('missing mandatory movie facts and unknown reference values still block before any upload', async () => {
+test('missing translations and dictionary matches are nullable and do not prevent a save', async () => {
   for (const change of [input => { input.movie.title.ru = null; }, input => { input.research.details.countries = fact(['United Kingdom']); }]) {
     const h = harness(), input = draft(); change(input); const result = await h.save(input);
-    assert.equal(result.status, 'needs-enrichment'); assert.equal(h.files.size, 0); assert.equal(h.writes(), 0);
+    assert.equal(result.status, 'created');assert.equal(h.state().movies.length,1);
   }
 });
 
@@ -136,10 +137,30 @@ test('movie insert or reciprocal franchise failure rolls back actors and counter
   }
 });
 
-test('R2 errors and changed dictionaries leave no new catalogue rows or dangling uploads', async () => {
-  const h = harness(); h.hooks.failMedia = true; await assert.rejects(() => h.save(draft()), /R2 failure/); assert.equal(h.files.size, 0); assert.equal(h.writes(), 0);
+test('poster storage failure or unavailable references save null fields without dangling uploads', async () => {
+  const h = harness(); h.hooks.failMedia = true;const result=await h.save(draft());assert.equal(result.status,'created');assert.equal(h.state().movies[0].homeImgPoster,null); assert.equal(h.files.size, 0);
   const changed = harness(); changed.hooks.changedReferences = { genres: [], countries: [] };
-  assert.equal((await changed.save(draft())).status, 'needs-enrichment'); assert.equal(changed.files.size, 0); assert.equal(changed.state().movies.length, 0);
+  assert.equal((await changed.save(draft())).status, 'created');assert.deepEqual(changed.state().movies[0].genre,{uz:[],ru:[]});assert.equal(changed.state().movies[0].filterCountry,null);
+});
+
+test('a sourced movie without IMDb/Kinopoisk entries or optional facts is saved with actual null fields',async()=>{
+ const h=harness(),input=draft();input.identity={originalTitle:'Example',year:null,imdbId:null,kinopoiskId:null};
+ input.research.year=null;input.research.sources=[{title:'Example film',url:'https://studio.example/movies/example'}];input.research.identitySources=input.research.sources;input.research.details=emptyDossier();
+ input.movie.title={uz:null,ru:null};input.movie.ratingImdb=null;input.movie.ratingKinopoisk=null;input.movie.specs={duration:null,ageRating:null,year:null,countries:[]};
+ for(const lang of ['uz','ru'])input.movie.description[lang]={text:null,year:null,country:null,duration:null,director:null};
+ input.movie.trailers=null;input.movie.watchUrl=null;input.posterCandidates=[];input.actors=[];
+ const result=await h.save(input);assert.equal(result.status,'created');const saved=h.state().movies[0];
+ for(const field of ['ratingImdb','ratingKinopoisk','homeImgPoster','categoryName','filterCountry','trailers','watchUrl'])assert.equal(saved[field],null,field);
+ assert.equal(saved.specs.year,null);assert.equal(saved.description.uz.director,null);assert.deepEqual(saved.actorIds,[]);
+ assert.deepEqual(validateCatalogReferenceValues(saved,references),[]);
+ assert.equal((await h.save(input)).movieId,result.movieId);assert.equal(h.state().movies.length,1);
+});
+test('missing facts do not authorize an unsupported film identity or a guessed duplicate',async()=>{
+ const h=harness(),input=draft();input.research.confidence='low';assert.equal((await h.save(input)).status,'needs-enrichment');assert.equal(h.state().movies.length,0);
+ const ambiguous=harness();ambiguous.state().movies.push({id:7999,title:{uz:'Example'},specs:{year:2000}});
+ const unknown=draft();unknown.identity.year=null;unknown.research.year=null;unknown.movie.specs.year=null;unknown.movie.description.uz.year=null;unknown.movie.description.ru.year=null;
+ unknown.identity.imdbId=null;unknown.research.sources=[{title:'Example film',url:'https://studio.example/movies/example'}];unknown.research.identitySources=unknown.research.sources;
+ assert.equal((await ambiguous.save(unknown)).status,'needs-enrichment');assert.equal(ambiguous.state().movies.length,1);
 });
 
 test('uncertain commit never deletes media of a committed movie; retry returns its existing ID', async () => {
@@ -154,5 +175,5 @@ test('verified existing franchise films link in both directions; arbitrary inter
   const result = await h.save(input); assert.equal(result.status, 'created');
   assert.deepEqual(h.state().movies.find(movie => movie.id === result.movieId).franchiseMovieIds, [7999]); assert.deepEqual(h.state().movies[0].franchiseMovieIds, [result.movieId]);
   const invalid = harness(), guessed = draft(); guessed.movie.franchiseMovieIds = [7999];
-  assert.equal((await invalid.save(guessed)).status, 'needs-enrichment'); assert.equal(invalid.files.size, 0);
+  assert.equal((await invalid.save(guessed)).status, 'created');assert.deepEqual(invalid.state().movies[0].franchiseMovieIds,[]);
 });

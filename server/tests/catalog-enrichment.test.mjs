@@ -85,14 +85,28 @@ test('translation output cannot fill source facts that remain unverified after r
   const result = await enrich(prepareCatalogDraft(input.movie, { language: 'uz' }), input, AbortSignal.timeout(1000), async () => {});
   assert.equal(result.movie.description.uz.country, null); assert.equal(result.movie.description.ru.country, null); assert.equal(result.research.details.countries.value, null);
 });
+test('a previously unknown year is filled only when the researched source explicitly supports it',async()=>{
+ const input=fixture();input.movie.year=null;
+ const raw=Object.fromEntries(Object.keys(emptyDossier()).filter(key=>key!=='checkedAt').map(key=>[key,['cast','characters'].includes(key)?[]:{value:null,sourceIndexes:[]} ]));
+ const enrich=createCatalogEnricher({generate:async(_schema,payload)=>payload.sources?{dossier:raw,year:{value:2014,sourceIndexes:[0]}}:translated,
+  searchWeb:async()=>({organic:[{title:'Example (2014)',link:source.url,snippet:'Example was released in 2014.'}]}),searchImages:async()=>({images:[]}),matcher:{actor:async()=>({status:'existing',id:9001,method:'external-id'}),movie:notFound}});
+ const result=await enrich(prepareCatalogDraft(input.movie,{language:'uz'}),input,AbortSignal.timeout(1000),async()=>{});
+ assert.equal(result.identity.year,2014);assert.equal(result.movie.specs.year,2014);assert.equal(result.movie.description.uz.year,2014);
+});
+test('actor backfill does not repeat missing movie ratings, translations or poster research',async()=>{
+ const input=fixture();input.movie.details.imdb={value:null,sources:[]};input.movie.details.kinopoisk={value:null,sources:[]};input.movie.year=null;input.movie.posters=[];
+ const enrich=createCatalogEnricher({generate:async()=>{throw Error('unrelated movie research');},searchWeb:async()=>{throw Error('unrelated web search');},searchImages:async()=>{throw Error('unrelated poster search');},references:async()=>{throw Error('unrelated reference lookup');},matcher:{actor:async()=>({status:'existing',id:9001,method:'external-id'}),movie:notFound}});
+ const result=await enrich(prepareCatalogDraft(input.movie,{language:'uz'}),input,AbortSignal.timeout(1000),async()=>{},true);
+ assert.equal(result.actors[0].existingId,9001);assert.equal(result.movie.ratingImdb,null);assert.equal(result.movie.specs.year,null);
+});
 
-test('missing dictionary values stop before paid actor research and never substitute another country', async () => {
+test('unknown country is retained as null without substituting another country or preventing the save', async () => {
   const input = fixture(); input.movie.details.countries = fact(['United Kingdom']);
   let paid = 0;
   const process = createCatalogChatProcessor({ matcher: { movie: notFound, actor: notFound }, references: async () => references,
-    enrich: async () => { paid++; throw Error('must not research'); }, links: async () => { throw Error('must not search'); }, save: async () => { throw Error('must not save'); } });
+    enrich: async draft => { paid++; return draft; }, links: async draft => draft, save: async draft => {assert.equal(draft.movie.filterCountry,null);assert.deepEqual(draft.movie.specs.countries,[]);return {status:'created',movieId:8001};} });
   const result = await process(input, null, AbortSignal.timeout(1000), async () => {});
-  assert.equal(result.status, 'needs-enrichment'); assert.ok(result.issues.some(issue => issue.value === 'United Kingdom')); assert.equal(paid, 0);
+  assert.equal(result.status, 'created'); assert.equal(paid, 1);
 });
 
 test('existing catalogue films skip translation, image search and storage entirely', async () => {
@@ -100,6 +114,22 @@ test('existing catalogue films skip translation, image search and storage entire
   const process = createCatalogChatProcessor({ matcher: { movie: async () => ({ status: 'existing', id: 8001, method: 'external-id' }), actor: notFound },
     references: async () => { throw Error('must not load'); }, enrich: async () => { throw Error('must not enrich'); }, links: async () => { throw Error('must not search'); }, save: async () => { throw Error('must not save'); } });
   assert.deepEqual(await process(input, null, AbortSignal.timeout(1000), async () => {}), { status: 'existing', movieId: 8001 });
+});
+
+test('optional provider failures preserve checkpointed facts and still save nullable fields',async()=>{
+ const input=fixture();let saved=false;
+ const process=createCatalogChatProcessor({matcher:{movie:notFound},references:async()=>references,
+  enrich:async(draft,_input,_signal,checkpoint)=>{draft.movie.ratingImdb=null;await checkpoint(draft);throw Object.assign(Error('provider unavailable'),{status:503});},
+  links:async()=>{throw Object.assign(Error('provider unavailable'),{status:503});},
+  save:async draft=>{saved=true;assert.equal(draft.movie.ratingImdb,null);return {status:'created',movieId:8001};},
+ });
+ const result=await process(input,null,AbortSignal.timeout(1000),async()=>{});assert.equal(result.status,'created');assert.equal(saved,true);
+});
+test('checkpoint failures are never swallowed as optional missing data',async()=>{
+ const process=createCatalogChatProcessor({matcher:{movie:notFound},references:async()=>references,
+  enrich:async(draft,_input,_signal,checkpoint)=>{await checkpoint(draft);return draft;},links:async draft=>draft,save:async()=>{throw Error('must not save');},
+ });
+ await assert.rejects(()=>process(fixture(),null,AbortSignal.timeout(1000),async()=>{throw Error('checkpoint DB failure');}),/checkpoint DB failure/);
 });
 
 test('the chat processor checkpoints enriched data before saving so storage retries retain completed research', async () => {

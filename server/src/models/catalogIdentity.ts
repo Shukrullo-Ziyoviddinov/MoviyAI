@@ -1,6 +1,7 @@
 import { Schema } from 'mongoose';
 
 export const movieCatalogIdentitySchema = new Schema({
+  sourceKeys:{type:[String],default:undefined},
   originalTitle: { type: String, trim: true },
   nameKeys: { type: [String], default: undefined },
   imdbId: { type: String, match: /^tt\d+$/ },
