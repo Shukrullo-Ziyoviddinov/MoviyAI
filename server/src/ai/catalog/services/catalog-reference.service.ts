@@ -6,9 +6,19 @@ import type { CatalogDraft } from '../types/catalog.types.js';
 import type { CatalogReferenceFields, CatalogReferenceIssue, CatalogReferenceRepository, CatalogReferenceResult, CatalogReferenceSnapshot } from '../types/catalog-reference.types.js';
 
 type Aliases = Record<string, readonly string[]>;
+const aliasIndexes = new WeakMap<Aliases, Map<string, string[]>>();
 function concepts(value: string, aliases: Aliases): string[] {
-  const key = catalogNameKey(value);
-  return Object.entries(aliases).filter(([, names]) => names.some(name => catalogNameKey(name) === key)).map(([concept]) => concept);
+  let index = aliasIndexes.get(aliases);
+  if (!index) {
+    index = new Map();
+    for (const [concept, names] of Object.entries(aliases)) for (const name of names) {
+      const key = catalogNameKey(name), groups = index.get(key) ?? [];
+      if (!groups.includes(concept)) groups.push(concept);
+      index.set(key, groups);
+    }
+    aliasIndexes.set(aliases, index);
+  }
+  return index.get(catalogNameKey(value)) ?? [];
 }
 function findRows<T>(value: string, rows: T[], names: (row: T) => string[], aliases: Aliases): T[] {
   const key = catalogNameKey(value);

@@ -255,6 +255,13 @@ outbox replay, job fencing, restart/backoff, checkpoints, enrichment provenance,
 conversation deletion and chat-answer independence using isolated dependencies.
 # Catalogue-first image replies
 
+Country maintenance: `npm run countries:sync` previews and
+`npm run countries:sync -- --apply` adds missing reviewed countries without
+renaming existing rows. `data/country.json` contains 250 country/territory
+entries and five historical movie production states. Multilingual aliases
+are bundled locally; see `data/COUNTRIES-SOURCE.md` for source and license.
+Ambiguous Korea/Congo remain unresolved rather than choosing a country.
+
 Genre dictionary maintenance: after building, run `npm run genres:sync` for a
 preview or `npm run genres:sync -- --apply` to add reviewed missing rows from
 `server/data/genre.json`. This does not seed movies/actors, overwrite existing

@@ -7,7 +7,7 @@ import { emptyDossier } from '../dist/ai/services/movie-dossier.js';
 
 const read = name => JSON.parse(readFileSync(new URL(`../data/${name}.json`, import.meta.url), 'utf8').replace(/^\uFEFF/, ''));
 // Keep the original small dictionary fixture for missing/ambiguous cases.
-const snapshot = { genres: read('genre').slice(0,12), countries: read('country') };
+const snapshot = { genres: read('genre').slice(0,12), countries: read('country').filter(row=>['India','USA'].includes(row.name)) };
 const source = { title: 'Film production facts', url: 'https://example.com/film' };
 function draft(genres = ['Science fiction', 'Drama'], countries = ['United States']) {
   const details = emptyDossier(); details.genres = { value: genres, sources: [source] }; details.countries = { value: countries, sources: [source] };

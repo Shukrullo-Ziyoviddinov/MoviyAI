@@ -1,3 +1,5 @@
+import { COUNTRY_REFERENCE_ALIASES } from './country-reference.generated.js';
+
 export const CATALOG_CATEGORIES = ['actionMovies', 'horrorMovies', 'animationMovies', 'romanceMovies', 'dramaMovies', 'comedyMovies', 'familyMovies', 'sciFiMovies'] as const;
 
 // Aliases identify a concept; the stored value must still be read from MongoDB.
@@ -32,6 +34,7 @@ export const GENRE_ALIASES: Record<string, readonly string[]> = {
 };
 
 export const COUNTRY_ALIASES: Record<string, readonly string[]> = {
+  ...COUNTRY_REFERENCE_ALIASES,
   usa: ['USA', 'US', 'U.S.A.', 'U.S.', 'United States', 'United States of America', 'AQSh', 'AQSH', 'Amerika Qo‘shma Shtatlari', 'США', 'Соединённые Штаты Америки'],
   india: ['India', 'IN', 'IND', 'Hindiston', 'Индия'],
   uk: ['UK', 'U.K.', 'GB', 'GBR', 'United Kingdom', 'Great Britain', 'Buyuk Britaniya', 'Великобритания', 'Соединённое Королевство'],
