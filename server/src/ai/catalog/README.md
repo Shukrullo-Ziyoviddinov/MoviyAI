@@ -255,6 +255,14 @@ outbox replay, job fencing, restart/backoff, checkpoints, enrichment provenance,
 conversation deletion and chat-answer independence using isolated dependencies.
 # Catalogue-first image replies
 
+Diagnostics: `[AI_CATALOG]` job events include `jobId`. Failed operations
+include `provider`, `stage`, `providerStatus`, safe `errorKind`, and `model`
+for structured Google enrichment calls. For example `google / actor-facts /
+503` identifies actor extraction separately from `serper / actor-evidence`.
+Raw SDK errors, URLs, query text, headers and private chat data are excluded.
+The job's private issue message keeps the same safe operation labels. This
+adds diagnosis only; it does not change retry limits or switch models.
+
 Country maintenance: `npm run countries:sync` previews and
 `npm run countries:sync -- --apply` adds missing reviewed countries without
 renaming existing rows. `data/country.json` contains 250 country/territory

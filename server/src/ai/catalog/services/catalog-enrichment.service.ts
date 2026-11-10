@@ -13,6 +13,7 @@ import type { CatalogReferenceSnapshot } from '../types/catalog-reference.types.
 import type { CatalogDraft, CatalogLocalizedFacts } from '../types/catalog.types.js';
 import type { CatalogChatInput } from '../types/catalog-job.types.js';
 import type { MovieFact, MovieSource } from '../../types/movie-dossier.types.js';
+import { catalogOperation, type CatalogStage } from '../utils/catalog-diagnostics.js';
 
 const indexes = z.array(z.number().int().min(0)).max(6);
 const sourcedText = z.object({ value: z.string().max(4000).nullable(), sourceIndexes: indexes });
@@ -44,8 +45,13 @@ function factFrom(raw: z.infer<typeof sourcedText>, sources: MovieSource[]): Mov
 }
 
 export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerator; searchWeb: typeof searchWeb; searchImages: typeof searchImages; matcher: typeof catalogMatcher; references?: () => Promise<CatalogReferenceSnapshot> } = { generate, searchWeb, searchImages, matcher: catalogMatcher, references: () => catalogReferenceRepository.load() }) {
-  async function webEvidence(queries: string[]): Promise<MovieSource[]> {
-    const results = await Promise.all(queries.map(query => deps.searchWeb(query, { num: 5 })));
+  const rawGenerate = deps.generate;
+  deps = { ...deps, generate: (schema,payload,instruction,signal) => {
+    const stage = schema === actorSchema ? 'actor-facts' : schema === filmSchema ? 'movie-facts' : 'translation';
+    return catalogOperation({provider:'google',stage,model:AI_CONFIG.models.image},async()=>schema.parse(await rawGenerate(schema,payload,instruction,signal)));
+  } };
+  async function webEvidence(queries: string[], stage: CatalogStage = 'movie-evidence'): Promise<MovieSource[]> {
+    const results = await Promise.all(queries.map(query => catalogOperation({provider:'serper',stage},()=>deps.searchWeb(query, { num: 5 }))));
     return mergeSources(...results.map(result => (result.organic ?? []).flatMap(item => isPublicHttpsUrl(item.link) ? [{ title: item.title, url: item.link, snippet: (item.snippet ?? '').slice(0, 1600) }] : [])));
   }
   return async function enrichCatalogDraft(input: CatalogDraft, chat: CatalogChatInput, signal: AbortSignal, checkpoint: (draft: CatalogDraft) => Promise<void>): Promise<CatalogDraft> {
@@ -110,7 +116,7 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
     if (deps.references && !resolveCatalogReferences(draft, await deps.references()).ready) return draft;
     if (!draft.posterCandidates.length) {
       signal.throwIfAborted();
-      const images = await deps.searchImages(`${draft.identity.originalTitle} ${draft.identity.year ?? ''} official movie poster -fanart`, { num: 10 });
+      const images = await catalogOperation({provider:'serper',stage:'poster-search'},()=>deps.searchImages(`${draft.identity.originalTitle} ${draft.identity.year ?? ''} official movie poster -fanart`, { num: 10 }));
       draft.posterCandidates = (images.images ?? []).filter(image => {
         const years: string[] = image.title.match(/\b(?:19|20)\d{2}\b/g) ?? [];
         return isPublicHttpsUrl(image.imageUrl) && (!image.imageWidth || image.imageWidth >= 250) && (!image.imageHeight || image.imageHeight >= 350) &&
@@ -127,7 +133,7 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
       if (existing.status === 'conflict') continue;
       const name = actor.originalName ?? actor.actorName;
       if (!actor.actorAbout.uz || !actor.actorAbout.ru || !(actor.identity.imdbId || actor.identity.kinopoiskId || known(actor.identity.birthDate ?? undefined))) {
-        const evidence = await webEvidence([`"${name}" ${draft.identity.originalTitle} actor biography born`, `site:imdb.com/name/ "${name}" actor`]);
+        const evidence = await webEvidence([`"${name}" ${draft.identity.originalTitle} actor biography born`, `site:imdb.com/name/ "${name}" actor`], 'actor-evidence');
         signal.throwIfAborted();
         const raw = actorSchema.parse(await deps.generate(actorSchema, { actor: { name: actor.actorName, originalName: name, role: actor.role }, film: draft.identity,
           sources: evidence.map((source, index) => ({ index, ...source })) },
@@ -155,7 +161,7 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
         const supplied = chat.actorImages.filter(image => namesEqual(image.label, actor.actorName, actor.originalName));
         actor.imageCandidates = supplied.filter(image => isPublicHttpsUrl(image.imageUrl)).map(image => ({ url: image.imageUrl, sourceUrl: image.sourceUrl }));
         if (!actor.imageCandidates.length) {
-          const images = await deps.searchImages(`"${name}" actor portrait headshot`, { num: 5 });
+          const images = await catalogOperation({provider:'serper',stage:'actor-image-search'},()=>deps.searchImages(`"${name}" actor portrait headshot`, { num: 5 }));
           const key = catalogNameKey(name);
           actor.imageCandidates = (images.images ?? []).filter(image => catalogNameKey(image.title ?? '').includes(key) && isPublicHttpsUrl(image.imageUrl))
             .slice(0, 2).map(image => ({ url: image.imageUrl, sourceUrl: image.link && isPublicHttpsUrl(image.link) ? image.link : null }));

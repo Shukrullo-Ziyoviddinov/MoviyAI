@@ -7,6 +7,7 @@ import { isPublicHttpsUrl } from '../validators/catalog.validator.js';
 import type { CatalogDraft } from '../types/catalog.types.js';
 import type { CatalogStructuredGenerator } from './catalog-enrichment.service.js';
 import type { MovieSource } from '../../types/movie-dossier.types.js';
+import { catalogOperation } from '../utils/catalog-diagnostics.js';
 
 const indexes = z.array(z.number().int().min(0)).max(5);
 const schema = z.object({ seriesName: z.string().max(200).nullable(), sourceIndexes: indexes,
@@ -21,6 +22,11 @@ const generate: CatalogStructuredGenerator = async (format, payload, instruction
 };
 function at(indices: number[], sources: MovieSource[]): MovieSource[] { return [...new Set(indices)].flatMap(index => sources[index] ? [sources[index]] : []); }
 export function createCatalogFranchiseResearch(deps = { searchWeb, generate }) {
+  const raw=deps;
+  deps={...raw,
+    searchWeb:(...args)=>catalogOperation({provider:'serper',stage:'franchise-search'},()=>raw.searchWeb(...args)),
+    generate:(...args)=>catalogOperation({provider:'google',stage:'franchise-facts',model:AI_CONFIG.models.image},()=>raw.generate(...args)),
+  };
   return async function researchFranchise(input: CatalogDraft, signal: AbortSignal): Promise<CatalogDraft> {
     if (input.franchiseCandidates !== undefined) return input;
     signal.throwIfAborted();

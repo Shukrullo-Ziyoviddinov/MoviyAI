@@ -26,7 +26,7 @@ test('only image signatures are accepted; upload names are unique and tracked be
 });
 test('failed/uncertain PUT keys remain tracked for safe cleanup and HTML never reaches R2', async () => {
   const keys = []; const media = createCatalogMediaService({ download: async () => png, put: async () => { throw Error('R2 timeout'); }, remove: async () => {} });
-  await assert.rejects(() => media.store('actorimg', ['https://example.com/a.png'], 1, key => keys.push(key), AbortSignal.timeout(1000)), /UNAVAILABLE/); assert.equal(keys.length, 1);
+  await assert.rejects(() => media.store('actorimg', ['https://example.com/a.png'], 1, key => keys.push(key), AbortSignal.timeout(1000)), /CATALOG_R2_IMAGE_UPLOAD/); assert.equal(keys.length, 1);
   let uploads = 0; const invalid = createCatalogMediaService({ download: async () => Buffer.from('<html>denied</html>'), put: async () => { uploads++; }, remove: async () => {} });
   await assert.rejects(() => invalid.store('actorimg', ['https://example.com/a.png'], 1, () => {}, AbortSignal.timeout(1000)), /UNAVAILABLE/); assert.equal(uploads, 0);
 });

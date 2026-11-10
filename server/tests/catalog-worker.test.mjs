@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createCatalogWorker } from '../dist/ai/catalog/services/catalog-worker.service.js';
 import { createCatalogDispatcher } from '../dist/ai/catalog/services/catalog-dispatch.service.js';
 import { catalogChatInput, catalogJobId, isCatalogEligible } from '../dist/ai/catalog/utils/catalog-chat-input.js';
+import { catalogOperation } from '../dist/ai/catalog/utils/catalog-diagnostics.js';
 
 const movie = { title: 'Example', titleUz: 'Misol', titleRu: null, year: 2014, confidence: 'high', sources: [{ title: 'Film', url: 'https://example.com/film' }], posters: [] };
 const input = { movie, language: 'uz', actorImages: [] };
@@ -66,6 +67,15 @@ test('provider/storage error keeps checkpoints and retries with backoff; restart
   assert.equal(h.row.status, 'retry'); assert.equal(h.row.next, 30000); assert.equal(h.row.input.movie.title, 'Example');
   h.time(30001); await createCatalogWorker({ jobs: h.jobs, now: h.now, dispatch: async () => 0, process }).runOnce();
   assert.equal(h.row.status, 'completed'); assert.equal(paidResearch, 1); assert.equal(h.row.attempts, 2);
+});
+
+test('worker retains safe provider/stage/status for a retried failure without persisting secret SDK text',async()=>{
+ const h=harness();await createCatalogWorker({jobs:h.jobs,now:h.now,dispatch:async()=>0,
+  process:()=>catalogOperation({provider:'google',stage:'actor-facts',model:'test-model'},async()=>{throw Object.assign(Error('SECRET_KEY private user message'),{status:503});}),
+ }).runOnce();
+ assert.equal(h.row.status,'retry');assert.equal(h.row.next,30000);
+ assert.match(h.row.issues[0].message,/provider=google, stage=actor-facts, status=503/);
+ assert.doesNotMatch(JSON.stringify(h.row.issues),/SECRET_KEY|private user message/);
 });
 
 test('expired processing leases recover after a restart, while old lease tokens cannot change job state', async () => {

@@ -4,6 +4,7 @@ import { prepareCatalogDraft } from '../dist/ai/catalog/mappers/movie.mapper.js'
 import { emptyDossier } from '../dist/ai/services/movie-dossier.js';
 import { createCatalogEnricher } from '../dist/ai/catalog/services/catalog-enrichment.service.js';
 import { createCatalogChatProcessor } from '../dist/ai/catalog/services/catalog-chat-save.service.js';
+import { catalogFailureDetails } from '../dist/ai/catalog/utils/catalog-diagnostics.js';
 
 const source = { title: 'Example film', url: 'https://www.imdb.com/title/tt1234567/' };
 const fact = value => ({ value, sources: [source] });
@@ -43,6 +44,19 @@ test('background enrichment adds sourced translations/person identity/biographie
   const paid = h.models(); await h.enrich(enriched, input, AbortSignal.timeout(1000), h.checkpoint); assert.equal(h.models(), paid);
 });
 
+test('real actor enrichment boundaries distinguish Google 503 from Serper 503',async()=>{
+ for(const provider of ['google','serper']){
+  const input=fixture();const enrich=createCatalogEnricher({
+   generate:async(_schema,payload)=>{if(payload.actor)throw Object.assign(Error('SECRET prompt'),{status:503});return translated;},
+   searchWeb:async()=>{if(provider==='serper')throw Object.assign(Error('SECRET API key'),{status:503});return {organic:[]};},
+   searchImages:async()=>({images:[]}),matcher:{actor:notFound,movie:notFound},
+  });
+  await assert.rejects(()=>enrich(prepareCatalogDraft(input.movie,{language:'uz'}),input,AbortSignal.timeout(1000),async()=>{}),error=>{
+   const info=catalogFailureDetails(error);assert.equal(info.provider,provider);assert.equal(info.stage,provider==='google'?'actor-facts':'actor-evidence');assert.equal(info.providerStatus,503);assert.doesNotMatch(JSON.stringify(error),/SECRET/);return true;
+  });
+ }
+});
+
 test('unsupported person identity or missing film credits never become an invented actor ID or biography', async () => {
   for (const options of [{ person: false }, { credit: false }]) {
     const input = fixture(), h = harness(options); const result = await h.enrich(prepareCatalogDraft(input.movie, { language: 'uz' }), input, AbortSignal.timeout(1000), h.checkpoint);
@@ -79,8 +93,8 @@ test('the chat processor checkpoints enriched data before saving so storage retr
   const input = fixture(), h = harness(); const checkpoints = []; let saved;
   const process = createCatalogChatProcessor({ matcher: { movie: notFound, actor: notFound }, references: async () => references, enrich: h.enrich,
     links: async draft => { draft.confirmedUnavailable = ['trailers', 'watchUrl']; return draft; }, save: async draft => { saved = draft; throw Error('storage failed'); } });
-  await assert.rejects(() => process(input, null, AbortSignal.timeout(1000), async draft => { checkpoints.push(structuredClone(draft)); }), /storage failed/);
+  await assert.rejects(() => process(input, null, AbortSignal.timeout(1000), async draft => { checkpoints.push(structuredClone(draft)); }), /CATALOG_INTERNAL_SAVE/);
   assert.equal(checkpoints.at(-1).actors[0].identity.imdbId, 'nm1234567'); assert.deepEqual(checkpoints.at(-1), saved);
   const paid = h.models();
-  await assert.rejects(() => process(input, checkpoints.at(-1), AbortSignal.timeout(1000), async () => {}), /storage failed/); assert.equal(h.models(), paid);
+  await assert.rejects(() => process(input, checkpoints.at(-1), AbortSignal.timeout(1000), async () => {}), /CATALOG_INTERNAL_SAVE/); assert.equal(h.models(), paid);
 });

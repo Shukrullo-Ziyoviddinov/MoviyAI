@@ -4,6 +4,7 @@ import { isIP, type LookupFunction } from 'node:net';
 import { randomUUID } from 'node:crypto';
 import { putImage, deleteImageKey } from '../../../services/r2.service.js';
 import { isPublicHttpsUrl } from '../validators/catalog.validator.js';
+import { catalogOperation } from '../utils/catalog-diagnostics.js';
 
 export interface CatalogAsset { key: string; path: string; sourceUrl: string }
 export function isPublicImageAddress(address: string): boolean {
@@ -47,7 +48,7 @@ export async function downloadCatalogImage(value: string, signal: AbortSignal, l
       }
       const type = res.headers['content-type']?.split(';')[0].trim();
       if (res.statusCode !== 200 || !['image/jpeg', 'image/png', 'image/webp', 'application/octet-stream'].includes(type ?? '') || Number(res.headers['content-length']) > limit) {
-        res.destroy(); reject(new Error('INVALID_IMAGE_RESPONSE')); return;
+        res.destroy(); reject(Object.assign(new Error('INVALID_IMAGE_RESPONSE'), { status: res.statusCode })); return;
       }
       const chunks: Buffer[] = []; let size = 0;
       res.on('data', (chunk: Buffer) => { size += chunk.length; if (size > limit) { res.destroy(new Error('IMAGE_TOO_LARGE')); return; } chunks.push(chunk); });
@@ -61,19 +62,20 @@ export function createCatalogMediaService(deps = { download: downloadCatalogImag
   return {
     async store(folder: 'movieimg' | 'actorimg', urls: string[], count: number, track: (key: string) => void, signal: AbortSignal): Promise<CatalogAsset[]> {
       const assets: CatalogAsset[] = [];
+      let lastError: unknown;
       for (const url of [...new Set(urls)].slice(0, 7)) {
         if (assets.length >= count) break;
         signal.throwIfAborted();
         try {
-          const body = await deps.download(url, AbortSignal.any([signal, AbortSignal.timeout(10000)]));
+          const body = await catalogOperation({provider:'image-source',stage:'image-download'},()=>deps.download(url, AbortSignal.any([signal, AbortSignal.timeout(10000)])));
           const format = imageFormat(body); if (!format || body.length > 4 * 1024 * 1024) continue;
           const fileName = `ai-${randomUUID()}.${format.extension}`;
           const key = `${folder}/${fileName}`; track(key); // Also track an uncertain/timed-out PUT.
-          const stored = await deps.put(folder, fileName, body, format.mimeType, signal);
+          const stored = await catalogOperation({provider:'r2',stage:'image-upload'},()=>deps.put(folder, fileName, body, format.mimeType, signal));
           assets.push({ key, path: stored.path, sourceUrl: url });
-        } catch { signal.throwIfAborted(); /* Try another supplied candidate; never invent a URL. */ }
+        } catch (error) { lastError=error; signal.throwIfAborted(); /* Try another supplied candidate; never invent a URL. */ }
       }
-      if (!assets.length) throw new Error('CATALOG_IMAGE_UNAVAILABLE');
+      if (!assets.length) throw lastError ?? new Error('CATALOG_IMAGE_UNAVAILABLE');
       return assets;
     },
     remove: deps.remove,
