@@ -1,6 +1,6 @@
-import {displayMovieRating} from '@/utils/movieDisplay';
 "use client";
 
+import {displayMovieRating} from '@/utils/movieDisplay';
 import { useState } from "react";
 import Link from "next/link";
 import { moviePosterUrl } from "@/api/wishlist";

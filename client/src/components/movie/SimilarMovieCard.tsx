@@ -1,5 +1,5 @@
-import {displayMovieRating} from '@/utils/movieDisplay';
 "use client";
+import {displayMovieRating} from '@/utils/movieDisplay';
 import { displayMovieTitle } from "@/utils/movieDisplay";
 
 
