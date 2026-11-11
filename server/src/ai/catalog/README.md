@@ -296,6 +296,13 @@ using the same uncertain-commit-safe ownership checks as movie saves.
 It skips unrelated movie rating, translation and poster research when a pending
 cast list already exists, so unknown movie facts cannot delay actor completion.
 
+Movie recommendations research up to three distinct films per reply. Each verified
+result keeps its own dossier, media and portraits in the chat turn's `recommendations`
+array. The outbox gives each result a stable per-index job key and only acknowledges
+the turn after every eligible result is durably enqueued. Normal catalogue identity
+checks still deduplicate films already in the database. Web and native reopen these
+results as independent movie messages rather than combining their source/media blocks.
+
 Actor enrichment searches biography, official person profile and exact film
 credits separately. If profile/credit evidence is missing, it performs bounded
 Kinopoisk-person/IMDb-film searches before generating sourced biographies.

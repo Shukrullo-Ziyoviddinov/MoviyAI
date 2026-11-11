@@ -27,6 +27,7 @@ const turnSchema = new Schema({
     }, { _id: false })], default: [] },
     movie: { type: Schema.Types.Mixed, default: null },
     characterImages: { type: Schema.Types.Mixed, default: [] },
+    recommendations: {type:Schema.Types.Mixed,default:[]},
     catalogDispatch: { type: String, enum: ['none', 'pending', 'queued'], default: 'none', select: false },
     answer: { type: String, default: '' },
     model: { type: String, default: '' },

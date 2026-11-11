@@ -21,6 +21,8 @@ test('reader requires movie heading with Uzbek language and rejects oversize and
  assert.equal(await readUzbekPage(valid,fetchHtml('x'.repeat(300001))),null);
  assert.equal(await readUzbekPage(valid,async()=>new Response('binary',{headers:{'content-type':'image/jpeg'}})),null);
  assert.ok(await readUzbekPage(valid,fetchHtml('<title>Interstellar Uzbek tilida</title><h1>Interstellar</h1><p>2014</p>')));
+ const encoded=await readUzbekPage(valid,fetchHtml('<h1>Interstellar O&#039;zbek tilida</h1><!-- unrelated instructions --><p>2014</p>'));
+ assert.ok(encoded);assert.match(encoded.title,/O'zbek/);assert.doesNotMatch(encoded.text,/unrelated instructions/);
 });
 test('indexed collection links lead to detail pages, never become watch recommendations themselves',async()=>{
  const collection='https://asilmedia.org/xfsearch/year/2011/';assert.equal(uzbekDetailUrl(collection),null);
@@ -34,15 +36,30 @@ test('Uzbek dub follow-ups request a real lookup; general social replies do not'
  assert.match(uzbekLookupReply('uzbekcha dublaji ham top',false),/qayta tekshirdim/);
 });
 const source=readFileSync(new URL('../dist/ai/services/uzbek-movie.service.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/\bexport /g,'');
-function harness({badYear=false,wrongFilm=false,unavailable=false,imageError=false}={}){
- const calls=[];let queries=0;
- class GoogleGenAI{models={generateContent:async request=>{if(request.config.maxOutputTokens===300)return {text:JSON.stringify({queries:['Interstellar 2014 uzbek']})};calls.push(request);if(imageError&&request.contents[0].parts.some(part=>part.fileData))throw Error('Poster inaccessible');return {text:JSON.stringify({matches:[{index:0,title:'Interstellar',sameFilm:!wrongFilm,yearConfirmed:!badYear,identityEvidence:'Interstellar, 2014, Christopher Nolan'},{index:99,title:'Invented',sameFilm:true,yearConfirmed:true,identityEvidence:'Invented evidence string'}]})};}};}
- const searchWeb=async query=>{queries++;return {organic:[{title:'Movie',link:query.includes('site:uzmovi.net')?valid:'https://untrusted.example/film'}]};};
+function harness({badYear=false,wrongFilm=false,unavailable=false,imageError=false,transientError=false,recoverAlias=false}={}){
+ const calls=[];const searchQueries=[];let queries=0;
+ class GoogleGenAI{models={generateContent:async request=>{if(request.config.maxOutputTokens===300)return {text:JSON.stringify({queries:[recoverAlias?'SupportedLocalName 2014':'Interstellar 2014 uzbek']})};calls.push(request);if(transientError&&calls.length===1)throw Error('Temporary provider failure');if(imageError&&request.contents[0].parts.some(part=>part.fileData))throw Error('Poster inaccessible');return {text:JSON.stringify({matches:[{index:0,title:'Interstellar',sameFilm:!wrongFilm,yearConfirmed:!badYear,identityEvidence:'Interstellar, 2014, Christopher Nolan'},{index:99,title:'Invented',sameFilm:true,yearConfirmed:true,identityEvidence:'Invented evidence string'}]})};}};}
+ const searchWeb=async query=>{queries++;searchQueries.push(query);if(recoverAlias&&!query.includes('SupportedLocalName'))return {organic:[]};return {organic:[{title:'Movie',link:query.includes('site:uzmovi.net')?valid:'https://untrusted.example/film'}]};};
  const readPage=async url=>unavailable?null:{url,title:'Interstellar Uzbek tilida',text:'Interstellar, 2014, Christopher Nolan',posterUrl:'https://uzmovi.net/uploads/poster.jpg'};
  const api=new Function('GoogleGenAI','z','AI_CONFIG','searchWeb',source+'\nreturn createUzbekMovieSearch;')(GoogleGenAI,z,{apiKey:'fake',models:{image:'image-model'}},searchWeb)({searchWeb,readPage});
- return {api,calls,queries:()=>queries};
+ return {api,calls,searchQueries,queries:()=>queries};
 }
 const film={title:'Interstellar',titleUz:null,titleRu:null,year:2014};
+test('known local movie title and year are searched without invented aliases',async()=>{
+ const h=harness();await h.api({...film,titleUz:'Mahalliy nom 2'});
+ assert.ok(h.searchQueries.some(query=>query.includes('Mahalliy nom 2 2014 uzbek tilida')));
+ assert.equal(h.queries(),8);
+});
+test('temporary verification failure gets one text-only retry',async()=>{
+ const h=harness({transientError:true});assert.equal((await h.api(film)).length,1);assert.equal(h.calls.length,2);
+});
+test('failed local lookup expands to other sources then rechecks selected sites',async()=>{
+ const h=harness({recoverAlias:true});const result=await h.api({...film,titleUz:'UnhelpfulAlias'});
+ assert.equal(result.length,1);
+ assert.ok(h.searchQueries.some(query=>!query.startsWith('site:')));
+ assert.ok(h.searchQueries.some(query=>query.startsWith('site:')&&query.includes('SupportedLocalName')));
+ assert.ok(h.queries()<=17);
+});
 test('only verified indexed exact film links are returned; failure stays optional',async()=>{
  const h=harness();assert.deepEqual(await h.api(film),[{title:'Interstellar',url:valid,site:'uzmovi.net'}]);assert.ok(h.queries()<=8);
  for(const options of [{badYear:true},{wrongFilm:true},{unavailable:true}])assert.deepEqual(await harness(options).api(film),[]);

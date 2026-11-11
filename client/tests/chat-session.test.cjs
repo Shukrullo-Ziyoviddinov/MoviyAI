@@ -50,6 +50,15 @@ function harness() {
 }
 
 test('web and native use identical session behavior', () => assert.equal(source, nativeSource));
+
+test('saved recommendations reopen as independent movie blocks in web and native session',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');
+ h.db.set('rec',{id:'rec',title:'Recommendations',updatedAt:new Date().toISOString(),turns:[{requestId:'r',text:'Recommend',answer:'Intro',status:'completed',createdAt:new Date().toISOString(),recommendations:[{text:'Dossier one',movie:{title:'One'}},{text:'Dossier two',movie:{title:'Two'}}]}]});
+ await session.actions.openChat('rec');
+ const models=session.getState().messages.filter(item=>item.role==='model');
+ assert.equal(models.length,3);assert.equal(models[1].movie.title,'One');assert.equal(models[2].movie.title,'Two');
+ assert.notEqual(models[1].id,models[2].id);
+});
 test('list loading stops when summaries arrive; opening a chat only loads its messages', async () => {
   const h=harness(),session=h.create();
   const list=h.api.listChats;let releaseList;

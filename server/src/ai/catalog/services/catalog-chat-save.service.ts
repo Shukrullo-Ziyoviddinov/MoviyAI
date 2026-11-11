@@ -9,6 +9,7 @@ import { researchCatalogFranchise } from './catalog-franchise-research.service.j
 import type { CatalogJobProcessor } from '../types/catalog-job.types.js';
 import { catalogOperation,catalogFailureDetails,type CatalogStage } from '../utils/catalog-diagnostics.js';
 import { ensureCatalogDictionary } from './catalog-dictionary.service.js';
+import { uzbekReleaseTitle } from '../../services/uzbek-movie.service.js';
 
 const defaults={ matcher: catalogMatcher, references: () => catalogReferenceRepository.load(), enrich: enrichCatalogDraft, links: researchCatalogLinks, save: saveCatalogMovie, franchise: researchCatalogFranchise, ensureReferences:ensureCatalogDictionary };
 export function createCatalogChatProcessor(deps:Omit<typeof defaults,'ensureReferences'|'franchise'>&Partial<Pick<typeof defaults,'ensureReferences'|'franchise'>> = defaults) {
@@ -37,6 +38,8 @@ export function createCatalogChatProcessor(deps:Omit<typeof defaults,'ensureRefe
     draft=(await references()).draft;
     if (deps.franchise) { draft = await optional('franchise',()=>catalogOperation({provider:'internal',stage:'franchise'},()=>deps.franchise!(draft, signal)),()=>draft); await persist(draft); }
     draft = await optional('links',()=>catalogOperation({provider:'internal',stage:'links'},()=>deps.links(draft, signal)),()=>draft);
+    draft.movie.title.uz=uzbekReleaseTitle(draft.research.uzbekLinks??[])??draft.movie.title.uz;
+    draft.research.titleUz=draft.movie.title.uz;
     await persist(draft); signal.throwIfAborted();
     return catalogOperation({provider:'internal',stage:'save'},()=>deps.save(draft));
   };

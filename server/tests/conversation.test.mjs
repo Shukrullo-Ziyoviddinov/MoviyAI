@@ -1,3 +1,6 @@
+import {isMovieRecommendation} from '../dist/ai/services/movie-recommendation.service.js';
+import {isNamedMovieSearch} from '../dist/ai/services/text-movie.service.js';
+import {uzbekReleaseTitle} from '../dist/ai/services/uzbek-movie.service.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -70,7 +73,7 @@ function harness() {
   };
   const findMovieFromImages = async (text, images) => {
     if(fail)throw Error('image search failure');
-    assert.ok(images[0].fileUri.startsWith('https://r2.example/'));
+    if(images.length)assert.ok(images[0].fileUri.startsWith('https://r2.example/'));
     return {text:'Found movie',model:'gemini-3.5-flash-lite',movie:{uzbekLinks:[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],title:'Example',titleUz:'Example',titleRu:null,year:2014,confidence:'high',sources:[{title:'Film',url:'https://example.com/film'}],posters:[],trailer:{videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Example trailer',channel:'Studio',kind:'trailer'}}};
   };
   const imagePath = (_owner,id,request,index) => `/images/${id}/${request}/${index}`;
@@ -80,9 +83,9 @@ function harness() {
   const getChatImage=async key=>objects.get(key)??null;
   const deleteChatImage=async key=>{if(storageFailure)throw Error('R2 unavailable');objects.delete(key);};
   const storage=new Function('ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages','catalogDispatcher',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{},{preserveConversation:async()=>{}});
-  const service = new Function('Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', 'isCatalogEligible', 'wakeCatalogWorker', source +
+  const service = new Function('isMovieRecommendation','recommendMovies','isNamedMovieSearch','findMovieFromText','uzbekReleaseTitle', 'Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', 'isCatalogEligible', 'wakeCatalogWorker', source +
     '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage,deleteConversation,pinConversation};')
-    (Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}],async()=>[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],isUzbekMovieRequest,uzbekLookupReply,isCatalogEligible,()=>{wakes++;if(wakeError)throw Error('scheduler failure');});
+    (isMovieRecommendation,async()=>({text:'Recommendations',model:'gemma',recommendations:[{text:'Dossier 1',movie:(await findMovieFromImages('One',[])).movie},{text:'Dossier 2',movie:{...(await findMovieFromImages('Two',[])).movie,title:'Second'}}]}),isNamedMovieSearch,(text)=>findMovieFromImages(text,[]),uzbekReleaseTitle, Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}],async()=>[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],isUzbekMovieRequest,uzbekLookupReply,isCatalogEligible,()=>{wakes++;if(wakeError)throw Error('scheduler failure');});
   return { ...service, ...storage, objects, storageFailure: value=>{storageFailure=value;}, Conversation, ChatTurn, fail: value => { fail = value; }, hold: value => { hold = value; },
     wakes:()=>wakes,wakeError:value=>{wakeError=value;},calls: () => calls, captured: () => captured };
 }
@@ -95,6 +98,21 @@ test('owners can list/reopen their chats; other accounts cannot read or write th
     await assert.rejects(action, error => error.status === 404);
   }
 });
+test('recommendations persist separate movie cards and schedule catalogue storage',async()=>{
+ const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+ const result=await h.sendConversationMessage('alice',id,randomUUID(),'fantastik kino tavsiya qil');
+ assert.equal(h.calls(),0);assert.equal(result.turns[0].recommendations.length,2);
+ assert.equal(result.turns[0].recommendations[1].movie.title,'Second');assert.equal(h.ChatTurn.rows[0].catalogDispatch,'pending');
+ assert.ok(result.turns[0].recommendations.every(item=>item.characterImages.length));
+});
+
+test('named movie search without attachments invokes sourced lookup and saves link blocks',async()=>{
+ const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+ const result=await h.sendConversationMessage('alice',id,randomUUID(),'O‘rgimchak odam 2 kinosini top');
+ assert.equal(h.calls(),0);assert.equal(result.turns[0].movie.uzbekLinks[0].site,'uzmovi.net');
+ assert.equal(h.ChatTurn.rows[0].catalogDispatch,'pending');assert.equal(result.turns[0].images.length,0);
+});
+
 test('failed image lookup retries saved bytes and does not create duplicate turns', async () => {
   const h=harness(),id=randomUUID(),requestId=randomUUID();await h.createConversation('alice',id);
   h.fail(true);await assert.rejects(()=>h.sendConversationMessage('alice',id,requestId,'Find',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,255])}]));

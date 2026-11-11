@@ -8,6 +8,7 @@ export type ChatSummary = {
     updatedAt: string;
 };
 export type SavedTurn = {
+    recommendations?:Array<{text:string;movie:MovieSearchResult;characterImages?:CharacterImage[]}>;
     characterImages?: CharacterImage[];
     images?: Array<{
         id: string;

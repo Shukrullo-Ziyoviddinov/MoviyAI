@@ -1,3 +1,4 @@
+import {uzbekReleaseTitle} from '../dist/ai/services/uzbek-movie.service.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -28,11 +29,16 @@ function harness({ searchable = true, badSource = false, posterError = false, de
   const searchImages = async (_query, options) => { posters++; if(options.num===15)throw Object.assign(Error('Unsupported Serper image result count'),{status:400}); if (posterError) throw Error('unavailable'); return { images: manyPosters ? [{imageUrl:'https://example.com/tiny.jpg',imageWidth:80,imageHeight:100},{imageUrl:'https://example.com/wrong.jpg',title:'Interstellar 2025'},...Array.from({length:10},(_,index)=>({imageUrl:'https://example.com/poster-'+index+'.jpg',title:'Interstellar 2014',imageWidth:1000,imageHeight:1500})),{imageUrl:'https://example.com/poster-0.jpg'}] : [
     { imageUrl: 'https://example.com/poster.jpg', link: 'https://example.com/movie' }, { imageUrl: 'http://127.0.0.1/private' },
   ] }; };
-  const api = new Function('GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', 'findUzbekMovieLinks', 'findCatalogChatCandidates', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
-    (GoogleGenAI, z, { apiKey: 'test', models: { image: 'gemini-3.5-flash-lite' } }, AiServiceError, searchWeb, searchImages, dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier, async()=>({videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Interstellar trailer',channel:'Warner Bros.',kind:'trailer'}),async()=>[{title:'Interstellar Uzbek',url:'https://uzmovi.net/123-interstellar.html',site:'uzmovi.net'}], async()=>cachedMovie&&++lookups===1?[cachedMovie]:[]);
+  const api = new Function('uzbekReleaseTitle', 'GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', 'findUzbekMovieLinks', 'findCatalogChatCandidates', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
+    (uzbekReleaseTitle, GoogleGenAI, z, { apiKey: 'test', models: { image: 'gemini-3.5-flash-lite' } }, AiServiceError, searchWeb, searchImages, dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier, async()=>({videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Interstellar trailer',channel:'Warner Bros.',kind:'trailer'}),async()=>[{title:'Interstellar Uzbek',url:'https://uzmovi.net/123-interstellar.html',site:'uzmovi.net'}], async()=>cachedMovie&&++lookups===1?[cachedMovie]:[]);
   return { ...api, calls, searches: () => searches, posters: () => posters };
 }
 const images = [{ mimeType: 'image/jpeg', data: Buffer.from([255, 216, 255]) }];
+test('named text lookup produces verified movie data and Uzbek links without an uploaded image',async()=>{
+ const h=harness();const result=await h.findMovieFromImages('Interstellar 2014 kinosini top',[]);
+ assert.equal(result.movie.title,'Interstellar');assert.equal(result.movie.uzbekLinks[0].site,'uzmovi.net');
+ assert.ok(h.searches()>0);assert.ok(!h.calls[0].contents[0].parts.some(part=>part.fileData||part.inlineData));
+});
 test('verified database movie returns stored details and media with zero Serper calls',async()=>{
  const cachedMovie={catalogId:8001,title:'Interstellar',titleUz:'Interstellar',titleRu:null,year:2014,confidence:'high',sources:[],posters:[{url:'https://media.example/stored.jpg',sourceUrl:null}],details:emptyDossier(),catalogPortraits:[{kind:'actor',label:'Actor',imageUrl:'https://media.example/actor.jpg',sourceUrl:null}]};
  const h=harness({cachedMovie});const result=await h.findMovieFromImages('Find',images);
@@ -46,7 +52,7 @@ test('uncertain database candidate continues normal web discovery',async()=>{
 test('image clues drive search and only supplied sources/posters are returned', async () => {
   const h = harness(), result = await h.findMovieFromImages('Bu qaysi kino?', images);
   assert.equal(result.model, 'gemini-3.5-flash-lite'); assert.equal(h.searches(), 10); assert.equal(h.posters(), 1);
-  assert.equal(result.movie.title, 'Interstellar'); assert.equal(result.movie.titleUz, 'Interstellar Uzbek'); assert.equal(result.movie.uzbekLinks[0].site,'uzmovi.net');
+  assert.equal(result.movie.title, 'Interstellar'); assert.equal(result.movie.titleUz, 'Interstellar'); assert.equal(result.movie.uzbekLinks[0].site,'uzmovi.net');
   assert.equal(result.movie.sources[0].url, 'https://www.imdb.com/title/tt0816692/'); assert.equal(result.movie.posters.length, 1);
   assert.ok(result.movie.identitySources.some(source=>source.url==='https://www.imdb.com/title/tt0816692/'));
 });

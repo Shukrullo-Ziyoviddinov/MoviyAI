@@ -3,8 +3,10 @@ import { Conversation, ChatTurn } from '../models/conversation.model.js';
 import { chatWithGemma } from './gemma.service.js';
 import type { AiHistoryMessage, AiResult } from '../types/ai.types.js';
 import type { ChatImageInput, MovieSearchResult } from '../types/movie-search.types.js';
-import {findUzbekMovieLinks,isUzbekMovieRequest,uzbekLookupReply} from './uzbek-movie.service.js';
+import {findUzbekMovieLinks,isUzbekMovieRequest,uzbekLookupReply,uzbekReleaseTitle} from './uzbek-movie.service.js';
 import { findMovieFromImages } from './image-movie.service.js';
+import { findMovieFromText, isNamedMovieSearch } from './text-movie.service.js';
+import { recommendMovies,isMovieRecommendation,type MovieRecommendation } from './movie-recommendation.service.js';
 import { imageReferences, uploadChatImages, chatImageUrls, cleanupConversationImages } from './chat-image-storage.service.js';
 import { resolveDirectImages } from './direct-image.service.js';
 import { findCharacterImages } from './character-image.service.js';
@@ -49,6 +51,7 @@ export async function getConversation(userId: string, id: string) {
             images: (await chatImageUrls(userId, id, turn.requestId, turn.images)).map((image, index) => ({ id: `${turn.requestId}-${index}`, type: 'image' as const, path: image.fileUri })),
             movie: turn.movie ?? null,
             characterImages: turn.characterImages ?? [],
+            recommendations: turn.recommendations??[],
             status: turn.status === 'processing' && row.lockUntil <= new Date() ? 'failed' : turn.status,
             createdAt: turn.createdAt, model: turn.model,
         }))),
@@ -97,31 +100,39 @@ export async function sendConversationMessage(userId: string, id: string, reques
             .sort({ createdAt: -1, _id: -1 }).limit(15).lean();
         const history: AiHistoryMessage[] = previous.reverse().flatMap(turn => [
             { role: 'user' as const, text: turn.text }, { role: 'model' as const, text: turn.movie?.title
-                ? `${turn.answer}\nIdentified film: ${turn.movie.title} (${turn.movie.year ?? ''})` : turn.answer },
+                ? `${turn.answer}\nIdentified film: ${turn.movie.title} (${turn.movie.year ?? ''})` : `${turn.answer}${turn.recommendations?.length?'\nRecommended films: '+turn.recommendations.map((item:MovieRecommendation)=>`${item.movie.title} (${item.movie.year??''})`).join('; '):''}` },
         ]);
         if (images.length) await uploadChatImages(id, requestId, images);
         const searchImages = await chatImageUrls(userId, id, requestId);
-        const previousMovie=[...previous].reverse().find(turn=>turn.movie?.title)?.movie as MovieSearchResult|undefined;
-        let result:AiResult&{movie?:MovieSearchResult};
-        if(!searchImages.length&&previousMovie&&isUzbekMovieRequest(text)) {
+        const contextTurn=[...previous].reverse().find(turn=>turn.movie?.title||turn.recommendations?.length);
+        const previousMovie=(contextTurn?.movie??(contextTurn?.recommendations?.length===1?contextTurn.recommendations[0].movie:undefined)) as MovieSearchResult|undefined;
+        let result:AiResult&{movie?:MovieSearchResult;recommendations?:MovieRecommendation[]};
+        if(!searchImages.length&&isMovieRecommendation(text)) {
+            result=await recommendMovies(text,history,onDelta);
+        } else if(!searchImages.length&&isNamedMovieSearch(text)) {
+            result=await findMovieFromText(text,onDelta);
+        } else if(!searchImages.length&&previousMovie&&isUzbekMovieRequest(text)) {
             const uzbekLinks=await findUzbekMovieLinks(previousMovie);
-            result={text:uzbekLookupReply(text,uzbekLinks.length>0),model:'uzbek-movie-search',movie:{...previousMovie,uzbekLinks,linksOnly:true}};
+            result={text:uzbekLookupReply(text,uzbekLinks.length>0),model:'uzbek-movie-search',movie:{...previousMovie,titleUz:uzbekReleaseTitle(uzbekLinks)??previousMovie.titleUz,uzbekLinks,linksOnly:true}};
             onDelta?.(result.text);
         } else result = searchImages.length
             ? await findMovieFromImages(text, searchImages, onDelta)
             : await chatWithGemma({ text, history }, onDelta);
-        const characterImages = result.movie?.linksOnly?[]:await findCharacterImages(result.text, result.movie);
+        if(result.recommendations)await Promise.all(result.recommendations.map(async item=>{
+            item.characterImages=await findCharacterImages(item.text,item.movie).catch(()=>[]);
+        }));
+        const characterImages = result.movie?.linksOnly||result.recommendations?[]:await findCharacterImages(result.text, result.movie);
         if ('movie' in result && result.movie) for (const portrait of characterImages) {
             if (portrait.sourceUrl && !result.movie.sources.some(source=>source.url===portrait.sourceUrl))
                 result.movie.sources.push({title:portrait.label,url:portrait.sourceUrl});
         }
         await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken }, {
-            $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages,
-                catalogDispatch: isCatalogEligible(result.movie) ? 'pending' : 'none' },
+            $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages,recommendations:result.recommendations??[],
+                catalogDispatch: isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie)) ? 'pending' : 'none' },
         });
         // The outbox flag is committed with the answer. Worker/R2/AI failures
         // cannot change a completed chat turn into a failed generation.
-        if (isCatalogEligible(result.movie)) notifyCatalogWorker();
+        if (isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie))) notifyCatalogWorker();
     }
     catch (error) {
         await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken, status: 'processing' }, { $set: { status: 'failed' } });

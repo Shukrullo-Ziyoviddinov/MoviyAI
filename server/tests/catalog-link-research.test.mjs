@@ -24,8 +24,17 @@ test('actual trailer and verified movie-page URLs map to distinct fields; relate
   const found = [{ title: 'Misol 2', site: 'asilmedia.org', url: 'https://asilmedia.org/123-example-2.html' }];
   const result = await links({ video: trailer, found })(draft(), AbortSignal.timeout(1000));
   assert.equal(result.movie.trailers, trailer.url); assert.equal(result.movie.watchUrl, found[0].url); assert.deepEqual(result.confirmedUnavailable, []);
+  assert.equal(result.movie.title.uz,'Misol 2');assert.equal(result.research.titleUz,'Misol 2');
   const related = await links({ video: { ...trailer, kind: 'related' } })(draft(), AbortSignal.timeout(1000));
   assert.equal(related.movie.trailers, null); assert.ok(related.confirmedUnavailable.includes('trailers'));
+});
+
+test('verified release overrides a translated fallback; absent releases preserve fallback',async()=>{
+ const input=draft();assert.equal(input.movie.title.uz,'Misol 2');
+ input.movie.title.uz='Invented translation';
+ const result=await links()(input,AbortSignal.timeout(1000));assert.equal(result.movie.title.uz,'Invented translation');
+ const found=[{title:'Haqiqiy nom 2 / Example 2 2014 Uzbek tilida',site:'asilmedia.org',url:'https://asilmedia.org/123-example-2.html'}];
+ const verified=await links({found})(input,AbortSignal.timeout(1000));assert.equal(verified.movie.title.uz,'Haqiqiy nom 2');
 });
 test('franchise research retains only explicitly cited member titles/years and checkpoints avoid repeated paid queries', async () => {
   let queries = 0;

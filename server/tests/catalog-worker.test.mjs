@@ -42,6 +42,14 @@ test('crash after durable enqueue but before outbox acknowledgement retries with
   await dispatcher.dispatch(); assert.equal(records.size, 1); assert.equal([...records.values()][0].status, 'completed'); assert.equal(turns[0].state, 'queued');
 });
 
+test('multiple recommendations enqueue independent stable jobs and survive partial dispatch failure',async()=>{
+ const turn={id:'multi',conversationId:'c',requestId:'r',movie:null,portraits:[],recommendations:[{movie,characterImages:[]},{movie:{...movie,title:'Another'},characterImages:[]}]};
+ const records=new Map();let fail=true,queued=false;
+ const dispatcher=createCatalogDispatcher({pending:async()=>queued?[]:[turn],enqueue:async(id,input)=>{if(!records.has(id))records.set(id,input);if(fail&&records.size===2){fail=false;throw Error('crash');}},markQueued:async()=>{queued=true;}});
+ await assert.rejects(()=>dispatcher.dispatch(),/crash/);await dispatcher.dispatch();
+ assert.equal(records.size,2);assert.equal(queued,true);assert.deepEqual([...records.values()].map(item=>item.movie.title),['Example','Another']);
+});
+
 test('conversation deletion preserves every pending public movie job independently of chat rows', async () => {
   const turns = Array.from({ length: 55 }, (_, index) => ({ id: String(index), conversationId: 'c', userId: 'u', requestId: String(index), movie, portraits: [], state: 'pending' })); const records = new Map();
   const dispatcher = createCatalogDispatcher({ pending: async (scope, limit) => turns.filter(turn => turn.state === 'pending' && turn.userId === scope.userId && turn.conversationId === scope.conversationId).slice(0, limit),

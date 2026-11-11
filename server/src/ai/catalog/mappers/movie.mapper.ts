@@ -1,6 +1,6 @@
 import type { MovieSearchResult } from '../../types/movie-search.types.js';
 import type { MovieFact } from '../../types/movie-dossier.types.js';
-import { uzbekDetailUrl } from '../../services/uzbek-movie.service.js';
+import { uzbekDetailUrl, uzbekReleaseTitle } from '../../services/uzbek-movie.service.js';
 import { catalogActorPayloadSchema, catalogMoviePayloadSchema, isPublicHttpsUrl } from '../validators/catalog.validator.js';
 import type { CatalogAssessment, CatalogDraft, CatalogIssue, CatalogLocale, CatalogLocalizedFacts, CatalogResolvedReferences } from '../types/catalog.types.js';
 import { identityIds } from '../utils/catalog-identity.js';
@@ -46,7 +46,7 @@ export function prepareCatalogDraft(result: MovieSearchResult, options: {
     language: options.language,
     movie: {
       categoryName: references?.categoryName ?? null,
-      title: { uz: sourced(options.localized?.uz?.title) ?? (result.titleUz?.trim() || null), ru: sourced(options.localized?.ru?.title) ?? (result.titleRu?.trim() || null) },
+      title: { uz: uzbekReleaseTitle(result.uzbekLinks??[]) ?? sourced(options.localized?.uz?.title) ?? result.titleUz?.trim() ?? null, ru: sourced(options.localized?.ru?.title) ?? (result.titleRu?.trim() || null) },
       homeImgPoster: null,
       ratingImdb: sourced(details?.imdb), ratingKinopoisk: sourced(details?.kinopoisk),
       genre: { uz: references?.genres.map(genre => genre.name) ?? [], ru: references?.genres.map(genre => genre.nameRu) ?? [] },
