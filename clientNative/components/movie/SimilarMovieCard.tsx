@@ -1,3 +1,4 @@
+import {displayMovieRating} from '@/src/utils/movieDisplay';
 import { displayMovieTitle } from "@/src/utils/movieDisplay";
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { BookmarkIcon } from '@/components/icons';
@@ -107,9 +108,9 @@ export function SimilarMovieCard({
             </Pressable>
 
             <View style={styles.ratingBadge}>
-              <Text style={styles.ratingLabel}>IMDb</Text>
+              <Text style={styles.ratingLabel}>{displayMovieRating(movie).label}</Text>
               <Text style={styles.ratingValue}>
-                {movie.ratingImdb == null ? "\u2014" : Number(movie.ratingImdb).toFixed(1)}
+                {displayMovieRating(movie).value?.toFixed(1)??'\u2014'}
               </Text>
             </View>
           </>

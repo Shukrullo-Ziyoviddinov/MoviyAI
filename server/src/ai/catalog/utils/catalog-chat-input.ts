@@ -13,8 +13,8 @@ export function catalogJobId(conversationId: string, requestId: string): string 
   return createHash('sha256').update(JSON.stringify(['catalog-v1', conversationId, requestId])).digest('hex');
 }
 export function catalogChatInput(movie: MovieSearchResult, portraits: Array<{ label: string; imageUrl: string; sourceUrl: string | null; kind?: string }>): CatalogChatInput {
-  const { title, titleUz, titleRu, year, confidence, sources, identitySources, posters, details, trailer, uzbekLinks, language } = movie;
-  return { movie: structuredClone({ title, titleUz, titleRu, year, confidence, sources, identitySources, posters, details, trailer, uzbekLinks, language }), language: movie.language ?? 'uz',
+  const { title, titleUz, titleRu, year, confidence, sources, identitySources, posters, details, trailer, uzbekLinks, language,sourceResearchComplete } = movie;
+  return { movie: structuredClone({ title, titleUz, titleRu, year, confidence, sources, identitySources, posters, details, trailer, uzbekLinks, language,sourceResearchComplete }), language: movie.language ?? 'uz',
     actorImages: portraits.filter(image => image.kind === 'actor' && isPublicHttpsUrl(image.imageUrl))
       .slice(0, 5).map(({ label, imageUrl, sourceUrl }) => ({ label, imageUrl, sourceUrl: sourceUrl && isPublicHttpsUrl(sourceUrl) ? sourceUrl : null })) };
 }

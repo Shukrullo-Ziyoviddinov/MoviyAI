@@ -1,6 +1,7 @@
 export interface ChatImageInput { mimeType: string; data: Buffer }
 export interface ChatImageUrl { mimeType: string; fileUri: string }
 export interface MovieSearchResult {
+  sourceResearchComplete?:boolean;
   catalogId?: number;
   catalogPortraits?: import('../services/character-image.service.js').CharacterImage[];
   /** Evidence for the exact film identity; presentation image links are not identity evidence. */

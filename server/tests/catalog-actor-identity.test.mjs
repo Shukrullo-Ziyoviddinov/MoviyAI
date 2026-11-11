@@ -39,7 +39,7 @@ test('actual enrichment accepts sourced non-IMDb biography/role evidence and ret
  const movie={title:'Sokin tong',titleUz:'Sokin tong',titleRu:'Sokin tong RU',year:2020,confidence:'high',sources:[sources[1]],posters:[{url:'https://images.example/poster.jpg',sourceUrl:null}],details};
  const draft=prepareCatalogDraft(movie,{language:'uz',localized:{ru:{synopsis:fact('Plot RU'),country:fact('USA'),director:fact('Director')}}});
  const chat={movie,language:'uz',actorImages:[{label:input.name,imageUrl:'https://images.example/actor.jpg',sourceUrl:sources[0].url}]};
- const enrich=createCatalogEnricher({matcher:{actor:async value=>matchActorCandidates(value,[])},searchWeb:async()=>({organic:sources.map(source=>({title:source.title,link:source.url,snippet:source.snippet}))}),searchImages:async()=>({images:[]}),
+ const enrich=createCatalogEnricher({readSource:async()=>null,matcher:{actor:async value=>matchActorCandidates(value,[])},searchWeb:async()=>({organic:sources.map(source=>({title:source.title,link:source.url,snippet:source.snippet}))}),searchImages:async()=>({images:[]}),
   generate:async()=>({samePerson:true,sameRole:true,personIndex:0,creditSourceIndexes:[0,1],creditedRole:{value:'Akmal',sourceIndexes:[0,1]},biographyUz:{value:'Sourced UZ biography',sourceIndexes:[0]},biographyRu:{value:'Sourced RU biography',sourceIndexes:[0]},birthDate:{value:null,sourceIndexes:[]}}),
  });
  const result=await enrich(draft,chat,AbortSignal.timeout(1000),async()=>{});const actor=result.actors[0];

@@ -8,6 +8,7 @@ import type { CatalogDraft } from '../types/catalog.types.js';
 import type { CatalogStructuredGenerator } from './catalog-enrichment.service.js';
 import type { MovieSource } from '../../types/movie-dossier.types.js';
 import { catalogOperation } from '../utils/catalog-diagnostics.js';
+import {readMovieSource} from '../../services/movie-source-research.service.js';
 
 const indexes = z.array(z.number().int().min(0)).max(5);
 const schema = z.object({ seriesName: z.string().max(200).nullable(), sourceIndexes: indexes,
@@ -21,7 +22,7 @@ const generate: CatalogStructuredGenerator = async (format, payload, instruction
   } }); return JSON.parse(response.text ?? '');
 };
 function at(indices: number[], sources: MovieSource[]): MovieSource[] { return [...new Set(indices)].flatMap(index => sources[index] ? [sources[index]] : []); }
-export function createCatalogFranchiseResearch(deps = { searchWeb, generate }) {
+export function createCatalogFranchiseResearch(deps:{searchWeb:typeof searchWeb;generate:CatalogStructuredGenerator;readPage?:typeof readMovieSource} = { searchWeb, generate,readPage:readMovieSource }) {
   const raw=deps;
   deps={...raw,
     searchWeb:(...args)=>catalogOperation({provider:'serper',stage:'franchise-search'},()=>raw.searchWeb(...args)),
@@ -31,8 +32,17 @@ export function createCatalogFranchiseResearch(deps = { searchWeb, generate }) {
     if (input.franchiseCandidates !== undefined) return input;
     signal.throwIfAborted();
     const draft = structuredClone(input);
-    const search = await deps.searchWeb(`${draft.identity.originalTitle} ${draft.identity.year ?? ''} film series franchise sequels prequels`, { num: 5 });
-    const sources = (search.organic ?? []).flatMap(item => isPublicHttpsUrl(item.link) ? [{ title: item.title, url: item.link, snippet: (item.snippet ?? '').slice(0, 2000) }] : []);
+    const sources:MovieSource[]=[];
+    // A film page often explicitly says "sequel to ..." even when the indexed
+    // search snippet omits that relationship or the first film's release year.
+    if(deps.readPage){
+      const page=(draft.research.identitySources??draft.research.sources).find(source=>{try{return /(^|\.)wikipedia.org$/.test(new URL(source.url).hostname);}catch{return false;}});
+      if(page){const full=await deps.readPage(page,signal).catch(()=>null);if(full)sources.push(full);}
+    }
+    if(!sources.length){
+      const search = await deps.searchWeb(`${draft.identity.originalTitle} ${draft.identity.year ?? ''} film series franchise sequels prequels`, { num: 5 });
+      sources.push(...(search.organic ?? []).flatMap(item => isPublicHttpsUrl(item.link) ? [{ title: item.title, url: item.link, snippet: (item.snippet ?? '').slice(0, 2000) }] : []));
+    }
     draft.franchiseCandidates = [];
     if (!sources.length) return draft;
     const raw = schema.parse(await deps.generate(schema, { film: draft.identity, sources: sources.map((source, index) => ({ index, ...source })) },
@@ -41,7 +51,7 @@ export function createCatalogFranchiseResearch(deps = { searchWeb, generate }) {
     const current = catalogNameKey(draft.identity.originalTitle), series = catalogNameKey(raw.seriesName);
     const relationSources = at(raw.sourceIndexes, sources).filter(source => {
       const text = catalogNameKey(source.title + ' ' + source.snippet);
-      return text.includes(current) && text.includes(series) && /film series|franchise|серия|франшиза|filmlar seriyasi|kino turkumi/i.test(source.title + ' ' + source.snippet);
+      return text.includes(current) && text.includes(series) && /film series|franchise|trilogy|sequel to|prequel to|серия|франшиза|трилог|продолжени|filmlar seriyasi|kino turkumi/i.test(source.title + ' ' + source.snippet);
     });
     if (!relationSources.length) return draft;
     for (const member of raw.members) {

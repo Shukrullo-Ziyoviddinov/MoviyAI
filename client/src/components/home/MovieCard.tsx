@@ -1,3 +1,4 @@
+import {displayMovieRating} from '@/utils/movieDisplay';
 "use client";
 
 import { useState } from "react";
@@ -69,9 +70,9 @@ export function MovieCard({
           ) : null}
           {showChrome ? (
             <span className="absolute right-2 bottom-2 flex items-center gap-1 rounded-lg bg-black/[0.72] px-2 py-1">
-              <span className="text-[10px] font-bold text-[#F5C518] md:text-[11px]">IMDb</span>
+              <span className="text-[10px] font-bold text-[#F5C518] md:text-[11px]">{displayMovieRating(movie).label}</span>
               <span className="text-[12px] font-bold text-white md:text-[13px]">
-                {(movie.ratingImdb == null ? "\u2014" : Number(movie.ratingImdb).toFixed(1))}
+                {(displayMovieRating(movie).value?.toFixed(1)??'\u2014')}
               </span>
             </span>
           ) : null}

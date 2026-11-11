@@ -30,7 +30,7 @@ function harness({ person = true, credit = true } = {}) {
       biographyUz: { value: 'An Actor Example filmida o‘ynagan.', sourceIndexes: [0] }, biographyRu: { value: 'An Actor starred in Example.', sourceIndexes: [1] }, birthDate: { value: '1980-01-01', sourceIndexes: [0] } };
     return translated;
   };
-  const enrich = createCatalogEnricher({ generate, searchWeb: async () => ({ organic: evidence }), searchImages: async () => { imageCalls++; return { images: [] }; }, matcher: { actor: notFound, movie: notFound } });
+  const enrich = createCatalogEnricher({readSource:async()=>null, generate, searchWeb: async () => ({ organic: evidence }), searchImages: async () => { imageCalls++; return { images: [] }; }, matcher: { actor: notFound, movie: notFound } });
   return { enrich, checkpoint: async () => { checkpoints++; }, models: () => modelCalls, images: () => imageCalls, checkpoints: () => checkpoints };
 }
 
@@ -46,7 +46,7 @@ test('background enrichment adds sourced translations/person identity/biographie
 
 test('real actor enrichment boundaries distinguish Google 503 from Serper 503',async()=>{
  for(const provider of ['google','serper']){
-  const input=fixture();const enrich=createCatalogEnricher({
+  const input=fixture();const enrich=createCatalogEnricher({readSource:async()=>null,
    generate:async(_schema,payload)=>{if(payload.actor)throw Object.assign(Error('SECRET prompt'),{status:503});return translated;},
    searchWeb:async()=>{if(provider==='serper')throw Object.assign(Error('SECRET API key'),{status:503});return {organic:[]};},
    searchImages:async()=>({images:[]}),matcher:{actor:notFound,movie:notFound},
@@ -67,7 +67,7 @@ test('actor research obtains film credits separately when biography snippets omi
  const input=fixture();const queries=[];
  const profile={title:'An Actor - IMDb',link:'https://www.imdb.com/name/nm1234567/',snippet:'An Actor is an actor, born January 1, 1980.'};
  const credit={title:'Example (2014)',link:source.url,snippet:'With An Actor as Hero.'};
- const enrich=createCatalogEnricher({
+ const enrich=createCatalogEnricher({readSource:async()=>null,
   searchWeb:async query=>{queries.push(query);return {organic:query.includes(' cast ')?[credit]:[profile]};},
   searchImages:async()=>({images:[]}),matcher:{actor:notFound,movie:notFound},
   generate:async(_schema,payload)=>payload.actor?{samePerson:true,personIndex:0,creditSourceIndexes:[1],biographyUz:{value:'Sourced biography UZ',sourceIndexes:[0]},biographyRu:{value:'Sourced biography RU',sourceIndexes:[0]},birthDate:{value:'1980-01-01',sourceIndexes:[0]}}:translated,
@@ -80,7 +80,7 @@ test('actor research obtains film credits separately when biography snippets omi
 test('translation output cannot fill source facts that remain unverified after research', async () => {
   const input = fixture(); input.movie.details.countries = { value: null, sources: [] };
   const raw = Object.fromEntries(Object.keys(emptyDossier()).filter(key => key !== 'checkedAt').map(key => [key, ['cast', 'characters'].includes(key) ? [] : { value: null, sourceIndexes: [] }]));
-  const enrich = createCatalogEnricher({ generate: async (_schema, payload) => payload.sources ? { dossier: raw, year: { value: null, sourceIndexes: [] } } : translated,
+  const enrich = createCatalogEnricher({readSource:async()=>null, generate: async (_schema, payload) => payload.sources ? { dossier: raw, year: { value: null, sourceIndexes: [] } } : translated,
     searchWeb: async () => ({ organic: [] }), searchImages: async () => ({ images: [] }), matcher: { actor: async () => ({ status: 'existing', id: 9001, method: 'external-id' }), movie: notFound } });
   const result = await enrich(prepareCatalogDraft(input.movie, { language: 'uz' }), input, AbortSignal.timeout(1000), async () => {});
   assert.equal(result.movie.description.uz.country, null); assert.equal(result.movie.description.ru.country, null); assert.equal(result.research.details.countries.value, null);
@@ -88,16 +88,36 @@ test('translation output cannot fill source facts that remain unverified after r
 test('a previously unknown year is filled only when the researched source explicitly supports it',async()=>{
  const input=fixture();input.movie.year=null;
  const raw=Object.fromEntries(Object.keys(emptyDossier()).filter(key=>key!=='checkedAt').map(key=>[key,['cast','characters'].includes(key)?[]:{value:null,sourceIndexes:[]} ]));
- const enrich=createCatalogEnricher({generate:async(_schema,payload)=>payload.sources?{dossier:raw,year:{value:2014,sourceIndexes:[0]}}:translated,
+ const enrich=createCatalogEnricher({readSource:async()=>null,generate:async(_schema,payload)=>payload.sources?{dossier:raw,year:{value:2014,sourceIndexes:[0]}}:translated,
   searchWeb:async()=>({organic:[{title:'Example (2014)',link:source.url,snippet:'Example was released in 2014.'}]}),searchImages:async()=>({images:[]}),matcher:{actor:async()=>({status:'existing',id:9001,method:'external-id'}),movie:notFound}});
  const result=await enrich(prepareCatalogDraft(input.movie,{language:'uz'}),input,AbortSignal.timeout(1000),async()=>{});
  assert.equal(result.identity.year,2014);assert.equal(result.movie.specs.year,2014);assert.equal(result.movie.description.uz.year,2014);
 });
 test('actor backfill does not repeat missing movie ratings, translations or poster research',async()=>{
  const input=fixture();input.movie.details.imdb={value:null,sources:[]};input.movie.details.kinopoisk={value:null,sources:[]};input.movie.year=null;input.movie.posters=[];
- const enrich=createCatalogEnricher({generate:async()=>{throw Error('unrelated movie research');},searchWeb:async()=>{throw Error('unrelated web search');},searchImages:async()=>{throw Error('unrelated poster search');},references:async()=>{throw Error('unrelated reference lookup');},matcher:{actor:async()=>({status:'existing',id:9001,method:'external-id'}),movie:notFound}});
+ const enrich=createCatalogEnricher({readSource:async()=>null,generate:async()=>{throw Error('unrelated movie research');},searchWeb:async()=>{throw Error('unrelated web search');},searchImages:async()=>{throw Error('unrelated poster search');},references:async()=>{throw Error('unrelated reference lookup');},matcher:{actor:async()=>({status:'existing',id:9001,method:'external-id'}),movie:notFound}});
  const result=await enrich(prepareCatalogDraft(input.movie,{language:'uz'}),input,AbortSignal.timeout(1000),async()=>{},true);
  assert.equal(result.actors[0].existingId,9001);assert.equal(result.movie.ratingImdb,null);assert.equal(result.movie.specs.year,null);
+});
+
+test('catalogue save reuses completed chat source research instead of repeating paid fact searches',async()=>{
+ const input=fixture();input.movie.sourceResearchComplete=true;input.movie.details.imdb={value:null,sources:[]};input.movie.titleRu='Example RU';
+ const draft=prepareCatalogDraft(input.movie,{language:'uz'});
+ for(const locale of ['uz','ru'])Object.assign(draft.movie.description[locale],{text:'Known plot',country:'USA',director:'Known director'});
+ const enrich=createCatalogEnricher({generate:async()=>{throw Error('repeated fact extraction');},searchWeb:async()=>{throw Error('repeated paid search');},searchImages:async()=>{throw Error('unexpected poster search');},matcher:{actor:async()=>({status:'existing',id:9001,method:'external-id'}),movie:notFound}});
+ const result=await enrich(draft,input,AbortSignal.timeout(1000),async()=>{});
+ assert.equal(result.movie.ratingImdb,null);assert.equal(result.actors[0].existingId,9001);
+});
+
+test('existing actor is reused after one official profile identity check without new biography or image research',async()=>{
+ const input=fixture();input.movie.titleRu='RU';input.movie.sourceResearchComplete=true;
+ const draft=prepareCatalogDraft(input.movie,{language:'uz'});for(const locale of ['uz','ru'])Object.assign(draft.movie.description[locale],{text:'Plot',country:'USA',director:'Director'});
+ let queries=0;
+ const enrich=createCatalogEnricher({generate:async()=>{throw Error('must reuse existing biography');},searchImages:async()=>{throw Error('must reuse existing image');},
+  searchWeb:async()=>{queries++;return {organic:[{title:'An Actor - IMDb',link:'https://www.imdb.com/name/nm1234567/',snippet:'An Actor biography.'}]};},
+  matcher:{movie:notFound,actor:async actor=>actor.imdbId==='nm1234567'?{status:'existing',id:9001,method:'external-id'}:{status:'needs-research',reason:'Needs person ID',candidateIds:[9001]}}});
+ const result=await enrich(draft,input,AbortSignal.timeout(1000),async()=>{});
+ assert.equal(result.actors[0].existingId,9001);assert.equal(queries,1);
 });
 
 test('unknown country is retained as null without substituting another country or preventing the save', async () => {

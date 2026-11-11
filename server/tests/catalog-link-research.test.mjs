@@ -49,3 +49,10 @@ test('a different franchise or a shared title prefix alone never establishes a f
     generate: async () => ({ seriesName: 'Unrelated', sourceIndexes: [0], members: [{ title: 'Another Movie', year: 2010, sourceIndexes: [0] }] }) });
   assert.deepEqual((await research(draft(), AbortSignal.timeout(1000))).franchiseCandidates, []);
 });
+
+test('explicit sequel relation on the existing full film page needs no new paid search',async()=>{
+ const input=draft();input.research.identitySources=[{title:'Example 2',url:'https://en.wikipedia.org/wiki/Example_2'}];
+ const research=createCatalogFranchiseResearch({searchWeb:async()=>{throw Error('unnecessary search');},readPage:async source=>({...source,snippet:'Example 2 (2014) is a sequel to Example (2010), part of the Example trilogy.'}),
+  generate:async()=>({seriesName:'Example',sourceIndexes:[0],members:[{title:'Example',year:2010,sourceIndexes:[0]}]})});
+ const result=await research(input,AbortSignal.timeout(1000));assert.equal(result.franchiseCandidates[0].film.originalTitle,'Example');
+});

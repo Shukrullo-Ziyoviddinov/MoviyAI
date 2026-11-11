@@ -303,6 +303,15 @@ the turn after every eligible result is durably enqueued. Normal catalogue ident
 checks still deduplicate films already in the database. Web and native reopen these
 results as independent movie messages rather than combining their source/media blocks.
 
+Movie fact research reads bounded public IMDb, Wikipedia and TMDB movie pages
+sequentially, then Kinopoisk when its score/age classification is still missing.
+Known source URLs are reused; discovery uses at most one indexed lookup per source.
+Only missing facts are merged, and research stops once all requested fields are
+supported. TMDB is read as a public page; no authenticated TMDB API is configured.
+The chat result's `sourceResearchComplete` checkpoint prevents immediate repetition
+of the same optional fact searches during catalogue storage. Unavailable source
+pages/facts remain unknown and do not prevent saving an identified movie.
+
 Actor enrichment searches biography, official person profile and exact film
 credits separately. If profile/credit evidence is missing, it performs bounded
 Kinopoisk-person/IMDb-film searches before generating sourced biographies.

@@ -1,3 +1,4 @@
+import {displayMovieRating} from '@/utils/movieDisplay';
 "use client";
 import { displayMovieTitle } from "@/utils/movieDisplay";
 
@@ -40,8 +41,8 @@ export function SimilarMovieCard({ movie, language }: { movie: Movie; language: 
               <BookmarkIcon size={20} color="#FFFFFF" />
             </span>
             <span className="absolute right-2 bottom-2 flex items-center gap-1 rounded-lg bg-black/[0.72] px-2 py-1">
-              <span className="text-[10px] font-bold text-[#F5C518]">IMDb</span>
-              <span className="text-[12px] font-bold text-white">{(movie.ratingImdb == null ? "\u2014" : Number(movie.ratingImdb).toFixed(1))}</span>
+              <span className="text-[10px] font-bold text-[#F5C518]">{displayMovieRating(movie).label}</span>
+              <span className="text-[12px] font-bold text-white">{(displayMovieRating(movie).value?.toFixed(1)??'\u2014')}</span>
             </span>
           </>
         ) : null}
