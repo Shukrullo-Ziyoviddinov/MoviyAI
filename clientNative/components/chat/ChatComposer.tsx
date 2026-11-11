@@ -30,13 +30,13 @@ export function ChatComposer() {
   const clearMedia = useComposerStore((state) => state.clearMedia);
   const [text, setText] = useState('');
 
-  const canSend = !pinningId && !deletingId && !loading && !sending && !error && !pending && selectedMedia.every(item => item.type === 'image') && (text.trim().length > 0 || selectedMedia.length > 0);
+  const canSend = !pinningId && !deletingId && !loading && !sending && !error && !pending && (!selectedMedia.some(item=>item.type==='video')||selectedMedia.length===1) && (text.trim().length > 0 || selectedMedia.length > 0);
 
   const handleSend = () => {
     if (!canSend) return;
 
     const sent = sendMessage({
-      text: text.trim() || t('chat.imagePrompt'),
+      text: text.trim() || t(selectedMedia.some(item=>item.type==='video')?'chat.videoPrompt':'chat.imagePrompt'),
       media: selectedMedia,
     });
     if (!sent) return;

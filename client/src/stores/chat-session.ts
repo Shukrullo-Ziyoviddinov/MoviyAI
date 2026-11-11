@@ -43,7 +43,7 @@ export function createChatSession(storage: Storage) {
         const failed = chat.turns.find(turn => turn.status === 'failed');
         emit({ streamingText: '', activeId: chat.id, messages: chat.turns.flatMap(turn => {
                 const messages: ChatMessage[] = [];
-                const media = (turn.images ?? []).map(image => ({ id: image.id, type: 'image' as const, uri: api.chatMediaUrl(image.path), stored: true }));
+                const media = [...(turn.images??[]),...(turn.videos??[])].map(image => ({ id: image.id, type: image.type, uri: api.chatMediaUrl(image.path), stored: true }));
                 if (media.length)
                     messages.push({ id: turn.requestId + '-media', kind: 'media', items: media, createdAt: Date.parse(turn.createdAt) });
                 if (turn.text)
@@ -54,7 +54,7 @@ export function createChatSession(storage: Storage) {
                     messages.push({id:turn.requestId+'-recommendation-'+index,kind:'text',role:'model',text:item.text,movie:item.movie,characterImages:item.characterImages,createdAt:Date.parse(turn.createdAt)+index+2});
                 return messages;
             }), sending: chat.turns.some(turn => turn.status === 'processing'),
-            pending: failed ? { conversationId: chat.id, requestId: failed.requestId, text: failed.text, media: (failed.images ?? []).map(image => ({ id: image.id, type: 'image' as const, uri: api.chatMediaUrl(image.path), stored: true })) } : null,
+            pending: failed ? { conversationId: chat.id, requestId: failed.requestId, text: failed.text, media: [...(failed.images??[]),...(failed.videos??[])].map(image => ({ id: image.id, type: image.type, uri: api.chatMediaUrl(image.path), stored: true })) } : null,
             error: failed ? 'Javob olinmadi. Qayta urinib ko\'ring.' : null });
     }
     async function refreshList(version: number) {
@@ -206,19 +206,16 @@ export function createChatSession(storage: Storage) {
             emit({ error: 'Hisobingizga kiring.' });
             return false;
         }
-        if (media.some(item => item.type !== 'image')) {
-            emit({ error: 'Video qidiruvi keyingi bosqichda ulanadi. Rasm yuboring.' });
-            return false;
+        const video=media.find(item=>item.type==='video');
+        if(video){
+            if(media.length!==1||video.fileSize!=null&&video.fileSize>80*1024*1024||video.durationSeconds!=null&&(!Number.isFinite(video.durationSeconds)||video.durationSeconds<=0||video.durationSeconds>180)||video.mimeType&&!['video/mp4','video/quicktime','video/webm'].includes(video.mimeType)){
+                emit({error:'Bitta MP4, MOV yoki WebM video yuboring: 3 daqiqa va 80 MB gacha.'});return false;
+            }
+        }else{
+            if(media.some(item=>item.mimeType&&!['image/jpeg','image/png','image/webp'].includes(item.mimeType))){emit({error:'JPEG, PNG yoki WebP rasm yuboring.'});return false;}
+            if(media.length>3||media.some(item=>(item.fileSize??0)>4*1024*1024)||media.reduce((sum,item)=>sum+(item.fileSize??0),0)>8*1024*1024){emit({error:'3 tagacha rasm yuboring: har biri 4 MB, jami 8 MB gacha.'});return false;}
         }
-        if (media.some(item => item.mimeType && !['image/jpeg', 'image/png', 'image/webp'].includes(item.mimeType))) {
-            emit({ error: 'JPEG, PNG yoki WebP rasm yuboring.' });
-            return false;
-        }
-        if (media.length > 3 || media.some(item => (item.fileSize ?? 0) > 4 * 1024 * 1024) || media.reduce((sum, item) => sum + (item.fileSize ?? 0), 0) > 8 * 1024 * 1024) {
-            emit({ error: '3 tagacha rasm yuboring: har biri 4 MB, jami 8 MB gacha.' });
-            return false;
-        }
-        const value = text?.trim() || (media.length ? 'Rasmdagi kinoni toping.' : '');
+        const value = text?.trim() || (media.length ? video?'Videodagi kinoni toping.':'Rasmdagi kinoni toping.' : '');
         if (!value)
             return false;
         const payload = { conversationId: state.activeId ?? storage.uuid(), requestId: storage.uuid(), text: value, media };
@@ -296,7 +293,7 @@ export function createChatSession(storage: Storage) {
         try {
             const chat=await api.getChat(id);
             if(version!==revision || state.sending || state.activeId!==id)return;
-            const urls=new Map(chat.turns.flatMap(turn=>(turn.images ?? []).map(image=>[image.id,api.chatMediaUrl(image.path)] as const)));
+            const urls=new Map(chat.turns.flatMap(turn=>[...(turn.images??[]),...(turn.videos??[])].map(image=>[image.id,api.chatMediaUrl(image.path)] as const)));
             emit({messages:state.messages.map(message=>message.kind==='media'?{...message,items:message.items.map(item=>urls.has(item.id)?{...item,uri:urls.get(item.id)!}:item)}:message)});
         } catch { /* Retry link renewal on the next interval. */ }
     }

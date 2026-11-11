@@ -7,6 +7,8 @@ import {findUzbekMovieLinks,isUzbekMovieRequest,uzbekLookupReply,uzbekReleaseTit
 import { findMovieFromImages } from './image-movie.service.js';
 import { findMovieFromText, isNamedMovieSearch } from './text-movie.service.js';
 import { recommendMovies,isMovieRecommendation,type MovieRecommendation } from './movie-recommendation.service.js';
+import {resolveDirectVideo,chatVideoUrls} from './direct-video.service.js';
+import {findMovieFromVideo} from './video-movie.service.js';
 import { imageReferences, uploadChatImages, chatImageUrls, cleanupConversationImages } from './chat-image-storage.service.js';
 import { resolveDirectImages } from './direct-image.service.js';
 import { findCharacterImages } from './character-image.service.js';
@@ -49,6 +51,7 @@ export async function getConversation(userId: string, id: string) {
         turns: await Promise.all(turns.map(async turn => ({
             requestId: turn.requestId, text: turn.text, answer: turn.answer,
             images: (await chatImageUrls(userId, id, turn.requestId, turn.images)).map((image, index) => ({ id: `${turn.requestId}-${index}`, type: 'image' as const, path: image.fileUri })),
+            videos:(await chatVideoUrls(userId,id,turn.requestId,turn.videos??[])).map((video,index)=>({id:`${turn.requestId}-video-${index}`,type:'video' as const,path:video.fileUri,duration:video.durationSeconds})),
             movie: turn.movie ?? null,
             characterImages: turn.characterImages ?? [],
             recommendations: turn.recommendations??[],
@@ -57,7 +60,8 @@ export async function getConversation(userId: string, id: string) {
         }))),
     };
 }
-export async function sendConversationMessage(userId: string, id: string, requestId: string, text: string, onDelta?: (text: string) => void, uploadedImages: ChatImageInput[] = [], directImages = false) {
+export async function sendConversationMessage(userId: string, id: string, requestId: string, text: string, onDelta?: (text: string) => void, uploadedImages: ChatImageInput[] = [], directImages = false,directVideo=false) {
+    if(directVideo&&(directImages||uploadedImages.length))throw new ConversationError('Send one video or images separately',400);
     const existing = await ChatTurn.findOne({ userId, conversationId: id, requestId }).lean();
     if (existing && existing.text !== text)
         throw new ConversationError('Request ID already used for another message', 409);
@@ -89,9 +93,11 @@ export async function sendConversationMessage(userId: string, id: string, reques
             throw new ConversationError('Retry the unanswered message before sending another', 409);
         }
         const references = directImages ? await resolveDirectImages(userId, id, requestId) : imageReferences(id, requestId, images);
+        const videoReferences=directVideo?await resolveDirectVideo(userId,id,requestId):[];
+        if(directVideo&&replay&&JSON.stringify((replay.videos??[]).map(video=>video.hash))!==JSON.stringify(videoReferences.map(video=>video.hash)))throw new ConversationError('Attachments already selected',409);
         if (replay && directImages && JSON.stringify(replay.images.map(image => image.hash)) !== JSON.stringify(references.map(image => image.hash))) throw new ConversationError('Attachments already selected', 409);
         await ChatTurn.updateOne({ conversationId: id, userId, requestId }, {
-            $set: { status: 'processing', attemptToken: lockToken }, $setOnInsert: { text, images: references },
+            $set: { status: 'processing', attemptToken: lockToken }, $setOnInsert: { text, images: references,videos:videoReferences },
         }, { upsert: true });
         await Conversation.updateOne({ _id: id, userId, lockToken }, {
             $set: { title: locked.title === 'Yangi chat' ? text.slice(0, 100) : locked.title },
@@ -104,10 +110,14 @@ export async function sendConversationMessage(userId: string, id: string, reques
         ]);
         if (images.length) await uploadChatImages(id, requestId, images);
         const searchImages = await chatImageUrls(userId, id, requestId);
+        const searchVideos=await chatVideoUrls(userId,id,requestId);
+        if(searchVideos.length&&searchImages.length)throw new ConversationError('Send one video or images separately',400);
         const contextTurn=[...previous].reverse().find(turn=>turn.movie?.title||turn.recommendations?.length);
         const previousMovie=(contextTurn?.movie??(contextTurn?.recommendations?.length===1?contextTurn.recommendations[0].movie:undefined)) as MovieSearchResult|undefined;
         let result:AiResult&{movie?:MovieSearchResult;recommendations?:MovieRecommendation[]};
-        if(!searchImages.length&&isMovieRecommendation(text)) {
+        if(searchVideos.length){
+            result=await findMovieFromVideo(text,searchVideos,onDelta);
+        } else if(!searchImages.length&&isMovieRecommendation(text)) {
             result=await recommendMovies(text,history,onDelta);
         } else if(!searchImages.length&&isNamedMovieSearch(text)) {
             result=await findMovieFromText(text,onDelta);

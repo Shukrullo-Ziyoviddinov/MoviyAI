@@ -9,7 +9,6 @@ import * as conversations from '../controllers/conversation.controller.js';
 const router = Router();
 const allowedTypes = new Set([
   'image/jpeg', 'image/png', 'image/webp',
-  'video/mp4', 'video/mpeg', 'video/quicktime', 'video/webm',
 ]);
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -77,6 +76,7 @@ router.delete('/conversations/:id', requireAuth, asyncHandler(conversations.remo
 router.patch('/conversations/:id/pin', requireAuth, asyncHandler(conversations.pin));
 router.post('/conversations/:id/messages', requireAuth, aiLimit, parseChatImages, asyncHandler(conversations.send));
 router.post('/conversations/:id/uploads', requireAuth, aiLimit, asyncHandler(conversations.prepareImages));
+router.post('/conversations/:id/video-upload', requireAuth, aiLimit, asyncHandler(conversations.prepareVideo));
 router.get('/conversations/:id/messages/:requestId/images/:index', asyncHandler(conversations.image));
 
 export default router;

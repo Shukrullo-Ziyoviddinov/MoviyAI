@@ -39,7 +39,7 @@ type ChatContextValue = {
 const ChatContext = createContext<ChatContextValue | null>(null);
 
 function measureFile(type: "image" | "video", uri: string) {
-  return new Promise<{ width: number; height: number }>((resolve) => {
+  return new Promise<{ width: number; height: number;durationSeconds?:number }>((resolve) => {
     if (type === "image") {
       const image = new Image();
       image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
@@ -49,7 +49,7 @@ function measureFile(type: "image" | "video", uri: string) {
     }
     const video = document.createElement("video");
     video.preload = "metadata";
-    video.onloadedmetadata = () => resolve({ width: video.videoWidth, height: video.videoHeight });
+    video.onloadedmetadata = () => resolve({ width: video.videoWidth, height: video.videoHeight,durationSeconds:video.duration });
     video.onerror = () => resolve({ width: 0, height: 0 });
     video.src = uri;
   });
@@ -105,6 +105,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           file, mimeType: file.type, fileName: file.name, fileSize: file.size,
           width: size.width || undefined,
           height: size.height || undefined,
+          durationSeconds:size.durationSeconds,
         };
       })
     ).then((next) => {

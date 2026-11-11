@@ -168,7 +168,7 @@
     "guideGotIt": "Got it",
     "imagePrompt": "Find the movie in this image.",
     "imageLimit": "Up to 3 JPG, PNG or WebP images. 4 MB each, 8 MB total.",
-    "videoLater": "Video search is coming in the next stage.",
+    "videoLater": "One MP4, MOV or WebM video. Up to 3 minutes and 80 MB.",
     "movieTable": {
       "title": "Film details",
       "original": "Original title",
@@ -204,6 +204,7 @@
       "heading": "Watch in Uzbek",
       "note": "External sites. Language is stated by the site; playback availability is not guaranteed.",
       "open": "Open movie page"
-    }
+    },
+    "videoPrompt": "Find the movie in this video."
   }
 }

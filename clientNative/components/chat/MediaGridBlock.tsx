@@ -2,6 +2,7 @@ import type { ChatMediaItem } from '@/src/types/chat';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { Image } from 'expo-image';
+import {VideoPreview} from './VideoPreview';
 import { useEffect, useState } from 'react';
 import {
   Image as RNImage,
@@ -50,7 +51,7 @@ function MediaCell({
       style={[styles.cell, style]}
       onPress={() => open(item)}
     >
-      <Image source={{ uri: item.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+      {item.type==='video'?<VideoPreview uri={item.uri}/>:<Image source={{ uri: item.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />}
       {item.type === 'video' ? (
         <View style={styles.videoBadge}>
           <Text style={styles.videoBadgeText}>VIDEO</Text>

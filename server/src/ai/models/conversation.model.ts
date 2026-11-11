@@ -26,6 +26,7 @@ const turnSchema = new Schema({
         data: { type: Buffer, select: false },
     }, { _id: false })], default: [] },
     movie: { type: Schema.Types.Mixed, default: null },
+    videos:{type:[new Schema({key:{type:String,required:true},hash:{type:String,required:true},mimeType:{type:String,required:true},size:{type:Number,required:true},duration:{type:Number,required:true}},{_id:false})],default:[]},
     characterImages: { type: Schema.Types.Mixed, default: [] },
     recommendations: {type:Schema.Types.Mixed,default:[]},
     catalogDispatch: { type: String, enum: ['none', 'pending', 'queued'], default: 'none', select: false },

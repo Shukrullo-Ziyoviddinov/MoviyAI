@@ -25,6 +25,7 @@ export type ChatMediaItem = {
     mimeType?: string;
     fileName?: string;
     fileSize?: number;
+    durationSeconds?:number;
     file?: Blob;
     stored?: boolean;
     id: string;

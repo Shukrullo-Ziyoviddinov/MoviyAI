@@ -5,6 +5,8 @@ import * as service from '../services/conversation.service.js';
 import { AiServiceError } from '../services/google-ai.service.js';
 import { readChatImage } from '../services/chat-image.service.js';
 import { reserveImages } from '../services/direct-image.service.js';
+import {reserveVideo} from '../services/direct-video.service.js';
+import {CHAT_VIDEO} from '../config/chat-video.config.js';
 const idSchema = z.string().uuid();
 async function respond(res: Response, work: () => Promise<unknown>) {
     res.setHeader('Cache-Control', 'no-store');
@@ -52,7 +54,7 @@ export async function pin(req: Request, res: Response) {
 }
 export async function send(req: Request, res: Response) {
     const id = idSchema.safeParse(req.params.id);
-    const input = z.object({ requestId: idSchema, text: z.string().trim().min(1).max(20000), directImages: z.boolean().optional() }).strict().safeParse(req.body);
+    const input = z.object({ requestId: idSchema, text: z.string().trim().min(1).max(20000), directImages: z.boolean().optional(),directVideo:z.boolean().optional() }).strict().refine(value=>!(value.directImages&&value.directVideo)).safeParse(req.body);
     if (!id.success || !input.success) {
         res.status(400).json({ ok: false, error: 'Invalid chat input' });
         return;
@@ -85,7 +87,7 @@ export async function send(req: Request, res: Response) {
         res.once('close', () => clearInterval(heartbeat));
         try {
             const chat = await service.sendConversationMessage((req as AuthRequest).userId, id.data,
-                input.data.requestId, input.data.text, text => write({ type: 'delta', text }), images, input.data.directImages);
+                input.data.requestId, input.data.text, text => write({ type: 'delta', text }), images, input.data.directImages,input.data.directVideo);
             write({ type: 'done', data: chat });
         } catch (error) {
             const status = error instanceof service.ConversationError ? error.status
@@ -97,7 +99,7 @@ export async function send(req: Request, res: Response) {
         }
         return;
     }
-    await respond(res, () => service.sendConversationMessage((req as AuthRequest).userId, id.data, input.data.requestId, input.data.text, undefined, images, input.data.directImages));
+    await respond(res, () => service.sendConversationMessage((req as AuthRequest).userId, id.data, input.data.requestId, input.data.text, undefined, images, input.data.directImages,input.data.directVideo));
 }
 
 export async function image(req: Request, res: Response) {
@@ -124,4 +126,11 @@ export async function prepareImages(req: Request, res: Response) {
         const data = await reserveImages((req as AuthRequest).userId,id.data,input.data.requestId,input.data.images);
         res.set('Cache-Control','no-store').json({ok:true,data});
     } catch { res.status(409).json({ok:false,error:'Could not prepare upload. Reopen the chat and retry.'}); }
+}
+
+export async function prepareVideo(req:Request,res:Response){
+ const id=idSchema.safeParse(req.params.id),input=z.object({requestId:idSchema,video:z.object({hash:z.string().regex(/^[a-f0-9]{64}$/),size:z.number().int().min(16).max(CHAT_VIDEO.maxBytes),mimeType:z.enum(CHAT_VIDEO.mimeTypes)}).strict()}).strict().safeParse(req.body);
+ if(!id.success||!input.success){res.status(400).json({ok:false,error:'Send one MP4, MOV or WebM video, up to 3 minutes and 80 MB'});return;}
+ try{res.set('Cache-Control','no-store').json({ok:true,data:await reserveVideo((req as AuthRequest).userId,id.data,input.data.requestId,input.data.video)});}
+ catch{res.status(409).json({ok:false,error:'Could not prepare video upload. Reopen chat and retry.'});}
 }

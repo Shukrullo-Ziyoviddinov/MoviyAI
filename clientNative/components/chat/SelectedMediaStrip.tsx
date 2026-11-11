@@ -2,6 +2,7 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import { Image } from 'expo-image';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
+import {VideoPreview} from './VideoPreview';
 
 export type SelectedMedia = import('@/src/types/chat').ChatMediaItem;
 
@@ -32,7 +33,7 @@ export function SelectedMediaStrip({ items, onRemove }: SelectedMediaStripProps)
             { backgroundColor: colors.panelSoft, borderColor: colors.borderSoft },
           ]}
         >
-          <Image source={{ uri: item.uri }} style={styles.thumb} contentFit="cover" />
+          {item.type==='video'?<VideoPreview uri={item.uri}/>:<Image source={{ uri: item.uri }} style={styles.thumb} contentFit="cover" />}
           {item.type === 'video' ? (
             <View style={styles.videoBadge}>
               <Text style={styles.videoBadgeText}>VIDEO</Text>

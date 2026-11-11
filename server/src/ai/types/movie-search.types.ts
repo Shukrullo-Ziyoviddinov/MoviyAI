@@ -1,5 +1,5 @@
 export interface ChatImageInput { mimeType: string; data: Buffer }
-export interface ChatImageUrl { mimeType: string; fileUri: string }
+export interface ChatImageUrl { mimeType: string; fileUri: string;durationSeconds?:number }
 export interface MovieSearchResult {
   sourceResearchComplete?:boolean;
   catalogId?: number;

@@ -29,7 +29,7 @@ function harness() {
       calls++;
       const chat = db.get(id);
       let turn = chat.turns.find(turn => turn.requestId === requestId);
-      if (!turn) { turn = { requestId, text, images:media.map((item,index)=>({id:item.id,type:'image',path:'/image-'+index+'.jpg'})), answer: '', status: 'processing', createdAt: new Date().toISOString() }; chat.turns.push(turn); }
+      if (!turn) { turn = { requestId, text, images:media.filter(item=>item.type==='image').map((item,index)=>({id:item.id,type:'image',path:'/image-'+index+'.jpg'})),videos:media.filter(item=>item.type==='video').map(item=>({id:item.id,type:'video',path:'/video.mp4'})), answer: '', status: 'processing', createdAt: new Date().toISOString() }; chat.turns.push(turn); }
       chat.title = text;
       for (const delta of deltas) onDelta(delta);
       if (hold) await hold;
@@ -83,12 +83,20 @@ test('image sending preserves the preview and restores saved images after refres
   assert.equal(restored.getState().messages[0].items[0].stored,true);
   assert.equal(restored.getState().messages[0].items[0].uri,'https://test.invalid/image-0.jpg');
 });
-test('videos and oversized image batches are rejected before API submission', async () => {
+test('oversized videos and images are rejected before API submission', async () => {
   const h=harness(),session=h.create();await session.actions.initialize('alice');
-  assert.equal(session.actions.sendMessage({media:[{id:'v',type:'video',uri:'file://video.mp4'}]}),false);
+  assert.equal(session.actions.sendMessage({media:[{id:'v',type:'video',uri:'file://video.mp4',durationSeconds:181}]}),false);
   assert.equal(h.calls(),0);session.actions.newChat();
   assert.equal(session.actions.sendMessage({media:[{id:'i',type:'image',uri:'file://big.jpg',fileSize:5*1024*1024}]}),false);
   assert.equal(h.calls(),0);
+});
+
+test('one valid video sends and reopens as a video while mixed media is rejected',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');
+ assert.equal(session.actions.sendMessage({media:[{id:'v',type:'video',uri:'blob:video',mimeType:'video/mp4',durationSeconds:120,fileSize:1000}]}),true);await tick();
+ const id=session.getState().activeId;await session.actions.openChat(id);
+ assert.equal(session.getState().messages[0].items[0].type,'video');assert.match(session.getState().messages[0].items[0].uri,/video.mp4/);
+ session.actions.newChat();assert.equal(session.actions.sendMessage({media:[{id:'v',type:'video',uri:'v'},{id:'i',type:'image',uri:'i'}]}),false);
 });
 test('refreshing summaries has its own loading flag which clears on completion', async () => {
   const h=harness(),session=h.create();await session.actions.initialize('alice');

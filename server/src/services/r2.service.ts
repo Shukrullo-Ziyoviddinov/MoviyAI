@@ -110,7 +110,7 @@ export function chatImageKey(conversationId: string, requestId: string, index: n
   return `chatimg/${conversationId}/${requestId}/${index}-${hash}`;
 }
 function validateChatKey(key: string) {
-  if (!/^chatimg\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\/[0-2]-[a-f0-9]{64}$/.test(key)) throw new Error('INVALID_CHAT_IMAGE_KEY');
+  if (!/^(chatimg|chatvideo)\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\/[0-2]-[a-f0-9]{64}$/.test(key)) throw new Error('INVALID_CHAT_IMAGE_KEY');
 }
 export async function putChatImage(key: string, body: Buffer, contentType: string) {
   validateChatKey(key);
@@ -152,4 +152,24 @@ export async function inspectChatImage(key: string) {
     throw new Error('INVALID_CHAT_IMAGE_RANGE');
   }
   return { size: meta.ContentLength, mimeType: meta.ContentType, bytes: Buffer.from(await sample.Body!.transformToByteArray()) };
+}
+
+export function chatVideoKey(conversationId:string,requestId:string,hash:string){return chatImageKey(conversationId,requestId,0,hash).replace(/^chatimg\//,'chatvideo/');}
+export async function inspectChatVideo(key:string){
+ validateChatKey(key);if(!key.startsWith('chatvideo/'))throw Error('INVALID_VIDEO_KEY');
+ const deadline=AbortSignal.timeout(30000);
+ const input={Bucket:requireR2('R2_BUCKET',env.r2Bucket),Key:key};
+ const meta=await r2().send(new HeadObjectCommand(input),{abortSignal:AbortSignal.timeout(10000)});
+ const {CHAT_VIDEO}=await import('../ai/config/chat-video.config.js');const {videoDuration}=await import('../ai/utils/video-metadata.js');
+ const size=meta.ContentLength??0,mimeType=meta.ContentType??'';
+ if(size<16||size>CHAT_VIDEO.maxBytes||!CHAT_VIDEO.mimeTypes.includes(mimeType as typeof CHAT_VIDEO.mimeTypes[number]))throw Error('INVALID_VIDEO_SIZE_OR_TYPE');
+ let total=0;
+ const duration=await videoDuration(size,mimeType,async(offset,length)=>{
+  deadline.throwIfAborted();
+  total+=length;if(total>131072||length>65536||offset<0||offset+length>size)throw Error('VIDEO_METADATA_LIMIT');
+  const object=await r2().send(new GetObjectCommand({...input,Range:`bytes=${offset}-${offset+length-1}`}),{abortSignal:AbortSignal.any([deadline,AbortSignal.timeout(10000)])});
+  if(!object.Body||object.ContentLength!==length||object.ContentRange!==`bytes ${offset}-${offset+length-1}/${size}`){(object.Body as {destroy?:()=>void}|undefined)?.destroy?.();throw Error('INVALID_VIDEO_RANGE');}
+  return Buffer.from(await object.Body.transformToByteArray());
+ });
+ if(duration>CHAT_VIDEO.maxSeconds)throw Error('VIDEO_EXCEEDS_THREE_MINUTES');return {size,mimeType,duration};
 }

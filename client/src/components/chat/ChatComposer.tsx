@@ -14,11 +14,11 @@ export function ChatComposer() {
   const { selectedMedia, removeMedia, send, pick, picking, sending, loading, error, deletingId, pinningId } = useChat();
   const t = useT();
   const [text, setText] = useState("");
-  const canSend = !pinningId && !deletingId && !loading && !sending && !error && selectedMedia.every(item => item.type === 'image') && (text.trim().length > 0 || selectedMedia.length > 0);
+  const canSend = !pinningId && !deletingId && !loading && !sending && !error && (!selectedMedia.some(item=>item.type==='video')||selectedMedia.length===1) && (text.trim().length > 0 || selectedMedia.length > 0);
 
   function handleSend() {
     if (!canSend) return;
-    if (!send(text.trim() || t('chat.imagePrompt'))) return;
+    if (!send(text.trim() || t(selectedMedia.some(item=>item.type==='video')?'chat.videoPrompt':'chat.imagePrompt'))) return;
     setText("");
   }
 

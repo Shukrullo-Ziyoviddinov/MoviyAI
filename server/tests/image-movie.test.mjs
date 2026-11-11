@@ -38,6 +38,12 @@ function harness({ searchable = true, badSource = false, posterError = false, de
   return { ...api, calls, searches: () => searches, posters: () => posters };
 }
 const images = [{ mimeType: 'image/jpeg', data: Buffer.from([255, 216, 255]) }];
+test('video requests pass signed R2 fileData and sampling metadata directly to the video model',async()=>{
+ const h=harness(),fileUri='https://r2.example/private-video?signature=test';
+ const result=await h.findMovieFromImages('Find movie',[{mimeType:'video/mp4',fileUri,durationSeconds:120}]);
+ assert.equal(result.movie.title,'Interstellar');
+ for(const call of h.calls.slice(0,2)){const part=call.contents[0].parts[0];assert.equal(part.fileData.fileUri,fileUri);assert.equal(part.fileData.mimeType,'video/mp4');assert.equal(part.inlineData,undefined);assert.equal(part.videoMetadata.endOffset,'120s');assert.equal(part.videoMetadata.fps,1);}
+});
 test('named text lookup produces verified movie data and Uzbek links without an uploaded image',async()=>{
  const h=harness();const result=await h.findMovieFromImages('Interstellar 2014 kinosini top',[]);
  assert.equal(result.movie.title,'Interstellar');assert.equal(result.movie.uzbekLinks[0].site,'uzmovi.net');

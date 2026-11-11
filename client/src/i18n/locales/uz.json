@@ -168,7 +168,7 @@
     "guideGotIt": "Tushundim",
     "imagePrompt": "Rasmdagi kinoni toping.",
     "imageLimit": "3 tagacha JPG, PNG yoki WebP. Har biri 4 MB, jami 8 MB gacha.",
-    "videoLater": "Video orqali qidirish keyingi bosqichda ulanadi.",
+    "videoLater": "Bitta MP4, MOV yoki WebM video. 3 daqiqa va 80 MB gacha.",
     "movieTable": {
       "title": "Kino ma’lumotlari",
       "original": "Original nomi",
@@ -204,6 +204,7 @@
       "heading": "O‘zbek tilida tomosha qilish",
       "note": "Tashqi saytlar. Til haqidagi ma’lumot sayt sahifasidan olingan; ijro mavjudligi kafolatlanmaydi.",
       "open": "Kino sahifasini ochish"
-    }
+    },
+    "videoPrompt": "Videodagi kinoni toping."
   }
 }

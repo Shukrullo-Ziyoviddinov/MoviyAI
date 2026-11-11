@@ -25,7 +25,7 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
         allowsMultipleSelection: true,
         quality: type === 'image' ? 0.9 : 1,
         ...(type === 'image' ? { preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible } : {}),
-        selectionLimit: type === 'image' ? 3 : 20,
+        selectionLimit: type === 'image' ? 3 : 1,
       });
 
       if (result.canceled) return;
@@ -38,6 +38,7 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
         file: asset.file,
         fileName: asset.fileName ?? undefined,
         fileSize: asset.fileSize ?? undefined,
+        durationSeconds:asset.duration!=null?asset.duration/1000:undefined,
         width: asset.width,
         height: asset.height,
       }));

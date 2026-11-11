@@ -3,6 +3,7 @@ import { chatImageKey, putChatImage, getChatImage, deleteChatImage, signChatImag
 import { cleanupExpiredUploads, cleanupReservedImages } from './direct-image.service.js';
 import type { ChatImageInput } from '../types/movie-search.types.js';
 import { catalogDispatcher } from '../catalog/services/catalog-dispatch.service.js';
+import {cleanupConversationVideos,cleanupExpiredVideos} from './direct-video.service.js';
 
 export function imageReferences(conversationId: string, requestId: string, images: (ChatImageInput & { hash: string })[]) {
   return images.map((image, index) => ({ key: chatImageKey(conversationId, requestId, index, image.hash),
@@ -42,6 +43,7 @@ export async function loadChatImages(userId: string, conversationId: string, req
 export async function cleanupConversationImages(userId: string, conversationId: string) {
   await catalogDispatcher.preserveConversation(userId, conversationId);
   await cleanupReservedImages(userId, conversationId);
+  await cleanupConversationVideos(userId,conversationId);
   const turns = await ChatTurn.find({ userId, conversationId }).select('-images.data').lean();
   for (const turn of turns) for (let index = 0; index < turn.images.length; index++) {
     const image = turn.images[index];
@@ -75,6 +77,7 @@ export function startChatImageCleanup() {
     try {
       try { await cleanupExpiredUploads(); }
       catch { console.warn('[CHAT_IMAGE_CLEANUP] Abandoned upload cleanup pending; will retry'); }
+      await cleanupExpiredVideos();
       const rows = await Conversation.find({ cleanupPending: true }).limit(20).lean();
       for (const row of rows) {
         if (!row.deletedAt) continue;
