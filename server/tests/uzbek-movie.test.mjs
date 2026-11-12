@@ -2,9 +2,22 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {z} from 'zod';
-import {readUzbekPage,uzbekDetailUrl,discoverUzbekDetails,isUzbekMovieRequest,uzbekLookupReply} from '../dist/ai/services/uzbek-movie.service.js';
+import {readUzbekPage,uzbekDetailUrl,discoverUzbekDetails,isUzbekMovieRequest,uzbekLookupReply,isSeriesIdentity} from '../dist/ai/services/uzbek-movie.service.js';
 
 const valid='https://uzmovi.net/tarjima-kinolar/123-interstellar.html';
+test('series identity is explicit or supported by original source metadata, never a guessed title',()=>{
+ assert.equal(isSeriesIdentity({title:'Cukur',mediaType:'series'}),true);
+ assert.equal(isSeriesIdentity({title:'Cukur',sources:[{title:'Cukur (TV Series 2017-2021)',url:'https://www.imdb.com/title/tt6726662/'}]}),true);
+ assert.equal(isSeriesIdentity({title:'Cukur'}),false);assert.equal(isSeriesIdentity({title:'Cukur',mediaType:'movie',sources:[{title:'A TV series',url:'https://example.com'}]}),false);
+});
+test('a normal series page with a long episode list fits the bounded reader',async()=>{
+ const html='<h1>Chuqur turk serial Uzbek tilida</h1><p>2017, Aras Bulut Iynemli</p>'+'<div>Episode</div>'.repeat(20000);
+ assert.ok(Buffer.byteLength(html)>300000);const page=await readUzbekPage(valid,async()=>new Response(html,{headers:{'content-type':'text/html'}}));assert.ok(page);assert.match(page.title,/Chuqur/);assert.ok(page.text.length<=18000);
+});
+test('long episode lists do not discard film facts already present in the bounded HTML prefix',async()=>{
+ const html='<h1>Chuqur turk serial Uzbek tilida</h1><p>Yili 2017. Aras Bulut Iynemli.</p>'+'<div>Episode</div>'.repeat(100000);
+ const page=await readUzbekPage(valid,async()=>new Response(html,{headers:{'content-type':'text/html'}}));assert.ok(page);assert.match(page.text,/2017/);assert.ok(page.text.length<=18000);
+});
 test('Uzbek detail URL boundary excludes other hosts, lists, files and credentials',()=>{
  assert.equal(uzbekDetailUrl(valid),valid);
  for(const url of ['https://uzmovi.net/','https://evil.uzmovi.net/movie','https://uzmovi.net.evil.org/movie','https://user:pass@uzmovi.net/movie','https://uzmovi.net:8443/movie','http://uzmovi.net/movie','https://uzmovi.net/search?q=film','https://uzmovi.net/category/movie','https://uzmovi.net/uploads/a.mp4'])assert.equal(uzbekDetailUrl(url),null,url);
@@ -45,6 +58,10 @@ function harness({badYear=false,wrongFilm=false,unavailable=false,imageError=fal
  return {api,calls,searchQueries,queries:()=>queries};
 }
 const film={title:'Interstellar',titleUz:null,titleRu:null,year:2014};
+test('series verification accepts a series landing page instead of applying movie-only exclusions',async()=>{
+ const h=harness();await h.api({...film,mediaType:'series'});assert.match(h.calls[0].config.systemInstruction,/TV SERIES/);assert.match(h.calls[0].config.systemInstruction,/barcha qismlari/);assert.match(h.calls[0].config.systemInstruction,/episode release year/);
+ const movie=harness();await movie.api({...film,mediaType:'movie'});assert.match(movie.calls[0].config.systemInstruction,/input is a MOVIE/);
+});
 test('known local movie title and year are searched without invented aliases',async()=>{
  const h=harness();await h.api({...film,titleUz:'Mahalliy nom 2'});
  assert.ok(h.searchQueries.some(query=>query.includes('Mahalliy nom 2 2014 uzbek tilida')));

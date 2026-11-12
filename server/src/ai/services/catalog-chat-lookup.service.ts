@@ -45,7 +45,7 @@ export async function findCatalogChatCandidates(titles: string[], year: number |
     const movie: MovieSearchResult = {
       title: row.catalogIdentity?.originalTitle ?? saved?.title ?? row.title.uz??row.title.ru??'',
       titleUz: row.title.uz??null, titleRu: row.title.ru??null, year: row.specs!.year??null, language,
-      confidence: 'high', sources: saved?.sources ?? [], identitySources: saved?.identitySources ?? [],
+      confidence: 'high',mediaType:saved?.mediaType, sources: saved?.sources ?? [], identitySources: saved?.identitySources ?? [],
       posters: [...new Set([row.homeImgPoster, ...(row.catalogPosters ?? [])])].filter((path):path is string=>!!path).slice(0, 2).map(path => ({ url: media(path, 'movieimg'), sourceUrl: null })),
       details, trailer: null, uzbekLinks: [], catalogId: row.id,
       catalogPortraits: orderedActors.map(actor => ({ label: actor.actorName, kind: 'actor', imageUrl: media(actor.actorImg, 'actorimg'), sourceUrl: null })),

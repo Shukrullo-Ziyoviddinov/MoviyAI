@@ -18,7 +18,7 @@ return async function researchCatalogLinks(input: CatalogDraft, signal: AbortSig
   if (!draft.movie.watchUrl && !draft.confirmedUnavailable.includes('watchUrl')) {
     const sites = new Set<string>();
     const find = deps.uzbekSearch({ searchWeb: async (query, options) => { signal.throwIfAborted(); const result = await deps.searchWeb(query, options); const site = /\bsite:([\w.-]+)/.exec(query)?.[1]; if (site) sites.add(site); return result; }, readPage: deps.readPage, discover: deps.discover });
-    const links = await find({ title: draft.identity.originalTitle, titleUz: draft.research.titleUz, titleRu: draft.research.titleRu, year: draft.identity.year });
+    const links = await find({ title: draft.identity.originalTitle, titleUz: draft.research.titleUz, titleRu: draft.research.titleRu, year: draft.identity.year,mediaType:draft.research.mediaType,sources:draft.research.sources });
     if (links.length) { draft.movie.watchUrl = links[0].url; draft.research.uzbekLinks = links; }
     else if (UZBEK_MOVIE_SITES.every(site => sites.has(site))) draft.confirmedUnavailable.push('watchUrl');
   }
