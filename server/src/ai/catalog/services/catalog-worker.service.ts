@@ -36,7 +36,7 @@ export function createCatalogWorker(deps: { jobs: CatalogJobRepository; dispatch
           await deps.jobs.complete(job.id, token, result.movieId);
           console.info('[AI_CATALOG]', { event: result.status, jobId:job.id, movieId: result.movieId });
         } else {
-          await deps.jobs.defer(job.id, token, 'needs-enrichment', new Date(deps.now().getTime() + 6 * 60 * 60 * 1000), result.issues);
+          await deps.jobs.defer(job.id, token, job.attempts>=5?'failed':'needs-enrichment', new Date(deps.now().getTime() + Math.min(3600000,60000*2**Math.max(0,job.attempts-1))), result.issues);
           console.info('[AI_CATALOG]', { event: 'needs-enrichment', jobId:job.id, fields: result.issues.map(issue => issue.path).slice(0, 20) });
         }
       } catch (error) {

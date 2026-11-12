@@ -14,6 +14,7 @@ import {hasCoreMovieFacts} from '../../services/movie-source-research.service.js
 
 let actorQueueReady:Promise<unknown>|undefined;
 export const catalogSaveRepository: CatalogSaveRepository = {
+  async storedPoster(id){const row=await Movie.findOne({id}).select('homeImgPoster').lean();return row?.homeImgPoster??null;},
   matcher: catalogMatcher,
   references: () => catalogReferenceRepository.load(),
   async transaction(work) {
@@ -23,12 +24,14 @@ export const catalogSaveRepository: CatalogSaveRepository = {
       matcher: createCatalogMatcher(createCatalogMatchRepository(session)),
       references: () => createCatalogReferenceRepository(session).load(),
       nextId: kind => allocateCatalogId(kind, session),
-      async updateExistingMovie(id,payload,research){
+      async updateExistingMovie(id,payload,research,assets=[]){
         const row=await Movie.findOne({id}).select('+catalogResearch').session(session).lean();if(!row)throw Error('MOVIE_NOT_FOUND');
         const {merged,updates}=prepareMovieUpdate(row,payload);
         const result=mergeMissing(row.catalogResearch?.result??research,research);
         result.sourceResearchComplete=hasCoreMovieFacts(result.details);
-        await Movie.updateOne({id},{$set:{...updates,'catalogResearch.result':result,'catalogResearch.missingFields':missingValuePaths(merged)}},{session});
+        const newAssets=!row.homeImgPoster?assets:[];
+        await Movie.updateOne({id},{$set:{...updates,'catalogResearch.result':result,'catalogResearch.missingFields':missingValuePaths(merged)},...(newAssets.length?{$addToSet:{catalogPosters:{$each:newAssets.map(asset=>asset.path)},catalogMediaKeys:{$each:newAssets.map(asset=>asset.key)},'catalogResearch.storedAssets':{$each:newAssets}}}:{})},{session});
+        return merged;
       },
       async verifyActorIdentity(id,input){
         // Only called after the transactional matcher has established identity.

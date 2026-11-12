@@ -9,6 +9,9 @@ import type { CatalogMatchResult } from '../types/catalog-match.types.js';
 import type { CatalogSaveMedia, CatalogSaveRepository, CatalogSaveResult, CatalogSaveTransaction } from '../types/catalog-save.types.js';
 import {stageCatalogActors,commitCatalogActors} from './catalog-actor-save.service.js';
 import {catalogFailureDetails} from '../utils/catalog-diagnostics.js';
+import {hasCoreMovieFacts} from '../../services/movie-source-research.service.js';
+import {storeMoviePosters} from './catalog-poster.service.js';
+import {catalogPublicationIssues} from '../utils/catalog-publication.js';
 
 class SaveBlocked extends Error {
   constructor(public issues: CatalogIssue[]) { super('CATALOG_ENRICHMENT_REQUIRED'); }
@@ -20,6 +23,9 @@ function requireKnown(match: CatalogMatchResult, path: string): void {
   if (match.status === 'needs-research' || match.status === 'conflict') block(path, match.reason);
 }
 function preflight(draft: CatalogDraft) {
+  if (!hasCoreMovieFacts(draft.research.details)) block('research.details', 'Essential film facts are missing; retain the draft for research instead of publishing a title-only movie.');
+  const essential=catalogPublicationIssues(draft.movie).filter(issue=>issue.path!=='homeImgPoster');
+  if(essential.length)throw new SaveBlocked(essential);
   if (draft.research.linksOnly) block('research.linksOnly', 'A link-only follow-up is not a new film result.');
   const allowedLater = (path: string) => path === 'homeImgPoster';
   const movieOnly=structuredClone(draft);movieOnly.actors=[];movieOnly.movie.actorIds=[];
@@ -37,7 +43,7 @@ async function resolveFranchise(draft: CatalogDraft, tx: Pick<CatalogSaveTransac
   return ids;
 }
 
-export function createCatalogSaver(deps: { repository: CatalogSaveRepository; media: CatalogSaveMedia } = { repository: catalogSaveRepository, media: catalogMediaService }) {
+export function createCatalogSaver(deps: { repository: CatalogSaveRepository; media: CatalogSaveMedia; posterSearch?:Parameters<typeof storeMoviePosters>[5] } = { repository: catalogSaveRepository, media: catalogMediaService }) {
   const { repository, media } = deps;
   async function cleanup(keys: string[]) {
     if (!keys.length) return;
@@ -62,8 +68,9 @@ export function createCatalogSaver(deps: { repository: CatalogSaveRepository; me
       const signal = AbortSignal.timeout(90000);
       const track = (key: string) => tracked.push(key);
       const staged:{posters:Awaited<ReturnType<CatalogSaveMedia['store']>>}={posters:[]};
-      if(draft.posterCandidates.length)try{staged.posters=await media.store('movieimg',draft.posterCandidates.map(item=>item.url),2,track,signal);}
+      try{staged.posters=await storeMoviePosters(media,draft.identity,draft.posterCandidates.map(item=>item.url),track,signal,deps.posterSearch);}
       catch(error){console.warn('[AI_CATALOG]',{event:'poster-unavailable',...catalogFailureDetails(error)});}
+      if(!staged.posters.length)block('homeImgPoster','No verified downloadable poster was stored in R2.','store-media');
       const stagedActors=await stageCatalogActors(draft.actors,repository.matcher,media,track,signal);
 
       const result = await repository.transaction<CatalogSaveResult>(async tx => {
@@ -73,6 +80,7 @@ export function createCatalogSaver(deps: { repository: CatalogSaveRepository; me
         if (!freshReferences.ready) throw new SaveBlocked(freshReferences.issues);
         const ready = freshReferences.draft;
         ready.movie.homeImgPoster = staged.posters[0]?.path??null; ready.movie.actorIds = [];
+        const essential=catalogPublicationIssues(ready.movie);if(essential.length)throw new SaveBlocked(essential);
         ready.movie.franchiseMovieIds = await resolveFranchise(ready, tx);
         const allActors=ready.actors;
         ready.actors=await commitCatalogActors(stagedActors,tx);

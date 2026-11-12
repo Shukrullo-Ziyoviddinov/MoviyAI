@@ -6,7 +6,7 @@ import type { CatalogReferenceSnapshot } from './catalog-reference.types.js';
 import type { CatalogAsset } from '../services/catalog-media.service.js';
 
 export interface CatalogSaveTransaction {
-  updateExistingMovie?(id:number,payload:CatalogMoviePayload,research:CatalogDraft['research']):Promise<void>;
+  updateExistingMovie?(id:number,payload:CatalogMoviePayload,research:CatalogDraft['research'],assets?:CatalogAsset[]):Promise<CatalogMoviePayload>;
   verifyActorIdentity?(id:number,input:ActorMatchInput):Promise<void>;
   enqueueActors?(movieId:number,draft:CatalogDraft):Promise<void>;
   movieExists?(movieId:number):Promise<boolean>;
@@ -20,6 +20,7 @@ export interface CatalogSaveTransaction {
   unreferencedMedia(keys: string[]): Promise<string[]>;
 }
 export interface CatalogSaveRepository {
+  storedPoster?(movieId:number):Promise<string|null>;
   matcher: ReturnType<typeof createCatalogMatcher>;
   references(): Promise<CatalogReferenceSnapshot>;
   transaction<T>(work: (tx: CatalogSaveTransaction) => Promise<T>): Promise<T>;

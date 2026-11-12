@@ -96,10 +96,13 @@ test('expired processing leases recover after a restart, while old lease tokens 
 test('missing verified fields defer safely; repeated infrastructure failure has a bounded attempt limit', async () => {
   const h = harness();
   await createCatalogWorker({ jobs: h.jobs, now: h.now, dispatch: async () => 0, process: async () => ({ status: 'needs-enrichment', issues: [{ path: 'filterCountry', action: 'resolve-reference', blocking: true, message: 'Missing country' }] }) }).runOnce();
-  assert.equal(h.row.status, 'needs-enrichment'); assert.equal(h.row.next, 6 * 60 * 60 * 1000); assert.equal(h.row.issues[0].path, 'filterCountry');
+  assert.equal(h.row.status, 'needs-enrichment'); assert.equal(h.row.next, 60 * 1000); assert.equal(h.row.issues[0].path, 'filterCountry');
   const failed = harness(); failed.row.attempts = 4;
   await createCatalogWorker({ jobs: failed.jobs, now: failed.now, dispatch: async () => 0, process: async () => { throw Error('provider down'); } }).runOnce();
   assert.equal(failed.row.status, 'failed'); assert.equal(failed.row.attempts, 5);
+  const incomplete=harness();incomplete.row.attempts=4;
+  await createCatalogWorker({jobs:incomplete.jobs,now:incomplete.now,dispatch:async()=>0,process:async()=>({status:'needs-enrichment',issues:[]})}).runOnce();
+  assert.equal(incomplete.row.status,'failed');assert.equal(incomplete.row.attempts,5);
 });
 
 test('outbox failure does not block previously durable jobs and worker errors do not escape to chat', async () => {

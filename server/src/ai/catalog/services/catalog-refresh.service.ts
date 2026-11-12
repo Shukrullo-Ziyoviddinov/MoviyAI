@@ -11,6 +11,8 @@ import type {CatalogChatInput} from '../types/catalog-job.types.js';
 import type {CatalogSaveResult} from '../types/catalog-save.types.js';
 import type {CatalogDraft} from '../types/catalog.types.js';
 import {hasCoreMovieFacts} from '../../services/movie-source-research.service.js';
+import {storeMoviePosters} from './catalog-poster.service.js';
+import {catalogPublicationIssues} from '../utils/catalog-publication.js';
 
 /** Existing films receive missing facts; IDs, known values and stored posters stay intact. */
 export async function refreshCatalogMovie(movieId:number,input:CatalogChatInput,signal:AbortSignal,previous?:CatalogDraft|null,checkpoint: (draft:CatalogDraft)=>Promise<void>=async()=>{}):Promise<CatalogSaveResult>{
@@ -22,6 +24,9 @@ export async function refreshCatalogMovie(movieId:number,input:CatalogChatInput,
  await checkpoint(draft);
  const tracked:string[]=[];
  try{
+  const existingPoster=await catalogSaveRepository.storedPoster!(movieId);
+  const posters=existingPoster?[]:await storeMoviePosters(catalogMediaService,draft.identity,draft.posterCandidates.map(item=>item.url),key=>tracked.push(key),signal);
+  draft.movie.homeImgPoster=existingPoster??posters[0]?.path??null;
   const staged=await stageCatalogActors(draft.actors,catalogSaveRepository.matcher,catalogMediaService,key=>tracked.push(key),signal);
   return await catalogSaveRepository.transaction(async tx=>{
    if(!tx.updateExistingMovie||!tx.linkActors)throw Error('MOVIE_REFRESH_REPOSITORY_REQUIRED');
@@ -29,10 +34,12 @@ export async function refreshCatalogMovie(movieId:number,input:CatalogChatInput,
    const fresh=resolveCatalogReferences(draft,await tx.references(),{allowMissing:true}).draft;
    const actors=await commitCatalogActors(staged,tx),pending=fresh.actors.filter(actor=>!actors.some(saved=>saved.actorName===actor.actorName&&saved.originalName===actor.originalName));
    fresh.movie.actorIds=actors.map(actor=>actor.existingId!);
-   await tx.updateExistingMovie(movieId,catalogMoviePayloadSchema.parse(fresh.movie),fresh.research);
+   const saved=await tx.updateExistingMovie(movieId,catalogMoviePayloadSchema.parse(fresh.movie),fresh.research,posters);
    await tx.linkActors(movieId,fresh.movie.actorIds,pending);
    if(pending.length&&tx.enqueueActors)await tx.enqueueActors(movieId,{...fresh,actors:pending});
-   const result:CatalogSaveResult=hasCoreMovieFacts(fresh.research.details)?{status:'existing',movieId}:{status:'needs-enrichment',issues:[{path:'research.details',action:'research',blocking:false,message:'Available facts were saved; essential movie facts still need research.'}]};
+   const issues=catalogPublicationIssues(saved);
+   if(!hasCoreMovieFacts(fresh.research.details))issues.push({path:'research.details',action:'research',blocking:true,message:'Essential movie facts still need research.'});
+   const result:CatalogSaveResult=issues.length?{status:'needs-enrichment',issues}:{status:'existing',movieId};
    return result;
   });
  }finally{

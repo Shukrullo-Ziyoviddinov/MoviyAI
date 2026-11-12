@@ -17,6 +17,7 @@ import type { MovieFact, MovieSource } from '../../types/movie-dossier.types.js'
 import { catalogOperation, catalogFailureDetails, type CatalogStage } from '../utils/catalog-diagnostics.js';
 import { actorProfileMatches, actorCreditMatches, actorIdentitySources } from '../utils/catalog-actor-evidence.js';
 import {verifiedActorCredit,actorProfileKey} from '../utils/catalog-actor-identity.js';
+import {setTimeout as delay} from 'node:timers/promises';
 
 const indexes = z.array(z.number().int().min(0)).max(6);
 const sourcedText = z.object({ value: z.string().max(4000).nullable(), sourceIndexes: indexes });
@@ -33,10 +34,13 @@ export interface CatalogStructuredGenerator {
 const generate: CatalogStructuredGenerator = async (schema, payload, instruction, signal) => {
   if (!AI_CONFIG.apiKey) throw new Error('CATALOG_GOOGLE_KEY_MISSING');
   const ai = new GoogleGenAI({ apiKey: AI_CONFIG.apiKey, httpOptions: { timeout: 30000, retryOptions: { attempts: 1 } } });
+  for(let attempt=0;attempt<2;attempt++)try{
   const response = await ai.models.generateContent({ model: AI_CONFIG.models.image, contents: [{ role: 'user', parts: [{ text: JSON.stringify(payload) }] }],
     config: { systemInstruction: instruction, responseMimeType: 'application/json', responseJsonSchema: z.toJSONSchema(schema), maxOutputTokens: 6000,
       abortSignal: AbortSignal.any([signal, AbortSignal.timeout(30000)]) } });
   return JSON.parse(response.text ?? '');
+  }catch(error){signal.throwIfAborted();if(attempt||![429,500,502,503,504].includes((error as {status?:number}).status??0))throw error;await delay(1000,undefined,{signal});}
+  throw Error('CATALOG_GOOGLE_UNAVAILABLE');
 };
 function known<T>(fact?: MovieFact<T>): fact is MovieFact<T> & { value: T } {
   return fact?.value !== undefined && fact.value !== null && !(typeof fact.value === 'string' && !fact.value.trim()) &&

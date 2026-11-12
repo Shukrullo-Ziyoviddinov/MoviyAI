@@ -51,20 +51,28 @@ export function createMovieSourceResearch(deps={searchWeb,read:readMovieSource})
    // One exact candidate per provider; extraction must verify title/year/version.
    const source=candidates[0];if(!source)continue;
    const page=await deps.read(source,signal).catch(()=>null);let current=page?{...page,snippet:[source.snippet,page.snippet].filter(Boolean).join('\n').slice(0,36000)}:source;
-   if(!current.snippet?.trim()&&!searched&&!signal.aborted)try{
-    const indexed=await deps.searchWeb(`"${source.url}" ${film.title} ${film.year??''}`,{num:1});
-    const exact=indexed.organic?.find(item=>item.link===source.url);if(exact)current={title:exact.title,url:exact.link,snippet:exact.snippet??''};
+   const needsRating=provider.domain==='imdb.com'&&!known(details.imdb)||provider.domain==='kinopoisk.ru'&&!known(details.kinopoisk);
+   if((!current.snippet?.trim()||needsRating)&&!searched&&!signal.aborted)try{
+    const indexed=await deps.searchWeb(`site:${new URL(source.url).hostname}${new URL(source.url).pathname} ${film.title} ${film.year??''} ${terms}`,{num:3});
+    const base=source.url.replace(/\/$/,'');
+    const exact=indexed.organic?.filter(item=>item.link.replace(/\/$/,'')===base||item.link.startsWith(base+'/'));
+    if(exact?.length)current={...current,snippet:[...exact.map(item=>item.title+' '+(item.snippet??'')),current.snippet].filter(Boolean).join('\n').slice(0,36000)};
    }catch{/* Missing page evidence stays unknown. */}
    if(!current.snippet?.trim())continue;
+   if(provider.domain==='imdb.com'&&!known(details.imdb)){
+    const scores=[...current.snippet.matchAll(/\b(?:IMDb\s+)?RATING\s+([0-9](?:[.,][0-9])?)\s*\/\s*10\b/gi)].map(match=>Number(match[1].replace(',','.')));
+    const unique=[...new Set(scores)];
+    if(unique.length===1&&unique[0]>=0&&unique[0]<=10)details.imdb={value:unique[0],sources:[{title:source.title,url:source.url}]};
+   }
    const titleKey=(value:string)=>value.replace(/\((?:film|\d{4} film)\)/gi,'').normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
    if(!known(details.countries)&&current.pageFacts?.countries.length&&current.pageFacts.year===film.year&&titleKey(current.pageFacts.title)===titleKey(film.title))
     details.countries={value:current.pageFacts.countries,sources:[{title:current.title,url:current.url}]};
    if(!missingMovieFacts(details).length)break;
-   try{const found=await extract([current],details);
+   for(let attempt=0;attempt<2;attempt++)try{const found=await extract([attempt?{...current,snippet:current.snippet?.slice(0,12000)}:current],details);
     for(const field of fields)if(!known(details[field])&&known(found[field]))Object.assign(details,{[field]:found[field]});
     if(!details.cast.length)details.cast=found.cast;if(!details.characters?.length)details.characters=found.characters;
-    evidence.push(current);
-   }catch(error){console.warn('[MOVIE_SOURCE]',{event:'extract-failed',provider:provider.domain,status:(error as {status?:number}).status??null});if(signal.aborted)break;}
+    evidence.push(current);break;
+   }catch(error){const status=(error as {status?:number}).status??null;console.warn('[MOVIE_SOURCE]',{event:'extract-failed',provider:provider.domain,status,attempt:attempt+1});if(signal.aborted||![429,500,502,503,504].includes(status??0))break;}
   }
   return details;
  };
