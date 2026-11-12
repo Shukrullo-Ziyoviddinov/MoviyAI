@@ -27,5 +27,7 @@ export function groupMoviesByCategory(movies: Movie[]): MovieCategoryGroup[] {
     }
   }
 
+  const others=movies.filter(movie=>!ACTIVE_CATEGORIES.some(category=>category===movie.categoryName));
+  if(others.length)groups.push({categoryName:'otherMovies',movies:others});
   return groups;
 }

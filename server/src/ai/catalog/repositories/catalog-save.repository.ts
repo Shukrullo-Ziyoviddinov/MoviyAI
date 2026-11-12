@@ -8,6 +8,9 @@ import {ActorEnrichmentJob} from '../models/actor-enrichment-job.model.js';
 import {catalogNameKeys} from '../utils/catalog-identity.js';
 import { catalogReferenceRepository } from './catalog-reference.repository.js';
 import type { CatalogSaveRepository } from '../types/catalog-save.types.js';
+import {mergeMissing,missingValuePaths} from '../utils/catalog-merge-missing.js';
+import {prepareMovieUpdate} from '../utils/catalog-movie-update.js';
+import {hasCoreMovieFacts} from '../../services/movie-source-research.service.js';
 
 let actorQueueReady:Promise<unknown>|undefined;
 export const catalogSaveRepository: CatalogSaveRepository = {
@@ -20,6 +23,13 @@ export const catalogSaveRepository: CatalogSaveRepository = {
       matcher: createCatalogMatcher(createCatalogMatchRepository(session)),
       references: () => createCatalogReferenceRepository(session).load(),
       nextId: kind => allocateCatalogId(kind, session),
+      async updateExistingMovie(id,payload,research){
+        const row=await Movie.findOne({id}).select('+catalogResearch').session(session).lean();if(!row)throw Error('MOVIE_NOT_FOUND');
+        const {merged,updates}=prepareMovieUpdate(row,payload);
+        const result=mergeMissing(row.catalogResearch?.result??research,research);
+        result.sourceResearchComplete=hasCoreMovieFacts(result.details);
+        await Movie.updateOne({id},{$set:{...updates,'catalogResearch.result':result,'catalogResearch.missingFields':missingValuePaths(merged)}},{session});
+      },
       async verifyActorIdentity(id,input){
         // Only called after the transactional matcher has established identity.
         const identity=actorIdentityForInsert(input);
@@ -31,9 +41,10 @@ export const catalogSaveRepository: CatalogSaveRepository = {
       },
       async enqueueActors(movieId,draft){
         await ActorEnrichmentJob.updateOne({_id:String(movieId)},{$setOnInsert:{movieId,draft,status:'pending',attempts:0,nextAttemptAt:new Date(Date.now()+15*60*1000)}},{upsert:true,session});
+        await ActorEnrichmentJob.updateOne({_id:String(movieId),status:{$in:['pending','retry','paused']}},{$set:{draft,status:'pending',attempts:0,nextAttemptAt:new Date(Date.now()+15*60*1000)}},{session});
       },
       async movieExists(movieId){return !!await Movie.exists({id:movieId}).session(session);},
-      async linkActors(movieId,actorIds,pending){await Movie.updateOne({id:movieId},{$addToSet:{actorIds:{$each:actorIds}},$set:{'catalogResearch.pendingActors':pending}},{session});},
+      async linkActors(movieId,actorIds,pending){await Movie.updateOne({id:movieId},{$addToSet:{actorIds:{$each:actorIds}},$set:{'catalogResearch.pendingActors':pending},...(actorIds.length?{$pull:{'catalogResearch.missingFields':'actorIds'}}:{})},{session});},
       async insertActor(input) {
         await Actor.create([{ ...input.payload, id: input.id, catalogIdentity: input.identity, catalogResearch: input.research, catalogMediaKeys: input.mediaKeys }], { session });
       },

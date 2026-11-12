@@ -48,6 +48,7 @@
     "emptySubtitle": "Movies and recommendations will show up here. Start searching with AI Chat.",
     "goToChat": "Go to AI Chat",
     "categories": {
+      "otherMovies": "Other movies",
       "actionMovies": "Action movies",
       "horrorMovies": "Horror movies",
       "animationMovies": "Cartoons",

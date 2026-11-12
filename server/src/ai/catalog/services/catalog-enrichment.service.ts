@@ -1,4 +1,4 @@
-import {researchMovieSources,createMovieSourceResearch,readMovieSource,MOVIE_FACT_INSTRUCTION} from '../../services/movie-source-research.service.js';
+import {researchMovieSources,createMovieSourceResearch,readMovieSource,MOVIE_FACT_INSTRUCTION,hasCoreMovieFacts} from '../../services/movie-source-research.service.js';
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { AI_CONFIG } from '../../config/ai.config.js';
@@ -63,7 +63,7 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
     const draft = structuredClone(input);
     signal.throwIfAborted();
     const required = ['genres', 'countries', 'runtimeMinutes', 'ageRating', 'synopsis', 'directors', 'imdb', 'kinopoisk'] as const;
-    if (actorBackfill?!draft.actors.length:!draft.research.sourceResearchComplete&&(!draft.identity.year||required.some(field => !known<unknown>(draft.research.details?.[field])))) {
+    if (actorBackfill?!draft.actors.length:(!draft.research.sourceResearchComplete||!hasCoreMovieFacts(draft.research.details))&&(!draft.identity.year||required.some(field => !known<unknown>(draft.research.details?.[field])))) {
       let yearEvidence:MovieSource[]=[];
       let releaseYear:number|null=null;
       const research=deps.researchSources??createMovieSourceResearch({searchWeb:deps.searchWeb,read:deps.readSource??readMovieSource});
@@ -76,7 +76,7 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
       for (const field of required) if (!known<unknown>(details[field]) && known<unknown>(found[field])) Object.assign(details, { [field]: found[field] });
       if (!details.cast.length && found.cast.length) details.cast = found.cast;
       draft.research.details = details;
-      if(!actorBackfill)draft.research.sourceResearchComplete=!signal.aborted;
+      if(!actorBackfill)draft.research.sourceResearchComplete=!signal.aborted&&hasCoreMovieFacts(details);
       const used = Object.values(details).flatMap(value => value && typeof value === 'object' && !Array.isArray(value) && 'sources' in value ? value.sources : []);
       draft.research.sources = mergeSources(draft.research.sources, used, details.cast.flatMap(actor => actor.sources));
       // Do not mix actor/character image pages into the movie-ID namespace.

@@ -48,6 +48,7 @@
     "emptySubtitle": "Фильмы и рекомендации появятся здесь. Начните поиск через AI Chat.",
     "goToChat": "Перейти в AI Chat",
     "categories": {
+      "otherMovies": "Другие фильмы",
       "actionMovies": "Боевики",
       "horrorMovies": "Ужасы",
       "animationMovies": "Мультфильмы",

@@ -31,6 +31,8 @@ export function groupMoviesByCategory(movies: HomeMovie[]): MovieCategoryGroup[]
     const list = movies.filter((movie) => movie.categoryName === categoryName);
     if (list.length > 0) groups.push({ categoryName, movies: list });
   }
+  const others=movies.filter(movie=>!ACTIVE_CATEGORIES.some(category=>category===movie.categoryName));
+  if(others.length)groups.push({categoryName:'otherMovies',movies:others});
   return groups;
 }
 

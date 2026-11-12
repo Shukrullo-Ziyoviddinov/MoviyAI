@@ -1,11 +1,18 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createMovieSourceResearch,readMovieSource} from '../dist/ai/services/movie-source-research.service.js';
+import {createMovieSourceResearch,readMovieSource,hasCoreMovieFacts} from '../dist/ai/services/movie-source-research.service.js';
 import {emptyDossier} from '../dist/ai/services/movie-dossier.js';
 const imdb={title:'Spider-Man 2 (2004)',url:'https://www.imdb.com/title/tt0316654/',snippet:'Movie'};
 const wiki={title:'Spider-Man 2',url:'https://en.wikipedia.org/wiki/Spider-Man_2',snippet:'Movie'};
 const tmdb={title:'Spider-Man 2',url:'https://www.themoviedb.org/movie/558-spider-man-2',snippet:'Movie'};
 function complete(){const d=emptyDossier();for(const [key,value] of Object.entries(d))if(value&&typeof value==='object'&&!Array.isArray(value)&&'value'in value)d[key]={value:'known',sources:[imdb]};d.cast=[{name:'Actor',originalName:'Actor',role:'Role',sources:[imdb]}];d.characters=[{name:'Hero',originalName:'Hero',description:null,sources:[imdb]}];return d;}
+test('empty research cannot be marked complete; explicit infobox country survives extraction failure',async()=>{
+ assert.equal(hasCoreMovieFacts(emptyDossier()),false);assert.equal(hasCoreMovieFacts(complete()),true);
+ const initial=complete();initial.countries={value:null,sources:[]};
+ const research=createMovieSourceResearch({searchWeb:async()=>({organic:[]}),read:async source=>({...source,pageFacts:{title:'Spider-Man 2',year:2004,countries:['United States']}})});
+ const result=await research({title:'Spider-Man 2',year:2004},[wiki],initial,async()=>{throw Object.assign(Error('provider down'),{status:503});},AbortSignal.timeout(1000));
+ assert.deepEqual(result.countries.value,['United States']);
+});
 test('complete first source stops all further source reads and paid search',async()=>{
  const reads=[];let searches=0;
  const research=createMovieSourceResearch({searchWeb:async()=>{searches++;return {organic:[]};},read:async source=>{reads.push(source.url);return source;}});

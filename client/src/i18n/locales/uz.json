@@ -48,6 +48,7 @@
     "emptySubtitle": "Kinolar va tavsiyalar shu yerda paydo bo'ladi. Hozir AI Chat orqali qidirishni boshlang.",
     "goToChat": "AI Chatga o'tish",
     "categories": {
+      "otherMovies": "Boshqa kinolar",
       "actionMovies": "Jangari kinolar",
       "horrorMovies": "Qo'rqinchli kinolar",
       "animationMovies": "Multfilimlar",

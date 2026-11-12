@@ -6,6 +6,7 @@ import type { CatalogReferenceSnapshot } from './catalog-reference.types.js';
 import type { CatalogAsset } from '../services/catalog-media.service.js';
 
 export interface CatalogSaveTransaction {
+  updateExistingMovie?(id:number,payload:CatalogMoviePayload,research:CatalogDraft['research']):Promise<void>;
   verifyActorIdentity?(id:number,input:ActorMatchInput):Promise<void>;
   enqueueActors?(movieId:number,draft:CatalogDraft):Promise<void>;
   movieExists?(movieId:number):Promise<boolean>;

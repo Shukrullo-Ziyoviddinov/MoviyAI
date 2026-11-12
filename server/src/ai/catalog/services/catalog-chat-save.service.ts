@@ -10,9 +10,10 @@ import type { CatalogJobProcessor } from '../types/catalog-job.types.js';
 import { catalogOperation,catalogFailureDetails,type CatalogStage } from '../utils/catalog-diagnostics.js';
 import { ensureCatalogDictionary } from './catalog-dictionary.service.js';
 import { uzbekReleaseTitle } from '../../services/uzbek-movie.service.js';
+import {refreshCatalogMovie} from './catalog-refresh.service.js';
 
-const defaults={ matcher: catalogMatcher, references: () => catalogReferenceRepository.load(), enrich: enrichCatalogDraft, links: researchCatalogLinks, save: saveCatalogMovie, franchise: researchCatalogFranchise, ensureReferences:ensureCatalogDictionary };
-export function createCatalogChatProcessor(deps:Omit<typeof defaults,'ensureReferences'|'franchise'>&Partial<Pick<typeof defaults,'ensureReferences'|'franchise'>> = defaults) {
+const defaults={ matcher: catalogMatcher, references: () => catalogReferenceRepository.load(), enrich: enrichCatalogDraft, links: researchCatalogLinks, save: saveCatalogMovie, franchise: researchCatalogFranchise, ensureReferences:ensureCatalogDictionary,refresh:refreshCatalogMovie };
+export function createCatalogChatProcessor(deps:Omit<typeof defaults,'ensureReferences'|'franchise'|'refresh'>&Partial<Pick<typeof defaults,'ensureReferences'|'franchise'|'refresh'>> = defaults) {
   const process: CatalogJobProcessor = async (input, checkpointed, signal, checkpoint) => {
     let draft = checkpointed ? structuredClone(checkpointed) : prepareCatalogDraft(input.movie, { language: input.language });
     let checkpointError:unknown;
@@ -29,7 +30,7 @@ export function createCatalogChatProcessor(deps:Omit<typeof defaults,'ensureRefe
     }
     signal.throwIfAborted();
     const match = await catalogOperation({provider:'mongodb',stage:'duplicate-check'},()=>deps.matcher.movie(movieMatchInput(draft)));
-    if (match.status === 'existing') return { status: 'existing', movieId: match.id };
+    if (match.status === 'existing') return deps.refresh?deps.refresh(match.id,input,signal,checkpointed,persist):{ status: 'existing', movieId: match.id };
     if (match.status === 'conflict' || match.status === 'needs-research' && draft.identity.year !== null)
       return { status: 'needs-enrichment', issues: [{ path: 'identity', action: 'research', blocking: true, message: match.reason }] };
     draft=(await references()).draft;

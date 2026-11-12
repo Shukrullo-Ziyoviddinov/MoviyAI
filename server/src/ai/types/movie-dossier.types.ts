@@ -1,4 +1,4 @@
-export type MovieSource = { title: string; url: string; snippet?: string };
+export type MovieSource = { title: string; url: string; snippet?: string;pageFacts?:{title:string;year:number|null;countries:string[]} };
 export type MovieFact<T> = { value: T | null; sources: MovieSource[] };
 export interface MovieDetails {
   productionYears: MovieFact<string>; countries: MovieFact<string[]>; genres: MovieFact<string[]>;
