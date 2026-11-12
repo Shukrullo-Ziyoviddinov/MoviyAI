@@ -9,6 +9,7 @@ import { dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier } from
 import { findMovieTrailer } from './movie-trailer.service.js';
 import { findUzbekMovieLinks, uzbekReleaseTitle } from './uzbek-movie.service.js';
 import { findCatalogChatCandidates } from './catalog-chat-lookup.service.js';
+import {selectWorkingPosters} from './movie-poster-probe.js';
 
 const clueSchema = z.object({
   query: z.string().max(350),
@@ -139,14 +140,18 @@ export function createImageMovieSearch(deps: { searchWeb: typeof searchWeb; sear
       ].filter((item,index,all)=>all.findIndex(other=>other.url===item.url)===index);
       let posters: MovieSearchResult['posters'] = [];
       try {
-        const results = await deps.searchImages(`${match.title} ${match.year ?? ''} movie official theatrical poster -fanart -site:ebay.com -site:etsy.com`, { num: 10 });
-        posters = (results.images ?? []).flatMap(item => {
+        for(let attempt=0;attempt<2&&!posters.length&&!deadline.aborted;attempt++){
+        const query=attempt?`"${match.titleRu??match.title}" ${match.year??''} theatrical film poster`:`${match.title} ${match.year ?? ''} movie official theatrical poster`;
+        const results = await deps.searchImages(`${query} -fanart -site:ebay.com -site:etsy.com -site:instagram.com -site:facebook.com`, { num: 10 });
+        const candidates = (results.images ?? []).flatMap(item => {
           const url = publicHttpsUrl(item.imageUrl);
           if ((item.imageWidth && item.imageWidth < 250) || (item.imageHeight && item.imageHeight < 350)) return [];
           const years: string[] = item.title?.match(/\b(?:19|20)\d{2}\b/g) ?? [];
           if (match.year && years.length && !years.includes(String(match.year))) return [];
           return url ? [{ url, sourceUrl: item.link ? publicHttpsUrl(item.link) : null }] : [];
-        }).filter((item, index, all) => all.findIndex(other => other.url === item.url) === index).slice(0, 2);
+        }).filter((item, index, all) => all.findIndex(other => other.url === item.url) === index).slice(0, 7);
+        posters=await selectWorkingPosters(candidates,deadline);
+        }
       } catch (error) {
         // Keep identification, but make provider failures visible without logging user data.
         console.warn('[MOVIE_POSTERS] Search failed', {status:(error as {status?:number}).status??null});

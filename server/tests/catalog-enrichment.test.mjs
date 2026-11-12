@@ -18,6 +18,13 @@ function fixture() {
 const translated = { uz: { title: 'Changed UZ title', synopsis: 'UZ plot', country: 'AQSh', director: 'A Director' }, ru: { title: 'Пример', synopsis: 'RU plot', country: 'США', director: 'A Director' } };
 const references = { genres: [{ name: 'Dramma', nameRu: 'Драма' }], countries: [{ name: 'USA' }] };
 const notFound = async () => ({ status: 'not-found', method: 'checked-candidates' });
+test('background research retains every supported dossier field, including budget, writers and characters',async()=>{
+ const input=fixture();input.movie.details.countries={value:null,sources:[]};
+ const found=structuredClone(input.movie.details);found.countries=fact(['USA']);found.budget=fact('$28 million');found.boxOffice=fact('$131 million');found.writers=fact(['A Writer']);found.premiere=fact('11 September 2014');found.productionYears=fact('2013-2014');found.characters=[{name:'Hero',originalName:'Hero',description:'Known character',sources:[source]}];
+ const enrich=createCatalogEnricher({researchSources:async()=>found,generate:async()=>translated,searchWeb:async()=>({organic:[]}),searchImages:async()=>({images:[]}),matcher:{actor:async()=>({status:'existing',id:9001,method:'external-id'}),movie:notFound}});
+ const result=await enrich(prepareCatalogDraft(input.movie,{language:'uz'}),input,AbortSignal.timeout(1000),async()=>{});
+ for(const key of ['budget','boxOffice','writers','premiere','productionYears','characters'])assert.deepEqual(result.research.details[key],found[key]);
+});
 function harness({ person = true, credit = true } = {}) {
   let modelCalls = 0, imageCalls = 0, checkpoints = 0;
   const evidence = [

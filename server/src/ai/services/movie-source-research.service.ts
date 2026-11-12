@@ -1,5 +1,6 @@
 import {searchWeb} from './serper.service.js';
 import type {MovieDetails,MovieSource} from '../types/movie-dossier.types.js';
+import {readStructuredMovieFacts} from './movie-page-facts.js';
 
 const providers=[{domain:'imdb.com',path:/^\/title\/tt\d+/},{domain:'wikipedia.org',path:/^\/wiki\//},{domain:'themoviedb.org',path:/^\/movie\/\d+/},{domain:'kinopoisk.ru',path:/^\/(film|series)\/\d+/}];
 function allowed(value:string,person=false){try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&providers.some(p=>(u.hostname===p.domain||u.hostname.endsWith('.'+p.domain))&&(p.path.test(u.pathname)||person&&p.domain==='imdb.com'&&/^\/name\/nm\d+/.test(u.pathname)))?u:null;}catch{return null;}}
@@ -13,7 +14,8 @@ export async function readMovieSource(source:MovieSource,signal:AbortSignal,fetc
   const reader=response.body?.getReader();if(!reader)return null;const chunks:Uint8Array[]=[];let size=0;
   try{for(;;){const {done,value}=await reader.read();if(done)break;chunks.push(value);size+=value.length;if(size>=1000000)break;}}finally{await reader.cancel();}
   const html=Buffer.concat(chunks).toString('utf8');
-  const json=[...html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).join('\n');
+  const scripts=[...html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
+  const json=scripts.join('\n');
   const infobox=html.match(/<table\b[^>]*class=["'][^"']*infobox[^"']*["'][^>]*>[\s\S]*?<\/table>/i)?.[0]??'';
   const clean=(value:string)=>value.replace(/<!--[\s\S]*?-->/g,' ').replace(/<(script|style|nav|footer|header)\b[^>]*>[\s\S]*?<\/\1>/gi,' ').replace(/<[^>]*>/g,' ').replace(/&(?:nbsp|amp|quot|#0?39);/g,' ').replace(/\s+/g,' ').trim();
   const rows=[...infobox.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(row=>({label:clean(row[1].match(/<th\b[^>]*>([\s\S]*?)<\/th>/i)?.[1]??'').toLowerCase(),value:row[1].match(/<td\b[^>]*>([\s\S]*?)<\/td>/i)?.[1]??''}));
@@ -22,12 +24,12 @@ export async function readMovieSource(source:MovieSource,signal:AbortSignal,fetc
   const release=clean(rows.find(row=>/^release/.test(row.label))?.value??'');
   const year=release.match(/\b(?:18|19|20)\d{2}\b/)?.[0];
   const heading=clean(infobox.match(/<caption\b[^>]*>([\s\S]*?)<\/caption>/i)?.[1]??html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1]??source.title);
-  return {...source,url:url.href,pageFacts:{title:heading,year:year?Number(year):null,countries},snippet:(json.slice(0,12000)+'\n'+clean(infobox)+'\n'+clean(html)).slice(0,32000)};
+  return {...source,url:url.href,structuredHtml:scripts.map(script=>`<script type="application/ld+json">${script}</script>`).join('\n'),pageFacts:{title:heading,year:year?Number(year):null,countries},snippet:(json.slice(0,12000)+'\n'+clean(infobox)+'\n'+clean(html)).slice(0,16000)};
  }
  return null;
 }
 const fields=['productionYears','countries','genres','runtimeMinutes','ageRating','synopsis','directors','writers','premiere','budget','boxOffice','imdb','kinopoisk'] as const;
-const known=(fact:unknown)=>!!fact&&typeof fact==='object'&&'value' in fact&&fact.value!==null&&fact.value!==undefined&&(!Array.isArray(fact.value)||fact.value.length>0)&&'sources' in fact&&Array.isArray(fact.sources)&&fact.sources.length>0;
+const known=(fact:unknown)=>!!fact&&typeof fact==='object'&&'value' in fact&&fact.value!==null&&fact.value!==undefined&&(typeof fact.value!=='string'||!!fact.value.trim())&&(!Array.isArray(fact.value)||fact.value.length>0)&&'sources' in fact&&Array.isArray(fact.sources)&&fact.sources.length>0;
 export function missingMovieFacts(details:MovieDetails){return [...fields.filter(field=>!known(details[field])),...(!details.cast.length?['cast']:[]),...(!details.characters?.length?['characters']:[])];}
 export function hasCoreMovieFacts(details?:MovieDetails,requireSources=true){return !!details&&['countries','genres','runtimeMinutes','synopsis','directors'].every(field=>{
  const fact=details[field as keyof MovieDetails];if(requireSources)return known(fact);
@@ -48,11 +50,19 @@ export function createMovieSourceResearch(deps={searchWeb,read:readMovieSource})
    if(!candidates.length)try{searched=true;const result=await deps.searchWeb(`site:${scope} "${(film.titleRu&&provider.domain==='kinopoisk.ru'?film.titleRu:film.title).replace(/"/g,'')}" ${film.year??''} ${terms}`,{num:3});
     candidates=(result.organic??[]).flatMap(item=>{const u=allowed(item.link);return u&&(u.hostname===provider.domain||u.hostname.endsWith('.'+provider.domain))?[{title:item.title,url:u.href,snippet:item.snippet??''}]:[];});
    }catch{/* Try the next independent source. */}
-   // One exact candidate per provider; extraction must verify title/year/version.
-   const source=candidates[0];if(!source)continue;
+   // Try a second indexed page when the first is unavailable; never accept an explicit different release year.
+   candidates=candidates.filter(source=>{const years=source.title.match(/\b(?:18|19|20)\d{2}\b/g)??[];return !film.year||!years.length||years.some(year=>Number(year)===film.year);});
+   for(const source of candidates.slice(0,2)){
+   if(signal.aborted||!missingMovieFacts(details).length)break;
    const page=await deps.read(source,signal).catch(()=>null);let current=page?{...page,snippet:[source.snippet,page.snippet].filter(Boolean).join('\n').slice(0,36000)}:source;
+   const literal=current.structuredHtml?readStructuredMovieFacts(current.structuredHtml,current,film):null;
+   // A literal English synopsis is evidence, not a localized chat answer: let the extractor translate it.
+   if(literal){for(const field of fields)if(field!=='synopsis'&&!known(details[field])&&known(literal[field]))Object.assign(details,{[field]:literal[field]});if(!details.cast.length)details.cast=literal.cast;}
+   // Structured markup is consumed locally, never duplicated into the model prompt.
+   delete current.structuredHtml;
    const needsRating=provider.domain==='imdb.com'&&!known(details.imdb)||provider.domain==='kinopoisk.ru'&&!known(details.kinopoisk);
    if((!current.snippet?.trim()||needsRating)&&!searched&&!signal.aborted)try{
+    searched=true;
     const indexed=await deps.searchWeb(`site:${new URL(source.url).hostname}${new URL(source.url).pathname} ${film.title} ${film.year??''} ${terms}`,{num:3});
     const base=source.url.replace(/\/$/,'');
     const exact=indexed.organic?.filter(item=>item.link.replace(/\/$/,'')===base||item.link.startsWith(base+'/'));
@@ -68,11 +78,14 @@ export function createMovieSourceResearch(deps={searchWeb,read:readMovieSource})
    if(!known(details.countries)&&current.pageFacts?.countries.length&&current.pageFacts.year===film.year&&titleKey(current.pageFacts.title)===titleKey(film.title))
     details.countries={value:current.pageFacts.countries,sources:[{title:current.title,url:current.url}]};
    if(!missingMovieFacts(details).length)break;
-   for(let attempt=0;attempt<2;attempt++)try{const found=await extract([attempt?{...current,snippet:current.snippet?.slice(0,12000)}:current],details);
+   for(let attempt=0;attempt<2;attempt++)try{const found=await extract([{...current,snippet:current.snippet?.slice(0,attempt?8000:16000)}],details);
     for(const field of fields)if(!known(details[field])&&known(found[field]))Object.assign(details,{[field]:found[field]});
-    if(!details.cast.length)details.cast=found.cast;if(!details.characters?.length)details.characters=found.characters;
+    if(!details.cast.length)details.cast=found.cast;
+    else details.cast=details.cast.map(actor=>{const richer=found.cast.find(item=>(item.originalName??item.name).toLowerCase()===(actor.originalName??actor.name).toLowerCase());return !actor.role&&richer?.role?{...actor,role:richer.role,sources:[...actor.sources,...richer.sources].filter((item,index,all)=>all.findIndex(other=>other.url===item.url)===index)}:actor;});
+    if(!details.characters?.length)details.characters=found.characters;
     evidence.push(current);break;
    }catch(error){const status=(error as {status?:number}).status??null;console.warn('[MOVIE_SOURCE]',{event:'extract-failed',provider:provider.domain,status,attempt:attempt+1});if(signal.aborted||![429,500,502,503,504].includes(status??0))break;}
+   }
   }
   return details;
  };

@@ -66,7 +66,8 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
   return async function enrichCatalogDraft(input: CatalogDraft, chat: CatalogChatInput, signal: AbortSignal, checkpoint: (draft: CatalogDraft) => Promise<void>, actorBackfill=false): Promise<CatalogDraft> {
     const draft = structuredClone(input);
     signal.throwIfAborted();
-    const required = ['genres', 'countries', 'runtimeMinutes', 'ageRating', 'synopsis', 'directors', 'imdb', 'kinopoisk'] as const;
+    const required = ['genres','countries','runtimeMinutes','ageRating','synopsis','directors','imdb','kinopoisk'] as const;
+    const fields = ['productionYears',...required,'writers','premiere','budget','boxOffice'] as const;
     if (actorBackfill?!draft.actors.length:(!draft.research.sourceResearchComplete||!hasCoreMovieFacts(draft.research.details))&&(!draft.identity.year||required.some(field => !known<unknown>(draft.research.details?.[field])))) {
       let yearEvidence:MovieSource[]=[];
       let releaseYear:number|null=null;
@@ -77,8 +78,10 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
         return verifiedDossier(raw.dossier,evidence);
       },signal);
       const details = draft.research.details ?? emptyDossier();
-      for (const field of required) if (!known<unknown>(details[field]) && known<unknown>(found[field])) Object.assign(details, { [field]: found[field] });
+      for (const field of fields) if (!known<unknown>(details[field]) && known<unknown>(found[field])) Object.assign(details, { [field]: found[field] });
       if (!details.cast.length && found.cast.length) details.cast = found.cast;
+      if(!details.characters?.length&&found.characters?.length)details.characters=found.characters;
+      details.checkedAt=found.checkedAt;
       draft.research.details = details;
       if(!actorBackfill)draft.research.sourceResearchComplete=!signal.aborted&&hasCoreMovieFacts(details);
       const used = Object.values(details).flatMap(value => value && typeof value === 'object' && !Array.isArray(value) && 'sources' in value ? value.sources : []);
