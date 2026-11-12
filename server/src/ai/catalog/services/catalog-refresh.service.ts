@@ -13,11 +13,13 @@ import type {CatalogDraft} from '../types/catalog.types.js';
 import {hasCoreMovieFacts} from '../../services/movie-source-research.service.js';
 import {storeMoviePosters} from './catalog-poster.service.js';
 import {catalogPublicationIssues} from '../utils/catalog-publication.js';
+import {researchCatalogLinks} from './catalog-link-research.service.js';
 
 /** Existing films receive missing facts; IDs, known values and stored posters stay intact. */
 export async function refreshCatalogMovie(movieId:number,input:CatalogChatInput,signal:AbortSignal,previous?:CatalogDraft|null,checkpoint: (draft:CatalogDraft)=>Promise<void>=async()=>{}):Promise<CatalogSaveResult>{
  let draft=previous?structuredClone(previous):prepareCatalogDraft(input.movie,{language:input.language});
  draft=await enrichCatalogDraft(draft,input,signal,async next=>{draft=structuredClone(next);await checkpoint(draft);});
+ try{draft=await researchCatalogLinks(draft,signal);}catch{signal.throwIfAborted();console.warn('[AI_CATALOG]',{event:'optional-links-unavailable'});}
  let refs=await catalogSaveRepository.references();
  if(resolveCatalogReferences(draft,refs).issues.some(issue=>issue.kind==='missing'))try{refs=await ensureCatalogDictionary(draft,signal);}catch{signal.throwIfAborted();}
  draft=resolveCatalogReferences(draft,refs,{allowMissing:true}).draft;

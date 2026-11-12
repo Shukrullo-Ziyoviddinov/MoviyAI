@@ -3,6 +3,7 @@ export type CharacterImage = { kind?: 'actor'|'character'; label: string; imageU
 export type MovieTableFact = { value: string | number | string[] | null; sources: Array<{title:string;url:string}> };
 export type MovieTableDetails = Partial<Record<'productionYears'|'countries'|'genres'|'directors'|'writers'|'runtimeMinutes'|'premiere'|'imdb'|'kinopoisk'|'budget'|'boxOffice'|'ageRating', MovieTableFact>> & {checkedAt?:string};
 export type MovieSearchResult = {
+    presentation?:'brief'|'details'|'cast'|'characters'|'trailer'|'full';
     linksOnly?:boolean;
     uzbekLinks?:Array<{title:string;url:string;site:string}>;
     trailer?:MovieTrailerData|null;

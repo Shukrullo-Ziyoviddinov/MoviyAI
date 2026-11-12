@@ -23,8 +23,8 @@ export function MovieSearchCard({ movie,children,confirmation }: { movie: MovieS
         <Image source={{ uri: poster.url }} contentFit="cover" style={{ width: '100%', height: '100%' }} />
       </Pressable>)}
     </View>}
-    <MovieTrailer trailer={movie.trailer}/>
-    <MovieDetailsTable movie={movie}/>
+    {(!movie.presentation||movie.presentation==='full'||movie.presentation==='trailer')&&<MovieTrailer trailer={movie.trailer}/>}
+    {(!movie.presentation||movie.presentation==='full'||movie.presentation==='details')&&<MovieDetailsTable movie={movie}/>}
     {children}
     <UzbekMovieLinks links={movie.uzbekLinks}/>
     <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 16, marginBottom: 4 }}>{t('chat.movieSources')}</Text>

@@ -22,8 +22,8 @@ export function MovieSearchCard({ movie,children,confirmation }: { movie: MovieS
         <img src={poster.url} alt={movie.title} loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
       </button>)}
     </div>}
-    <MovieTrailer trailer={movie.trailer}/>
-    <MovieDetailsTable movie={movie}/>
+    {(!movie.presentation||movie.presentation==='full'||movie.presentation==='trailer')&&<MovieTrailer trailer={movie.trailer}/>}
+    {(!movie.presentation||movie.presentation==='full'||movie.presentation==='details')&&<MovieDetailsTable movie={movie}/>}
     {children}
     <UzbekMovieLinks links={movie.uzbekLinks}/>
     <p className="mt-4 mb-1 text-xs font-medium" style={{ color: colors.textMuted }}>{t('chat.movieSources')}</p>

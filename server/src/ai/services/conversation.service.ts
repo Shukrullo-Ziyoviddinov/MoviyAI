@@ -14,6 +14,7 @@ import { resolveDirectImages } from './direct-image.service.js';
 import { findCharacterImages } from './character-image.service.js';
 import { isCatalogEligible } from '../catalog/utils/catalog-chat-input.js';
 import { wakeCatalogWorker } from '../catalog/services/catalog-worker.service.js';
+import {movieFollowup,isContextMovieFollowup} from './movie-followup.service.js';
 function notifyCatalogWorker() {
     try { wakeCatalogWorker(); } catch { console.warn('[AI_CATALOG] Chat saved; background dispatch will retry'); }
 }
@@ -117,6 +118,8 @@ export async function sendConversationMessage(userId: string, id: string, reques
         let result:AiResult&{movie?:MovieSearchResult;recommendations?:MovieRecommendation[]};
         if(searchVideos.length){
             result=await findMovieFromVideo(text,searchVideos,onDelta);
+        } else if(!searchImages.length&&previousMovie&&isContextMovieFollowup(text,previousMovie)){
+            result=await movieFollowup(text,previousMovie,onDelta);
         } else if(!searchImages.length&&isMovieRecommendation(text)) {
             result=await recommendMovies(text,history,onDelta);
         } else if(!searchImages.length&&isNamedMovieSearch(text)) {
@@ -131,7 +134,7 @@ export async function sendConversationMessage(userId: string, id: string, reques
         if(result.recommendations)await Promise.all(result.recommendations.map(async item=>{
             item.characterImages=await findCharacterImages(item.text,item.movie).catch(()=>[]);
         }));
-        const characterImages = result.movie?.linksOnly||result.recommendations?[]:await findCharacterImages(result.text, result.movie);
+        const characterImages = result.movie?.linksOnly||result.movie?.presentation==='brief'||result.movie?.presentation==='trailer'||result.movie?.presentation==='details'||result.recommendations?[]:await findCharacterImages(result.text, result.movie).catch(()=>[]);
         if ('movie' in result && result.movie) for (const portrait of characterImages) {
             if (portrait.sourceUrl && !result.movie.sources.some(source=>source.url===portrait.sourceUrl))
                 result.movie.sources.push({title:portrait.label,url:portrait.sourceUrl});

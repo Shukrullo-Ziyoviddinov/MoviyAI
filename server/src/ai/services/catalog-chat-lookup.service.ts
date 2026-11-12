@@ -37,10 +37,10 @@ export async function findCatalogChatCandidates(titles: string[], year: number |
       const actor = actors.find(actor => actor.id === id);
       return actor ? [actor] : [];
     }).slice(0, 5);
-    details.cast = orderedActors.map(actor => {
+    details.cast = orderedActors.length?orderedActors.map(actor => {
       const previous = saved?.details?.cast.find(item => catalogNameKeys([item.name, item.originalName]).includes(catalogNameKeys([actor.actorName])[0]));
       return { name: actor.actorName, originalName: actor.catalogIdentity?.originalName ?? undefined, role: previous?.role ?? null, sources: previous?.sources ?? [] };
-    });
+    }):(saved?.details?.cast??[]);
     const media = (path: string, folder: string) => /^https:\/\//i.test(path) ? path : `${env.publicUrl}/api/media/${folder}/${encodeURIComponent(path.split('/').pop() ?? '')}`;
     const movie: MovieSearchResult = {
       title: row.catalogIdentity?.originalTitle ?? saved?.title ?? row.title.uz??row.title.ru??'',

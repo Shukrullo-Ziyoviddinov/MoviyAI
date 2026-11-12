@@ -21,11 +21,11 @@ export function mainCharacterLabels(answer: string) {
 function normalized(value: string) { return value.normalize('NFD').replace(/\p{M}/gu, '').replace(/[’‘]/g,"'").replace(/\s+/g,' ').toLowerCase(); }
 export function createCharacterImageSearch(deps = { searchImages }) {
   return async function findCharacterImages(answer: string, movie?:MovieSearchResult): Promise<CharacterImage[]> {
-    if (movie?.catalogId) return movie.catalogPortraits ?? [];
+    if (movie?.catalogId&&movie.presentation!=='characters'&&(movie.catalogPortraits?.length||!movie.presentation)) return movie.catalogPortraits ?? [];
     if(movie?.details && movie.year && AI_CONFIG.serperApiKey){
       const requests=[
-        ...(movie.details.characters??[]).slice(0,5).map(item=>({label:`${item.name} (${item.originalName})`,name:item.originalName,kind:'character' as const})),
-        ...movie.details.cast.slice(0,5).map(item=>({label:item.name,name:item.originalName??item.name,kind:'actor' as const})),
+        ...(movie.presentation==='cast'?[]:movie.details.characters??[]).slice(0,5).map(item=>({label:`${item.name} (${item.originalName})`,name:item.originalName,kind:'character' as const})),
+        ...(movie.presentation==='characters'?[]:movie.details.cast).slice(0,5).map(item=>({label:item.name,name:item.originalName??item.name,kind:'actor' as const})),
       ];
       return (await Promise.all(requests.map(async item=>{
         try{
