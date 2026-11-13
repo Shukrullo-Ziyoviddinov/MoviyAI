@@ -19,6 +19,26 @@ test('optional media errors cannot discard a positively identified movie',async(
  const result=await briefMovieResponse(movie,AbortSignal.timeout(1000),{searchImages:async()=>{throw Error('503');},select:async()=>[],findLinks:async()=>{throw Error('503');}});
  assert.equal(result.movie.title,'Example');assert.equal(result.movie.presentation,'brief');assert.deepEqual(result.movie.posters,[]);assert.deepEqual(result.movie.uzbekLinks,[]);
 });
+
+test('brief reply waits for recovered Uzbek links instead of leaving recovery to catalog enrichment',async()=>{
+ let calls=0;let release;const gate=new Promise(resolve=>{release=resolve;});let completed=false;
+ const link={title:'Misol',url:'https://uzmovi.net/tarjima-kinolar/123-misol.html',site:'uzmovi.net'};
+ const pending=briefMovieResponse({...movie,posters:[{url:'https://cdn.example/poster.jpg'}]},AbortSignal.timeout(2000),{
+  searchImages:async()=>{throw Error('stored posters must be reused');},select:async()=>[],
+  findLinks:async()=>{calls++;if(calls===1)return [];await gate;return [link];},
+ }).then(result=>{completed=true;return result;});
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(calls,2);assert.equal(completed,false);
+ release();const result=await pending;assert.deepEqual(result.movie.uzbekLinks,[link]);assert.equal(result.movie.titleUz,'Misol');
+});
+
+test('brief response reuses stored links and bounds unsuccessful searches',async()=>{
+ const link={title:'Misol',url:'https://asilmedia.org/123-misol.html',site:'asilmedia.org'};let calls=0;
+ const deps={searchImages:async()=>({images:[]}),select:async()=>[],findLinks:async()=>{calls++;return [];}};
+ const cached=await briefMovieResponse({...movie,uzbekLinks:[link]},AbortSignal.timeout(1000),deps);
+ assert.deepEqual(cached.movie.uzbekLinks,[link]);assert.equal(calls,0);
+ const missing=await briefMovieResponse(movie,AbortSignal.timeout(1000),deps);
+ assert.equal(calls,2);assert.deepEqual(missing.movie.uzbekLinks,[]);
+});
 test('context follow-ups distinguish requests about the current movie from a different named title',()=>{
  for(const text of ['Aktyorlari kimlar?','asosiy qahramonlar haqida','treylerini top','reytinglari va janrlari','shu kino haqida to‘liq ma’lumot ber','aktyorlarni rasmlari bilan yubor','show its trailer','Example aktyorlari'])assert.equal(isContextMovieFollowup(text,movie),true,text);
  assert.equal(isContextMovieFollowup('Interstellar treylerini top',movie),false);assert.equal(isContextMovieFollowup('Salom',movie),false);assert.equal(requestedMovieSection('IMDb reytingi'),'details');

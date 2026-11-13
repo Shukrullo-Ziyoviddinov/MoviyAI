@@ -15,7 +15,18 @@ export async function briefMovieResponse(input:MovieSearchResult,signal:AbortSig
  const movie=structuredClone(input);movie.presentation='brief';movie.trailer=null;movie.catalogPortraits=[];
  let linksReady=!!movie.uzbekLinks?.length;
  if(!linksReady)onProgress?.('uzbek_links');
- const linksTask=linksReady?Promise.resolve(movie.uzbekLinks!):deps.findLinks(movie).catch(()=>[]).finally(()=>{linksReady=true;});
+ // Finish the user-facing link search before returning the answer. Background
+ // catalog enrichment is separate and must not be the first useful link lookup.
+ const linksTask=(async()=>{
+  if(linksReady)return movie.uzbekLinks!;
+  for(let attempt=0;attempt<2&&!signal.aborted;attempt++){
+   try {
+    const links=await deps.findLinks(movie);
+    if(links.length)return links;
+   }catch{ /* A second bounded lookup can recover a temporary provider failure. */ }
+  }
+  return [];
+ })().finally(()=>{linksReady=true;});
  if(!movie.posters.length){
   onProgress?.('posters');
   try{
