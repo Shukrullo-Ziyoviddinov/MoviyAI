@@ -2,6 +2,7 @@ import type { ChatMediaItem, MovieSearchResult, CharacterImage } from '../types/
 import { consumeChatStream } from './chat-stream';
 import { apiBaseUrl, readAuthToken } from './client';
 import type {ChatStage,ChatFailureCode} from '../types/chat-progress';
+import {prepareChatVideo} from '../media/prepare-chat-video';
 export type ChatSummary = {
     pinned: boolean;
     id: string;
@@ -56,15 +57,16 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
     const localVideos=media.filter(item=>item.type==='video'&&!item.stored);
     if(media.some(item=>item.type==='video')&&media.length!==1)throw new Error('Bitta video yoki rasmlarni alohida yuboring.');
     if(localVideos.length){
-        onProgress('upload_video');
+        onProgress('preparing_video');
         const item=localVideos[0];
-        const file=item.file;
-        if(!file||file.size>80*1024*1024)throw new Error('Video 80 MB dan oshmasligi kerak.');
+        if(!item.file)throw new Error('Videoni qayta tanlang.');
+        const file=await prepareChatVideo(item.file);
         const bytes=await file.arrayBuffer();
         const digest=await crypto.subtle.digest('SHA-256',bytes);
         const hash=Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
-        const mimeType=item.mimeType||file.type||(/\.mov$/i.test(item.fileName??'')?'video/quicktime':/\.webm$/i.test(item.fileName??'')?'video/webm':'video/mp4');
+        const mimeType=file.type||item.mimeType||(/\.mov$/i.test(item.fileName??'')?'video/quicktime':/\.webm$/i.test(item.fileName??'')?'video/webm':'video/mp4');
         const upload=await request<{url:string;headers:Record<string,string>}>('/'+id+'/video-upload',{requestId,video:{hash,size:file.size,mimeType}});
+        onProgress('upload_video');
         const uploaded=await fetch(upload.url,{method:'PUT',headers:upload.headers,body:file,signal:AbortSignal.timeout(180000)});
         if(!uploaded.ok)throw Object.assign(new Error('Video yuklanmadi.'),{failureCode:'upload_failed'});
     }

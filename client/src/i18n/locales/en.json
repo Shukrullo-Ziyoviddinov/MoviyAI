@@ -217,7 +217,8 @@
       "searching": "Searching online sources",
       "uzbek_links": "Searching for Uzbek-dubbed links",
       "posters": "Checking posters",
-      "preparing": "Preparing the answer"
+      "preparing": "Preparing the answer",
+      "preparing_video": "Preparing video"
     },
     "failures": {
       "insufficient_evidence": "The film could not be reliably identified from this media. Send a clearer image or video showing a recognizable scene.",
@@ -228,7 +229,10 @@
       "timeout": "The request time limit was reached. Send a shorter clip or try again.",
       "video_unreadable": "The uploaded video could not be read. Upload it again.",
       "upload_failed": "The file could not be uploaded. Upload it again.",
-      "unknown": "The request could not be completed. Please try again."
+      "unknown": "The request could not be completed. Please try again.",
+      "compression_unsupported": "This browser cannot perform the required video compression. Send a video smaller than 14 MB or use an updated Chrome/Edge browser.",
+      "compression_failed": "The video could not be prepared. Send another MP4 file or a shorter clip.",
+      "video_too_large": "The video could not be reduced to the required size. Send a file smaller than 14 MB or a shorter clip."
     },
     "retry": "Try again"
   }
