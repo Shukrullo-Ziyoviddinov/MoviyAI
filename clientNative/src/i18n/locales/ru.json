@@ -1,5 +1,6 @@
 {
   "common": {
+    "close": "Закрыть",
     "logout": "Выйти",
     "logoutSystem": "Выйти из аккаунта",
     "language": "Язык",

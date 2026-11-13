@@ -30,7 +30,7 @@ export function ChatComposer() {
   const clearMedia = useComposerStore((state) => state.clearMedia);
   const [text, setText] = useState('');
 
-  const canSend = !pinningId && !deletingId && !loading && !sending && !error && !pending && (!selectedMedia.some(item=>item.type==='video')||selectedMedia.length===1) && (text.trim().length > 0 || selectedMedia.length > 0);
+  const canSend = !picking && !pinningId && !deletingId && !loading && !sending && !error && !pending && (!selectedMedia.some(item=>item.type==='video')||selectedMedia.length===1) && (text.trim().length > 0 || selectedMedia.length > 0);
 
   const handleSend = () => {
     if (!canSend) return;
@@ -93,6 +93,7 @@ export function ChatComposer() {
             picking && styles.mediaBtnDisabled,
           ]}
           onPress={() => pickFromDevice('image')}
+          disabled={picking}
         >
           <GalleryIcon size={18} color={colors.icon} />
         </Pressable>
@@ -103,6 +104,7 @@ export function ChatComposer() {
             picking && styles.mediaBtnDisabled,
           ]}
           onPress={() => pickFromDevice('video')}
+          disabled={picking}
         >
           <VideoIcon size={18} color={colors.icon} />
         </Pressable>

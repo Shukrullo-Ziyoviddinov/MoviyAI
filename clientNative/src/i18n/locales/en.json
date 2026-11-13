@@ -1,5 +1,6 @@
 {
   "common": {
+    "close": "Close",
     "logout": "Log out",
     "logoutSystem": "Sign out",
     "language": "Language",

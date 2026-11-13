@@ -1,5 +1,6 @@
 {
   "common": {
+    "close": "Yopish",
     "logout": "Chiqish",
     "logoutSystem": "Tizimdan chiqish",
     "language": "Til",

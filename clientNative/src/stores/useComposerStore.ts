@@ -2,6 +2,7 @@ import type { SelectedMedia } from '@/components/chat/SelectedMediaStrip';
 import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
 import { create } from 'zustand';
+import { useSideMenuStore } from './useSideMenuStore';
 
 type ComposerState = {
   selectedMedia: SelectedMedia[];
@@ -18,6 +19,7 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
   pickFromDevice: async (type) => {
     if (get().picking) return;
     set({ picking: true });
+    useSideMenuStore.getState().suspendGestures();
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -44,13 +46,16 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
       }));
 
       set((state) => {
-        const existing = new Set(state.selectedMedia.map((item) => item.uri));
+        if(type==='video')return {selectedMedia:nextItems.slice(0,1)};
+        const images=state.selectedMedia.filter(item=>item.type==='image');
+        const existing = new Set(images.map((item) => item.uri));
         const unique = nextItems.filter((item) => !existing.has(item.uri));
-        return { selectedMedia: [...state.selectedMedia, ...unique] };
+        return { selectedMedia: [...images, ...unique].slice(0,3) };
       });
     } catch {
       Alert.alert('Xato', 'Galereyani ochib bo‘lmadi.');
     } finally {
+      useSideMenuStore.getState().resumeGestures();
       set({ picking: false });
     }
   },
