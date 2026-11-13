@@ -1,6 +1,7 @@
 import {hasCoreMovieFacts} from '../dist/ai/services/movie-source-research.service.js';
 import {briefMovieResponse} from '../dist/ai/services/movie-brief.service.js';
 import {ChatFailure,chatFailureCode} from '../dist/ai/types/chat-progress.types.js';
+import {videoEndOffset} from '../dist/ai/utils/video-offset.js';
 import {uzbekReleaseTitle} from '../dist/ai/services/uzbek-movie.service.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -32,8 +33,8 @@ function harness({ searchable = true, badSource = false, posterError = false, de
   const searchImages = async (_query, options) => { posters++; if(options.num===15)throw Object.assign(Error('Unsupported Serper image result count'),{status:400}); if (posterError) throw Error('unavailable'); return { images: manyPosters ? [{imageUrl:'https://example.com/tiny.jpg',imageWidth:80,imageHeight:100},{imageUrl:'https://example.com/wrong.jpg',title:'Interstellar 2025'},...Array.from({length:10},(_,index)=>({imageUrl:'https://example.com/poster-'+index+'.jpg',title:'Interstellar 2014',imageWidth:1000,imageHeight:1500})),{imageUrl:'https://example.com/poster-0.jpg'}] : [
     { imageUrl: 'https://example.com/poster.jpg', link: 'https://example.com/movie' }, { imageUrl: 'http://127.0.0.1/private' },
   ] }; };
-  const api = new Function('ChatFailure','chatFailureCode','briefMovieResponse','selectWorkingPosters','hasCoreMovieFacts','researchMovieSources','MOVIE_FACT_INSTRUCTION','uzbekReleaseTitle', 'GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', 'findUzbekMovieLinks', 'findCatalogChatCandidates', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
-    (ChatFailure,chatFailureCode,briefMovieResponse,async candidates=>candidates.slice(0,2),hasCoreMovieFacts,async(film,sources,details,extract)=>{
+  const api = new Function('videoEndOffset','ChatFailure','chatFailureCode','briefMovieResponse','selectWorkingPosters','hasCoreMovieFacts','researchMovieSources','MOVIE_FACT_INSTRUCTION','uzbekReleaseTitle', 'GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', 'findUzbekMovieLinks', 'findCatalogChatCandidates', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
+    (videoEndOffset,ChatFailure,chatFailureCode,briefMovieResponse,async candidates=>candidates.slice(0,2),hasCoreMovieFacts,async(film,sources,details,extract)=>{
  const evidence=[...sources];
  for(const query of ['film production','production budget','site:kinopoisk','IMDb rating']){try{for(const item of (await searchWeb(query)).organic??[]){const previous=evidence.find(source=>source.url===item.link);if(previous)previous.snippet+=' '+item.snippet;else evidence.push({title:item.title,url:item.link,snippet:item.snippet});}}catch{}}
  return extract(evidence,details);
@@ -55,6 +56,11 @@ test('video requests pass signed R2 fileData and sampling metadata directly to t
  const result=await h.findMovieFromImages('Find movie',[{mimeType:'video/mp4',fileUri,durationSeconds:120}]);
  assert.equal(result.movie.title,'Interstellar');
  for(const call of h.calls.slice(0,2)){const part=call.contents[0].parts[0];assert.equal(part.fileData.fileUri,fileUri);assert.equal(part.fileData.mimeType,'video/mp4');assert.equal(part.inlineData,undefined);assert.equal(part.videoMetadata.endOffset,'120s');assert.equal(part.videoMetadata.fps,1);}
+});
+test('real fractional MP4 duration is normalized on every Gemini video request',async()=>{
+ const h=harness(),durationSeconds=42.63111111111111;
+ await h.findMovieFromImages('Find movie',[{mimeType:'video/mp4',fileUri:'https://r2.example/video?signature=test',durationSeconds}],undefined,undefined,'brief');
+ for(const call of h.calls.slice(0,2))assert.equal(call.contents[0].parts[0].videoMetadata.endOffset,'42.631111111s');
 });
 test('named text lookup produces verified movie data and Uzbek links without an uploaded image',async()=>{
  const h=harness();const result=await h.findMovieFromImages('Interstellar 2014 kinosini top',[]);

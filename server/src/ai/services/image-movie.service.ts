@@ -12,6 +12,7 @@ import { findCatalogChatCandidates } from './catalog-chat-lookup.service.js';
 import {selectWorkingPosters} from './movie-poster-probe.js';
 import {briefMovieResponse} from './movie-brief.service.js';
 import {ChatFailure,chatFailureCode,type ChatProgress} from '../types/chat-progress.types.js';
+import {videoEndOffset} from '../utils/video-offset.js';
 
 const clueSchema = z.object({
   query: z.string().max(350),
@@ -71,7 +72,7 @@ export function createImageMovieSearch(deps: { searchWeb: typeof searchWeb; sear
       throw new AiServiceError('Kino tahlili yakunlanmadi.');
     }
     const mediaParts: Part[] = images.map(image => 'fileUri' in image
-      ? { fileData: { mimeType: image.mimeType, fileUri: image.fileUri },...(image.mimeType.startsWith('video/')?{videoMetadata:{fps:1,startOffset:'0s',endOffset:`${image.durationSeconds??180}s`}}:{}) }
+      ? { fileData: { mimeType: image.mimeType, fileUri: image.fileUri },...(image.mimeType.startsWith('video/')?{videoMetadata:{fps:1,startOffset:'0s',endOffset:videoEndOffset(image.durationSeconds??180)}}:{}) }
       : { inlineData: { mimeType: image.mimeType, data: image.data.toString('base64') } });
     async function completeCachedLinks(movie:MovieSearchResult) {
       if(!images.length&&!movie.uzbekLinks?.length) {
