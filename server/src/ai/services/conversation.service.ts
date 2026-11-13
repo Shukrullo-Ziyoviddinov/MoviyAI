@@ -15,6 +15,7 @@ import { findCharacterImages } from './character-image.service.js';
 import { isCatalogEligible } from '../catalog/utils/catalog-chat-input.js';
 import { wakeCatalogWorker } from '../catalog/services/catalog-worker.service.js';
 import {movieFollowup,isContextMovieFollowup} from './movie-followup.service.js';
+import {ChatFailure,chatFailureCode,type ChatProgress,type ChatStage} from '../types/chat-progress.types.js';
 function notifyCatalogWorker() {
     try { wakeCatalogWorker(); } catch { console.warn('[AI_CATALOG] Chat saved; background dispatch will retry'); }
 }
@@ -57,11 +58,13 @@ export async function getConversation(userId: string, id: string) {
             characterImages: turn.characterImages ?? [],
             recommendations: turn.recommendations??[],
             status: turn.status === 'processing' && row.lockUntil <= new Date() ? 'failed' : turn.status,
+            progressStage:turn.status==='processing'?turn.progressStage??null:null,
+            failureCode:turn.failureCode??null,
             createdAt: turn.createdAt, model: turn.model,
         }))),
     };
 }
-export async function sendConversationMessage(userId: string, id: string, requestId: string, text: string, onDelta?: (text: string) => void, uploadedImages: ChatImageInput[] = [], directImages = false,directVideo=false) {
+export async function sendConversationMessage(userId: string, id: string, requestId: string, text: string, onDelta?: (text: string) => void, uploadedImages: ChatImageInput[] = [], directImages = false,directVideo=false,onProgress?:ChatProgress) {
     if(directVideo&&(directImages||uploadedImages.length))throw new ConversationError('Send one video or images separately',400);
     const existing = await ChatTurn.findOne({ userId, conversationId: id, requestId }).lean();
     if (existing && existing.text !== text)
@@ -72,6 +75,8 @@ export async function sendConversationMessage(userId: string, id: string, reques
     }
     if (existing?.status === 'completed') { notifyCatalogWorker(); return getConversation(userId, id); }
     const lockToken = randomUUID();
+    let progressWrites=Promise.resolve();
+    const progress=(stage:ChatStage)=>{onProgress?.(stage);progressWrites=progressWrites.then(async()=>{await ChatTurn.updateOne({conversationId:id,userId,requestId,attemptToken:lockToken,status:'processing'},{$set:{progressStage:stage}});}).catch(()=>{});};
     const locked = await Conversation.findOneAndUpdate({
         _id: id, userId, deletedAt: null, lockUntil: { $lte: new Date() },
     }, { $set: { lockToken, lockUntil: new Date(Date.now() + 240000) } }, { returnDocument: 'after' });
@@ -94,11 +99,12 @@ export async function sendConversationMessage(userId: string, id: string, reques
             throw new ConversationError('Retry the unanswered message before sending another', 409);
         }
         const references = directImages ? await resolveDirectImages(userId, id, requestId) : imageReferences(id, requestId, images);
-        const videoReferences=directVideo?await resolveDirectVideo(userId,id,requestId):[];
+        let videoReferences:Awaited<ReturnType<typeof resolveDirectVideo>>=[];
+        if(directVideo)try{videoReferences=await resolveDirectVideo(userId,id,requestId);}catch(error){const code=(error as {message?:string;name?:string}).message??'';if(/^(?:VIDEO_CHANGED|UPLOAD_EXPIRED|INVALID_VIDEO|UNSUPPORTED_VIDEO|VIDEO_DURATION)/.test(code)||(error as {name?:string}).name==='NoSuchKey')throw new ChatFailure('video_unreadable');throw error;}
         if(directVideo&&replay&&JSON.stringify((replay.videos??[]).map(video=>video.hash))!==JSON.stringify(videoReferences.map(video=>video.hash)))throw new ConversationError('Attachments already selected',409);
         if (replay && directImages && JSON.stringify(replay.images.map(image => image.hash)) !== JSON.stringify(references.map(image => image.hash))) throw new ConversationError('Attachments already selected', 409);
         await ChatTurn.updateOne({ conversationId: id, userId, requestId }, {
-            $set: { status: 'processing', attemptToken: lockToken }, $setOnInsert: { text, images: references,videos:videoReferences },
+            $set: { status: 'processing', attemptToken: lockToken,progressStage:null,failureCode:null }, $setOnInsert: { text, images: references,videos:videoReferences },
         }, { upsert: true });
         await Conversation.updateOne({ _id: id, userId, lockToken }, {
             $set: { title: locked.title === 'Yangi chat' ? text.slice(0, 100) : locked.title },
@@ -117,7 +123,7 @@ export async function sendConversationMessage(userId: string, id: string, reques
         const previousMovie=(contextTurn?.movie??(contextTurn?.recommendations?.length===1?contextTurn.recommendations[0].movie:undefined)) as MovieSearchResult|undefined;
         let result:AiResult&{movie?:MovieSearchResult;recommendations?:MovieRecommendation[]};
         if(searchVideos.length){
-            result=await findMovieFromVideo(text,searchVideos,onDelta);
+            result=await findMovieFromVideo(text,searchVideos,onDelta,progress);
         } else if(!searchImages.length&&previousMovie&&isContextMovieFollowup(text,previousMovie)){
             result=await movieFollowup(text,previousMovie,onDelta);
         } else if(!searchImages.length&&isMovieRecommendation(text)) {
@@ -129,7 +135,7 @@ export async function sendConversationMessage(userId: string, id: string, reques
             result={text:uzbekLookupReply(text,uzbekLinks.length>0),model:'uzbek-movie-search',movie:{...previousMovie,titleUz:uzbekReleaseTitle(uzbekLinks)??previousMovie.titleUz,uzbekLinks,linksOnly:true}};
             onDelta?.(result.text);
         } else result = searchImages.length
-            ? await findMovieFromImages(text, searchImages, onDelta)
+            ? await findMovieFromImages(text, searchImages, onDelta,undefined,undefined,progress)
             : await chatWithGemma({ text, history }, onDelta);
         if(result.recommendations)await Promise.all(result.recommendations.map(async item=>{
             item.characterImages=await findCharacterImages(item.text,item.movie).catch(()=>[]);
@@ -139,16 +145,20 @@ export async function sendConversationMessage(userId: string, id: string, reques
             if (portrait.sourceUrl && !result.movie.sources.some(source=>source.url===portrait.sourceUrl))
                 result.movie.sources.push({title:portrait.label,url:portrait.sourceUrl});
         }
+        progress('preparing');await progressWrites;
         await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken }, {
             $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages,recommendations:result.recommendations??[],
-                catalogDispatch: isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie)) ? 'pending' : 'none' },
+                progressStage:null,failureCode:null,catalogDispatch: isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie)) ? 'pending' : 'none' },
         });
         // The outbox flag is committed with the answer. Worker/R2/AI failures
         // cannot change a completed chat turn into a failed generation.
         if (isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie))) notifyCatalogWorker();
     }
     catch (error) {
-        await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken, status: 'processing' }, { $set: { status: 'failed' } });
+        await progressWrites;
+        const failureCode=chatFailureCode(error);
+        console.warn('[CHAT_FAILURE]',{failureCode});
+        await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken, status: 'processing' }, { $set: { status: 'failed',failureCode,progressStage:null } });
         throw error;
     }
     finally {

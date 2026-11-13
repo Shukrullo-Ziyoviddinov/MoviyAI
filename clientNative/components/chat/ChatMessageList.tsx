@@ -16,6 +16,8 @@ export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
  const error=useChatStore(s=>s.error);
  const retry=useChatStore(s=>s.retry);
  const loading=useChatStore(s=>s.loading);
+ const progressStage=useChatStore(s=>s.progressStage);
+ const failureCode=useChatStore(s=>s.failureCode);
  const streamingText=useChatStore(s=>s.streamingText);
  const activeId=useChatStore(s=>s.activeId);
  const refreshMedia=useChatStore(s=>s.refreshMedia);
@@ -29,7 +31,7 @@ export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
   scrollEventThrottle={32}
   onScroll={event=>{const {contentSize,contentOffset,layoutMeasurement}=event.nativeEvent;following.current=contentSize.height-contentOffset.y-layoutMeasurement.height<100;}}
   onContentSizeChange={()=>{if(following.current)list.current?.scrollToEnd({animated:false});}}
-  ListFooterComponent={sending ? (streamingText ? <TextMessageBubble text={streamingText} role="model"/> : <AiWaiting/>) : error ? <AiError message={error} onRetry={retry} disabled={loading}/> : null}
+  ListFooterComponent={sending ? (streamingText ? <TextMessageBubble text={streamingText} role="model"/> : <AiWaiting stage={progressStage}/>) : error ? <AiError message={error} failureCode={failureCode} onRetry={retry} disabled={loading}/> : null}
   renderItem={({item})=>item.kind==='text'?<TextMessageBubble text={item.text} role={item.role} movie={item.movie} characterImages={item.characterImages}/>:<MediaGridBlock items={item.items}/>}
  />;
 }

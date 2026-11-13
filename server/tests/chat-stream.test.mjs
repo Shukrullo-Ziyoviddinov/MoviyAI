@@ -3,14 +3,15 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
+import {ChatFailure,chatFailureCode} from '../dist/ai/types/chat-progress.types.js';
 
 const source = readFileSync(new URL('../dist/ai/controllers/conversation.controller.js', import.meta.url), 'utf8')
   .replace(/^import .*;$/gm, '').replace(/\bexport /g, '');
 class AiServiceError extends Error {}
 function controller(work) {
   class ConversationError extends Error {}
-  return new Function('z', 'service', 'AiServiceError', 'setInterval', 'clearInterval', source + '\nreturn send;')
-    (z, { sendConversationMessage: work, ConversationError }, AiServiceError, setInterval, clearInterval);
+  return new Function('ChatFailure','chatFailureCode','z', 'service', 'AiServiceError', 'setInterval', 'clearInterval', source + '\nreturn send;')
+    (ChatFailure,chatFailureCode,z, { sendConversationMessage: work, ConversationError }, AiServiceError, setInterval, clearInterval);
 }
 function response() {
   const result = { statusCode: 0, headers: {}, writes: [], ended: false, flushed: false,
@@ -45,6 +46,13 @@ test('provider stream failure is a safe error event and closes the response', as
   const send = controller(async (_owner, _id, _request, _text, delta) => { delta('Partial'); throw new AiServiceError('SECRET'); });
   await send(request(), res);
   assert.match(res.writes.at(-1), /"type":"error"/); assert.ok(!res.writes.join('').includes('SECRET')); assert.ok(res.ended);
+});
+
+test('SSE forwards actual stage callbacks and a specific safe failure code',async()=>{
+ const res=response();const send=controller(async(_owner,_id,_request,_text,_delta,_images,_directImages,_directVideo,progress)=>{
+  progress('analyzing_video');progress('searching');throw new ChatFailure('provider_unavailable');
+ });await send(request(),res);
+ const events=res.writes.map(line=>JSON.parse(line.slice(6)));assert.deepEqual(events.slice(0,2),[{type:'progress',stage:'analyzing_video'},{type:'progress',stage:'searching'}]);assert.equal(events[2].code,'provider_unavailable');assert.ok(res.ended);
 });
 test('invalid input is rejected before opening a stream or invoking AI', async () => {
   const res = response(), req = request(); req.body.text = '';

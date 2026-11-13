@@ -4,16 +4,20 @@ import {selectWorkingPosters} from './movie-poster-probe.js';
 import {emptyDossier} from './movie-dossier.js';
 import type {MovieSearchResult} from '../types/movie-search.types.js';
 import {isPublicHttpsUrl} from '../catalog/validators/catalog.validator.js';
+import type {ChatProgress} from '../types/chat-progress.types.js';
 
 export function renderBriefMovie(movie:MovieSearchResult){
  const language=movie.language??'uz';const labels={uz:{about:'Kino haqida',confirm:'Siz izlagan kino shumi?'},ru:{about:'О фильме',confirm:'Это фильм, который вы искали?'},en:{about:'About the film',confirm:'Is this the film you were looking for?'}}[language];
  const synopsis=movie.details?.synopsis.value?.trim();
  return [`### ${labels.about}`,synopsis?synopsis.slice(0,600):`${movie.title}${movie.year?` (${movie.year})`:''}`,labels.confirm].join('\n\n');
 }
-export async function briefMovieResponse(input:MovieSearchResult,signal:AbortSignal,deps={searchImages,findLinks:findUzbekMovieLinks,select:selectWorkingPosters}){
+export async function briefMovieResponse(input:MovieSearchResult,signal:AbortSignal,deps={searchImages,findLinks:findUzbekMovieLinks,select:selectWorkingPosters},onProgress?:ChatProgress){
  const movie=structuredClone(input);movie.presentation='brief';movie.trailer=null;movie.catalogPortraits=[];
- const linksTask=movie.uzbekLinks?.length?Promise.resolve(movie.uzbekLinks):deps.findLinks(movie).catch(()=>[]);
+ let linksReady=!!movie.uzbekLinks?.length;
+ if(!linksReady)onProgress?.('uzbek_links');
+ const linksTask=linksReady?Promise.resolve(movie.uzbekLinks!):deps.findLinks(movie).catch(()=>[]).finally(()=>{linksReady=true;});
  if(!movie.posters.length){
+  onProgress?.('posters');
   try{
    for(let attempt=0;attempt<2&&!movie.posters.length&&!signal.aborted;attempt++){
     const result=await deps.searchImages(`${attempt?'"'+movie.title+'"':movie.title} ${movie.year??''} ${attempt?'theatrical':'official'} movie poster -fanart -site:instagram.com -site:facebook.com`,{num:10});
@@ -22,6 +26,7 @@ export async function briefMovieResponse(input:MovieSearchResult,signal:AbortSig
    }
   }catch{ /* Identification survives optional poster service failure. */ }
  }
+ if(!linksReady)onProgress?.('uzbek_links');
  movie.uzbekLinks=await linksTask;movie.titleUz=uzbekReleaseTitle(movie.uzbekLinks)??movie.titleUz;
  movie.details??=emptyDossier();
  return {text:renderBriefMovie(movie),movie};

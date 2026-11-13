@@ -25,15 +25,16 @@ function harness() {
       if (!db.has(id)) throw Error('not found');
       return copy(db.get(id));
     },
-    sendChat: async (id, requestId, text, onDelta, media = []) => {
+    sendChat: async (id, requestId, text, onDelta, media = [],onProgress=()=>{}) => {
       calls++;
       const chat = db.get(id);
       let turn = chat.turns.find(turn => turn.requestId === requestId);
       if (!turn) { turn = { requestId, text, images:media.filter(item=>item.type==='image').map((item,index)=>({id:item.id,type:'image',path:'/image-'+index+'.jpg'})),videos:media.filter(item=>item.type==='video').map(item=>({id:item.id,type:'video',path:'/video.mp4'})), answer: '', status: 'processing', createdAt: new Date().toISOString() }; chat.turns.push(turn); }
       chat.title = text;
+      onProgress('searching');
       for (const delta of deltas) onDelta(delta);
       if (hold) await hold;
-      if (fail) { turn.status = 'failed'; throw Error('provider failed'); }
+      if (fail) { turn.status = 'failed';turn.failureCode=typeof fail==='string'?fail:null; throw Object.assign(Error('provider failed'),{failureCode:turn.failureCode}); }
       turn.status = 'completed'; turn.answer = 'Answer'; return copy(chat);
     },
   };
@@ -50,6 +51,16 @@ function harness() {
 }
 
 test('web and native use identical session behavior', () => assert.equal(source, nativeSource));
+
+test('real progress is observable while sending and clears when the saved reply arrives',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');let release;h.hold(new Promise(resolve=>{release=resolve;}));
+ session.actions.sendMessage({text:'Question'});await tick();assert.equal(session.getState().sending,true);assert.equal(session.getState().progressStage,'searching');
+ release();await tick();assert.equal(session.getState().progressStage,null);
+});
+test('a persisted failure reason survives reopening a chat and resets on new chat',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');h.fail('timeout');session.actions.sendMessage({text:'Question'});await tick();const id=session.getState().activeId;
+ assert.equal(session.getState().failureCode,'timeout');await session.actions.openChat(id);assert.equal(session.getState().failureCode,'timeout');session.actions.newChat();assert.equal(session.getState().failureCode,null);
+});
 
 test('saved recommendations reopen as independent movie blocks in web and native session',async()=>{
  const h=harness(),session=h.create();await session.actions.initialize('alice');

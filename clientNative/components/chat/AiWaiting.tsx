@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { useTheme } from '@/src/stores/useThemeStore';
+import {useTranslation} from 'react-i18next';
+import type {ChatStage} from '@/src/types/chat-progress';
 
-export function AiWaiting() {
+export function AiWaiting({stage}:{stage?:ChatStage|null}) {
   const { colors } = useTheme();
+  const {t}=useTranslation();const label=t('chat.progress.'+(stage??'preparing'));
   const [rotation] = useState(() => new Animated.Value(0));
   const [reduced, setReduced] = useState(true);
   useEffect(() => {
@@ -19,7 +22,7 @@ export function AiWaiting() {
     animation.start();
     return () => { animation.stop(); rotation.setValue(0); };
   }, [reduced, rotation]);
-  return <View accessible accessibilityRole="progressbar" accessibilityLabel="Javob tayyorlanmoqda"
+  return <View accessible accessibilityRole="progressbar" accessibilityLabel={label}
     style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 20 }}>
     <Animated.View style={{ transform: [{ rotate: rotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }}>
       <Svg width={28} height={28} viewBox="0 0 28 28">
@@ -28,6 +31,6 @@ export function AiWaiting() {
         {[[14, 7], [21, 14], [14, 21], [7, 14]].map(([cx, cy]) => <Circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={3} fill={colors.accentBright} opacity={0.7} />)}
       </Svg>
     </Animated.View>
-    <Text style={{ color: colors.textMuted, fontSize: 14 }}>Javob tayyorlanmoqda...</Text>
+    <Text style={{ color: colors.textMuted, fontSize: 14 }}>{label}...</Text>
   </View>;
 }

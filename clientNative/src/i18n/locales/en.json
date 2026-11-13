@@ -206,6 +206,30 @@
       "note": "External sites. Language is stated by the site; playback availability is not guaranteed.",
       "open": "Open movie page"
     },
-    "videoPrompt": "Find the movie in this video."
+    "videoPrompt": "Find the movie in this video.",
+    "progress": {
+      "upload_video": "Uploading video",
+      "upload_image": "Uploading image",
+      "analyzing_video": "Analyzing video scenes",
+      "analyzing_image": "Analyzing image details",
+      "verifying": "Verifying the title and match",
+      "catalog": "Checking the Moviy AI database",
+      "searching": "Searching online sources",
+      "uzbek_links": "Searching for Uzbek-dubbed links",
+      "posters": "Checking posters",
+      "preparing": "Preparing the answer"
+    },
+    "failures": {
+      "insufficient_evidence": "The film could not be reliably identified from this media. Send a clearer image or video showing a recognizable scene.",
+      "identity_unconfirmed": "An exact match could not be confirmed from the search results. Send another frame or clip.",
+      "provider_unavailable": "The AI service has a temporary problem. Please try again.",
+      "search_unavailable": "The online search could not be completed. Please try again.",
+      "rate_limited": "The service request limit was reached. Wait a moment and try again.",
+      "timeout": "The request time limit was reached. Send a shorter clip or try again.",
+      "video_unreadable": "The uploaded video could not be read. Upload it again.",
+      "upload_failed": "The file could not be uploaded. Upload it again.",
+      "unknown": "The request could not be completed. Please try again."
+    },
+    "retry": "Try again"
   }
 }

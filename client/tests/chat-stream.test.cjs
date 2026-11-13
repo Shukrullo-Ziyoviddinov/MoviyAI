@@ -18,6 +18,16 @@ test('native and web share the stream parser and text reveal behavior', () => {
       fs.readFileSync(path.join(__dirname, '../../clientNative/src/' + file), 'utf8'));
   }
 });
+
+test('all progress and failure labels exist in Uzbek, Russian and English on both clients',()=>{
+ const stages=['upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'];
+ const failures=['insufficient_evidence','identity_unconfirmed','provider_unavailable','search_unavailable','rate_limited','timeout','video_unreadable','upload_failed','unknown'];
+ for(const language of ['uz','ru','en']){
+  const web=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/i18n/locales/'+language+'.json'),'utf8')).chat;
+  const native=JSON.parse(fs.readFileSync(path.join(__dirname,'../../clientNative/src/i18n/locales/'+language+'.json'),'utf8')).chat;
+  for(const [group,keys] of [['progress',stages],['failures',failures]])for(const key of keys){assert.ok(web[group][key]?.trim());assert.equal(web[group][key],native[group][key]);}
+ }
+});
 function response(text, size = 3) {
   const bytes = new TextEncoder().encode(text);
   let offset = 0, released = false;
@@ -36,6 +46,17 @@ test('stream errors and premature disconnect are not mistaken for completed answ
   for (const text of ['data: {"type":"error"}\n\n', 'data: {"type":"delta","text":"Partial"}\n\n']) {
     const input = response(text); await assert.rejects(() => consumeChatStream(input, () => {})); assert.ok(input.released());
   }
+});
+
+test('real progress stages cross fragmented SSE without becoming answer text',async()=>{
+ const stages=[],deltas=[];const input=response('data: {"type":"progress","stage":"analyzing_video"}\n\ndata: {"type":"progress","stage":"invented"}\n\ndata: {"type":"progress","stage":"searching"}\n\ndata: {"type":"delta","text":"Result"}\n\ndata: {"type":"done","data":{"id":"chat","turns":[]}}\n\n',2);
+ await consumeChatStream(input,text=>deltas.push(text),stage=>stages.push(stage));assert.deepEqual(stages,['analyzing_video','searching']);assert.deepEqual(deltas,['Result']);
+});
+test('SSE failures preserve whitelisted cause codes and ignore arbitrary error text',async()=>{
+ for(const [code,expected] of [['video_unreadable','video_unreadable'],['timeout','timeout'],['invented','unknown']]){
+  const input=response('data: '+JSON.stringify({type:'error',code,message:'SECRET'})+'\n\n');
+  await assert.rejects(()=>consumeChatStream(input,()=>{}),error=>error.failureCode===expected&&!error.message.includes('SECRET'));
+ }
 });
 test('text reveal is progressive, preserves emoji, and drains before completion', async () => {
   const frames = [], scheduled = [];

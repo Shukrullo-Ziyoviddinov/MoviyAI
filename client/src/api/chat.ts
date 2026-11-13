@@ -1,6 +1,7 @@
 import type { ChatMediaItem, MovieSearchResult, CharacterImage } from '../types/chat';
 import { consumeChatStream } from './chat-stream';
 import { apiBaseUrl, readAuthToken } from './client';
+import type {ChatStage,ChatFailureCode} from '../types/chat-progress';
 export type ChatSummary = {
     pinned: boolean;
     id: string;
@@ -8,6 +9,8 @@ export type ChatSummary = {
     updatedAt: string;
 };
 export type SavedTurn = {
+    progressStage?:ChatStage|null;
+    failureCode?:ChatFailureCode|null;
     videos?:Array<{id:string;type:'video';path:string;duration?:number}>;
     recommendations?:Array<{text:string;movie:MovieSearchResult;characterImages?:CharacterImage[]}>;
     characterImages?: CharacterImage[];
@@ -45,7 +48,7 @@ async function request<T>(path: string, body?: unknown, method?: string): Promis
 export const listChats = () => request<ChatSummary[]>('');
 export const createChat = (id: string) => request<SavedConversation>('', { id });
 export const getChat = (id: string) => request<SavedConversation>('/' + id);
-export async function sendChat(id: string, requestId: string, text: string, onDelta: (text: string) => void = () => { }, media: ChatMediaItem[] = []): Promise<SavedConversation> {
+export async function sendChat(id: string, requestId: string, text: string, onDelta: (text: string) => void = () => { }, media: ChatMediaItem[] = [],onProgress:(stage:ChatStage)=>void=()=>{}): Promise<SavedConversation> {
     const token = readAuthToken();
     if (!token)
         throw new Error('Hisobingizga kiring.');
@@ -53,6 +56,7 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
     const localVideos=media.filter(item=>item.type==='video'&&!item.stored);
     if(media.some(item=>item.type==='video')&&media.length!==1)throw new Error('Bitta video yoki rasmlarni alohida yuboring.');
     if(localVideos.length){
+        onProgress('upload_video');
         const item=localVideos[0];
         const file=item.file;
         if(!file||file.size>80*1024*1024)throw new Error('Video 80 MB dan oshmasligi kerak.');
@@ -62,9 +66,10 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
         const mimeType=item.mimeType||file.type||(/\.mov$/i.test(item.fileName??'')?'video/quicktime':/\.webm$/i.test(item.fileName??'')?'video/webm':'video/mp4');
         const upload=await request<{url:string;headers:Record<string,string>}>('/'+id+'/video-upload',{requestId,video:{hash,size:file.size,mimeType}});
         const uploaded=await fetch(upload.url,{method:'PUT',headers:upload.headers,body:file,signal:AbortSignal.timeout(180000)});
-        if(!uploaded.ok)throw new Error('Video yuklanmadi. Qayta urinib koring.');
+        if(!uploaded.ok)throw Object.assign(new Error('Video yuklanmadi.'),{failureCode:'upload_failed'});
     }
     if (localImages.length) {
+        onProgress('upload_image');
         const files = await Promise.all(localImages.map(async image => {
             const file = image.file;
             if (!file) throw new Error('Rasmni qayta tanlang.');
@@ -78,7 +83,7 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
         for (let index=0;index<files.length;index++) {
             const uploaded = await fetch(uploads[index].url, { method:'PUT', headers:uploads[index].headers,
                 body:files[index].file, signal:AbortSignal.timeout(60000) });
-            if (!uploaded.ok) throw new Error('Rasm yuklanmadi. Qayta urinib koring.');
+            if (!uploaded.ok) throw Object.assign(new Error('Rasm yuklanmadi.'),{failureCode:'upload_failed'});
         }
     }
     const body = JSON.stringify({requestId,text,...(localImages.length ? {directImages:true} : {}),...(localVideos.length?{directVideo:true}:{})});
@@ -86,7 +91,7 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
     const response = await fetch(apiBaseUrl + '/api/ai/conversations/' + id + '/messages', {
         method: 'POST', headers, body, signal: AbortSignal.timeout(240000),
     });
-    return consumeChatStream(response, onDelta);
+    return consumeChatStream(response, onDelta,onProgress);
 }
 export const deleteChat = (id: string) => request<{
     id: string;

@@ -1,6 +1,7 @@
 import { createTextReveal } from './text-reveal';
 import * as api from '../api/chat';
 import type { ChatMessage, ChatMediaItem } from '../types/chat';
+import type {ChatStage,ChatFailureCode} from '../types/chat-progress';
 type Pending = {
     media?: ChatMediaItem[];
     conversationId: string;
@@ -8,6 +9,8 @@ type Pending = {
     text: string;
 };
 type State = {
+    progressStage:ChatStage|null;
+    failureCode:ChatFailureCode|null;
     pinningId: string | null;
     pinError: string | null;
     deletingId: string | null;
@@ -32,7 +35,7 @@ export function createChatSession(storage: Storage) {
     let revision = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const listeners = new Set<() => void>();
-    let state: State = { listLoading: false, pinningId: null, pinError: null, deletingId: null, deleteError: null, streamingText: '', owner: null, activeId: null, conversations: [], messages: [], loading: false, sending: false, error: null, pending: null };
+    let state: State = { progressStage:null,failureCode:null,listLoading: false, pinningId: null, pinError: null, deletingId: null, deleteError: null, streamingText: '', owner: null, activeId: null, conversations: [], messages: [], loading: false, sending: false, error: null, pending: null };
     const emit = (patch: Partial<State>) => { state = { ...state, ...patch }; listeners.forEach(fn => fn()); };
     const key = (owner: string) => 'moviy.activeChat.' + owner;
     const remember = async (id: string) => {
@@ -41,7 +44,7 @@ export function createChatSession(storage: Storage) {
     };
     function apply(chat: api.SavedConversation) {
         const failed = chat.turns.find(turn => turn.status === 'failed');
-        emit({ streamingText: '', activeId: chat.id, messages: chat.turns.flatMap(turn => {
+        emit({ progressStage:chat.turns.find(turn=>turn.status==='processing')?.progressStage??null,failureCode:failed?.failureCode??null,streamingText: '', activeId: chat.id, messages: chat.turns.flatMap(turn => {
                 const messages: ChatMessage[] = [];
                 const media = [...(turn.images??[]),...(turn.videos??[])].map(image => ({ id: image.id, type: image.type, uri: api.chatMediaUrl(image.path), stored: true }));
                 if (media.length)
@@ -77,7 +80,7 @@ export function createChatSession(storage: Storage) {
         const version = ++revision;
         clearTimeout(timer);
         timer = undefined;
-        emit({ listLoading: false, loading: true, error: null, pending: null });
+        emit({ progressStage:null,failureCode:null,listLoading: false, loading: true, error: null, pending: null });
         try {
             const chat = await api.getChat(id);
             if (version !== revision)
@@ -120,7 +123,7 @@ export function createChatSession(storage: Storage) {
         const version = ++revision;
         clearTimeout(timer);
         timer = undefined;
-        emit({ pinningId: null, pinError: null, deletingId: null, deleteError: null, streamingText: '', listLoading: !!owner, owner, activeId: null, conversations: [], messages: [], loading: !!owner, sending: false, error: null, pending: null });
+        emit({ progressStage:null,failureCode:null,pinningId: null, pinError: null, deletingId: null, deleteError: null, streamingText: '', listLoading: !!owner, owner, activeId: null, conversations: [], messages: [], loading: !!owner, sending: false, error: null, pending: null });
         if (!owner)
             return;
         try {
@@ -143,14 +146,14 @@ export function createChatSession(storage: Storage) {
         ++revision;
         clearTimeout(timer);
         timer = undefined;
-        emit({ listLoading: false, streamingText: '', activeId: null, messages: [], pending: null, error: null });
+        emit({ progressStage:null,failureCode:null,listLoading: false, streamingText: '', activeId: null, messages: [], pending: null, error: null });
         void remember('');
     }
     async function deliver(payload: Pending) {
         if (state.sending || !state.owner)
             return;
         const version = revision;
-        emit({ sending: true, error: null, streamingText: '' });
+        emit({ sending: true, error: null,failureCode:null,progressStage:'preparing', streamingText: '' });
         const reveal = createTextReveal(text => emit({ streamingText: text }), () => version === revision);
         try {
             await remember(payload.conversationId);
@@ -161,17 +164,18 @@ export function createChatSession(storage: Storage) {
                 return;
             if (!state.conversations.some(chat => chat.id === payload.conversationId))
                 emit({ conversations: [{ id: payload.conversationId, pinned: false, title: payload.text.slice(0, 100), updatedAt: new Date().toISOString() }, ...state.conversations] });
-            const chat = await api.sendChat(payload.conversationId, payload.requestId, payload.text, delta => reveal.push(delta), payload.media);
+            const chat = await api.sendChat(payload.conversationId, payload.requestId, payload.text, delta => reveal.push(delta), payload.media,stage=>{if(version===revision)emit({progressStage:stage});});
             await reveal.finish();
             if (version !== revision)
                 return;
             apply(chat);
             await refreshList(version);
         }
-        catch {
+        catch (failure) {
             reveal.cancel();
             if (version !== revision)
                 return;
+            const code=(failure as {failureCode?:ChatFailureCode;name?:string})?.failureCode??((failure as {name?:string})?.name==='TimeoutError'?'timeout':null);
             emit({ streamingText: '' });
             try {
                 const chat = await api.getChat(payload.conversationId);
@@ -185,9 +189,9 @@ export function createChatSession(storage: Storage) {
             }
             catch { /* The request may not have reached the server; retain the same retry ID. */ }
             if (!state.sending && state.pending)
-                emit({ error: 'Javob olinmadi. Qayta urinib ko\'ring.' });
+                emit({ error: 'Javob olinmadi. Qayta urinib ko\'ring.',failureCode:state.failureCode&&state.failureCode!=='unknown'?state.failureCode:code??state.failureCode??'unknown',progressStage:null });
             else if (state.sending && !timer) {
-                emit({ sending: false, error: 'Javob olinmadi. Qayta urinib ko\'ring.', pending: payload });
+                emit({ sending: false, error: 'Javob olinmadi. Qayta urinib ko\'ring.',failureCode:code??'unknown',progressStage:null, pending: payload });
             }
         }
         finally {

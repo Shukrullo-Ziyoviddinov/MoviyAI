@@ -1,5 +1,6 @@
 import {hasCoreMovieFacts} from '../dist/ai/services/movie-source-research.service.js';
 import {briefMovieResponse} from '../dist/ai/services/movie-brief.service.js';
+import {ChatFailure,chatFailureCode} from '../dist/ai/types/chat-progress.types.js';
 import {uzbekReleaseTitle} from '../dist/ai/services/uzbek-movie.service.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -31,16 +32,20 @@ function harness({ searchable = true, badSource = false, posterError = false, de
   const searchImages = async (_query, options) => { posters++; if(options.num===15)throw Object.assign(Error('Unsupported Serper image result count'),{status:400}); if (posterError) throw Error('unavailable'); return { images: manyPosters ? [{imageUrl:'https://example.com/tiny.jpg',imageWidth:80,imageHeight:100},{imageUrl:'https://example.com/wrong.jpg',title:'Interstellar 2025'},...Array.from({length:10},(_,index)=>({imageUrl:'https://example.com/poster-'+index+'.jpg',title:'Interstellar 2014',imageWidth:1000,imageHeight:1500})),{imageUrl:'https://example.com/poster-0.jpg'}] : [
     { imageUrl: 'https://example.com/poster.jpg', link: 'https://example.com/movie' }, { imageUrl: 'http://127.0.0.1/private' },
   ] }; };
-  const api = new Function('briefMovieResponse','selectWorkingPosters','hasCoreMovieFacts','researchMovieSources','MOVIE_FACT_INSTRUCTION','uzbekReleaseTitle', 'GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', 'findUzbekMovieLinks', 'findCatalogChatCandidates', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
-    (briefMovieResponse,async candidates=>candidates.slice(0,2),hasCoreMovieFacts,async(film,sources,details,extract)=>{
+  const api = new Function('ChatFailure','chatFailureCode','briefMovieResponse','selectWorkingPosters','hasCoreMovieFacts','researchMovieSources','MOVIE_FACT_INSTRUCTION','uzbekReleaseTitle', 'GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', 'findUzbekMovieLinks', 'findCatalogChatCandidates', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
+    (ChatFailure,chatFailureCode,briefMovieResponse,async candidates=>candidates.slice(0,2),hasCoreMovieFacts,async(film,sources,details,extract)=>{
  const evidence=[...sources];
  for(const query of ['film production','production budget','site:kinopoisk','IMDb rating']){try{for(const item of (await searchWeb(query)).organic??[]){const previous=evidence.find(source=>source.url===item.link);if(previous)previous.snippet+=' '+item.snippet;else evidence.push({title:item.title,url:item.link,snippet:item.snippet});}}catch{}}
  return extract(evidence,details);
  },'Extract only sourced facts',uzbekReleaseTitle, GoogleGenAI, z, { apiKey: 'test', models: { image: 'gemini-3.5-flash-lite' } }, AiServiceError, searchWeb, searchImages, dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier, async()=>({videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Interstellar trailer',channel:'Warner Bros.',kind:'trailer'}),async()=>[{title:'Interstellar Uzbek',url:'https://uzmovi.net/123-interstellar.html',site:'uzmovi.net'}], async()=>cachedMovie&&++lookups===1?[cachedMovie]:[]);
-  return { ...api,findMovieFromImages:(text,images,onDelta,signal,mode='full')=>api.findMovieFromImages(text,images,onDelta,signal,mode), calls, searches: () => searches, posters: () => posters };
+  return { ...api,findMovieFromImages:(text,images,onDelta,signal,mode='full',onProgress)=>api.findMovieFromImages(text,images,onDelta,signal,mode,onProgress), calls, searches: () => searches, posters: () => posters };
 }
 function completeDossier(){const d=emptyDossier(),sources=[{title:'Verified film',url:'https://example.com/film'}];for(const key of ['countries','genres','directors'])d[key]={value:['Known'],sources};d.runtimeMinutes={value:100,sources};d.synopsis={value:'Known plot',sources};d.cast=[{name:'Actor',originalName:'Actor',role:'Hero',sources}];return d;}
 const images = [{ mimeType: 'image/jpeg', data: Buffer.from([255, 216, 255]) }];
+test('media stage callbacks correspond to actual calls and finish with answer preparation',async()=>{
+ const h=harness(),stages=[];await h.findMovieFromImages('Find',images,undefined,undefined,'brief',stage=>stages.push(stage));
+ assert.equal(stages[0],'analyzing_image');for(const stage of ['searching','verifying','uzbek_links','posters'])assert.ok(stages.includes(stage),stage);assert.equal(stages.at(-1),'preparing');
+});
 test('brief media search finishes after identification without dossier, trailer or portrait generation',async()=>{
  const h=harness();const result=await h.findMovieFromImages('kinoni top',images,undefined,undefined,'brief');
  assert.equal(h.calls.length,2);assert.equal(result.movie.presentation,'brief');assert.equal(result.movie.details.cast.length,0);assert.equal(result.movie.trailer,null);assert.equal(result.movie.sourceResearchComplete,false);assert.equal(result.movie.uzbekLinks.length,1);assert.ok(result.movie.posters.length);assert.doesNotMatch(result.text,/Asosiy aktyorlar|Asosiy qahramonlar/);
@@ -80,13 +85,11 @@ test('image clues drive search and only supplied sources/posters are returned', 
   assert.ok(result.movie.identitySources.some(source=>source.url==='https://www.imdb.com/title/tt0816692/'));
 });
 test('unrecognizable images request more evidence without unnecessary searches', async () => {
-  const h = harness({ searchable: false }), result = await h.findMovieFromImages('Find movie', images);
-  assert.equal(h.searches(), 0); assert.equal(h.posters(), 0); assert.equal(result.movie, undefined);
-  assert.match(result.text, /Boshqa kadr/);
+  const h = harness({ searchable: false });await assert.rejects(()=>h.findMovieFromImages('Find movie', images),error=>error.failureCode==='insufficient_evidence');
+  assert.equal(h.searches(), 0); assert.equal(h.posters(), 0);
 });
 test('unsupported model match cannot be presented as a verified movie', async () => {
-  const h = harness({ badSource: true }), result = await h.findMovieFromImages('Find movie', images);
-  assert.equal(result.movie, undefined); assert.match(result.text, /aniqlay olmadim/); assert.equal(h.posters(), 0);
+  const h = harness({ badSource: true });await assert.rejects(()=>h.findMovieFromImages('Find movie', images),error=>error.failureCode==='identity_unconfirmed');assert.equal(h.posters(),0);
 });
 test('poster failure keeps a sourced identification usable', async () => {
   const result = await harness({ posterError: true }).findMovieFromImages('Find movie', images);

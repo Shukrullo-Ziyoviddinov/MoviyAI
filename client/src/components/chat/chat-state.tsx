@@ -5,9 +5,12 @@ import type { ChatMediaItem, ChatMessage } from "@/types/chat";
 import { createChatSession } from '@/stores/chat-session';
 import { webChatStorage } from '@/stores/web-chat-storage';
 import type { ChatSummary } from '@/api/chat';
+import type {ChatStage,ChatFailureCode} from '@/types/chat-progress';
 import { useAuth } from '@/components/auth/auth-state';
 
 type ChatContextValue = {
+  progressStage:ChatStage|null;
+  failureCode:ChatFailureCode|null;
   refreshMedia: () => Promise<void>;
   pinningId: string | null;
   pinError: string | null;
@@ -59,7 +62,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const { profile, ready } = useAuth();
   const [session] = useState(() => createChatSession(webChatStorage));
   const snapshot = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
-  const { messages, sending, loading, error, conversations, activeId, streamingText, deletingId, deleteError, pinningId, pinError, listLoading } = snapshot;
+  const { messages, sending, loading, error, conversations, activeId, streamingText, deletingId, deleteError, pinningId, pinError, listLoading,progressStage,failureCode } = snapshot;
   const { refreshMedia, retry, openChat, newChat, deleteConversation, setPinned } = session.actions;
   const owner = ready ? profile?.id ?? null : null;
   useEffect(() => { void session.actions.initialize(owner); }, [session, owner]);
@@ -145,6 +148,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         deleteError,
         deleteConversation,
         streamingText,
+        progressStage,
+        failureCode,
         conversations,
         activeId,
         loading,

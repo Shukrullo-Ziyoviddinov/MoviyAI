@@ -1,5 +1,6 @@
 import {isMovieRecommendation} from '../dist/ai/services/movie-recommendation.service.js';
 import {isContextMovieFollowup} from '../dist/ai/services/movie-followup.service.js';
+import {ChatFailure,chatFailureCode} from '../dist/ai/types/chat-progress.types.js';
 import {isNamedMovieSearch} from '../dist/ai/services/text-movie.service.js';
 import {uzbekReleaseTitle} from '../dist/ai/services/uzbek-movie.service.js';
 import { test } from 'node:test';
@@ -69,7 +70,7 @@ function harness() {
   let fail = false, calls = 0, captured, hold, wakes=0, wakeError=false;
   const chatWithGemma = async request => {
     calls++; captured = request; if (hold) await hold;
-    if (fail) throw Error('provider failure');
+    if (fail) throw typeof fail==='string'?new ChatFailure(fail):Error('provider failure');
     return { text: 'Answer', model: 'gemma-4-26b-a4b-it' };
   };
   const findMovieFromImages = async (text, images) => {
@@ -84,9 +85,9 @@ function harness() {
   const getChatImage=async key=>objects.get(key)??null;
   const deleteChatImage=async key=>{if(storageFailure)throw Error('R2 unavailable');objects.delete(key);};
   const storage=new Function('cleanupConversationVideos','cleanupExpiredVideos','ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages','catalogDispatcher',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(async()=>{},async()=>{},ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{},{preserveConversation:async()=>{}});
-  const service = new Function('isContextMovieFollowup','movieFollowup','resolveDirectVideo','chatVideoUrls','findMovieFromVideo','isMovieRecommendation','recommendMovies','isNamedMovieSearch','findMovieFromText','uzbekReleaseTitle', 'Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', 'isCatalogEligible', 'wakeCatalogWorker', source +
+  const service = new Function('ChatFailure','chatFailureCode','isContextMovieFollowup','movieFollowup','resolveDirectVideo','chatVideoUrls','findMovieFromVideo','isMovieRecommendation','recommendMovies','isNamedMovieSearch','findMovieFromText','uzbekReleaseTitle', 'Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', 'isCatalogEligible', 'wakeCatalogWorker', source +
     '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage,deleteConversation,pinConversation};')
-    (isContextMovieFollowup,async(text,movie)=>({text:"Requested movie section",movie:{...movie,presentation:"details"},model:"test"}),async()=>[{key:"video-key",hash:"v".repeat(64),mimeType:"video/mp4",size:200,duration:6}],async(_owner,_id,requestId,saved)=>{const videos=saved??ChatTurn.rows.find(turn=>turn.requestId===requestId)?.videos??[];return videos.map(video=>({fileUri:"https://r2.example/"+video.key,mimeType:video.mimeType,durationSeconds:video.duration}));},(text,videos)=>findMovieFromImages(text,videos),isMovieRecommendation,async()=>({text:'Recommendations',model:'gemma',recommendations:[{text:'Dossier 1',movie:(await findMovieFromImages('One',[])).movie},{text:'Dossier 2',movie:{...(await findMovieFromImages('Two',[])).movie,title:'Second'}}]}),isNamedMovieSearch,(text)=>findMovieFromImages(text,[]),uzbekReleaseTitle, Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}],async()=>[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],isUzbekMovieRequest,uzbekLookupReply,isCatalogEligible,()=>{wakes++;if(wakeError)throw Error('scheduler failure');});
+    (ChatFailure,chatFailureCode,isContextMovieFollowup,async(text,movie)=>({text:"Requested movie section",movie:{...movie,presentation:"details"},model:"test"}),async()=>[{key:"video-key",hash:"v".repeat(64),mimeType:"video/mp4",size:200,duration:6}],async(_owner,_id,requestId,saved)=>{const videos=saved??ChatTurn.rows.find(turn=>turn.requestId===requestId)?.videos??[];return videos.map(video=>({fileUri:"https://r2.example/"+video.key,mimeType:video.mimeType,durationSeconds:video.duration}));},(text,videos)=>findMovieFromImages(text,videos),isMovieRecommendation,async()=>({text:'Recommendations',model:'gemma',recommendations:[{text:'Dossier 1',movie:(await findMovieFromImages('One',[])).movie},{text:'Dossier 2',movie:{...(await findMovieFromImages('Two',[])).movie,title:'Second'}}]}),isNamedMovieSearch,(text)=>findMovieFromImages(text,[]),uzbekReleaseTitle, Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}],async()=>[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],isUzbekMovieRequest,uzbekLookupReply,isCatalogEligible,()=>{wakes++;if(wakeError)throw Error('scheduler failure');});
   return { ...service, ...storage, objects, storageFailure: value=>{storageFailure=value;}, Conversation, ChatTurn, fail: value => { fail = value; }, hold: value => { hold = value; },
     wakes:()=>wakes,wakeError:value=>{wakeError=value;},calls: () => calls, captured: () => captured };
 }
@@ -99,6 +100,12 @@ test('owners can list/reopen their chats; other accounts cannot read or write th
     await assert.rejects(action, error => error.status === 404);
   }
 });
+test('a confirmed failure code persists on the turn and is returned on reopen',async()=>{
+ const h=harness(),id=randomUUID(),request=randomUUID();await h.createConversation('alice',id);h.fail('provider_unavailable');
+ await assert.rejects(()=>h.sendConversationMessage('alice',id,request,'salom'),error=>error.failureCode==='provider_unavailable');
+ const reopened=await h.getConversation('alice',id);assert.equal(reopened.turns[0].failureCode,'provider_unavailable');assert.equal(reopened.turns[0].status,'failed');assert.equal(reopened.turns[0].progressStage,null);
+});
+
 test('recommendations persist separate movie cards and schedule catalogue storage',async()=>{
  const h=harness(),id=randomUUID();await h.createConversation('alice',id);
  const result=await h.sendConversationMessage('alice',id,randomUUID(),'fantastik kino tavsiya qil');

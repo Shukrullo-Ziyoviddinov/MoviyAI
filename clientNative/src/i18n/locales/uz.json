@@ -206,6 +206,30 @@
       "note": "Tashqi saytlar. Til haqidagi ma’lumot sayt sahifasidan olingan; ijro mavjudligi kafolatlanmaydi.",
       "open": "Kino sahifasini ochish"
     },
-    "videoPrompt": "Videodagi kinoni toping."
+    "videoPrompt": "Videodagi kinoni toping.",
+    "progress": {
+      "upload_video": "Video yuklanmoqda",
+      "upload_image": "Rasm yuklanmoqda",
+      "analyzing_video": "Videodagi sahnalar tahlil qilinmoqda",
+      "analyzing_image": "Rasmdagi belgilar tahlil qilinmoqda",
+      "verifying": "Kino nomi va mosligi tekshirilmoqda",
+      "catalog": "Moviy AI bazasi tekshirilmoqda",
+      "searching": "Internetdagi manbalar qidirilmoqda",
+      "uzbek_links": "O‘zbekcha dublaj havolalari qidirilmoqda",
+      "posters": "Posterlar tekshirilmoqda",
+      "preparing": "Javob tayyorlanmoqda"
+    },
+    "failures": {
+      "insufficient_evidence": "Ushbu tasvirdan kinoni ishonchli aniqlab bo‘lmadi. Qahramonlar yoki sahna aniqroq ko‘ringan rasm yoki video yuboring.",
+      "identity_unconfirmed": "Qidiruv natijalari bilan aynan shu kino ekanini tasdiqlay olmadik. Boshqa kadr yoki parcha yuboring.",
+      "provider_unavailable": "AI xizmatida vaqtinchalik muammo. Qayta urinib ko‘ring.",
+      "search_unavailable": "Internet qidiruvini bajarib bo‘lmadi. Qayta urinib ko‘ring.",
+      "rate_limited": "Xizmatning so‘rovlar chegarasiga yetildi. Biroz kutib, qayta urinib ko‘ring.",
+      "timeout": "So‘rov uchun ajratilgan vaqt tugadi. Qisqaroq parcha yuboring yoki qayta urinib ko‘ring.",
+      "video_unreadable": "Yuklangan videoni o‘qib bo‘lmadi. Videoni qayta yuklang.",
+      "upload_failed": "Faylni yuklab bo‘lmadi. Qayta yuklang.",
+      "unknown": "So‘rovni yakunlab bo‘lmadi. Qayta urinib ko‘ring."
+    },
+    "retry": "Qayta urinish"
   }
 }

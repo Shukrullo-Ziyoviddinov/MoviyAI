@@ -31,6 +31,8 @@ const turnSchema = new Schema({
     recommendations: {type:Schema.Types.Mixed,default:[]},
     catalogDispatch: { type: String, enum: ['none', 'pending', 'queued'], default: 'none', select: false },
     answer: { type: String, default: '' },
+    progressStage:{type:String,default:null},
+    failureCode:{type:String,default:null},
     model: { type: String, default: '' },
     status: { type: String, enum: ['processing', 'completed', 'failed'], required: true },
 }, { timestamps: true, collection: 'ai_chat_turns' });

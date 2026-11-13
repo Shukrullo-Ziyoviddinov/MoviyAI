@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { AuthRequest } from '../../middleware/requireAuth.js';
 import * as service from '../services/conversation.service.js';
 import { AiServiceError } from '../services/google-ai.service.js';
+import {ChatFailure,chatFailureCode} from '../types/chat-progress.types.js';
 import { readChatImage } from '../services/chat-image.service.js';
 import { reserveImages } from '../services/direct-image.service.js';
 import {reserveVideo} from '../services/direct-video.service.js';
@@ -16,8 +17,8 @@ async function respond(res: Response, work: () => Promise<unknown>) {
     catch (error) {
         if (error instanceof service.ConversationError)
             res.status(error.status).json({ ok: false, error: error.message });
-        else if (error instanceof AiServiceError)
-            res.status(error.status === 429 ? 429 : 502).json({ ok: false, error: 'AI response could not be generated. Please retry.' });
+        else if (error instanceof AiServiceError||error instanceof ChatFailure)
+            res.status(chatFailureCode(error)==='rate_limited' ? 429 : 502).json({ ok: false,code:chatFailureCode(error), error: 'AI response could not be generated. Please retry.' });
         else
             throw error;
     }
@@ -87,12 +88,13 @@ export async function send(req: Request, res: Response) {
         res.once('close', () => clearInterval(heartbeat));
         try {
             const chat = await service.sendConversationMessage((req as AuthRequest).userId, id.data,
-                input.data.requestId, input.data.text, text => write({ type: 'delta', text }), images, input.data.directImages,input.data.directVideo);
+                input.data.requestId, input.data.text, text => write({ type: 'delta', text }), images, input.data.directImages,input.data.directVideo,stage=>write({type:'progress',stage}));
             write({ type: 'done', data: chat });
         } catch (error) {
+            const code=chatFailureCode(error);
             const status = error instanceof service.ConversationError ? error.status
-                : error instanceof AiServiceError && error.status === 429 ? 429 : 502;
-            write({ type: 'error', status, message: 'AI response could not be generated. Please retry.' });
+                : code==='rate_limited' ? 429 : 502;
+            write({ type: 'error', status, code,message: 'AI response could not be generated. Please retry.' });
         } finally {
             clearInterval(heartbeat);
             res.end();
