@@ -63,7 +63,8 @@
         }
       ],
       "expo-notifications",
-      "expo-sharing"
+      "expo-sharing",
+      "react-native-compressor"
     ],
     "extra": {
       "apiUrl": "https://moviyai.onrender.com",

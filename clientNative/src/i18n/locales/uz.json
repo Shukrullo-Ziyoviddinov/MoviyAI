@@ -217,7 +217,8 @@
       "searching": "Internetdagi manbalar qidirilmoqda",
       "uzbek_links": "O‘zbekcha dublaj havolalari qidirilmoqda",
       "posters": "Posterlar tekshirilmoqda",
-      "preparing": "Javob tayyorlanmoqda"
+      "preparing": "Javob tayyorlanmoqda",
+      "preparing_video": "Video tayyorlanmoqda"
     },
     "failures": {
       "insufficient_evidence": "Ushbu tasvirdan kinoni ishonchli aniqlab bo‘lmadi. Qahramonlar yoki sahna aniqroq ko‘ringan rasm yoki video yuboring.",
@@ -228,7 +229,10 @@
       "timeout": "So‘rov uchun ajratilgan vaqt tugadi. Qisqaroq parcha yuboring yoki qayta urinib ko‘ring.",
       "video_unreadable": "Yuklangan videoni o‘qib bo‘lmadi. Videoni qayta yuklang.",
       "upload_failed": "Faylni yuklab bo‘lmadi. Qayta yuklang.",
-      "unknown": "So‘rovni yakunlab bo‘lmadi. Qayta urinib ko‘ring."
+      "unknown": "So‘rovni yakunlab bo‘lmadi. Qayta urinib ko‘ring.",
+      "compression_unsupported": "Bu ilovada videoni siqish imkoniyati mavjud emas. Ilovani yangilang yoki 14 MB’dan kichik video yuboring.",
+      "compression_failed": "Videoni tayyorlab bo‘lmadi. Boshqa MP4 video yoki qisqaroq parcha yuboring.",
+      "video_too_large": "Videoni kerakli hajmgacha kichraytirib bo‘lmadi. 14 MB’dan kichikroq yoki qisqaroq video yuboring."
     },
     "retry": "Qayta urinish"
   }
