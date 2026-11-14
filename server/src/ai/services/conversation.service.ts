@@ -2,6 +2,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import { Conversation, ChatTurn } from '../models/conversation.model.js';
 import { chatWithGemma } from './gemma.service.js';
 import { conversationTitle } from './conversation-title.service.js';
+import { saveCatalogWatchLinks } from '../catalog/services/catalog-watch-links.service.js';
 import type { AiHistoryMessage, AiResult } from '../types/ai.types.js';
 import type { ChatImageInput, MovieSearchResult } from '../types/movie-search.types.js';
 import {findUzbekMovieLinks,isUzbekMovieRequest,uzbekLookupReply,uzbekReleaseTitle} from './uzbek-movie.service.js';
@@ -165,6 +166,8 @@ export async function sendConversationMessage(userId: string, id: string, reques
         });
         await Conversation.updateOne({ _id: id, userId, deletedAt: null, lockToken }, { $set: { title, titleGenerated: true } })
             .catch(() => { console.warn('[CHAT_TITLE] Title update deferred; chat answer saved'); });
+        if (result.movie?.linksOnly) await saveCatalogWatchLinks(result.movie)
+            .catch(() => { console.warn('[MOVIE_WATCH_OPTIONS] Follow-up links could not be saved'); });
         // The outbox flag is committed with the answer. Worker/R2/AI failures
         // cannot change a completed chat turn into a failed generation.
         if (isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie))) notifyCatalogWorker();

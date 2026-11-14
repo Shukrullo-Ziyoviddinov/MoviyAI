@@ -23,7 +23,7 @@ field/action issues. A draft is never itself a Movie insert payload.
 | `description.uz/ru.text`, `.country`, `.director` | Nullable. Use only sourced facts/translations and current dictionary labels. |
 | `description.uz/ru.year`, `.duration` | Nullable and identical to specs counterparts. A known runtime is positive integer minutes. |
 | `trailers` | The actual YouTube **trailer** watch URL, not a general related video. Canonical `https://www.youtube.com/watch?v=ID`. |
-| `watchUrl` | First verified exact movie detail page from the four configured Uzbek sites. Never a media-file or homepage URL. All alternative choices remain in research. |
+| `watchUrl` / `watchUrls` | `watchUrl` keeps the first verified exact movie detail page for compatibility. `watchUrls` stores every verified alternative without duplicates. Never media-file or homepage URLs. |
 | `filterCountry`, `specs.countries` | Dictionary values. Primary country must be one of the production countries. Never map an unknown country to USA/India by default. |
 | `specs.ageRating` | Source classification or null. Never convert MPAA to a guessed numeric age. |
 | `like`, `dislike` | Server-controlled string `"0"` for a newly created film, not imported search-site reactions. |

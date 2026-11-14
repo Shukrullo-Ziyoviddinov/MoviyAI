@@ -19,7 +19,9 @@ for(const root of ['client','clientNative'])test(root+' uploads bytes only to R2
  await api.sendChat('chat','request','Find movie',()=>{},[{id:'i',type:'image',uri:'file://frame.jpg',...(root==='client'?{file}:{}),mimeType:'image/jpeg'}]);
  const [reservation,upload,message]=api.requests;
  assert.ok(reservation.url.endsWith('/uploads'));const metadata=JSON.parse(reservation.options.body);assert.equal(metadata.images[0].hash.length,64);assert.equal(metadata.images[0].size,5);
- assert.equal(upload.url,'https://r2.example/upload');assert.equal(upload.options.method,'PUT');assert.equal(upload.options.headers.Authorization,undefined);assert.equal(await upload.options.body.text(),'image');
+ assert.equal(upload.url,'https://r2.example/upload');assert.equal(upload.options.method,'PUT');assert.equal(upload.options.headers.Authorization,undefined);
+ const uploadedText=upload.options.body instanceof Blob?await upload.options.body.text():new TextDecoder().decode(upload.options.body);
+ assert.equal(uploadedText,'image');
  assert.equal(message.options.headers['Content-Type'],'application/json');assert.equal(JSON.parse(message.options.body).directImages,true);
  assert.equal(api.chatMediaUrl('https://r2.example/image'),'https://r2.example/image');
 });

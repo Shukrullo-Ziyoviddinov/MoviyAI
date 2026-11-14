@@ -1,3 +1,4 @@
+import { WatchButton } from "@/components/movie/WatchOptionModal";
 import { displayMovieTitle } from "@/src/utils/movieDisplay";
 import { BookmarkIcon, PlayIcon } from '@/components/icons';
 import { MovieDescriptionModal } from '@/components/movie/MovieDescriptionModal';
@@ -13,7 +14,6 @@ import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   BackHandler,
-  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -45,6 +45,7 @@ type TrailerModalProps = {
   movieId?: number | null;
   trailerUrl?: string | null;
   watchUrl?: string | null;
+  watchUrls?: string[];
   movieTitle?: string;
   description?: MovieDescriptionLocale | null;
   durationLabel?: string;
@@ -66,6 +67,7 @@ export function TrailerModal({
   movieId,
   trailerUrl,
   watchUrl,
+  watchUrls,
   movieTitle,
   description = null,
   durationLabel = '',
@@ -100,6 +102,7 @@ export function TrailerModal({
   const [activeId, setActiveId] = useState<number | null>(movieId ?? null);
   const [activeTrailerUrl, setActiveTrailerUrl] = useState(trailerUrl ?? '');
   const [activeWatchUrl, setActiveWatchUrl] = useState(watchUrl ?? '');
+  const [activeWatchUrls, setActiveWatchUrls] = useState(watchUrls);
   const [activeTitle, setActiveTitle] = useState(movieTitle ?? '');
   const [activeDescription, setActiveDescription] =
     useState<MovieDescriptionLocale | null>(description);
@@ -128,10 +131,11 @@ export function TrailerModal({
     setActiveId(movieId ?? null);
     setActiveTrailerUrl(trailerUrl ?? '');
     setActiveWatchUrl(watchUrl ?? '');
+    setActiveWatchUrls(watchUrls);
     setActiveTitle(movieTitle ?? '');
     setActiveDescription(description);
     setActiveDurationLabel(durationLabel);
-  }, [visible, movieId, trailerUrl, watchUrl, movieTitle, description, durationLabel]);
+  }, [visible, movieId, trailerUrl, watchUrl, watchUrls, movieTitle, description, durationLabel]);
 
   useEffect(() => {
     if (!visible || !activeId) {
@@ -338,16 +342,7 @@ export function TrailerModal({
     setDescOpen(true);
   };
 
-  const onWatch = async () => {
-    const target = activeWatchUrl?.trim();
-    if (!target) return;
-    setPlaying(false);
-    try {
-      await Linking.openURL(target);
-    } catch {
-      // ignore invalid / unsupported urls
-    }
-  };
+
 
   const onToggleSave = async () => {
     if (activeId == null || saveBusy) return;
@@ -364,6 +359,7 @@ export function TrailerModal({
     setActiveId(movie.id);
     setActiveTrailerUrl(movie.trailers ?? '');
     setActiveWatchUrl(movie.watchUrl ?? '');
+    setActiveWatchUrls(movie.watchUrls);
     setActiveTitle(displayMovieTitle(movie, lang));
     setActiveDescription(nextDesc);
     setActiveDurationLabel(durationLabelFor(nextDesc, language));
@@ -493,14 +489,11 @@ export function TrailerModal({
             ) : null}
 
             <View style={styles.actionRow}>
-              <Pressable
-                style={[styles.actionBtn, { backgroundColor: colors.accentBright }]}
-                onPress={onWatch}
-                disabled={!activeWatchUrl?.trim()}
-              >
-                <PlayIcon size={16} color="#FFFFFF" />
-                <Text style={styles.actionBtnTextPrimary}>{t('movie.watch')}</Text>
-              </Pressable>
+              <WatchButton key={activeId} movie={{watchUrl: activeWatchUrl, watchUrls: activeWatchUrls}} title={activeTitle}
+                  onBeforeOpen={() => setPlaying(false)} style={[styles.actionBtn, { backgroundColor: colors.accentBright }]}>
+                  <PlayIcon size={16} color="#FFFFFF" />
+                  <Text style={styles.actionBtnTextPrimary}>{t('movie.watch')}</Text>
+                </WatchButton>
               <Pressable
                 style={[
                   styles.actionBtn,

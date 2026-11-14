@@ -5,6 +5,7 @@ import { catalogNameKeys } from '../catalog/utils/catalog-identity.js';
 import { emptyDossier } from './movie-dossier.js';
 import { youtubeVideoId } from './movie-trailer.service.js';
 import type { MovieSearchResult } from '../types/movie-search.types.js';
+import { watchOptions } from '../../utils/watch-options.js';
 
 /** Only exact names are candidates. Gemini must still verify the uploaded frame. */
 export async function findCatalogChatCandidates(titles: string[], year: number | null, language: 'uz'|'ru'|'en') {
@@ -52,7 +53,8 @@ export async function findCatalogChatCandidates(titles: string[], year: number |
     };
     const videoId = youtubeVideoId(row.trailers??'');
     if (videoId) movie.trailer = { videoId, url: `https://www.youtube.com/watch?v=${videoId}`, title: saved?.trailer?.title ?? movie.title, channel: saved?.trailer?.channel ?? null, kind: 'trailer' };
-    try { const url = new URL(row.watchUrl??''); if (url.protocol === 'https:') movie.uzbekLinks = [{ title: row.title.uz??movie.title, url: url.href, site: url.hostname }]; } catch { /* No stored watching link. */ }
+    movie.uzbekLinks = watchOptions({watchUrl:row.watchUrl,watchUrls:[...(row.watchUrls??[]),...(saved?.uzbekLinks??[]).map(link=>link.url)]})
+      .map(option=>({title:row.title.uz??movie.title,url:option.url,site:option.domain}));
     return movie;
   }));
 }

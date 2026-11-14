@@ -24,6 +24,6 @@ export function parseMovieFields(payload:Record<string,unknown>,allowMissingTitl
  const locale=(row:Record<string,unknown>)=>({text:text(row.text),year,country:text(row.country),duration,director:text(row.director)});
  return {categoryName,title:{uz:uzTitle,ru:ruTitle},ratingImdb:number(payload.ratingImdb,'rating'),ratingKinopoisk:number(payload.ratingKinopoisk,'rating'),
   genre:{uz:list(object(payload.genre).uz),ru:list(object(payload.genre).ru)},description:{uz:locale(uz),ru:locale(ru)},
-  trailers:text(payload.trailers),watchUrl:text(payload.watchUrl),filterCountry:text(payload.filterCountry),filterGenre:list(payload.filterGenre),
+  trailers:text(payload.trailers),watchUrl:text(payload.watchUrl),...(payload.watchUrls!==undefined?{watchUrls:list(payload.watchUrls)}:{}),filterCountry:text(payload.filterCountry),filterGenre:list(payload.filterGenre),
   like:text(payload.like)||'0',dislike:text(payload.dislike)||'0',specs:{year,duration,ageRating:text(specs.ageRating),countries:list(specs.countries)},franchiseMovieIds:ids(payload.franchiseMovieIds),actorIds:ids(payload.actorIds)};
 }

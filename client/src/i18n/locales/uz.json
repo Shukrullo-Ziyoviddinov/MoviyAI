@@ -13,7 +13,8 @@
     "deleting": "O'chirilmoqda...",
     "pin": "Qadash",
     "unpin": "Qadashdan olish",
-    "loading": "Yuklanmoqda..."
+    "loading": "Yuklanmoqda...",
+    "close": "Yopish"
   },
   "language": {
     "choose": "Tilni tanlang",
@@ -86,7 +87,9 @@
     "reply": "Javob",
     "moreReplies": "Ko'proq",
     "lessReplies": "Kamroq",
-    "replyingTo": "Javob: {{user}}"
+    "replyingTo": "Javob: {{user}}",
+    "watchOptionsTitle": "Tomosha qilish manbasini tanlang",
+    "watchOpenFailed": "Havolani ochib bo?lmadi. Qayta urinib ko?ring."
   },
   "actor": {
     "aboutTitle": "Aktor haqida",

@@ -38,6 +38,7 @@ const movieSchema = new Schema(
     },
     trailers: { type: String, default: null },
     watchUrl: { type: String, default: null },
+    watchUrls: { type: [String], default: [] },
     filterCountry: { type: String, default: null },
     filterGenre: { type: [String], default: [] },
     like: { type: String, default: '0' },

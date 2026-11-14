@@ -1,5 +1,5 @@
 import { createMovieTrailerSearch } from '../../services/movie-trailer.service.js';
-import { createUzbekMovieSearch, readUzbekPage, discoverUzbekDetails, UZBEK_MOVIE_SITES, uzbekReleaseTitle } from '../../services/uzbek-movie.service.js';
+import { createUzbekMovieSearch, readUzbekPage, discoverUzbekDetails, UZBEK_MOVIE_SITES, uzbekReleaseTitle, uzbekDetailUrl } from '../../services/uzbek-movie.service.js';
 import { searchVideos, searchWeb } from '../../services/serper.service.js';
 import type { CatalogDraft } from '../types/catalog.types.js';
 
@@ -23,6 +23,11 @@ return async function researchCatalogLinks(input: CatalogDraft, signal: AbortSig
     else if (UZBEK_MOVIE_SITES.every(site => sites.has(site))) draft.confirmedUnavailable.push('watchUrl');
   }
   const localTitle=uzbekReleaseTitle(draft.research.uzbekLinks??[]);
+  draft.movie.watchUrls = [...new Set([...(draft.movie.watchUrls ?? []), draft.movie.watchUrl,
+    ...(draft.research.uzbekLinks ?? []).map(link => link.url)].flatMap(value => {
+      const url = value && uzbekDetailUrl(value); return url ? [url] : [];
+    }))];
+  draft.movie.watchUrl ||= draft.movie.watchUrls[0] ?? null;
   draft.movie.title.uz=localTitle??draft.movie.title.uz;
   draft.research.titleUz=localTitle??draft.research.titleUz;
   if(localTitle&&draft.localizedFacts?.uz) delete draft.localizedFacts.uz.title;

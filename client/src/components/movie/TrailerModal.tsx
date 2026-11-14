@@ -1,4 +1,5 @@
 "use client";
+import { WatchButton } from "@/components/movie/WatchOptionModal";
 import { displayMovieTitle } from "@/utils/movieDisplay";
 
 
@@ -302,26 +303,9 @@ export function TrailerModal({
                 </p>
               ) : null}
               <div className="mt-3 flex gap-2.5">
-                {active.watchUrl ? (
-                  <a
-                    href={active.watchUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-white md:h-11"
-                    style={{ backgroundColor: colors.accentBright }}
-                  >
-                    <PlayIcon size={16} color="#FFFFFF" />
-                    {copy.watch}
-                  </a>
-                ) : (
-                  <span
-                    className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-white opacity-60 md:h-11"
-                    style={{ backgroundColor: colors.accentBright }}
-                  >
-                    <PlayIcon size={16} color="#FFFFFF" />
-                    {copy.watch}
-                  </span>
-                )}
+                <WatchButton movie={active} title={title} className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-white md:h-11" style={{ backgroundColor: colors.accentBright }}>
+                <PlayIcon size={16} color="#FFFFFF" />{copy.watch}
+              </WatchButton>
                 <button
                   type="button"
                   className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border text-[13px] font-bold disabled:opacity-60 md:h-11"

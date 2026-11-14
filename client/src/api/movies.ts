@@ -42,6 +42,7 @@ export type Movie = {
   description: { uz: MovieDescription; ru: MovieDescription };
   trailers: string | null;
   watchUrl: string | null;
+  watchUrls?: string[];
   like: string;
   dislike: string;
   userReaction?: "like" | "dislike" | null;

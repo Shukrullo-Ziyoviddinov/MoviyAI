@@ -13,7 +13,8 @@
     "deleting": "Deleting...",
     "pin": "Pin",
     "unpin": "Unpin",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "close": "Close"
   },
   "language": {
     "choose": "Choose language",
@@ -86,7 +87,9 @@
     "reply": "Reply",
     "moreReplies": "More",
     "lessReplies": "Less",
-    "replyingTo": "Reply: {{user}}"
+    "replyingTo": "Reply: {{user}}",
+    "watchOptionsTitle": "Choose where to watch",
+    "watchOpenFailed": "Could not open the link. Please try again."
   },
   "actor": {
     "aboutTitle": "About the actor",

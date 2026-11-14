@@ -29,6 +29,7 @@ export type Movie = {
   };
   trailers: string | null;
   watchUrl: string | null;
+  watchUrls?: string[];
   filterCountry: string | null;
   filterGenre: string[];
   like: string;

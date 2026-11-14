@@ -1,4 +1,5 @@
 "use client";
+import { WatchButton } from "@/components/movie/WatchOptionModal";
 import { displayMovieTitle } from "@/utils/movieDisplay";
 
 
@@ -326,26 +327,9 @@ export function MovieDetailScreen({
             ))}
           </HorizontalScroll>
           <div className="mt-2 flex gap-2.5">
-            {current.watchUrl ? (
-              <a
-                href={current.watchUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-11 flex-1 md:h-[52px] items-center justify-center gap-2 rounded-xl text-[14px] font-bold text-white"
-                style={{ backgroundColor: colors.accentBright }}
-              >
-                <PlayIcon size={16} color="#FFFFFF" />
-                {copy.watch}
-              </a>
-            ) : (
-              <span
-                className="flex h-11 flex-1 md:h-[52px] items-center justify-center gap-2 rounded-xl text-[14px] font-bold text-white opacity-60"
-                style={{ backgroundColor: colors.accentBright }}
-              >
-                <PlayIcon size={16} color="#FFFFFF" />
-                {copy.watch}
-              </span>
-            )}
+            <WatchButton movie={current} title={title} className="flex h-11 flex-1 md:h-[52px] items-center justify-center gap-2 rounded-xl text-[14px] font-bold text-white" style={{ backgroundColor: colors.accentBright }}>
+                <PlayIcon size={16} color="#FFFFFF" />{copy.watch}
+              </WatchButton>
             <button
               type="button"
               className="flex h-11 flex-1 md:h-[52px] items-center justify-center gap-2 rounded-xl border text-[14px] font-bold"

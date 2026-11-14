@@ -43,6 +43,7 @@ export const catalogMoviePayloadSchema = z.object({
   description: z.object({ uz: description, ru: description }).strict(),
   trailers: trailer.nullable(),
   watchUrl:watchUrl.nullable(),
+  watchUrls:z.array(watchUrl).default([]),
   filterCountry: text.nullable(),
   filterGenre: z.array(text),
   like: z.literal('0'),

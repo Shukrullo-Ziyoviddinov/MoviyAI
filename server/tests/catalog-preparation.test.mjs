@@ -62,7 +62,7 @@ test('complete drafts produce only model-compatible fields and reuse existing ac
 
 test('every Movie payload key is required; drifted runtime, dictionary filters and duplicate actor IDs are rejected', () => {
   const payload = assessCatalogDraft(complete()).payload;
-  for (const key of Object.keys(payload)) { const broken = structuredClone(payload); delete broken[key]; assert.equal(catalogMoviePayloadSchema.safeParse(broken).success, false, key); }
+  for (const key of Object.keys(payload).filter(key => key !== 'watchUrls')) { const broken = structuredClone(payload); delete broken[key]; assert.equal(catalogMoviePayloadSchema.safeParse(broken).success, false, key); }
   for (const patch of [{ actorIds: [9001, 9001] }, { filterCountry: 'India' }, { filterGenre: ['Unresolved genre'] }, { genre: { uz: ['Fantastika'], ru: [] } }, { ratingImdb: 11 }])
     assert.equal(catalogMoviePayloadSchema.safeParse({ ...payload, ...patch }).success, false);
   const draft = complete(); draft.movie.description.uz.duration = 99; assert.equal(assessCatalogDraft(draft).ready, false);

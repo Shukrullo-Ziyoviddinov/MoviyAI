@@ -25,6 +25,7 @@ export interface CatalogMovieDraft {
   genre: { uz: string[]; ru: string[] };
   description: Record<'uz' | 'ru', { text: string | null; year: number | null; country: string | null; duration: number | null; director: string | null }>;
   trailers: string|null; watchUrl: string|null;
+  watchUrls: string[];
   filterCountry: string | null; filterGenre: string[];
   like: '0'; dislike: '0';
   specs: { duration: number | null; ageRating: string | null; year: number | null; countries: string[] };

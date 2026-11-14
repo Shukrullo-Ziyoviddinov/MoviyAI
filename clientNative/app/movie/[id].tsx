@@ -1,3 +1,4 @@
+import { WatchButton } from "@/components/movie/WatchOptionModal";
 import { displayMovieTitle } from "@/src/utils/movieDisplay";
 import {
   AgeRatingIcon,
@@ -47,7 +48,6 @@ import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
-  Linking,
   Pressable,
   StyleSheet,
   Text,
@@ -95,15 +95,7 @@ type SpecItem = {
   Icon: ComponentType<SpecIconProps>;
 };
 
-async function openExternalUrl(url?: string) {
-  const target = url?.trim();
-  if (!target) return;
-  try {
-    await Linking.openURL(target);
-  } catch {
-    // ignore invalid / unsupported urls
-  }
-}
+
 
 function hexToRgba(hex: string, alpha: number) {
   const raw = hex.replace('#', '');
@@ -598,14 +590,10 @@ export default function MovieDetailScreen() {
             ) : null}
 
             <View style={styles.actionRow}>
-              <Pressable
-                style={[styles.actionBtn, { backgroundColor: colors.accentBright }]}
-                disabled={!movie.watchUrl}
-                onPress={() => openExternalUrl(movie.watchUrl??undefined)}
-              >
+              <WatchButton movie={movie} title={displayMovieTitle(movie, lang)} style={[styles.actionBtn, { backgroundColor: colors.accentBright }]}>
                 <PlayIcon size={16} color="#FFFFFF" />
                 <Text style={styles.actionBtnText}>{t('movie.watch')}</Text>
-              </Pressable>
+              </WatchButton>
               <Pressable
                 style={[
                   styles.actionBtn,
@@ -1048,6 +1036,7 @@ export default function MovieDetailScreen() {
         movieId={movie?.id}
         trailerUrl={movie?.trailers}
         watchUrl={movie?.watchUrl}
+        watchUrls={movie?.watchUrls}
         movieTitle={title}
         description={description}
         durationLabel={durationLabel}

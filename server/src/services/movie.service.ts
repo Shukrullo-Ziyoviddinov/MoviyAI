@@ -3,13 +3,22 @@ import { MovieComment } from '../models/MovieComment.js';
 import { MovieReaction } from '../models/MovieReaction.js';
 import { Wishlist } from '../models/Wishlist.js';
 import { withCatalogTransaction, allocateCatalogId } from './catalog-transaction.service.js';
+import {watchOptions} from '../utils/watch-options.js';
 
 export async function getAllMovies() {
   return Movie.find().sort({ id: 1 }).lean();
 }
 
 export async function getMovieById(id: number) {
-  return Movie.findOne({ id }).lean();
+  const row=await Movie.findOne({ id }).select('+catalogResearch').lean();
+  if(!row)return null;
+  const watchUrls=watchOptions({watchUrl:row.watchUrl,watchUrls:[...(row.watchUrls??[]),
+    ...(row.catalogResearch?.result?.uzbekLinks??[]).map((link:{url:string})=>link.url)]}).map(option=>option.url);
+  if(watchUrls.some(url=>!row.watchUrls?.includes(url)))
+    await Movie.updateOne({id},{$addToSet:{watchUrls:{$each:watchUrls}}},{timestamps:false})
+      .catch(()=>{console.warn('[MOVIE_WATCH_OPTIONS] Legacy link update will retry on next read');});
+  const {catalogResearch,...movie}=row;
+  return {...movie,watchUrls};
 }
 
 export async function createMovie(input: Record<string, unknown>) {

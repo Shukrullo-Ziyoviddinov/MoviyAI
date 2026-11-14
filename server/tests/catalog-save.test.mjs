@@ -178,3 +178,13 @@ test('verified existing franchise films link in both directions; arbitrary inter
   const invalid = harness(), guessed = draft(); guessed.movie.franchiseMovieIds = [7999];
   assert.equal((await invalid.save(guessed)).status, 'created');assert.deepEqual(invalid.state().movies[0].franchiseMovieIds,[]);
 });
+
+test('movie insertion persists every verified watch alternative in its public fields',async()=>{
+ const h=harness(),input=draft();
+ const urls=['https://asilmedia.org/123-example.html','https://uzmovi.net/123-example.html'];
+ input.movie.watchUrl=urls[0];input.movie.watchUrls=urls;
+ input.research.uzbekLinks=urls.map(url=>({url,title:'Example',site:new URL(url).hostname}));
+ const saved=await h.save(input);assert.equal(saved.status,'created');
+ assert.deepEqual(h.state().movies[0].watchUrls,urls);
+ const document=new Movie(h.state().movies[0]);await document.validate();assert.deepEqual([...document.watchUrls],urls);
+});

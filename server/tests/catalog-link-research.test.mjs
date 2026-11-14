@@ -56,3 +56,10 @@ test('explicit sequel relation on the existing full film page needs no new paid 
   generate:async()=>({seriesName:'Example',sourceIndexes:[0],members:[{title:'Example',year:2010,sourceIndexes:[0]}]})});
  const result=await research(input,AbortSignal.timeout(1000));assert.equal(result.franchiseCandidates[0].film.originalTitle,'Example');
 });
+
+test('optional link research retains every found watch URL',async()=>{
+ const found=[{title:'Misol',site:'asilmedia.org',url:'https://asilmedia.org/123-film.html'},{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-film.html'}];
+ const result=await links({found})(draft(),AbortSignal.timeout(1000));
+ assert.deepEqual(result.movie.watchUrls,found.map(link=>link.url));
+ assert.equal(result.movie.watchUrl,found[0].url);
+});

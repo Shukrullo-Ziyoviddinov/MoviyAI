@@ -35,8 +35,10 @@ export function prepareCatalogDraft(result: MovieSearchResult, options: {
         selectedTrailer = `https://www.youtube.com/watch?v=${result.trailer.videoId}`;
     } catch { /* Invalid links remain unresolved rather than guessed. */ }
   }
-  // Keep the verified provider order. All remaining choices are preserved in research.
-  const watch = result.uzbekLinks?.map(link => uzbekDetailUrl(link.url)).find(Boolean) ?? '';
+  const watchUrls = [...new Set((result.uzbekLinks ?? []).flatMap(link => {
+    const url = uzbekDetailUrl(link.url); return url ? [url] : [];
+  }))];
+  const watch = watchUrls[0] ?? '';
   return {
     version: 1,
     identity: {
@@ -51,7 +53,7 @@ export function prepareCatalogDraft(result: MovieSearchResult, options: {
       ratingImdb: sourced(details?.imdb), ratingKinopoisk: sourced(details?.kinopoisk),
       genre: { uz: references?.genres.map(genre => genre.name) ?? [], ru: references?.genres.map(genre => genre.nameRu) ?? [] },
       description: { uz: descriptions('uz'), ru: descriptions('ru') },
-      trailers: selectedTrailer||null, watchUrl: watch||null,
+      trailers: selectedTrailer||null, watchUrl: watch||null, watchUrls,
       filterCountry: references?.primaryCountry ?? null, filterGenre: references?.genres.map(genre => genre.name) ?? [],
       like: '0', dislike: '0',
       specs: { duration: runtime, ageRating: sourced(details?.ageRating), year: result.year, countries: [...(references?.countries ?? [])] },
