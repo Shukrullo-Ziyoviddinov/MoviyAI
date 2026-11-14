@@ -5,6 +5,7 @@ import { SideMenu } from '@/components/menu/SideMenu';
 import { BottomNav } from '@/components/nav/BottomNav';
 import '@/src/i18n';
 import { useAuthStore } from '@/src/stores/useAuthStore';
+import { useChatAppLifecycle } from '@/src/stores/useChatStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import {
@@ -32,6 +33,7 @@ const slideSpec = {
 };
 
 function AppNavigator() {
+  useChatAppLifecycle();
   const { colors, isDark } = useTheme();
   const hydrate = useAuthStore((s) => s.hydrate);
   const hydrated = useAuthStore((s) => s.hydrated);
