@@ -7,14 +7,11 @@ import '@/src/i18n';
 import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
-import {
-  CardStyleInterpolators,
-  Stack,
-} from 'expo-router/js-stack';
+import { Stack } from 'expo-router';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
-import { Easing, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
@@ -22,14 +19,6 @@ import 'react-native-reanimated';
 export { ErrorBoundary } from 'expo-router';
 
 ExpoSplashScreen.preventAutoHideAsync().catch(() => undefined);
-
-const slideSpec = {
-  animation: 'timing' as const,
-  config: {
-    duration: 380,
-    easing: Easing.out(Easing.poly(4)),
-  },
-};
 
 function AppNavigator() {
   const { colors, isDark } = useTheme();
@@ -60,35 +49,17 @@ function AppNavigator() {
           <Stack
             screenOptions={{
               headerShown: false,
-              cardStyle: { backgroundColor: colors.bg },
+              contentStyle: { backgroundColor: colors.bg },
               gestureEnabled: false,
-              gestureDirection: 'horizontal',
-              cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-              transitionSpec: {
-                open: slideSpec,
-                close: slideSpec,
-              },
+              // Keep the existing horizontal direction, using platform transitions.
+              animation: 'slide_from_right',
+              animationTypeForReplace: 'push',
+              freezeOnBlur: true,
             }}
           >
-            <Stack.Screen name="index" options={{ animationEnabled: false }} />
-            <Stack.Screen
-              name="home"
-              options={{
-                transitionSpec: {
-                  open: { animation: 'timing', config: { duration: 140 } },
-                  close: { animation: 'timing', config: { duration: 140 } },
-                },
-              }}
-            />
-            <Stack.Screen
-              name="favorites"
-              options={{
-                transitionSpec: {
-                  open: { animation: 'timing', config: { duration: 140 } },
-                  close: { animation: 'timing', config: { duration: 140 } },
-                },
-              }}
-            />
+            <Stack.Screen name="index" options={{ animation: 'none' }} />
+            <Stack.Screen name="home" />
+            <Stack.Screen name="favorites" />
             <Stack.Screen name="search" />
             <Stack.Screen name="profile" />
             <Stack.Screen name="movie/[id]" />
