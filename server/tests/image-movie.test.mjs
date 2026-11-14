@@ -1,3 +1,4 @@
+import {hasMediaIdentityEvidence} from '../dist/ai/utils/media-identity.js';
 import {hasCoreMovieFacts} from '../dist/ai/services/movie-source-research.service.js';
 import {briefMovieResponse} from '../dist/ai/services/movie-brief.service.js';
 import {ChatFailure,chatFailureCode} from '../dist/ai/types/chat-progress.types.js';
@@ -11,12 +12,12 @@ import { dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier } from
 
 const source = readFileSync(new URL('../dist/ai/services/image-movie.service.js', import.meta.url), 'utf8')
   .replace(/^import .*;$/gm, '').replace(/\bexport /g, '');
-function harness({ searchable = true, badSource = false, posterError = false, detailError = false, evidenceError = false, wrongRatingSource = false, manyPosters = false, cachedMovie = null, verifyCache = true } = {}) {
+function harness({ searchable = true, badSource = false, posterError = false, detailError = false, evidenceError = false, wrongRatingSource = false, manyPosters = false, cachedMovie = null, verifyCache = true, weakEvidence = false } = {}) {
   const answers = [
     { query: 'Interstellar 2014 movie', clues: ['Spacesuit', 'Interstellar title'], searchable, titles:['Interstellar'],year:2014,language:'uz' },
     ...(cachedMovie ? [{id:verifyCache?cachedMovie.catalogId:null,confidence:verifyCache?'high':'low'}] : []),
     { matched: searchable, title: 'Interstellar', titleUz: null, titleRu: null, year: 2014, confidence: 'high',
-      answer: searchable ? 'Interstellar (2014). Siz izlagan kino shumi?' : 'Boshqa kadr yuboring.', sourceIndexes: badSource ? [9] : [0], language:'uz' },
+      answer: searchable ? 'Interstellar (2014). Siz izlagan kino shumi?' : 'Boshqa kadr yuboring.', sourceIndexes: badSource ? [9] : [0], language:'uz', visualEvidence:weakEvidence?[]:[{kind:'title',observation:'Interstellar title appears in frame',sourceIndex:0,sourceQuote:'Interstellar (2014)'},{kind:'scene',observation:'Astronauts travel through space',sourceIndex:0,sourceQuote:'Astronauts travel through space'}],contradictions:[] },
     {productionYears:{value:'2013',sourceIndexes:[1]},countries:{value:['AQSH'],sourceIndexes:[1]},genres:{value:['Ilmiy fantastika'],sourceIndexes:[1]},runtimeMinutes:{value:169,sourceIndexes:[1]},ageRating:{value:'PG-13 (US)',sourceIndexes:[1]},synopsis:{value:'Kosmik sayohat haqida film.',sourceIndexes:[1]},directors:{value:['Christopher Nolan'],sourceIndexes:[0]},budget:{value:'USD 165 million',sourceIndexes:[2]},boxOffice:{value:'USD 700 million',sourceIndexes:[2]},imdb:{value:8.7,sourceIndexes:[0]},kinopoisk:{value:8.6,sourceIndexes:wrongRatingSource?[0]:[3]},characters:[],cast:['Matthew McConaughey','Anne Hathaway','Jessica Chastain','Michael Caine','Mackenzie Foy'].map(name=>({name,originalName:name,role:'Role',sourceIndexes:[0]}))},
   ];
   let lookups=0; let searches = 0, posters = 0;const calls=[];
@@ -28,13 +29,13 @@ function harness({ searchable = true, badSource = false, posterError = false, de
     if(query.includes('site:kinopoisk'))return {organic:[{title:'Interstellar (2014)',link:'https://www.kinopoisk.ru/film/258687/',snippet:'Rating 8.6/10'}]};
     if(query.includes('production budget'))return {organic:[{title:'Interstellar finances',link:'https://www.the-numbers.com/movie/Interstellar',snippet:'Production budget USD 165 million, worldwide box office USD 700 million.'}]};
     if(query.includes('film production')||query.includes('director plot'))return {organic:[{title:'Interstellar (2014)',link:'https://en.wikipedia.org/wiki/Interstellar_(film)',snippet:'2013 production, 169 minutes, USA, Science fiction. PG-13. Space journey.'}]};
-    return {organic:[{title:'Interstellar (2014)',link:'https://www.imdb.com/title/tt0816692/',snippet:query.includes('IMDb rating')?'IMDb RATING 8.7/10':query.includes('top 5 cast')?'Matthew McConaughey, Anne Hathaway, Jessica Chastain, Michael Caine, Mackenzie Foy.':'Directed by Christopher Nolan.'}]};
+    return {organic:[{title:'Interstellar (2014)',link:'https://www.imdb.com/title/tt0816692/',snippet:query.includes('IMDb rating')?'IMDb RATING 8.7/10':query.includes('top 5 cast')?'Matthew McConaughey, Anne Hathaway, Jessica Chastain, Michael Caine, Mackenzie Foy.':'Directed by Christopher Nolan. Astronauts travel through space.'}]};
   };
   const searchImages = async (_query, options) => { posters++; if(options.num===15)throw Object.assign(Error('Unsupported Serper image result count'),{status:400}); if (posterError) throw Error('unavailable'); return { images: manyPosters ? [{imageUrl:'https://example.com/tiny.jpg',imageWidth:80,imageHeight:100},{imageUrl:'https://example.com/wrong.jpg',title:'Interstellar 2025'},...Array.from({length:10},(_,index)=>({imageUrl:'https://example.com/poster-'+index+'.jpg',title:'Interstellar 2014',imageWidth:1000,imageHeight:1500})),{imageUrl:'https://example.com/poster-0.jpg'}] : [
     { imageUrl: 'https://example.com/poster.jpg', link: 'https://example.com/movie' }, { imageUrl: 'http://127.0.0.1/private' },
   ] }; };
-  const api = new Function('videoEndOffset','ChatFailure','chatFailureCode','briefMovieResponse','selectWorkingPosters','hasCoreMovieFacts','researchMovieSources','MOVIE_FACT_INSTRUCTION','uzbekReleaseTitle', 'GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', 'findUzbekMovieLinks', 'findCatalogChatCandidates', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
-    (videoEndOffset,ChatFailure,chatFailureCode,briefMovieResponse,async candidates=>candidates.slice(0,2),hasCoreMovieFacts,async(film,sources,details,extract)=>{
+  const api = new Function('hasMediaIdentityEvidence','videoEndOffset','ChatFailure','chatFailureCode','briefMovieResponse','selectWorkingPosters','hasCoreMovieFacts','researchMovieSources','MOVIE_FACT_INSTRUCTION','uzbekReleaseTitle', 'GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', 'findUzbekMovieLinks', 'findCatalogChatCandidates', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
+    (hasMediaIdentityEvidence,videoEndOffset,ChatFailure,chatFailureCode,briefMovieResponse,async candidates=>candidates.slice(0,2),hasCoreMovieFacts,async(film,sources,details,extract)=>{
  const evidence=[...sources];
  for(const query of ['film production','production budget','site:kinopoisk','IMDb rating']){try{for(const item of (await searchWeb(query)).organic??[]){const previous=evidence.find(source=>source.url===item.link);if(previous)previous.snippet+=' '+item.snippet;else evidence.push({title:item.title,url:item.link,snippet:item.snippet});}}catch{}}
  return extract(evidence,details);
@@ -129,3 +130,9 @@ test('optional dossier and evidence failures keep identification and mark missin
 });
 
 test('poster search returns up to two unique images and skips small images or wrong years',async()=>{const result=await harness({manyPosters:true}).findMovieFromImages('Find',images);assert.equal(result.movie.posters.length,2);assert.equal(new Set(result.movie.posters.map(item=>item.url)).size,2);assert.ok(result.movie.posters.every(item=>item.url.includes('poster-')));});
+
+test('a plausible sourced title without visual support is rejected before posters and dubbed links',async()=>{
+ const h=harness({weakEvidence:true});
+ await assert.rejects(()=>h.findMovieFromImages('Find',[{mimeType:'video/mp4',fileUri:'https://r2.example/video',durationSeconds:60}],undefined,undefined,'brief'),e=>e.failureCode==='identity_unconfirmed');
+ assert.equal(h.posters(),0);assert.equal(h.calls.length,2);
+});
