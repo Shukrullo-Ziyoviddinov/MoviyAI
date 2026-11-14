@@ -4,6 +4,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { useChat } from "@/components/chat/chat-state";
 import { useTheme } from "@/components/theme/theme-state";
 import type { ChatMediaItem } from "@/types/chat";
+import { VideoPreview } from './VideoPreview';
 
 const GAP = 3;
 const MEDIA_MAX_W = 360;
@@ -29,7 +30,7 @@ function MediaCell({ item, style }: { item: ChatMediaItem; style?: CSSProperties
   const { openViewer } = useChat();
   const media =
     item.type === "video" ? (
-      <video src={item.uri} className="absolute inset-0 h-full w-full object-cover" muted />
+      <VideoPreview uri={item.uri} className="absolute inset-0 h-full w-full" />
     ) : (
       <img src={item.uri} alt="" className="absolute inset-0 h-full w-full object-cover" />
     );

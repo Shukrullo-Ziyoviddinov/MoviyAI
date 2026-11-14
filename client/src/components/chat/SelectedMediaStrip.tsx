@@ -2,6 +2,7 @@
 
 import { useTheme } from "@/components/theme/theme-state";
 import type { ChatMediaItem } from "@/types/chat";
+import { VideoPreview } from './VideoPreview';
 
 export function SelectedMediaStrip({
   items,
@@ -25,7 +26,7 @@ export function SelectedMediaStrip({
           style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}
         >
           {item.type === "video" ? (
-            <video src={item.uri} className="h-full w-full object-cover" muted />
+            <VideoPreview uri={item.uri} className="h-full w-full" />
           ) : (
             <img src={item.uri} alt="" className="h-full w-full object-cover" />
           )}
