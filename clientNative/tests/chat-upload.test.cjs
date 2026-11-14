@@ -24,7 +24,7 @@ const nativeCrypto=load('node_modules/expo-crypto/src/Crypto.ts',{
   output.set(crypto.createHash('sha256').update(new Uint8Array(input.buffer,input.byteOffset,input.byteLength)).digest());
  }}},
 });
-function harness({rejectUpload=false}={}){
+function harness({rejectUpload=false,reservationError,transferError}={}){
  const bytes=Uint8Array.from([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
  class LocalFile {
   constructor(uri){this.uri=uri;this.type='application/octet-stream';this.size=bytes.byteLength;}
@@ -32,6 +32,7 @@ function harness({rejectUpload=false}={}){
  }
  const uploads=[],messages=[],reservations=[];
  const chat=load('src/api/chat.ts',{
+  './upload-failure':load('src/api/upload-failure.ts'),
   'expo-file-system':{File:LocalFile},
   'expo-crypto':nativeCrypto,
   '@/src/utils/authToken':{getAuthTokenSync:()=> 'test-token',getAuthTokenKey:()=> 'token'},
@@ -40,12 +41,14 @@ function harness({rejectUpload=false}={}){
   './chat-stream':{consumeChatStream:async()=>({id:'chat',turns:[]})},
   './client':{apiBaseUrl:'https://api.test',api:{post:async(path,body)=>{
    reservations.push(body);
+   if(reservationError)throw reservationError;
    const mimeType=body.video?.mimeType??body.images[0].mimeType;
    const descriptor={url:'https://r2.test/upload',headers:{'Content-Type':mimeType,'Cache-Control':'private, no-store'}};
    return {data:{ok:true,data:body.video?descriptor:[descriptor]}};
   }}},
   'expo/fetch':{fetch:async(url,options)=>{
    if(options.method==='PUT'){
+    if(transferError)throw transferError;
     const normalized=await expo.normalizeBodyInitAsync(options.body);
     const headers=expo.overrideHeaders(expo.normalizeHeadersInit(options.headers),normalized.overriddenHeaders??[]);
     uploads.push({headers:Object.fromEntries(headers),bytes:Array.from(normalized.body)});
@@ -70,5 +73,18 @@ for(const type of ['image','video'])test(`${type} upload preserves signed MIME a
 test('a rejected R2 upload stops before movie analysis with upload_failed',async()=>{
  const h=harness({rejectUpload:true});
  await assert.rejects(h.chat.sendChat('chat','request','Find movie',()=>{},[{id:'media',uri:'file://photo.jpg',type:'image',mimeType:'image/jpeg'}]),error=>error.failureCode==='upload_failed');
+ assert.equal(h.messages.length,0);
+});
+
+for(const [name,options,code] of [
+ ['reservation rejection',{reservationError:{response:{status:409}}},'upload_conflict'],
+ ['reservation unavailable',{reservationError:{response:{status:503}}},'upload_setup_failed'],
+ ['reservation timeout',{reservationError:{code:'ECONNABORTED'}},'upload_timeout'],
+ ['reservation rate limit',{reservationError:{response:{status:429}}},'rate_limited'],
+ ['R2 connection failure',{transferError:new TypeError('Network request failed')},'upload_connection_failed'],
+ ['R2 timeout',{transferError:Object.assign(new Error('timeout'),{name:'TimeoutError'})},'upload_timeout'],
+])test(name+' stays distinct and stops before analysis',async()=>{
+ const h=harness(options);
+ await assert.rejects(h.chat.sendChat('chat','request','Find movie',()=>{},[{id:'media',uri:'file://picked.mov',type:'video',mimeType:'video/quicktime'}]),error=>error.failureCode===code);
  assert.equal(h.messages.length,0);
 });

@@ -224,6 +224,10 @@
       "preparing_video": "Video tayyorlanmoqda"
     },
     "failures": {
+      "upload_setup_failed": "Serverdan video yuklash havolasini olib bo?lmadi. Ulanishni tekshirib, qayta urining.",
+      "upload_conflict": "Server ushbu video uchun yuklashni tayyorlay olmadi. Chatni qayta ochib, videoni yangi xabar sifatida yuboring.",
+      "upload_connection_failed": "Videoni R2?ga yuborishda ulanish uzildi. Internetni tekshirib, qayta urining.",
+      "upload_timeout": "Video yuklash uchun ajratilgan vaqt tugadi. Ulanishni tekshirib, qayta urining.",
       "insufficient_evidence": "Ushbu tasvirdan kinoni ishonchli aniqlab bo‘lmadi. Qahramonlar yoki sahna aniqroq ko‘ringan rasm yoki video yuboring.",
       "identity_unconfirmed": "Qidiruv natijalari bilan aynan shu kino ekanini tasdiqlay olmadik. Boshqa kadr yoki parcha yuboring.",
       "provider_unavailable": "AI xizmatida vaqtinchalik muammo. Qayta urinib ko‘ring.",

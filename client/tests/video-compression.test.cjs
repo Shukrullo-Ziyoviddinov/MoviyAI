@@ -1,6 +1,22 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),path=require('path'),vm=require('node:vm'),ts=require('typescript');
 function load(name,dependencies={},globals={}){const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(__dirname,'../src/media/'+name+'.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports,require:name=>{if(dependencies[name])return dependencies[name];throw Error('Unexpected module: '+name);},Blob,WeakMap,Promise,setTimeout,clearTimeout,...globals});return exports;}
 const plan=load('video-compression-plan');
+
+test('large conversion budgets AAC in bits per second using the installed Quality API',async()=>{
+ const bunny=await import('mediabunny');
+ const video={displayWidth:1920,displayHeight:1080},audio={};
+ class Input{async getPrimaryVideoTrack(){return video;}async getPrimaryAudioTrack(){return audio;}async computeDuration(){return 60;}dispose(){}}
+ class Target{on(){return ()=>{};}}
+ class Output{constructor({target}){this.target=target;}}
+ const fake={...bunny,Input,BlobSource:class{},BufferTarget:Target,Output,Mp4OutputFormat:class{},canEncodeAudio:async()=>true,
+  Conversion:{init:async args=>({isValid:true,utilizedTracks:[video,audio],state:'pending',cancel:async()=>{},execute:async function(){
+   assert.equal(args.audio.quality._toAudioBitrate('aac'),64000);
+   args.output.target.buffer=new Uint8Array(100).buffer;this.state='done';
+  }})}};
+ const {prepareChatVideo}=load('prepare-chat-video',{'./video-compression-plan':plan,mediabunny:fake},{VideoEncoder:function(){},VideoDecoder:function(){}});
+ const result=await prepareChatVideo(new Blob([new Uint8Array(20_000_000)],{type:'video/mp4'}));
+ assert.equal(result.type,'video/mp4');assert.ok(result.size<=plan.AI_VIDEO_MAX_BYTES);
+});
 test('compression plan preserves aspect ratio within even encoder dimensions and budgets for audio',()=>{
  for(const duration of [31.724333333333334,60,180])for(const [width,height] of [[1920,1080],[1080,1920],[720,544]]){
   const first=plan.videoCompressionPlan(duration,width,height);assert.ok(first.width<=720&&first.height<=720);assert.equal(first.width%2,0);assert.equal(first.height%2,0);assert.ok(Math.abs(first.width/first.height-width/height)<0.01);assert.ok((first.videoBitrate+first.audioBitrate)*duration/8<plan.AI_VIDEO_MAX_BYTES);

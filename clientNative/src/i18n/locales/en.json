@@ -224,6 +224,10 @@
       "preparing_video": "Preparing video"
     },
     "failures": {
+      "upload_setup_failed": "Could not obtain a video upload link from the server. Check your connection and retry.",
+      "upload_conflict": "The server could not prepare this video upload. Reopen the chat and send the video as a new message.",
+      "upload_connection_failed": "The connection failed while uploading the video to R2. Check your internet and retry.",
+      "upload_timeout": "Video upload timed out. Check your connection and retry.",
       "insufficient_evidence": "The film could not be reliably identified from this media. Send a clearer image or video showing a recognizable scene.",
       "identity_unconfirmed": "An exact match could not be confirmed from the search results. Send another frame or clip.",
       "provider_unavailable": "The AI service has a temporary problem. Please try again.",

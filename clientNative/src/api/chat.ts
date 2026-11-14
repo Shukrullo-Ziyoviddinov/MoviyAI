@@ -9,6 +9,7 @@ import { apiBaseUrl } from './client';
 import { api } from './client';
 import type {ChatStage,ChatFailureCode} from '../types/chat-progress';
 import { prepareChatVideo } from '../media/prepare-chat-video';
+import { uploadFailure } from './upload-failure';
 export type ChatSummary = {
     pinned: boolean;
     id: string;
@@ -44,8 +45,8 @@ async function request<T>(path: string, body?: unknown, method?: string): Promis
             throw new Error('So\'rov bajarilmadi.');
         return res.data.data;
     }
-    catch {
-        throw new Error('So\'rov bajarilmadi. Hisobingiz va ulanishni tekshirib, qayta urining.');
+    catch (cause) {
+        throw new Error('So\'rov bajarilmadi. Hisobingiz va ulanishni tekshirib, qayta urining.', { cause });
     }
 }
 export const listChats = () => request<ChatSummary[]>('');
@@ -69,10 +70,12 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
         const hash=Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
         const mimeType=file.uri!==item.uri?'video/mp4':item.mimeType||file.type||(/\.mov$/i.test(item.fileName??'')?'video/quicktime':/\.webm$/i.test(item.fileName??'')?'video/webm':'video/mp4');
         onProgress('upload_video');
-        const upload=await request<{url:string;headers:Record<string,string>}>('/'+id+'/video-upload',{requestId,video:{hash,size:file.size,mimeType}});
+        const upload=await request<{url:string;headers:Record<string,string>}>('/'+id+'/video-upload',{requestId,video:{hash,size:file.size,mimeType}})
+            .catch(error=>{throw uploadFailure(error,'reservation');});
         // expo/fetch replaces Content-Type with File.type for Blob bodies.
         // Upload the exact bytes we hashed so R2 receives the signed MIME header.
-        const uploaded=await fetch(upload.url,{method:'PUT',headers:upload.headers,body:new Uint8Array(bytes),signal:AbortSignal.timeout(180000)});
+        const uploaded=await fetch(upload.url,{method:'PUT',headers:upload.headers,body:new Uint8Array(bytes),signal:AbortSignal.timeout(180000)})
+            .catch(error=>{throw uploadFailure(error,'transfer');});
         if(!uploaded.ok)throw Object.assign(new Error('Video yuklanmadi.'),{failureCode:'upload_failed'});
     }
     if (localImages.length) {

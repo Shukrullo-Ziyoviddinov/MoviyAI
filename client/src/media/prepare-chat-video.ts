@@ -17,7 +17,7 @@ async function compress(file:Blob):Promise<Blob>{
    const output=new bunny.Output({format:new bunny.Mp4OutputFormat({fastStart:'in-memory'}),target:new bunny.BufferTarget()});
    const conversion=await bunny.Conversion.init({input,output,
     video:{codec:'avc',width:plan.width,height:plan.height,fit:'contain',frameRate:plan.frameRate,quality:new bunny.Quality({bitrate:plan.videoBitrate,bitrateMode:'variable'}),forceTranscode:true,allowTransformationMetadata:false},
-    audio:{codec:'aac',quality:new bunny.Quality(plan.audioBitrate),forceTranscode:true}});
+    audio:{codec:'aac',quality:new bunny.Quality({bitrate:plan.audioBitrate}),forceTranscode:true}});
    // Conversion can otherwise succeed by silently dropping an unsupported track.
    if(!conversion.isValid||!conversion.utilizedTracks.includes(video)||audio&&!conversion.utilizedTracks.includes(audio)){await conversion.cancel();throw failure('compression_unsupported');}
    let timedOut=false,oversized=false;
