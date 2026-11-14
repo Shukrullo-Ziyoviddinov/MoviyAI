@@ -213,3 +213,13 @@ test('expiring R2 links renew without clearing chat messages or showing a loadin
  h.db.get(id).turns[0].images[0].path='https://r2.example/renewed';
  await session.actions.refreshMedia();assert.equal(session.getState().loading,false);assert.equal(session.getState().messages.length,count);assert.equal(session.getState().messages[0].items[0].uri,'https://r2.example/renewed');
 });
+
+test('server-assigned conversation titles appear immediately even if list refresh fails',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');
+ const send=h.api.sendChat;
+ h.api.sendChat=async(...args)=>{const chat=await send(...args);chat.title='Interstellar (2014)';h.db.get(chat.id).title=chat.title;return chat;};
+ h.api.listChats=async()=>{throw Error('summary refresh unavailable');};
+ session.actions.sendMessage({text:'Rasmdagi kinoni top'});await tick();await tick();
+ assert.equal(session.getState().conversations[0].title,'Interstellar (2014)');
+ assert.notEqual(session.getState().conversations[0].title,'Rasmdagi kinoni top');
+});

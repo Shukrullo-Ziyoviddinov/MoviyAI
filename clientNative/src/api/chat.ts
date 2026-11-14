@@ -64,28 +64,32 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
         const file=await prepareChatVideo(new LocalFile(item.uri));
         if(!file||file.size>80*1024*1024)throw new Error('Video 80 MB dan oshmasligi kerak.');
         const bytes=await file.arrayBuffer();
-        const digest=await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256,bytes);
+        // Android's native Crypto bridge requires a TypedArray, not a raw ArrayBuffer.
+        const digest=await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256,new Uint8Array(bytes));
         const hash=Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
         const mimeType=file.uri!==item.uri?'video/mp4':item.mimeType||file.type||(/\.mov$/i.test(item.fileName??'')?'video/quicktime':/\.webm$/i.test(item.fileName??'')?'video/webm':'video/mp4');
         onProgress('upload_video');
         const upload=await request<{url:string;headers:Record<string,string>}>('/'+id+'/video-upload',{requestId,video:{hash,size:file.size,mimeType}});
-        const uploaded=await fetch(upload.url,{method:'PUT',headers:upload.headers,body:file,signal:AbortSignal.timeout(180000)});
+        // expo/fetch replaces Content-Type with File.type for Blob bodies.
+        // Upload the exact bytes we hashed so R2 receives the signed MIME header.
+        const uploaded=await fetch(upload.url,{method:'PUT',headers:upload.headers,body:new Uint8Array(bytes),signal:AbortSignal.timeout(180000)});
         if(!uploaded.ok)throw Object.assign(new Error('Video yuklanmadi.'),{failureCode:'upload_failed'});
     }
     if (localImages.length) {
         onProgress('upload_image');
         const files = await Promise.all(localImages.map(async image => {
             const file = image.file ?? new LocalFile(image.uri);
-            const digest = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, await file.arrayBuffer());
+            const bytes = await file.arrayBuffer();
+            const digest = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, new Uint8Array(bytes));
             const hash = Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
-            return { file, hash, size: file.size, mimeType: image.mimeType ?? file.type ?? 'image/jpeg' };
+            return { bytes, hash, size: bytes.byteLength, mimeType: image.mimeType || file.type || 'image/jpeg' };
         }));
         const uploads = await request<Array<{url:string;headers:Record<string,string>}>>('/' + id + '/uploads', {
             requestId, images: files.map(({hash,size,mimeType})=>({hash,size,mimeType})),
         });
         for (let index=0;index<files.length;index++) {
             const uploaded = await fetch(uploads[index].url, { method:'PUT', headers:uploads[index].headers,
-                body:files[index].file, signal:AbortSignal.timeout(60000) });
+                body:new Uint8Array(files[index].bytes), signal:AbortSignal.timeout(60000) });
             if (!uploaded.ok) throw Object.assign(new Error('Rasm yuklanmadi.'),{failureCode:'upload_failed'});
         }
     }

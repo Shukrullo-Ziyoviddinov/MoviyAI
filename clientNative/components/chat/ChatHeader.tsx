@@ -2,10 +2,13 @@ import { CloseIcon, DownloadIcon, MenuIcon, PersonIcon } from '@/components/icon
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
+import { useAuthStore } from '@/src/stores/useAuthStore';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const HEADER_ROW_HEIGHT = 62;
@@ -18,6 +21,10 @@ export function ChatHeader() {
   const close = useMediaViewerStore((state) => state.close);
   const openMenu = useSideMenuStore((state) => state.openMenu);
   const viewing = !!item;
+  const profile = useAuthStore(state => state.profile);
+  const picture = profile?.picture?.trim() || '';
+  const [failedPicture, setFailedPicture] = useState<string | null>(null);
+  const initial = (profile?.email?.trim() || profile?.name?.trim() || '?').charAt(0).toUpperCase();
 
   const handleDownload = async () => {
     if (!item) return;
@@ -61,7 +68,12 @@ export function ChatHeader() {
           {viewing ? (
             <DownloadIcon size={20} color={colors.icon} />
           ) : (
-            <PersonIcon size={20} color={colors.icon} />
+            picture && picture !== failedPicture ? (
+              <Image key={picture} source={{ uri: picture }} style={styles.avatar}
+                contentFit="cover" onError={() => setFailedPicture(picture)} />
+            ) : profile ? (
+              <Text style={[styles.initial, { color: colors.text }]}>{initial}</Text>
+            ) : <PersonIcon size={20} color={colors.icon} />
           )}
         </Pressable>
       </View>
@@ -91,5 +103,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
+    overflow: 'hidden',
   },
+  avatar: { width: '100%', height: '100%' },
+  initial: { fontSize: 19, fontWeight: '700' },
 });

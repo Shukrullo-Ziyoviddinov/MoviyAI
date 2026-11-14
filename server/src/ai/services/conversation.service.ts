@@ -1,6 +1,7 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { Conversation, ChatTurn } from '../models/conversation.model.js';
 import { chatWithGemma } from './gemma.service.js';
+import { conversationTitle } from './conversation-title.service.js';
 import type { AiHistoryMessage, AiResult } from '../types/ai.types.js';
 import type { ChatImageInput, MovieSearchResult } from '../types/movie-search.types.js';
 import {findUzbekMovieLinks,isUzbekMovieRequest,uzbekLookupReply,uzbekReleaseTitle} from './uzbek-movie.service.js';
@@ -48,6 +49,14 @@ export async function getConversation(userId: string, id: string) {
     if (!row)
         throw new ConversationError('Conversation not found', 404);
     const turns = await ChatTurn.find({ conversationId: id, userId }).select('-images.data').sort({ createdAt: 1, _id: 1 }).lean();
+    // Upgrade old first-message titles when the conversation is reopened.
+    if (!row.titleGenerated && row.lockUntil <= new Date() && turns.some(turn => turn.status === 'completed')
+        && (row.title === 'Yangi chat' || row.title === turns[0]?.text.slice(0, 100))) {
+        const title = await conversationTitle(turns.filter(turn => turn.status === 'completed').slice(0, 1));
+        const updated = await Conversation.findOneAndUpdate({ _id: id, userId, deletedAt: null,
+            title: row.title, lockUntil: { $lte: new Date() } }, { $set: { title, titleGenerated: true } }, { returnDocument: 'after' });
+        if (updated) row.title = updated.title;
+    }
     return {
         id: row._id, title: row.title, pinned: Boolean(row.pinned), updatedAt: row.updatedAt,
         turns: await Promise.all(turns.map(async turn => ({
@@ -106,9 +115,6 @@ export async function sendConversationMessage(userId: string, id: string, reques
         await ChatTurn.updateOne({ conversationId: id, userId, requestId }, {
             $set: { status: 'processing', attemptToken: lockToken,progressStage:null,failureCode:null }, $setOnInsert: { text, images: references,videos:videoReferences },
         }, { upsert: true });
-        await Conversation.updateOne({ _id: id, userId, lockToken }, {
-            $set: { title: locked.title === 'Yangi chat' ? text.slice(0, 100) : locked.title },
-        });
         const previous = await ChatTurn.find({ userId, conversationId: id, status: 'completed' })
             .sort({ createdAt: -1, _id: -1 }).limit(15).lean();
         const history: AiHistoryMessage[] = previous.reverse().flatMap(turn => [
@@ -146,10 +152,19 @@ export async function sendConversationMessage(userId: string, id: string, reques
                 result.movie.sources.push({title:portrait.label,url:portrait.sourceUrl});
         }
         progress('preparing');await progressWrites;
+        // Name once from the first completed exchange, then preserve that name.
+        const legacyTitle = locked.title === 'Yangi chat' || !previous.length
+            || locked.title === previous[0]?.text.slice(0, 100);
+        const title = !locked.titleGenerated && legacyTitle
+            ? await conversationTitle(previous.length ? previous.slice(0, 1)
+                : [{ text, answer: result.text, movie: result.movie, recommendations: result.recommendations }])
+            : locked.title;
         await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken }, {
             $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages,recommendations:result.recommendations??[],
                 progressStage:null,failureCode:null,catalogDispatch: isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie)) ? 'pending' : 'none' },
         });
+        await Conversation.updateOne({ _id: id, userId, deletedAt: null, lockToken }, { $set: { title, titleGenerated: true } })
+            .catch(() => { console.warn('[CHAT_TITLE] Title update deferred; chat answer saved'); });
         // The outbox flag is committed with the answer. Worker/R2/AI failures
         // cannot change a completed chat turn into a failed generation.
         if (isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie))) notifyCatalogWorker();

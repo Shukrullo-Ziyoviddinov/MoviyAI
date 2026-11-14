@@ -1,4 +1,5 @@
 import {isMovieRecommendation} from '../dist/ai/services/movie-recommendation.service.js';
+import {conversationTitle} from '../dist/ai/services/conversation-title.service.js';
 import {isContextMovieFollowup} from '../dist/ai/services/movie-followup.service.js';
 import {ChatFailure,chatFailureCode} from '../dist/ai/types/chat-progress.types.js';
 import {isNamedMovieSearch} from '../dist/ai/services/text-movie.service.js';
@@ -85,9 +86,9 @@ function harness() {
   const getChatImage=async key=>objects.get(key)??null;
   const deleteChatImage=async key=>{if(storageFailure)throw Error('R2 unavailable');objects.delete(key);};
   const storage=new Function('cleanupConversationVideos','cleanupExpiredVideos','ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages','catalogDispatcher',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(async()=>{},async()=>{},ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{},{preserveConversation:async()=>{}});
-  const service = new Function('ChatFailure','chatFailureCode','isContextMovieFollowup','movieFollowup','resolveDirectVideo','chatVideoUrls','findMovieFromVideo','isMovieRecommendation','recommendMovies','isNamedMovieSearch','findMovieFromText','uzbekReleaseTitle', 'Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', 'isCatalogEligible', 'wakeCatalogWorker', source +
+  const service = new Function('conversationTitle','ChatFailure','chatFailureCode','isContextMovieFollowup','movieFollowup','resolveDirectVideo','chatVideoUrls','findMovieFromVideo','isMovieRecommendation','recommendMovies','isNamedMovieSearch','findMovieFromText','uzbekReleaseTitle', 'Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', 'isCatalogEligible', 'wakeCatalogWorker', source +
     '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage,deleteConversation,pinConversation};')
-    (ChatFailure,chatFailureCode,isContextMovieFollowup,async(text,movie)=>({text:"Requested movie section",movie:{...movie,presentation:"details"},model:"test"}),async()=>[{key:"video-key",hash:"v".repeat(64),mimeType:"video/mp4",size:200,duration:6}],async(_owner,_id,requestId,saved)=>{const videos=saved??ChatTurn.rows.find(turn=>turn.requestId===requestId)?.videos??[];return videos.map(video=>({fileUri:"https://r2.example/"+video.key,mimeType:video.mimeType,durationSeconds:video.duration}));},(text,videos)=>findMovieFromImages(text,videos),isMovieRecommendation,async()=>({text:'Recommendations',model:'gemma',recommendations:[{text:'Dossier 1',movie:(await findMovieFromImages('One',[])).movie},{text:'Dossier 2',movie:{...(await findMovieFromImages('Two',[])).movie,title:'Second'}}]}),isNamedMovieSearch,(text)=>findMovieFromImages(text,[]),uzbekReleaseTitle, Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}],async()=>[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],isUzbekMovieRequest,uzbekLookupReply,isCatalogEligible,()=>{wakes++;if(wakeError)throw Error('scheduler failure');});
+    (turns=>conversationTitle(turns,async()=>"Kino mavzusi"),ChatFailure,chatFailureCode,isContextMovieFollowup,async(text,movie)=>({text:"Requested movie section",movie:{...movie,presentation:"details"},model:"test"}),async()=>[{key:"video-key",hash:"v".repeat(64),mimeType:"video/mp4",size:200,duration:6}],async(_owner,_id,requestId,saved)=>{const videos=saved??ChatTurn.rows.find(turn=>turn.requestId===requestId)?.videos??[];return videos.map(video=>({fileUri:"https://r2.example/"+video.key,mimeType:video.mimeType,durationSeconds:video.duration}));},(text,videos)=>findMovieFromImages(text,videos),isMovieRecommendation,async()=>({text:'Recommendations',model:'gemma',recommendations:[{text:'Dossier 1',movie:(await findMovieFromImages('One',[])).movie},{text:'Dossier 2',movie:{...(await findMovieFromImages('Two',[])).movie,title:'Second'}}]}),isNamedMovieSearch,(text)=>findMovieFromImages(text,[]),uzbekReleaseTitle, Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}],async()=>[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],isUzbekMovieRequest,uzbekLookupReply,isCatalogEligible,()=>{wakes++;if(wakeError)throw Error('scheduler failure');});
   return { ...service, ...storage, objects, storageFailure: value=>{storageFailure=value;}, Conversation, ChatTurn, fail: value => { fail = value; }, hold: value => { hold = value; },
     wakes:()=>wakes,wakeError:value=>{wakeError=value;},calls: () => calls, captured: () => captured };
 }
@@ -247,3 +248,25 @@ test('history is built from saved turns and an expired processing turn can be re
  });
 
 test('character portraits are stored and restored with the AI answer',async()=>{const h=harness(),id=randomUUID();await h.createConversation('alice',id);await h.sendConversationMessage('alice',id,randomUUID(),'Characters');const chat=await h.getConversation('alice',id);assert.equal(chat.turns[0].characterImages[0].label,'Belle');assert.equal(h.ChatTurn.rows[0].characterImages[0].imageUrl,'https://example.com/belle.jpg');});
+
+test('completed media searches use film titles and old first-message titles refresh on reopen',async()=>{
+ const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+ const result=await h.sendConversationMessage('alice',id,randomUUID(),'Rasmdagi kinoni toping',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,255,0])}]);
+ assert.equal(result.title,'Example (2014)');
+ h.Conversation.rows[0].title='Rasmdagi kinoni toping';
+ h.Conversation.rows[0].titleGenerated=false;
+ const reopened=await h.getConversation('alice',id);
+ assert.equal(reopened.title,'Example (2014)');
+ assert.equal((await h.listConversations('alice'))[0].title,'Example (2014)');
+});
+test('the initial title stays unchanged after the conversation topic changes',async()=>{
+ const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+ const greeting=await h.sendConversationMessage('alice',id,randomUUID(),'Salom');
+ assert.equal(greeting.title,'Kino haqida suhbat');
+ const topic=await h.sendConversationMessage('alice',id,randomUUID(),'Rejissyorning ishini tushuntir');
+ assert.equal(topic.title,greeting.title);
+ assert.equal(h.Conversation.rows[0].titleGenerated,true);
+ const movie=await h.sendConversationMessage('alice',id,randomUUID(),'Rasmdagi kinoni top',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,255,0])}]);
+ assert.equal(movie.title,greeting.title);
+ assert.equal((await h.getConversation('alice',id)).title,greeting.title);
+});

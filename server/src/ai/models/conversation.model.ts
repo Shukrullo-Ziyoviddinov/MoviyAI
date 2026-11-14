@@ -3,6 +3,7 @@ const schema = new Schema({
     _id: { type: String, required: true },
     userId: { type: String, required: true },
     title: { type: String, default: 'Yangi chat', maxlength: 100 },
+    titleGenerated: { type: Boolean, default: false },
     pinned: { type: Boolean, default: false },
   deletedAt: { type: Date, default: null },
     cleanupPending: { type: Boolean, default: false },

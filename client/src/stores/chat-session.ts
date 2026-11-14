@@ -43,6 +43,8 @@ export function createChatSession(storage: Storage) {
             await storage.write(key(state.owner), id).catch(() => undefined);
     };
     function apply(chat: api.SavedConversation) {
+        state = { ...state, conversations: state.conversations.map(item => item.id === chat.id
+            ? { ...item, title: chat.title, updatedAt: chat.updatedAt } : item) };
         const failed = chat.turns.find(turn => turn.status === 'failed');
         emit({ progressStage:chat.turns.find(turn=>turn.status==='processing')?.progressStage??null,failureCode:failed?.failureCode??null,streamingText: '', activeId: chat.id, messages: chat.turns.flatMap(turn => {
                 const messages: ChatMessage[] = [];
@@ -163,7 +165,7 @@ export function createChatSession(storage: Storage) {
             if (version !== revision)
                 return;
             if (!state.conversations.some(chat => chat.id === payload.conversationId))
-                emit({ conversations: [{ id: payload.conversationId, pinned: false, title: payload.text.slice(0, 100), updatedAt: new Date().toISOString() }, ...state.conversations] });
+                emit({ conversations: [{ id: payload.conversationId, pinned: false, title: 'Yangi chat', updatedAt: new Date().toISOString() }, ...state.conversations] });
             const chat = await api.sendChat(payload.conversationId, payload.requestId, payload.text, delta => reveal.push(delta), payload.media,stage=>{if(version===revision)emit({progressStage:stage});});
             await reveal.finish();
             if (version !== revision)
