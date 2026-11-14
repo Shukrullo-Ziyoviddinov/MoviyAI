@@ -20,13 +20,13 @@ export function WatchOptionModal({ visible, onClose, movie, title, onSelect }: {
   const sheetHeight = Math.min(height - insets.top - 24, 112 + Math.min(options.length, 5) * 78 + bottom);
   const [present, setPresent] = useState(visible);
   const progress = useRef(new Animated.Value(0)).current;
-  const current = useRef(0);
-  const startProgress = useRef(1);
+  const drag = useRef<{ start: number | null; distance: number } | null>(null);
   const shown = useRef(false);
   const latestVisible = useRef(visible);
   latestVisible.current = visible;
   const version = useRef(0);
   const animate = useCallback((opening: boolean) => {
+    drag.current = null;
     const token = ++version.current;
     progress.stopAnimation();
     Animated.timing(progress, { toValue: opening ? 1 : 0, duration: opening ? 320 : 240,
@@ -38,30 +38,49 @@ export function WatchOptionModal({ visible, onClose, movie, title, onSelect }: {
     });
   }, [progress]);
   useEffect(() => {
-    const listener = progress.addListener(({ value }) => { current.current = value; });
-    return () => { ++version.current; progress.stopAnimation(); progress.removeListener(listener); };
+    return () => { ++version.current; progress.stopAnimation(); };
   }, [progress]);
   useEffect(() => {
     if (visible) setPresent(true);
     if (shown.current) animate(visible);
   }, [visible, animate]);
   const pan = useMemo(() => PanResponder.create({
+    // The native Modal host claims unhandled touch starts. Own the header touch
+    // immediately so the host cannot swallow subsequent drag events.
+    onStartShouldSetPanResponderCapture: () => latestVisible.current,
+    onStartShouldSetPanResponder: () => latestVisible.current,
+    onMoveShouldSetPanResponderCapture: (_event, gesture) => latestVisible.current && gesture.dy > 6 && gesture.dy > Math.abs(gesture.dx),
     onMoveShouldSetPanResponder: (_event, gesture) => latestVisible.current && gesture.dy > 6 && gesture.dy > Math.abs(gesture.dx),
     onPanResponderGrant: () => {
       ++version.current;
-      progress.stopAnimation();
-      startProgress.current = current.current;
+      const activeDrag = { start: null as number | null, distance: 0 };
+      drag.current = activeDrag;
+      // Read the actual native position, not a listener value left by the last close.
+      progress.stopAnimation(value => {
+        if (drag.current !== activeDrag) return;
+        activeDrag.start = value;
+        const next = Math.max(0, Math.min(1, value - activeDrag.distance / sheetHeight));
+        progress.setValue(next);
+      });
     },
     onPanResponderMove: (_event, gesture) => {
-      const value = Math.max(0, Math.min(1, startProgress.current - Math.max(0, gesture.dy) / sheetHeight));
-      current.current = value;
+      const activeDrag = drag.current;
+      if (!activeDrag) return;
+      activeDrag.distance = Math.max(0, gesture.dy);
+      if (activeDrag.start === null) return;
+      const value = Math.max(0, Math.min(1, activeDrag.start - activeDrag.distance / sheetHeight));
       progress.setValue(value);
     },
     onPanResponderRelease: (_event, gesture) => {
-      if (current.current < 0.8 || gesture.vy > 0.8) onClose();
+      const activeDrag = drag.current;
+      drag.current = null;
+      if (!activeDrag || !latestVisible.current) return;
+      const distance = Math.max(0, gesture.dy);
+      // A tap must never close the sheet, even while opening or after reopening.
+      if (distance > sheetHeight * 0.2 || distance > 6 && gesture.vy > 0.8) onClose();
       else animate(true);
     },
-    onPanResponderTerminate: () => animate(latestVisible.current),
+    onPanResponderTerminate: () => { drag.current = null; animate(latestVisible.current); },
     onPanResponderTerminationRequest: () => false,
   }), [animate, onClose, progress, sheetHeight]);
   if (!present) return null;
@@ -73,10 +92,12 @@ export function WatchOptionModal({ visible, onClose, movie, title, onSelect }: {
       </Animated.View>
       <Animated.View accessibilityViewIsModal style={[styles.sheet, { height: sheetHeight, backgroundColor: colors.panel, borderColor: colors.borderSoft,
         paddingBottom: bottom, transform: [{translateY:progress.interpolate({inputRange:[0,1],outputRange:[sheetHeight,0]})}] }]}>
-        <View style={styles.heading} {...pan.panHandlers}>
-          <View style={[styles.handle, {backgroundColor:colors.border}]} />
-          <Text style={[styles.title, { color: colors.text }]}>{t('movie.watchOptionsTitle')}</Text>
-          {!!title && <Text numberOfLines={1} style={{ color: colors.textMuted, marginTop: 4 }}>{title}</Text>}
+        <View collapsable={false} style={styles.heading} {...pan.panHandlers}>
+          <View pointerEvents="none">
+            <View style={[styles.handle, {backgroundColor:colors.border}]} />
+            <Text style={[styles.title, { color: colors.text }]}>{t('movie.watchOptionsTitle')}</Text>
+            {!!title && <Text numberOfLines={1} style={{ color: colors.textMuted, marginTop: 4 }}>{title}</Text>}
+          </View>
         </View>
         <ScrollView style={{flex:1}} contentContainerStyle={{ paddingHorizontal: 20 }}>
           {options.map(option => <Pressable key={option.url} onPress={() => onSelect(option.url)} accessibilityRole="link"
