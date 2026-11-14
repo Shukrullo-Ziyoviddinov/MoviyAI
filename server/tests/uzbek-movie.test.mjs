@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {z} from 'zod';
-import {readUzbekPage,uzbekDetailUrl,discoverUzbekDetails,isUzbekMovieRequest,uzbekLookupReply,isSeriesIdentity} from '../dist/ai/services/uzbek-movie.service.js';
+import {readUzbekPage,uzbekDetailUrl,discoverUzbekDetails,searchUzbekSite,isUzbekMovieRequest,uzbekLookupReply,isSeriesIdentity} from '../dist/ai/services/uzbek-movie.service.js';
 
 const valid='https://uzmovi.net/tarjima-kinolar/123-interstellar.html';
 test('series identity is explicit or supported by original source metadata, never a guessed title',()=>{
@@ -22,7 +22,7 @@ test('Uzbek detail URL boundary excludes other hosts, lists, files and credentia
  assert.equal(uzbekDetailUrl(valid),valid);
  for(const url of ['https://uzmovi.net/','https://evil.uzmovi.net/movie','https://uzmovi.net.evil.org/movie','https://user:pass@uzmovi.net/movie','https://uzmovi.net:8443/movie','http://uzmovi.net/movie','https://uzmovi.net/search?q=film','https://uzmovi.net/category/movie','https://uzmovi.net/uploads/a.mp4'])assert.equal(uzbekDetailUrl(url),null,url);
 });
-test('page reader never follows redirects outside the four sites',async()=>{
+test('page reader never follows redirects outside the allowed sites',async()=>{
  let calls=0;const page=await readUzbekPage(valid,async()=>{calls++;return new Response(null,{status:302,headers:{location:'http://169.254.169.254/private'}});});
  assert.equal(page,null);assert.equal(calls,1);
 });
@@ -49,15 +49,41 @@ test('Uzbek dub follow-ups request a real lookup; general social replies do not'
  assert.match(uzbekLookupReply('uzbekcha dublaji ham top',false),/qayta tekshirdim/);
 });
 const source=readFileSync(new URL('../dist/ai/services/uzbek-movie.service.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/\bexport /g,'');
-function harness({badYear=false,wrongFilm=false,unavailable=false,imageError=false,transientError=false,recoverAlias=false}={}){
+function harness({badYear=false,wrongFilm=false,unavailable=false,imageError=false,transientError=false,recoverAlias=false,yearlessOnly=false,internalOnly=false}={}){
  const calls=[];const searchQueries=[];let queries=0;
  class GoogleGenAI{models={generateContent:async request=>{if(request.config.maxOutputTokens===300)return {text:JSON.stringify({queries:[recoverAlias?'SupportedLocalName 2014':'Interstellar 2014 uzbek']})};calls.push(request);if(transientError&&calls.length===1)throw Error('Temporary provider failure');if(imageError&&request.contents[0].parts.some(part=>part.fileData))throw Error('Poster inaccessible');return {text:JSON.stringify({matches:[{index:0,title:'Interstellar',sameFilm:!wrongFilm,yearConfirmed:!badYear,identityEvidence:'Interstellar, 2014, Christopher Nolan'},{index:99,title:'Invented',sameFilm:true,yearConfirmed:true,identityEvidence:'Invented evidence string'}]})};}};}
- const searchWeb=async query=>{queries++;searchQueries.push(query);if(recoverAlias&&!query.includes('SupportedLocalName'))return {organic:[]};return {organic:[{title:'Movie',link:query.includes('site:uzmovi.net')?valid:'https://untrusted.example/film'}]};};
+ const searchWeb=async query=>{queries++;searchQueries.push(query);if(internalOnly||yearlessOnly&&query.includes('2014')||recoverAlias&&!query.includes('SupportedLocalName'))return {organic:[]};return {organic:[{title:'Movie',link:query.includes('site:uzmovi.net')?valid:'https://untrusted.example/film'}]};};
  const readPage=async url=>unavailable?null:{url,title:'Interstellar Uzbek tilida',text:'Interstellar, 2014, Christopher Nolan',posterUrl:'https://uzmovi.net/uploads/poster.jpg'};
- const api=new Function('GoogleGenAI','z','AI_CONFIG','searchWeb',source+'\nreturn createUzbekMovieSearch;')(GoogleGenAI,z,{apiKey:'fake',models:{image:'image-model'}},searchWeb)({searchWeb,readPage});
+ const api=new Function('GoogleGenAI','z','AI_CONFIG','searchWeb',source+'\nreturn createUzbekMovieSearch;')(GoogleGenAI,z,{apiKey:'fake',models:{image:'image-model'}},searchWeb)({searchWeb,readPage,...(internalOnly?{searchSite:async site=>site==='uzmovi.net'?[valid]:[]}: {})});
  return {api,calls,searchQueries,queries:()=>queries};
 }
 const film={title:'Interstellar',titleUz:null,titleRu:null,year:2014};
+
+test('missing indexed release year triggers a yearless search without dropping identity verification',async()=>{
+ const h=harness({yearlessOnly:true});const links=await h.api(film);
+ assert.equal(links.length,1);assert.ok(h.searchQueries.some(query=>query.startsWith('site:uzmovi.net')&&!query.includes('2014')));
+ assert.ok(h.calls.length>0);
+ assert.deepEqual(await harness({yearlessOnly:true,wrongFilm:true}).api(film),[]);
+});
+
+test('unindexed internal search candidates still require successful film verification',async()=>{
+ const h=harness({internalOnly:true});assert.equal((await h.api(film)).length,1);
+ assert.deepEqual(await harness({internalOnly:true,wrongFilm:true}).api(film),[]);
+});
+
+test('public internal searches use confirmed forms and return only same-site detail candidates',async()=>{
+ for(const site of ['uzmovi.net','asilmedia.org']){
+  let request;
+  const url=`https://${site}/123-other-local-name.html`;
+  const links=await searchUzbekSite(site,'Original Title 2019',async value=>{
+   request=new URL(value);
+   return new Response(`<a href="${url}">Boshqa mahalliy nom</a><a href="https://evil.example/123.html">Original Title</a><a href="/search?q=x">Search</a>`,{headers:{'content-type':'text/html'}});
+  });
+  assert.deepEqual(links,[url]);assert.equal(request.searchParams.get(site==='uzmovi.net'?'q':'story'),'Original Title');
+  assert.equal(uzbekDetailUrl(request.href),null);
+ }
+ let fetched=false;assert.deepEqual(await searchUzbekSite('evil.example','Film',async()=>{fetched=true;}),[]);assert.equal(fetched,false);
+});
 test('series verification accepts a series landing page instead of applying movie-only exclusions',async()=>{
  const h=harness();await h.api({...film,mediaType:'series'});assert.match(h.calls[0].config.systemInstruction,/TV SERIES/);assert.match(h.calls[0].config.systemInstruction,/barcha qismlari/);assert.match(h.calls[0].config.systemInstruction,/episode release year/);
  const movie=harness();await movie.api({...film,mediaType:'movie'});assert.match(movie.calls[0].config.systemInstruction,/input is a MOVIE/);
@@ -65,7 +91,7 @@ test('series verification accepts a series landing page instead of applying movi
 test('known local movie title and year are searched without invented aliases',async()=>{
  const h=harness();await h.api({...film,titleUz:'Mahalliy nom 2'});
  assert.ok(h.searchQueries.some(query=>query.includes('Mahalliy nom 2 2014 uzbek tilida')));
- assert.equal(h.queries(),8);
+ assert.ok(h.queries()<=14);
 });
 test('temporary verification failure gets one text-only retry',async()=>{
  const h=harness({transientError:true});assert.equal((await h.api(film)).length,1);assert.equal(h.calls.length,2);
@@ -75,10 +101,10 @@ test('failed local lookup expands to other sources then rechecks selected sites'
  assert.equal(result.length,1);
  assert.ok(h.searchQueries.some(query=>!query.startsWith('site:')));
  assert.ok(h.searchQueries.some(query=>query.startsWith('site:')&&query.includes('SupportedLocalName')));
- assert.ok(h.queries()<=17);
+ assert.ok(h.queries()<=26);
 });
 test('only verified indexed exact film links are returned; failure stays optional',async()=>{
- const h=harness();assert.deepEqual(await h.api(film),[{title:'Interstellar',url:valid,site:'uzmovi.net'}]);assert.ok(h.queries()<=8);
+ const h=harness();assert.deepEqual(await h.api(film),[{title:'Interstellar',url:valid,site:'uzmovi.net'}]);assert.ok(h.queries()<=14);
  for(const options of [{badYear:true},{wrongFilm:true},{unavailable:true}])assert.deepEqual(await harness(options).api(film),[]);
 });
 test('frames and site posters go directly to Gemini; inaccessible media falls back to page facts',async()=>{
@@ -87,4 +113,13 @@ test('frames and site posters go directly to Gemini; inaccessible media falls ba
  assert.ok(h.calls[0].contents[0].parts.some(part=>part.fileData?.fileUri==='https://uzmovi.net/uploads/poster.jpg'));
  assert.ok(h.calls[0].contents[0].parts.some(part=>part.fileData?.fileUri===frame.fileData.fileUri));
  assert.ok(h.calls[1].contents[0].parts.every(part=>!part.fileData));
+});
+
+test('Playuz details are accepted while searches, files and lookalike domains are rejected',async()=>{
+ const url='https://playuz.net/serial/123-example-uzbek-tilida.html';
+ assert.equal(uzbekDetailUrl(url),url);
+ assert.equal(uzbekDetailUrl(url.replace('playuz.net','www.playuz.net')),url.replace('playuz.net','www.playuz.net'));
+ for(const bad of ['https://playuz.net/','https://playuz.net/?do=search&story=film','https://playuz.net/uploads/poster.jpg','https://evil.playuz.net/123.html','https://playuz.net.evil.org/123.html'])assert.equal(uzbekDetailUrl(bad),null);
+ const page=await readUzbekPage(url,async()=>new Response('<h1>Misol Uzbek tilida</h1><p>2019</p>',{headers:{'content-type':'text/html'}}));assert.ok(page);
+ const h=harness();await h.api(film);assert.ok(h.searchQueries.some(query=>query.startsWith('site:playuz.net ')));
 });

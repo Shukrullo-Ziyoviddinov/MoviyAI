@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import { createCatalogLinkResearch } from '../dist/ai/catalog/services/catalog-link-research.service.js';
 import { createCatalogFranchiseResearch } from '../dist/ai/catalog/services/catalog-franchise-research.service.js';
 import { prepareCatalogDraft } from '../dist/ai/catalog/mappers/movie.mapper.js';
+import { UZBEK_MOVIE_SITES } from '../dist/ai/services/uzbek-movie.service.js';
 
 function draft() { return prepareCatalogDraft({ title: 'Example 2', titleUz: 'Misol 2', titleRu: null, year: 2014, confidence: 'high', sources: [{ title: 'Film', url: 'https://example.com/film' }], posters: [] }, { language: 'uz' }); }
 function links({ fail = false, video = null, found = [] } = {}) {
   return createCatalogLinkResearch({
     searchVideos: async () => { if (fail) throw Error('provider down'); return { videos: [] }; }, searchWeb: async () => { if (fail) throw Error('provider down'); return { organic: [] }; },
     trailerSearch: deps => async () => { try { await deps.searchVideos('query', {}); } catch { return null; } return video; },
-    uzbekSearch: deps => async () => { for (const site of ['uzmovi.net', 'asilmedia.org', 'kinochilar.com', 'kino-olami.uz']) try { await deps.searchWeb(`site:${site} query`, {}); } catch { /* Actual search service isolates site failures. */ } return found; },
+    uzbekSearch: deps => async () => { for (const site of UZBEK_MOVIE_SITES) try { await deps.searchWeb(`site:${site} query`, {}); } catch { /* Actual search service isolates site failures. */ } return found; },
     readPage: async () => null, discover: async () => [],
   });
 }
