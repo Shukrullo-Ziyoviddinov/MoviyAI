@@ -7,6 +7,8 @@ const schema = new Schema({
     pinned: { type: Boolean, default: false },
   deletedAt: { type: Date, default: null },
     cleanupPending: { type: Boolean, default: false },
+    cleanupAttempts: { type: Number, default: 0 },
+    cleanupNextAttemptAt: { type: Date, default: new Date(0) },
     lockToken: { type: String, default: '' },
     lockUntil: { type: Date, default: new Date(0) },
 }, { timestamps: true, collection: 'ai_conversations' });

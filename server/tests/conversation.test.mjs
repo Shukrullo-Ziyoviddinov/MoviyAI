@@ -1,3 +1,4 @@
+import {cleanupRetryDelay,cleanupErrorInfo} from '../dist/ai/utils/cleanup-retry.js';
 import {isMovieRecommendation} from '../dist/ai/services/movie-recommendation.service.js';
 import {conversationTitle} from '../dist/ai/services/conversation-title.service.js';
 import {isContextMovieFollowup} from '../dist/ai/services/movie-followup.service.js';
@@ -86,7 +87,7 @@ function harness() {
   const putChatImage=async(key,data)=>{if(storageFailure)throw Error('R2 unavailable');objects.set(key,Buffer.from(data));};
   const getChatImage=async key=>objects.get(key)??null;
   const deleteChatImage=async key=>{if(storageFailure)throw Error('R2 unavailable');objects.delete(key);};
-  const storage=new Function('cleanupConversationVideos','cleanupExpiredVideos','ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages','catalogDispatcher',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(async()=>{},async()=>{},ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{},{preserveConversation:async()=>{}});
+  const storage=new Function('cleanupRetryDelay','cleanupErrorInfo','cleanupConversationVideos','cleanupExpiredVideos','ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages','catalogDispatcher',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(cleanupRetryDelay,cleanupErrorInfo,async()=>{},async()=>{},ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{},{preserveConversation:async()=>{}});
   const service = new Function('saveCatalogWatchLinks','conversationTitle','ChatFailure','chatFailureCode','isContextMovieFollowup','movieFollowup','resolveDirectVideo','chatVideoUrls','findMovieFromVideo','isMovieRecommendation','recommendMovies','isNamedMovieSearch','findMovieFromText','uzbekReleaseTitle', 'Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', 'isCatalogEligible', 'wakeCatalogWorker', source +
     '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage,deleteConversation,pinConversation};')
     (async movie=>{savedWatchLinks.push(movie.uzbekLinks);},turns=>conversationTitle(turns,async()=>"Kino mavzusi"),ChatFailure,chatFailureCode,isContextMovieFollowup,async(text,movie)=>({text:"Requested movie section",movie:{...movie,presentation:"details"},model:"test"}),async()=>[{key:"video-key",hash:"v".repeat(64),mimeType:"video/mp4",size:200,duration:6}],async(_owner,_id,requestId,saved)=>{const videos=saved??ChatTurn.rows.find(turn=>turn.requestId===requestId)?.videos??[];return videos.map(video=>({fileUri:"https://r2.example/"+video.key,mimeType:video.mimeType,durationSeconds:video.duration}));},(text,videos)=>findMovieFromImages(text,videos),isMovieRecommendation,async()=>({text:'Recommendations',model:'gemma',recommendations:[{text:'Dossier 1',movie:(await findMovieFromImages('One',[])).movie},{text:'Dossier 2',movie:{...(await findMovieFromImages('Two',[])).movie,title:'Second'}}]}),isNamedMovieSearch,(text)=>findMovieFromImages(text,[]),uzbekReleaseTitle, Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}],async()=>[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],isUzbekMovieRequest,uzbekLookupReply,isCatalogEligible,()=>{wakes++;if(wakeError)throw Error('scheduler failure');});
@@ -231,9 +232,33 @@ test('history is built from saved turns and an expired processing turn can be re
  await h.sendConversationMessage('alice',id,randomUUID(),'Find',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,255])}]);
  h.storageFailure(true);await assert.rejects(()=>h.deleteConversation('alice',id));
  assert.equal(h.ChatTurn.rows.length,1);assert.equal(h.objects.size,1);assert.equal(h.Conversation.rows[0].cleanupPending,true);
+ assert.equal(h.Conversation.rows[0].cleanupAttempts,1);
+ assert.ok(h.Conversation.rows[0].cleanupNextAttemptAt.getTime()>Date.now());
  h.storageFailure(false);await h.deleteConversation('alice',id);
  assert.equal(h.objects.size,0);assert.equal(h.ChatTurn.rows.length,0);assert.equal(h.Conversation.rows[0].cleanupPending,false);
+ assert.equal(h.Conversation.rows[0].cleanupAttempts,0);
  });
+
+test('legacy text-only turns without images can finish deletion',async()=>{
+ const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+ h.ChatTurn.rows.push({userId:'alice',conversationId:id,requestId:randomUUID(),text:'Old text'});
+ await h.deleteConversation('alice',id);
+ assert.equal(h.ChatTurn.rows.length,0);assert.equal(h.Conversation.rows[0].cleanupPending,false);
+});
+
+test('cleanup cannot delete an active conversation or another owners media',async()=>{
+ const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+ await h.sendConversationMessage('alice',id,randomUUID(),'Find',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,255])}]);
+ await h.cleanupConversationImages('alice',id);await h.cleanupConversationImages('bob',id);
+ assert.equal(h.ChatTurn.rows.length,1);assert.equal(h.objects.size,1);
+});
+
+test('cleanup retries back off to an hour and diagnostics exclude secrets',()=>{
+ assert.deepEqual([1,2,3,4,5,6,7,20].map(cleanupRetryDelay),[60000,120000,240000,480000,960000,1920000,3600000,3600000]);
+ const info=cleanupErrorInfo({name:'AccessDenied',code:'AccessDenied',$metadata:{httpStatusCode:403},message:'secret signed URL',key:'private/key'});
+ assert.deepEqual(info,{errorKind:'AccessDenied',code:'AccessDenied',status:403});
+ assert.equal(cleanupErrorInfo({name:'https://secret.example/token'}).errorKind,'UnknownError');
+});
  test('legacy bytes migrate only after successful R2 upload',async()=>{
  const h=harness(),id=randomUUID(),requestId=randomUUID();await h.createConversation('alice',id);
  const data=Buffer.from([255,216,255]);h.ChatTurn.rows.push({userId:'alice',conversationId:id,requestId,images:[{data,mimeType:'image/jpeg',hash:createHash('sha256').update(data).digest('hex')} ]});

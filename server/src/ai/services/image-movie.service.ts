@@ -13,6 +13,7 @@ import {selectWorkingPosters} from './movie-poster-probe.js';
 import {briefMovieResponse} from './movie-brief.service.js';
 import {ChatFailure,chatFailureCode,type ChatProgress} from '../types/chat-progress.types.js';
 import {videoEndOffset} from '../utils/video-offset.js';
+import {PROVIDER_RETRY_DELAYS,waitForProviderRetry} from '../utils/provider-retry.js';
 
 const clueSchema = z.object({
   query: z.string().max(350),
@@ -64,7 +65,8 @@ export function createImageMovieSearch(deps: { searchWeb: typeof searchWeb; sear
     const mediaModel=isVideo?AI_CONFIG.models.video:AI_CONFIG.models.image;
     async function structured<T>(schema: z.ZodType<T>, parts: Part[], instruction: string): Promise<T> {
       let callSignal:AbortSignal|undefined;
-      for(let attempt=0;attempt<2;attempt++)try {
+      for(let attempt=0;attempt<=PROVIDER_RETRY_DELAYS.length;attempt++)try {
+        deadline.throwIfAborted();
         callSignal=AbortSignal.any([deadline,AbortSignal.timeout(callTimeout)]);
         const response = await ai.models.generateContent({ model: mediaModel,
           contents: [{ role: 'user', parts }], config: {
@@ -76,7 +78,16 @@ export function createImageMovieSearch(deps: { searchWeb: typeof searchWeb; sear
         const status = (error as { status?: number })?.status;
         const phase=(schema as unknown)===clueSchema?'recognition':(schema as unknown)===matchSchema?'identity':(schema as unknown)===dossierSchema?'facts':'verification';
         console.warn('[MOVIE_SEARCH]',{event:'provider-failed',phase,media:isVideo?'video':images.length?'image':'text',status:status??null,attempt:attempt+1});
-        if(!attempt&&!deadline.aborted&&[429,500,502,503,504].includes(status??0)){await new Promise(resolve=>setTimeout(resolve,500));continue;}
+        if(attempt<PROVIDER_RETRY_DELAYS.length&&!deadline.aborted&&[429,500,502,503,504].includes(status??0)){
+          const delayMs=PROVIDER_RETRY_DELAYS[attempt];
+          console.warn('[MOVIE_SEARCH]',{event:'provider-retry',phase,media:isVideo?'video':images.length?'image':'text',status,attempt:attempt+2,delayMs});
+          try{await waitForProviderRetry(delayMs,deadline);}catch{
+            // The shared deadline also cancels backoff, so no late request is sent.
+            if(images.length)throw new ChatFailure(deadline.reason?.name==='TimeoutError'?'timeout':chatFailureCode(deadline.reason));
+            throw new AiServiceError('Kino tahlili yakunlanmadi.');
+          }
+          continue;
+        }
         if(images.length)throw new ChatFailure(callSignal?.aborted&&callSignal.reason?.name==='TimeoutError'?'timeout':[500,502,503,504].includes(status??0)?'provider_unavailable':chatFailureCode(error));
         throw new AiServiceError('Kino rasmini tahlil qilishda xato yuz berdi.', status);
       }

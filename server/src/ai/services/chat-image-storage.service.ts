@@ -4,6 +4,7 @@ import { cleanupExpiredUploads, cleanupReservedImages } from './direct-image.ser
 import type { ChatImageInput } from '../types/movie-search.types.js';
 import { catalogDispatcher } from '../catalog/services/catalog-dispatch.service.js';
 import {cleanupConversationVideos,cleanupExpiredVideos} from './direct-video.service.js';
+import {cleanupRetryDelay,cleanupErrorInfo} from '../utils/cleanup-retry.js';
 
 export function imageReferences(conversationId: string, requestId: string, images: (ChatImageInput & { hash: string })[]) {
   return images.map((image, index) => ({ key: chatImageKey(conversationId, requestId, index, image.hash),
@@ -41,19 +42,38 @@ export async function loadChatImages(userId: string, conversationId: string, req
   return result;
 }
 export async function cleanupConversationImages(userId: string, conversationId: string) {
+  const conversation=await Conversation.findOne({_id:conversationId,userId}).lean();
+  if(!conversation?.deletedAt||!conversation.cleanupPending)return;
+  let operation='preserve-catalog';
+  try {
   await catalogDispatcher.preserveConversation(userId, conversationId);
+  operation='reserved-images';
   await cleanupReservedImages(userId, conversationId);
+  operation='videos';
   await cleanupConversationVideos(userId,conversationId);
+  operation='turn-images';
   const turns = await ChatTurn.find({ userId, conversationId }).select('-images.data').lean();
-  for (const turn of turns) for (let index = 0; index < turn.images.length; index++) {
+  for (const turn of turns) for (let index = 0; index < (turn.images??[]).length; index++) {
     const image = turn.images[index];
     const key = chatImageKey(conversationId, turn.requestId, index, image.hash);
     if (image.key && image.key !== key) throw new Error('INVALID_CHAT_IMAGE_KEY');
     await deleteChatImage(key);
   }
   // Keep references until every R2 deletion succeeds, so retries cannot lose keys.
+  operation='remove-turns';
   await ChatTurn.deleteMany({ userId, conversationId });
-  await Conversation.updateOne({ _id: conversationId, userId, cleanupPending: true }, { $set: { cleanupPending: false } });
+  operation='complete';
+  await Conversation.updateOne({ _id: conversationId, userId, cleanupPending: true }, { $set: { cleanupPending: false,cleanupAttempts:0,cleanupNextAttemptAt:new Date(0) } });
+  } catch(error) {
+    const row=await Conversation.findOne({_id:conversationId,userId,cleanupPending:true}).lean();
+    if(row){
+      const attempt=(row.cleanupAttempts??0)+1;
+      const delayMs=cleanupRetryDelay(attempt);
+      await Conversation.updateOne({_id:conversationId,userId,cleanupPending:true},{$set:{cleanupAttempts:attempt,cleanupNextAttemptAt:new Date(Date.now()+delayMs)}});
+      console.warn('[CHAT_IMAGE_CLEANUP]',{event:'retry-scheduled',operation,attempt,delayMs,...cleanupErrorInfo(error)});
+    }
+    throw error;
+  }
 }
 export async function chatImageUrls(userId: string, conversationId: string, requestId: string,
   savedImages?: Array<{ key?: string | null; hash: string; mimeType: string }>) {
@@ -78,11 +98,11 @@ export function startChatImageCleanup() {
       try { await cleanupExpiredUploads(); }
       catch { console.warn('[CHAT_IMAGE_CLEANUP] Abandoned upload cleanup pending; will retry'); }
       await cleanupExpiredVideos();
-      const rows = await Conversation.find({ cleanupPending: true }).limit(20).lean();
+      const rows = await Conversation.find({ cleanupPending: true,deletedAt:{$ne:null},$or:[{cleanupNextAttemptAt:{$exists:false}},{cleanupNextAttemptAt:{$lte:new Date()}}] }).sort({cleanupNextAttemptAt:1}).limit(20).lean();
       for (const row of rows) {
         if (!row.deletedAt) continue;
         try { await cleanupConversationImages(row.userId, row._id); }
-        catch { console.warn('[CHAT_IMAGE_CLEANUP] R2 cleanup pending; will retry'); }
+        catch { /* The cleanup operation records its safe error and next retry time. */ }
       }
     } catch { console.warn('[CHAT_IMAGE_CLEANUP] Could not load pending cleanups'); }
     finally { running = false; }

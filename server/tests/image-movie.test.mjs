@@ -1,3 +1,4 @@
+import {PROVIDER_RETRY_DELAYS,waitForProviderRetry} from '../dist/ai/utils/provider-retry.js';
 import {hasCoreMovieFacts} from '../dist/ai/services/movie-source-research.service.js';
 import {briefMovieResponse} from '../dist/ai/services/movie-brief.service.js';
 import {ChatFailure,chatFailureCode} from '../dist/ai/types/chat-progress.types.js';
@@ -11,7 +12,7 @@ import { dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier } from
 
 const source = readFileSync(new URL('../dist/ai/services/image-movie.service.js', import.meta.url), 'utf8')
   .replace(/^import .*;$/gm, '').replace(/\bexport /g, '');
-function harness({ searchable = true, badSource = false, posterError = false, detailError = false, evidenceError = false, wrongRatingSource = false, manyPosters = false, cachedMovie = null, verifyCache = true, clueOverride = {}, matchOverride = {}, recoveryMatch = null, recoveryError = false } = {}) {
+function harness({ searchable = true, badSource = false, posterError = false, detailError = false, evidenceError = false, wrongRatingSource = false, manyPosters = false, cachedMovie = null, verifyCache = true, clueOverride = {}, matchOverride = {}, recoveryMatch = null, recoveryError = false, failures = {}, retryWait } = {}) {
   const answers = [
     { query: 'Interstellar 2014 movie', clues: ['Spacesuit', 'Interstellar title'], searchable, titles:['Interstellar'],year:2014,language:'uz',...clueOverride },
     ...(cachedMovie ? [{id:verifyCache?cachedMovie.catalogId:null,confidence:verifyCache?'high':'low'}] : []),
@@ -20,8 +21,8 @@ function harness({ searchable = true, badSource = false, posterError = false, de
     ...(recoveryMatch?[recoveryMatch]:[]),
     {productionYears:{value:'2013',sourceIndexes:[1]},countries:{value:['AQSH'],sourceIndexes:[1]},genres:{value:['Ilmiy fantastika'],sourceIndexes:[1]},runtimeMinutes:{value:169,sourceIndexes:[1]},ageRating:{value:'PG-13 (US)',sourceIndexes:[1]},synopsis:{value:'Kosmik sayohat haqida film.',sourceIndexes:[1]},directors:{value:['Christopher Nolan'],sourceIndexes:[0]},budget:{value:'USD 165 million',sourceIndexes:[2]},boxOffice:{value:'USD 700 million',sourceIndexes:[2]},imdb:{value:8.7,sourceIndexes:[0]},kinopoisk:{value:8.6,sourceIndexes:wrongRatingSource?[0]:[3]},characters:[],cast:['Matthew McConaughey','Anne Hathaway','Jessica Chastain','Michael Caine','Mackenzie Foy'].map(name=>({name,originalName:name,role:'Role',sourceIndexes:[0]}))},
   ];
-  let lookups=0; let searches = 0, posters = 0;const calls=[],searchQueries=[];
-  class GoogleGenAI { models = { generateContent: async request => {calls.push(request);if(detailError&&calls.length===3)throw Error('dossier unavailable');return { text: JSON.stringify(answers.shift()) };} }; }
+  let lookups=0; let searches = 0, posters = 0;const calls=[],searchQueries=[],retryDelays=[];
+  class GoogleGenAI { models = { generateContent: async request => {calls.push(request);if(failures[calls.length])throw Object.assign(Error('provider failed'),{status:failures[calls.length]});if(detailError&&calls.length===3)throw Error('dossier unavailable');return { text: JSON.stringify(answers.shift()) };} }; }
   class AiServiceError extends Error {}
   const searchWeb = async query => {
     searches++;searchQueries.push(query);
@@ -35,16 +36,51 @@ function harness({ searchable = true, badSource = false, posterError = false, de
   const searchImages = async (_query, options) => { posters++; if(options.num===15)throw Object.assign(Error('Unsupported Serper image result count'),{status:400}); if (posterError) throw Error('unavailable'); return { images: manyPosters ? [{imageUrl:'https://example.com/tiny.jpg',imageWidth:80,imageHeight:100},{imageUrl:'https://example.com/wrong.jpg',title:'Interstellar 2025'},...Array.from({length:10},(_,index)=>({imageUrl:'https://example.com/poster-'+index+'.jpg',title:'Interstellar 2014',imageWidth:1000,imageHeight:1500})),{imageUrl:'https://example.com/poster-0.jpg'}] : [
     { imageUrl: 'https://example.com/poster.jpg', link: 'https://example.com/movie' }, { imageUrl: 'http://127.0.0.1/private' },
   ] }; };
-  const api = new Function('videoEndOffset','ChatFailure','chatFailureCode','briefMovieResponse','selectWorkingPosters','hasCoreMovieFacts','researchMovieSources','MOVIE_FACT_INSTRUCTION','uzbekReleaseTitle', 'GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', 'findUzbekMovieLinks', 'findCatalogChatCandidates', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
-    (videoEndOffset,ChatFailure,chatFailureCode,briefMovieResponse,async candidates=>candidates.slice(0,2),hasCoreMovieFacts,async(film,sources,details,extract)=>{
+  const api = new Function('PROVIDER_RETRY_DELAYS','waitForProviderRetry','videoEndOffset','ChatFailure','chatFailureCode','briefMovieResponse','selectWorkingPosters','hasCoreMovieFacts','researchMovieSources','MOVIE_FACT_INSTRUCTION','uzbekReleaseTitle', 'GoogleGenAI', 'z', 'AI_CONFIG', 'AiServiceError', 'searchWeb', 'searchImages', 'dossierSchema', 'verifiedDossier', 'emptyDossier', 'renderMovieDossier', 'findMovieTrailer', 'findUzbekMovieLinks', 'findCatalogChatCandidates', source + '\nreturn {findMovieFromImages,publicHttpsUrl};')
+    (PROVIDER_RETRY_DELAYS,async(delay,signal)=>{retryDelays.push(delay);if(retryWait)await retryWait(delay,signal);signal.throwIfAborted();},videoEndOffset,ChatFailure,chatFailureCode,briefMovieResponse,async candidates=>candidates.slice(0,2),hasCoreMovieFacts,async(film,sources,details,extract)=>{
  const evidence=[...sources];
  for(const query of ['film production','production budget','site:kinopoisk','IMDb rating']){try{for(const item of (await searchWeb(query)).organic??[]){const previous=evidence.find(source=>source.url===item.link);if(previous)previous.snippet+=' '+item.snippet;else evidence.push({title:item.title,url:item.link,snippet:item.snippet});}}catch{}}
  return extract(evidence,details);
  },'Extract only sourced facts',uzbekReleaseTitle, GoogleGenAI, z, { apiKey: 'test', models: { image: 'gemini-3.5-flash-lite' } }, AiServiceError, searchWeb, searchImages, dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier, async()=>({videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Interstellar trailer',channel:'Warner Bros.',kind:'trailer'}),async()=>[{title:'Interstellar Uzbek',url:'https://uzmovi.net/123-interstellar.html',site:'uzmovi.net'}], async()=>cachedMovie&&++lookups===1?[cachedMovie]:[]);
-  return { ...api,findMovieFromImages:(text,images,onDelta,signal,mode='full',onProgress)=>api.findMovieFromImages(text,images,onDelta,signal,mode,onProgress), calls, searchQueries, searches: () => searches, posters: () => posters };
+  return { ...api,findMovieFromImages:(text,images,onDelta,signal,mode='full',onProgress)=>api.findMovieFromImages(text,images,onDelta,signal,mode,onProgress), calls, searchQueries, retryDelays, searches: () => searches, posters: () => posters };
 }
 function completeDossier(){const d=emptyDossier(),sources=[{title:'Verified film',url:'https://example.com/film'}];for(const key of ['countries','genres','directors'])d[key]={value:['Known'],sources};d.runtimeMinutes={value:100,sources};d.synopsis={value:'Known plot',sources};d.cast=[{name:'Actor',originalName:'Actor',role:'Hero',sources}];return d;}
 const images = [{ mimeType: 'image/jpeg', data: Buffer.from([255, 216, 255]) }];
+
+test('503 retries only the failed identity call with 2s and 5s backoff',async()=>{
+ const h=harness({failures:{2:503,3:503}});
+ const result=await h.findMovieFromImages('Find',images,undefined,undefined,'brief');
+ assert.equal(result.movie.title,'Interstellar');
+ assert.deepEqual(h.retryDelays,[2000,5000]);
+ assert.equal(h.calls.length,4);
+ assert.equal(h.calls[1].config.systemInstruction,h.calls[2].config.systemInstruction);
+ assert.equal(h.calls[2].config.systemInstruction,h.calls[3].config.systemInstruction);
+ assert.notEqual(h.calls[0].config.systemInstruction,h.calls[1].config.systemInstruction);
+ assert.equal(h.searches(),2);
+});
+
+test('persistent 503 stops after three attempts and non-transient errors do not retry',async()=>{
+ const h=harness({failures:{1:503,2:503,3:503}});
+ await assert.rejects(()=>h.findMovieFromImages('Find',images),e=>e.failureCode==='provider_unavailable');
+ assert.equal(h.calls.length,3);assert.deepEqual(h.retryDelays,[2000,5000]);assert.equal(h.searches(),0);
+ const invalid=harness({failures:{1:400}});
+ await assert.rejects(()=>invalid.findMovieFromImages('Find',images));
+ assert.equal(invalid.calls.length,1);assert.deepEqual(invalid.retryDelays,[]);
+});
+
+test('shared deadline expiring during backoff prevents another provider request',async()=>{
+ const controller=new AbortController();
+ const h=harness({failures:{1:503},retryWait:async()=>controller.abort(new DOMException('Deadline','TimeoutError'))});
+ await assert.rejects(()=>h.findMovieFromImages('Find',images,undefined,controller.signal),e=>e.failureCode==='timeout');
+ assert.equal(h.calls.length,1);assert.equal(h.searches(),0);
+});
+
+test('real retry wait is interrupted by the caller deadline',async()=>{
+ const controller=new AbortController();
+ const waiting=waitForProviderRetry(5000,controller.signal);
+ controller.abort(new DOMException('Deadline','TimeoutError'));
+ await assert.rejects(waiting,e=>e.name==='AbortError');
+});
 test('media stage callbacks correspond to actual calls and finish with answer preparation',async()=>{
  const h=harness(),stages=[];await h.findMovieFromImages('Find',images,undefined,undefined,'brief',stage=>stages.push(stage));
  assert.equal(stages[0],'analyzing_image');for(const stage of ['searching','verifying','uzbek_links','posters'])assert.ok(stages.includes(stage),stage);assert.equal(stages.at(-1),'preparing');
