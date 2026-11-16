@@ -211,6 +211,7 @@
     },
     "videoPrompt": "Найди фильм по этому видео.",
     "progress": {
+      "checking_video": "??????????? ?????",
       "upload_video": "Видео загружается",
       "upload_image": "Изображение загружается",
       "analyzing_video": "Анализируем сцены видео",

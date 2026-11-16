@@ -69,6 +69,7 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
         onProgress('upload_video');
         const uploaded=await fetch(upload.url,{method:'PUT',headers:upload.headers,body:file,signal:AbortSignal.timeout(180000)});
         if(!uploaded.ok)throw Object.assign(new Error('Video yuklanmadi.'),{failureCode:'upload_failed'});
+        onProgress('checking_video');
     }
     if (localImages.length) {
         onProgress('upload_image');

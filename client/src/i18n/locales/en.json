@@ -211,6 +211,7 @@
     },
     "videoPrompt": "Find the movie in this video.",
     "progress": {
+      "checking_video": "Checking uploaded video",
       "upload_video": "Uploading video",
       "upload_image": "Uploading image",
       "analyzing_video": "Analyzing video scenes",

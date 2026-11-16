@@ -211,6 +211,7 @@
     },
     "videoPrompt": "Videodagi kinoni toping.",
     "progress": {
+      "checking_video": "Video tekshirilmoqda",
       "upload_video": "Video yuklanmoqda",
       "upload_image": "Rasm yuklanmoqda",
       "analyzing_video": "Videodagi sahnalar tahlil qilinmoqda",

@@ -1,4 +1,4 @@
-export const CHAT_STAGES=['upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'] as const;
+export const CHAT_STAGES=['checking_video','upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'] as const;
 export type ChatStage=typeof CHAT_STAGES[number];
 export type ChatProgress=(stage:ChatStage)=>void;
 export const CHAT_FAILURES=['insufficient_evidence','identity_unconfirmed','provider_unavailable','search_unavailable','rate_limited','timeout','video_unreadable','unknown'] as const;

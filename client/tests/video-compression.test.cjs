@@ -53,5 +53,5 @@ test('web uploader reserves the compressed byte size and hash, then uploads that
   calls.push({url,options});if(url.endsWith('/video-upload'))return {ok:true,json:async()=>({ok:true,data:{url:'https://r2.example/upload',headers:{'Content-Type':'video/mp4'}}})};return {ok:true};
  }});
  await exports.sendChat('chat','request','Find',()=>{},[{id:'video',type:'video',file:original,mimeType:'video/quicktime'}],stage=>stages.push(stage));
- const reservation=JSON.parse(calls[0].options.body).video;assert.equal(reservation.size,compressed.size);assert.equal(reservation.mimeType,'video/mp4');assert.equal(reservation.hash,createHash('sha256').update('compressed-video').digest('hex'));assert.equal(calls[1].options.body,compressed);assert.deepEqual(stages,['preparing_video','upload_video']);
+ const reservation=JSON.parse(calls[0].options.body).video;assert.equal(reservation.size,compressed.size);assert.equal(reservation.mimeType,'video/mp4');assert.equal(reservation.hash,createHash('sha256').update('compressed-video').digest('hex'));assert.equal(calls[1].options.body,compressed);assert.deepEqual(stages,['preparing_video','upload_video','checking_video']);
 });

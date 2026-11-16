@@ -110,7 +110,7 @@ export async function sendConversationMessage(userId: string, id: string, reques
         }
         const references = directImages ? await resolveDirectImages(userId, id, requestId) : imageReferences(id, requestId, images);
         let videoReferences:Awaited<ReturnType<typeof resolveDirectVideo>>=[];
-        if(directVideo)try{videoReferences=await resolveDirectVideo(userId,id,requestId);}catch(error){const code=(error as {message?:string;name?:string}).message??'';if(/^(?:VIDEO_CHANGED|UPLOAD_EXPIRED|INVALID_VIDEO|UNSUPPORTED_VIDEO|VIDEO_DURATION)/.test(code)||(error as {name?:string}).name==='NoSuchKey')throw new ChatFailure('video_unreadable');throw error;}
+        if(directVideo)try{progress('checking_video');videoReferences=await resolveDirectVideo(userId,id,requestId);}catch(error){const code=(error as {message?:string;name?:string}).message??'';if(/^(?:VIDEO_CHANGED|UPLOAD_EXPIRED|INVALID_VIDEO|UNSUPPORTED_VIDEO|VIDEO_DURATION)/.test(code)||(error as {name?:string}).name==='NoSuchKey')throw new ChatFailure('video_unreadable');throw error;}
         if(directVideo&&replay&&JSON.stringify((replay.videos??[]).map(video=>video.hash))!==JSON.stringify(videoReferences.map(video=>video.hash)))throw new ConversationError('Attachments already selected',409);
         if (replay && directImages && JSON.stringify(replay.images.map(image => image.hash)) !== JSON.stringify(references.map(image => image.hash))) throw new ConversationError('Attachments already selected', 409);
         await ChatTurn.updateOne({ conversationId: id, userId, requestId }, {
