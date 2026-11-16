@@ -105,6 +105,29 @@ test('unrecognizable images request more evidence without unnecessary searches',
   const h = harness({ searchable: false });await assert.rejects(()=>h.findMovieFromImages('Find movie', images),error=>error.failureCode==='insufficient_evidence');
   assert.equal(h.searches(), 0); assert.equal(h.posters(), 0);
 });
+
+test('unknown video title still searches observed scene despite searchable=false',async()=>{
+ const h=harness({searchable:false,clueOverride:{query:'',titles:[],sceneQuery:'young woman finds couple in apartment doorway'},matchOverride:{matched:false,sourceIndexes:[]}});
+ await assert.rejects(()=>h.findMovieFromImages('Find movie',[{mimeType:'video/mp4',fileUri:'https://r2.example/video',durationSeconds:44}]),error=>error.failureCode==='identity_unconfirmed');
+ assert.equal(h.searchQueries[0],'young woman finds couple in apartment doorway');
+ assert.equal(h.searches(),1);assert.equal(h.posters(),0);
+});
+
+test('video dialogue query preserves original words and sends timed observations to verification',async()=>{
+ const moments=[{seconds:12,observation:'Woman opens a door',dialogue:'Why are you in my apartment?'}];
+ const h=harness({searchable:false,clueOverride:{query:'',titles:[],moments},matchOverride:{matched:false,sourceIndexes:[]}});
+ await assert.rejects(()=>h.findMovieFromImages('Find movie',[{mimeType:'video/mp4',fileUri:'https://r2.example/video',durationSeconds:44}]),error=>error.failureCode==='identity_unconfirmed');
+ assert.equal(h.searchQueries[0],'"Why are you in my apartment?" movie film');
+ const payload=JSON.parse(h.calls[1].contents[0].parts.at(-1).text);
+ assert.deepEqual(payload.moments,moments);
+ assert.ok(h.calls[0].config.systemInstruction.includes('Never invent, paraphrase, translate or reconstruct dialogue'));
+});
+
+test('out of clip timestamps cannot create a video fallback query',async()=>{
+ const h=harness({searchable:false,clueOverride:{query:'',titles:[],moments:[{seconds:90,observation:'Unobserved scene',dialogue:null}]}});
+ await assert.rejects(()=>h.findMovieFromImages('Find movie',[{mimeType:'video/mp4',fileUri:'https://r2.example/video',durationSeconds:44}]),error=>error.failureCode==='insufficient_evidence');
+ assert.equal(h.searches(),0);
+});
 test('unsupported model match cannot be presented as a verified movie', async () => {
   const h = harness({ badSource: true });await assert.rejects(()=>h.findMovieFromImages('Find movie', images),error=>error.failureCode==='identity_unconfirmed');assert.equal(h.posters(),0);
 });
