@@ -5,6 +5,26 @@ import {createMovieFollowup,isContextMovieFollowup,requestedMovieSection} from '
 import {catalogChatInput,isCatalogEligible} from '../dist/ai/catalog/utils/catalog-chat-input.js';
 import {createCatalogChatProcessor} from '../dist/ai/catalog/services/catalog-chat-save.service.js';
 const movie={title:'Example',titleUz:'Misol',titleRu:null,year:2005,confidence:'high',language:'uz',sources:[{title:'Film',url:'https://www.imdb.com/title/tt1234567/'}],posters:[],details:emptyDossier()};
+
+test('a stalled optional provider cannot hold an identified movie beyond the shared deadline',{timeout:1000},async()=>{
+ const controller=new AbortController();let lookups=0;
+ const result=briefMovieResponse(movie,controller.signal,{
+  findLinks:()=>{lookups++;return new Promise(()=>{});},
+  searchImages:()=>new Promise(()=>{}),select:async()=>[],
+ });
+ controller.abort();const answer=await result;
+ assert.equal(answer.movie.title,'Example');assert.equal(answer.movie.presentation,'brief');
+ assert.deepEqual(answer.movie.uzbekLinks,[]);assert.equal(lookups,1);
+});
+
+test('deadline exhaustion preserves already verified stored links',async()=>{
+ const controller=new AbortController();controller.abort();
+ const link={title:'Misol',url:'https://asilmedia.org/123-misol.html',site:'asilmedia.org'};
+ const result=await briefMovieResponse({...movie,uzbekLinks:[link]},controller.signal,{
+  findLinks:async()=>{throw Error('Must not search stored links');},searchImages:async()=>({images:[]}),select:async()=>[],
+ });
+ assert.deepEqual(result.movie.uzbekLinks,[link]);
+});
 test('a brief result still dispatches complete background enrichment and link research before save',async()=>{
  const brief={...movie,presentation:'brief',sourceResearchComplete:false};assert.equal(isCatalogEligible(brief),true);
  const input=catalogChatInput(brief,[]);assert.equal(input.movie.presentation,undefined);assert.equal(input.movie.sourceResearchComplete,false);

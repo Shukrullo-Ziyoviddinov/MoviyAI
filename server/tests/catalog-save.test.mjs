@@ -110,6 +110,25 @@ test('unknown actors or missing actor biographies/photos do not prevent the movi
   assert.equal(result.status,'created');assert.deepEqual(result.actorIds,[]);assert.equal(h.state().movies.length,1);assert.equal(h.state().actors.length,0);assert.equal(h.state().actorJobs.length,1);assert.equal(h.files.size,2);
  }
 });
+
+test('absent researched cast does not block a sourced movie and queues later actor research',async()=>{
+ const h=harness(),input=draft();input.research.details.cast=[];input.actors=[];
+ const result=await h.save(input);assert.equal(result.status,'created');assert.deepEqual(result.actorIds,[]);
+ assert.equal(h.state().actorJobs.length,1);assert.equal(h.state().movies.length,1);
+});
+
+test('a sourced series may retain unknown episode runtime as null without blocking publication',async()=>{
+ const h=harness(),input=draft();input.research.mediaType='series';input.research.details.runtimeMinutes=fact(null);
+ input.movie.specs.duration=null;input.movie.description.uz.duration=null;input.movie.description.ru.duration=null;
+ const result=await h.save(input);assert.equal(result.status,'created');
+ assert.equal(h.state().movies[0].specs.duration,null);assert.ok(h.state().movies[0].research.missingFields.includes('specs.duration'));
+});
+
+test('missing core facts report the precise field and do not publish a title-only record',async()=>{
+ const h=harness(),input=draft();input.research.details.synopsis=fact(null);
+ const result=await h.save(input);assert.equal(result.status,'needs-enrichment');
+ assert.ok(result.issues.some(issue=>issue.path==='research.details.synopsis'));assert.equal(h.state().movies.length,0);
+});
 test('available actors save now and unresolved cast is durably queued inside the movie transaction',async()=>{
  const h=harness(),input=draft();const missing=structuredClone(input.actors[0]);missing.actorName='Unknown actor';missing.originalName='Unknown actor';missing.identity={imdbId:null,kinopoiskId:null,birthDate:null};missing.actorAbout={uz:null,ru:null};input.actors.push(missing);
  const result=await h.save(input);assert.equal(result.status,'created');assert.equal(result.actorIds.length,1);assert.equal(h.state().actorJobs[0].draft.actors[0].actorName,'Unknown actor');assert.equal(h.state().actorJobs[0].movieId,result.movieId);

@@ -112,6 +112,11 @@ export function createUzbekMovieSearch(deps:{searchWeb:typeof searchWeb;readPage
   const groups=await Promise.all(UZBEK_MOVIE_SITES.map(async site=>{
    const aliases=[film.title,film.titleRu,film.titleUz].filter((name):name is string=>!!name).map(name=>`"${name.replace(/"/g,'')}"`).join(' OR ');
    try {
+    const known=(film.sources??[]).filter(source=>{
+     const url=uzbekDetailUrl(source.url);return !!url&&new URL(url).hostname.replace(/^www\./,'')===site;
+    }).slice(0,2);
+    const knownPages=(await Promise.all(known.map(source=>deps.readPage(source.url).catch(()=>null)))).filter(page=>page!==null);
+    if(knownPages.length)return knownPages;
     // Prefer an already identified local title over a model-generated search hypothesis.
     const localQuery=film.titleUz?`${film.titleUz} ${film.year??''} uzbek tilida`:localQueries[0]??`${film.titleRu??film.title} ${film.year??''} uzbek`;
     const queries=[`(${aliases}) ${film.year??''} uzbek tilida`,localQuery];

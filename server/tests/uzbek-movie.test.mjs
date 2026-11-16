@@ -58,6 +58,12 @@ function harness({badYear=false,wrongFilm=false,unavailable=false,imageError=fal
  return {api,calls,searchQueries,queries:()=>queries};
 }
 const film={title:'Interstellar',titleUz:null,titleRu:null,year:2014};
+
+test('a known allowed release page is verified directly without searching that site again',async()=>{
+ const h=harness();const links=await h.api({...film,sources:[{title:'Interstellar Uzbek tilida',url:valid}]});
+ assert.equal(links[0].url,valid);assert.equal(h.searchQueries.some(query=>query.startsWith('site:uzmovi.net ')),false);
+ assert.deepEqual(await harness({wrongFilm:true}).api({...film,sources:[{title:'Unrelated',url:valid}]}),[]);
+});
 test('series verification accepts a series landing page instead of applying movie-only exclusions',async()=>{
  const h=harness();await h.api({...film,mediaType:'series'});assert.match(h.calls[0].config.systemInstruction,/TV SERIES/);assert.match(h.calls[0].config.systemInstruction,/barcha qismlari/);assert.match(h.calls[0].config.systemInstruction,/episode release year/);
  const movie=harness();await movie.api({...film,mediaType:'movie'});assert.match(movie.calls[0].config.systemInstruction,/input is a MOVIE/);

@@ -5,6 +5,7 @@ import {emptyDossier} from './movie-dossier.js';
 import type {MovieSearchResult} from '../types/movie-search.types.js';
 import {isPublicHttpsUrl} from '../catalog/validators/catalog.validator.js';
 import type {ChatProgress} from '../types/chat-progress.types.js';
+import {optionalBeforeDeadline} from '../utils/optional-before-deadline.js';
 
 export function renderBriefMovie(movie:MovieSearchResult){
  const language=movie.language??'uz';const labels={uz:{about:'Kino haqida',confirm:'Siz izlagan kino shumi?'},ru:{about:'О фильме',confirm:'Это фильм, который вы искали?'},en:{about:'About the film',confirm:'Is this the film you were looking for?'}}[language];
@@ -17,7 +18,7 @@ export async function briefMovieResponse(input:MovieSearchResult,signal:AbortSig
  if(!linksReady)onProgress?.('uzbek_links');
  // Finish the user-facing link search before returning the answer. Background
  // catalog enrichment is separate and must not be the first useful link lookup.
- const linksTask=(async()=>{
+ const linksTask=optionalBeforeDeadline((async()=>{
   if(linksReady)return movie.uzbekLinks!;
   for(let attempt=0;attempt<2&&!signal.aborted;attempt++){
    try {
@@ -26,12 +27,12 @@ export async function briefMovieResponse(input:MovieSearchResult,signal:AbortSig
    }catch{ /* A second bounded lookup can recover a temporary provider failure. */ }
   }
   return [];
- })().finally(()=>{linksReady=true;});
+ })(),signal,movie.uzbekLinks??[]).finally(()=>{linksReady=true;});
  if(!movie.posters.length){
   onProgress?.('posters');
   try{
    for(let attempt=0;attempt<2&&!movie.posters.length&&!signal.aborted;attempt++){
-    const result=await deps.searchImages(`${attempt?'"'+movie.title+'"':movie.title} ${movie.year??''} ${attempt?'theatrical':'official'} movie poster -fanart -site:instagram.com -site:facebook.com`,{num:10});
+    const result=await optionalBeforeDeadline(deps.searchImages(`${attempt?'"'+movie.title+'"':movie.title} ${movie.year??''} ${attempt?'theatrical':'official'} movie poster -fanart -site:instagram.com -site:facebook.com`,{num:10}),signal,{images:[]});
     const candidates=(result.images??[]).filter(image=>{const years=image.title?.match(/\b(?:19|20)\d{2}\b/g)??[];return isPublicHttpsUrl(image.imageUrl)&&(!movie.year||!years.length||years.some(year=>Number(year)===movie.year))&&(!image.imageWidth||image.imageWidth>=250)&&(!image.imageHeight||image.imageHeight>=350);}).map(image=>({url:image.imageUrl,sourceUrl:image.link&&isPublicHttpsUrl(image.link)?image.link:null}));
     movie.posters=await deps.select(candidates,signal);
    }

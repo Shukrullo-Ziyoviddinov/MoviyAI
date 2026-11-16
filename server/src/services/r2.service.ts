@@ -7,6 +7,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '../config/env.js';
+import { videoRangeReader } from '../ai/utils/video-range-reader.js';
 
 const SAFE_NAME = /^[a-zA-Z0-9._-]+$/;
 export const IMAGE_FOLDERS = ['movieimg', 'actorimg', 'banner', 'adminimg'] as const;
@@ -159,17 +160,23 @@ export async function inspectChatVideo(key:string){
  validateChatKey(key);if(!key.startsWith('chatvideo/'))throw Error('INVALID_VIDEO_KEY');
  const deadline=AbortSignal.timeout(30000);
  const input={Bucket:requireR2('R2_BUCKET',env.r2Bucket),Key:key};
- const meta=await r2().send(new HeadObjectCommand(input),{abortSignal:AbortSignal.timeout(10000)});
+ const headSignal=AbortSignal.any([deadline,AbortSignal.timeout(10000)]);
+ const meta=await r2().send(new HeadObjectCommand(input),{abortSignal:headSignal})
+  .catch(error=>{headSignal.throwIfAborted();throw error;});
  const {CHAT_VIDEO}=await import('../ai/config/chat-video.config.js');const {videoDuration}=await import('../ai/utils/video-metadata.js');
  const size=meta.ContentLength??0,mimeType=meta.ContentType??'';
  if(size<16||size>CHAT_VIDEO.maxBytes||!CHAT_VIDEO.mimeTypes.includes(mimeType as typeof CHAT_VIDEO.mimeTypes[number]))throw Error('INVALID_VIDEO_SIZE_OR_TYPE');
  let total=0;
- const duration=await videoDuration(size,mimeType,async(offset,length)=>{
+ const read=videoRangeReader(size,async(offset,length)=>{
   deadline.throwIfAborted();
   total+=length;if(total>131072||length>65536||offset<0||offset+length>size)throw Error('VIDEO_METADATA_LIMIT');
-  const object=await r2().send(new GetObjectCommand({...input,Range:`bytes=${offset}-${offset+length-1}`}),{abortSignal:AbortSignal.any([deadline,AbortSignal.timeout(10000)])});
+  const readSignal=AbortSignal.any([deadline,AbortSignal.timeout(10000)]);
+  const object=await r2().send(new GetObjectCommand({...input,Range:`bytes=${offset}-${offset+length-1}`}),{abortSignal:readSignal})
+   .catch(error=>{readSignal.throwIfAborted();throw error;});
   if(!object.Body||object.ContentLength!==length||object.ContentRange!==`bytes ${offset}-${offset+length-1}/${size}`){(object.Body as {destroy?:()=>void}|undefined)?.destroy?.();throw Error('INVALID_VIDEO_RANGE');}
-  return Buffer.from(await object.Body.transformToByteArray());
+  try{return Buffer.from(await object.Body.transformToByteArray());}
+  catch(error){readSignal.throwIfAborted();throw error;}
  });
+ const duration=await videoDuration(size,mimeType,read);
  if(duration>CHAT_VIDEO.maxSeconds)throw Error('VIDEO_EXCEEDS_THREE_MINUTES');return {size,mimeType,duration};
 }

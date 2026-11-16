@@ -11,19 +11,21 @@ import { dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier } from
 
 const source = readFileSync(new URL('../dist/ai/services/image-movie.service.js', import.meta.url), 'utf8')
   .replace(/^import .*;$/gm, '').replace(/\bexport /g, '');
-function harness({ searchable = true, badSource = false, posterError = false, detailError = false, evidenceError = false, wrongRatingSource = false, manyPosters = false, cachedMovie = null, verifyCache = true } = {}) {
+function harness({ searchable = true, badSource = false, posterError = false, detailError = false, evidenceError = false, wrongRatingSource = false, manyPosters = false, cachedMovie = null, verifyCache = true, clueOverride = {}, matchOverride = {}, recoveryMatch = null, recoveryError = false } = {}) {
   const answers = [
-    { query: 'Interstellar 2014 movie', clues: ['Spacesuit', 'Interstellar title'], searchable, titles:['Interstellar'],year:2014,language:'uz' },
+    { query: 'Interstellar 2014 movie', clues: ['Spacesuit', 'Interstellar title'], searchable, titles:['Interstellar'],year:2014,language:'uz',...clueOverride },
     ...(cachedMovie ? [{id:verifyCache?cachedMovie.catalogId:null,confidence:verifyCache?'high':'low'}] : []),
     { matched: searchable, title: 'Interstellar', titleUz: null, titleRu: null, year: 2014, confidence: 'high',
-      answer: searchable ? 'Interstellar (2014). Siz izlagan kino shumi?' : 'Boshqa kadr yuboring.', sourceIndexes: badSource ? [9] : [0], language:'uz' },
+      answer: searchable ? 'Interstellar (2014). Siz izlagan kino shumi?' : 'Boshqa kadr yuboring.', sourceIndexes: badSource ? [9] : [0], language:'uz',...matchOverride },
+    ...(recoveryMatch?[recoveryMatch]:[]),
     {productionYears:{value:'2013',sourceIndexes:[1]},countries:{value:['AQSH'],sourceIndexes:[1]},genres:{value:['Ilmiy fantastika'],sourceIndexes:[1]},runtimeMinutes:{value:169,sourceIndexes:[1]},ageRating:{value:'PG-13 (US)',sourceIndexes:[1]},synopsis:{value:'Kosmik sayohat haqida film.',sourceIndexes:[1]},directors:{value:['Christopher Nolan'],sourceIndexes:[0]},budget:{value:'USD 165 million',sourceIndexes:[2]},boxOffice:{value:'USD 700 million',sourceIndexes:[2]},imdb:{value:8.7,sourceIndexes:[0]},kinopoisk:{value:8.6,sourceIndexes:wrongRatingSource?[0]:[3]},characters:[],cast:['Matthew McConaughey','Anne Hathaway','Jessica Chastain','Michael Caine','Mackenzie Foy'].map(name=>({name,originalName:name,role:'Role',sourceIndexes:[0]}))},
   ];
-  let lookups=0; let searches = 0, posters = 0;const calls=[];
+  let lookups=0; let searches = 0, posters = 0;const calls=[],searchQueries=[];
   class GoogleGenAI { models = { generateContent: async request => {calls.push(request);if(detailError&&calls.length===3)throw Error('dossier unavailable');return { text: JSON.stringify(answers.shift()) };} }; }
   class AiServiceError extends Error {}
   const searchWeb = async query => {
-    searches++;
+    searches++;searchQueries.push(query);
+    if(query==='Korean organ transplant recipients superpowers movie'){if(recoveryError)throw Error('search failed');return {organic:[{title:'Hi-Five (2025)',link:'https://example.com/hi-five',snippet:'Organ recipients develop superpowers in a Korean film.'}]};}
     if(evidenceError&&searches>2)throw Error('search unavailable');
     if(query.includes('site:kinopoisk'))return {organic:[{title:'Interstellar (2014)',link:'https://www.kinopoisk.ru/film/258687/',snippet:'Rating 8.6/10'}]};
     if(query.includes('production budget'))return {organic:[{title:'Interstellar finances',link:'https://www.the-numbers.com/movie/Interstellar',snippet:'Production budget USD 165 million, worldwide box office USD 700 million.'}]};
@@ -39,7 +41,7 @@ function harness({ searchable = true, badSource = false, posterError = false, de
  for(const query of ['film production','production budget','site:kinopoisk','IMDb rating']){try{for(const item of (await searchWeb(query)).organic??[]){const previous=evidence.find(source=>source.url===item.link);if(previous)previous.snippet+=' '+item.snippet;else evidence.push({title:item.title,url:item.link,snippet:item.snippet});}}catch{}}
  return extract(evidence,details);
  },'Extract only sourced facts',uzbekReleaseTitle, GoogleGenAI, z, { apiKey: 'test', models: { image: 'gemini-3.5-flash-lite' } }, AiServiceError, searchWeb, searchImages, dossierSchema, verifiedDossier, emptyDossier, renderMovieDossier, async()=>({videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Interstellar trailer',channel:'Warner Bros.',kind:'trailer'}),async()=>[{title:'Interstellar Uzbek',url:'https://uzmovi.net/123-interstellar.html',site:'uzmovi.net'}], async()=>cachedMovie&&++lookups===1?[cachedMovie]:[]);
-  return { ...api,findMovieFromImages:(text,images,onDelta,signal,mode='full',onProgress)=>api.findMovieFromImages(text,images,onDelta,signal,mode,onProgress), calls, searches: () => searches, posters: () => posters };
+  return { ...api,findMovieFromImages:(text,images,onDelta,signal,mode='full',onProgress)=>api.findMovieFromImages(text,images,onDelta,signal,mode,onProgress), calls, searchQueries, searches: () => searches, posters: () => posters };
 }
 function completeDossier(){const d=emptyDossier(),sources=[{title:'Verified film',url:'https://example.com/film'}];for(const key of ['countries','genres','directors'])d[key]={value:['Known'],sources};d.runtimeMinutes={value:100,sources};d.synopsis={value:'Known plot',sources};d.cast=[{name:'Actor',originalName:'Actor',role:'Hero',sources}];return d;}
 const images = [{ mimeType: 'image/jpeg', data: Buffer.from([255, 216, 255]) }];
@@ -77,6 +79,15 @@ test('an incomplete cached movie continues sourced research instead of returning
  const cachedMovie={catalogId:8007,title:'Interstellar',titleUz:null,titleRu:null,year:2014,details:emptyDossier()};
  const h=harness({cachedMovie});const result=await h.findMovieFromImages('Find',images);
  assert.equal(result.movie.catalogId,undefined);assert.ok(h.searches()>0);assert.equal(result.movie.details.cast.length,5);
+});
+
+test('published movies without cast and series with unknown runtime still use the database fast path',async()=>{
+ for(const mediaType of ['movie','series']){
+  const details=completeDossier();details.cast=[];if(mediaType==='series')details.runtimeMinutes={value:null,sources:[]};
+  const cachedMovie={catalogId:8010,title:'Interstellar',titleUz:'Interstellar',titleRu:null,year:2014,mediaType,confidence:'high',sources:[],posters:[{url:'https://media.example/stored.jpg',sourceUrl:null}],details};
+  const h=harness({cachedMovie});const result=await h.findMovieFromImages('Find',images);
+  assert.equal(result.movie,cachedMovie);assert.equal(h.searches(),0);assert.equal(h.posters(),0);
+ }
 });
 test('uncertain database candidate continues normal web discovery',async()=>{
  const cachedMovie={catalogId:8001,title:'Wrong version',year:2014,details:emptyDossier()};
@@ -129,3 +140,30 @@ test('optional dossier and evidence failures keep identification and mark missin
 });
 
 test('poster search returns up to two unique images and skips small images or wrong years',async()=>{const result=await harness({manyPosters:true}).findMovieFromImages('Find',images);assert.equal(result.movie.posters.length,2);assert.equal(new Set(result.movie.posters.map(item=>item.url)).size,2);assert.ok(result.movie.posters.every(item=>item.url.includes('poster-')));});
+
+const video=[{mimeType:'video/mp4',fileUri:'https://r2.example/video',durationSeconds:60}];
+const sceneQuery='Korean organ transplant recipients superpowers movie';
+const correctedMatch={matched:true,title:'Hi-Five',titleUz:null,titleRu:null,year:2025,confidence:'high',answer:'Hi-Five (2025)',sourceIndexes:[0],language:'uz',visualFit:'consistent',mediaType:'movie'};
+test('a tentative actor-based guess uses scene discovery instead of repeating the guessed title in a localized query',async()=>{
+ const h=harness({clueOverride:{titleIsGuess:true,sceneQuery},matchOverride:correctedMatch});
+ const result=await h.findMovieFromImages('Find',video,undefined,undefined,'brief');
+ assert.equal(result.movie.title,'Hi-Five');assert.equal(result.movie.identitySources[0].url,'https://example.com/hi-five');
+ assert.equal(h.calls.length,2);assert.equal(h.searchQueries.length,2);assert.equal(h.searchQueries[1],sceneQuery);
+});
+test('a rejected actor-based title gets one scene search and can recover the correct film',async()=>{
+ const h=harness({clueOverride:{sceneQuery},matchOverride:{title:'He Is Psychometric',year:2019,mediaType:'series',visualFit:'conflicting'},recoveryMatch:correctedMatch});
+ const result=await h.findMovieFromImages('Find',video,undefined,undefined,'brief');
+ assert.equal(result.movie.title,'Hi-Five');assert.equal(result.movie.year,2025);
+ assert.equal(result.movie.identitySources[0].url,'https://example.com/hi-five');
+ assert.equal(h.searchQueries.filter(query=>query===sceneQuery).length,1);assert.equal(h.calls.length,3);
+});
+test('an immediately clear video keeps its two-call fast path without mandatory evidence counts',async()=>{
+ const h=harness({clueOverride:{sceneQuery},matchOverride:{visualFit:'consistent'}});
+ assert.equal((await h.findMovieFromImages('Find',video,undefined,undefined,'brief')).movie.title,'Interstellar');
+ assert.equal(h.calls.length,2);assert.equal(h.searchQueries.includes(sceneQuery),false);
+});
+test('a failed scene recovery cannot publish an explicitly conflicting identification',async()=>{
+ const h=harness({clueOverride:{sceneQuery},matchOverride:{visualFit:'conflicting'},recoveryError:true});
+ await assert.rejects(()=>h.findMovieFromImages('Find',video,undefined,undefined,'brief'),e=>e.failureCode==='identity_unconfirmed');
+ assert.equal(h.posters(),0);
+});

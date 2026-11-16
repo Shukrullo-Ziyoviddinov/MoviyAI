@@ -18,6 +18,7 @@ import { catalogOperation, catalogFailureDetails, type CatalogStage } from '../u
 import { actorProfileMatches, actorCreditMatches, actorIdentitySources } from '../utils/catalog-actor-evidence.js';
 import {verifiedActorCredit,actorProfileKey} from '../utils/catalog-actor-identity.js';
 import {setTimeout as delay} from 'node:timers/promises';
+import {uzbekDetailUrl} from '../../services/uzbek-movie.service.js';
 
 const indexes = z.array(z.number().int().min(0)).max(6);
 const sourcedText = z.object({ value: z.string().max(4000).nullable(), sourceIndexes: indexes });
@@ -71,6 +72,10 @@ export function createCatalogEnricher(deps: { generate: CatalogStructuredGenerat
     if (actorBackfill?!draft.actors.length:(!draft.research.sourceResearchComplete||!hasCoreMovieFacts(draft.research.details))&&(!draft.identity.year||required.some(field => !known<unknown>(draft.research.details?.[field])))) {
       let yearEvidence:MovieSource[]=[];
       let releaseYear:number|null=null;
+      // Already verified dub pages often contain the missing country, runtime,
+      // director and cast. Reuse them before buying more general web searches.
+      draft.research.sources=mergeSources(draft.research.sources,(draft.research.uzbekLinks??[])
+        .filter(link=>!!uzbekDetailUrl(link.url)).map(link=>({title:link.title,url:link.url})));
       const research=deps.researchSources??createMovieSourceResearch({searchWeb:deps.searchWeb,read:deps.readSource??readMovieSource});
       const found=await research({title:draft.identity.originalTitle,titleRu:draft.research.titleRu,year:draft.identity.year},draft.research.sources,draft.research.details??emptyDossier(),async(evidence,known)=>{
         const raw=filmSchema.parse(await deps.generate(filmSchema,{film:draft.identity,language:draft.language,known,sources:evidence.map((source,index)=>({index,...source}))},MOVIE_FACT_INSTRUCTION+' Output language: '+draft.language+' Also return a release year only when explicitly stated in the supplied film page.',signal));

@@ -10,9 +10,8 @@ import {catalogMediaService} from './catalog-media.service.js';
 import type {CatalogChatInput} from '../types/catalog-job.types.js';
 import type {CatalogSaveResult} from '../types/catalog-save.types.js';
 import type {CatalogDraft} from '../types/catalog.types.js';
-import {hasCoreMovieFacts} from '../../services/movie-source-research.service.js';
 import {storeMoviePosters} from './catalog-poster.service.js';
-import {catalogPublicationIssues} from '../utils/catalog-publication.js';
+import {catalogPublicationIssues,catalogFactIssues} from '../utils/catalog-publication.js';
 import {researchCatalogLinks} from './catalog-link-research.service.js';
 
 /** Existing films receive missing facts; IDs, known values and stored posters stay intact. */
@@ -39,8 +38,7 @@ export async function refreshCatalogMovie(movieId:number,input:CatalogChatInput,
    const saved=await tx.updateExistingMovie(movieId,catalogMoviePayloadSchema.parse(fresh.movie),fresh.research,posters);
    await tx.linkActors(movieId,fresh.movie.actorIds,pending);
    if(pending.length&&tx.enqueueActors)await tx.enqueueActors(movieId,{...fresh,actors:pending});
-   const issues=catalogPublicationIssues(saved);
-   if(!hasCoreMovieFacts(fresh.research.details))issues.push({path:'research.details',action:'research',blocking:true,message:'Essential movie facts still need research.'});
+   const issues=[...catalogPublicationIssues(saved,fresh.research.mediaType),...catalogFactIssues(fresh.research.details,fresh.research.mediaType)];
    const result:CatalogSaveResult=issues.length?{status:'needs-enrichment',issues}:{status:'existing',movieId};
    return result;
   });

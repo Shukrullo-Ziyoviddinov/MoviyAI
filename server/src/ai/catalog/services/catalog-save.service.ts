@@ -9,9 +9,8 @@ import type { CatalogMatchResult } from '../types/catalog-match.types.js';
 import type { CatalogSaveMedia, CatalogSaveRepository, CatalogSaveResult, CatalogSaveTransaction } from '../types/catalog-save.types.js';
 import {stageCatalogActors,commitCatalogActors} from './catalog-actor-save.service.js';
 import {catalogFailureDetails} from '../utils/catalog-diagnostics.js';
-import {hasCoreMovieFacts} from '../../services/movie-source-research.service.js';
 import {storeMoviePosters} from './catalog-poster.service.js';
-import {catalogPublicationIssues} from '../utils/catalog-publication.js';
+import {catalogPublicationIssues,catalogFactIssues} from '../utils/catalog-publication.js';
 
 class SaveBlocked extends Error {
   constructor(public issues: CatalogIssue[]) { super('CATALOG_ENRICHMENT_REQUIRED'); }
@@ -23,8 +22,9 @@ function requireKnown(match: CatalogMatchResult, path: string): void {
   if (match.status === 'needs-research' || match.status === 'conflict') block(path, match.reason);
 }
 function preflight(draft: CatalogDraft) {
-  if (!hasCoreMovieFacts(draft.research.details)) block('research.details', 'Essential film facts are missing; retain the draft for research instead of publishing a title-only movie.');
-  const essential=catalogPublicationIssues(draft.movie).filter(issue=>issue.path!=='homeImgPoster');
+  const missing=catalogFactIssues(draft.research.details,draft.research.mediaType);
+  if(missing.length)throw new SaveBlocked(missing);
+  const essential=catalogPublicationIssues(draft.movie,draft.research.mediaType).filter(issue=>issue.path!=='homeImgPoster');
   if(essential.length)throw new SaveBlocked(essential);
   if (draft.research.linksOnly) block('research.linksOnly', 'A link-only follow-up is not a new film result.');
   const allowedLater = (path: string) => path === 'homeImgPoster';
@@ -80,7 +80,7 @@ export function createCatalogSaver(deps: { repository: CatalogSaveRepository; me
         if (!freshReferences.ready) throw new SaveBlocked(freshReferences.issues);
         const ready = freshReferences.draft;
         ready.movie.homeImgPoster = staged.posters[0]?.path??null; ready.movie.actorIds = [];
-        const essential=catalogPublicationIssues(ready.movie);if(essential.length)throw new SaveBlocked(essential);
+        const essential=catalogPublicationIssues(ready.movie,ready.research.mediaType);if(essential.length)throw new SaveBlocked(essential);
         ready.movie.franchiseMovieIds = await resolveFranchise(ready, tx);
         const allActors=ready.actors;
         ready.actors=await commitCatalogActors(stagedActors,tx);
