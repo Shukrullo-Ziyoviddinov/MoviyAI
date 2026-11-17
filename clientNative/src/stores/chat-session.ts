@@ -3,8 +3,10 @@ import * as api from '../api/chat';
 import type { ChatMessage, ChatMediaItem } from '../types/chat';
 import type {ChatStage,ChatFailureCode} from '../types/chat-progress';
 type Pending = {
+    lastMessageId?:string;
     needsAttachment?:boolean;
     resume?:boolean;
+    resumeEvent?:{id:string;text:string};
     media?: ChatMediaItem[];
     conversationId: string;
     requestId: string;
@@ -54,7 +56,7 @@ export function createChatSession(storage: Storage) {
         const processing=chat.turns.find(turn=>turn.status==='processing');
         inFlight=processing?{conversationId:chat.id,requestId:processing.requestId,text:processing.text}:null;
         const stopped=[...chat.turns].reverse().find(turn=>turn.status==='stopped');
-        const paused=stopped?{needsAttachment:stopped.needsAttachment,conversationId:chat.id,requestId:stopped.requestId,text:stopped.text,resume:true,media:[...(stopped.images??[]),...(stopped.videos??[])].map(item=>({id:item.id,type:item.type,uri:api.chatMediaUrl(item.path),stored:true}))}:null;
+        const paused=stopped?{lastMessageId:stopped.resumeEvents?.length?'resume-'+stopped.resumeEvents.at(-1)!.id:stopped.requestId,needsAttachment:stopped.needsAttachment,conversationId:chat.id,requestId:stopped.requestId,text:stopped.text,resume:true,media:[...(stopped.images??[]),...(stopped.videos??[])].map(item=>({id:item.id,type:item.type,uri:api.chatMediaUrl(item.path),stored:true}))}:null;
         const failed = chat.turns.find(turn => turn.status === 'failed');
         emit({ paused,stopping:false,progressStage:chat.turns.find(turn=>turn.status==='processing')?.progressStage??null,failureCode:failed?.failureCode??null,streamingText: '', activeId: chat.id, messages: chat.turns.flatMap(turn => {
                 const messages: ChatMessage[] = [];
@@ -63,13 +65,15 @@ export function createChatSession(storage: Storage) {
                     messages.push({ id: turn.requestId + '-media', kind: 'media', items: media, createdAt: Date.parse(turn.createdAt) });
                 if (turn.text)
                     messages.push({ id: turn.requestId, kind: 'text', role: 'user', text: turn.text, createdAt: Date.parse(turn.createdAt) });
+                for(const event of turn.resumeEvents??[])messages.push({id:'resume-'+event.id,kind:'text',role:'user',text:event.text,createdAt:Date.parse(event.createdAt)});
+                const answerTime=turn.answerAt?Date.parse(turn.answerAt):Date.parse(turn.createdAt)+1;
                 if (turn.answer)
-                    messages.push({ id: turn.requestId + '-ai', kind: 'text', role: 'model', text: turn.answer, movie: turn.movie, characterImages: turn.characterImages, createdAt: Date.parse(turn.createdAt) + 1 });
+                    messages.push({ id: turn.requestId + '-ai', kind: 'text', role: 'model', text: turn.answer, movie: turn.movie, characterImages: turn.characterImages, createdAt: answerTime });
                 for(const [index,item] of (turn.recommendations??[]).entries())
-                    messages.push({id:turn.requestId+'-recommendation-'+index,kind:'text',role:'model',text:item.text,movie:item.movie,characterImages:item.characterImages,createdAt:Date.parse(turn.createdAt)+index+2});
+                    messages.push({id:turn.requestId+'-recommendation-'+index,kind:'text',role:'model',text:item.text,movie:item.movie,characterImages:item.characterImages,createdAt:answerTime});
                 return messages;
-            }), sending: chat.turns.some(turn => turn.status === 'processing'),
-            pending: failed ? { conversationId: chat.id, requestId: failed.requestId, text: failed.text, media: [...(failed.images??[]),...(failed.videos??[])].map(image => ({ id: image.id, type: image.type, uri: api.chatMediaUrl(image.path), stored: true })) } : null,
+            }).sort((a,b)=>a.createdAt-b.createdAt), sending: chat.turns.some(turn => turn.status === 'processing'),
+            pending: failed ? { conversationId: chat.id, requestId: failed.requestId, text: failed.text,resume:!!failed.resumeEvents?.length,resumeEvent:failed.resumeEvents?.at(-1), media: [...(failed.images??[]),...(failed.videos??[])].map(image => ({ id: image.id, type: image.type, uri: api.chatMediaUrl(image.path), stored: true })) } : null,
             error: failed ? 'Javob olinmadi. Qayta urinib ko\'ring.' : null });
     }
     async function refreshList(version: number) {
@@ -178,7 +182,7 @@ export function createChatSession(storage: Storage) {
                 return;
             if (!state.conversations.some(chat => chat.id === payload.conversationId))
                 emit({ conversations: [{ id: payload.conversationId, pinned: false, title: 'Yangi chat', updatedAt: new Date().toISOString() }, ...state.conversations] });
-            const chat = await api.sendChat(payload.conversationId, payload.requestId, payload.text, delta => reveal.push(delta), payload.media,stage=>{if(version===revision)emit({progressStage:stage});},{signal,resume:payload.resume});
+            const chat = await api.sendChat(payload.conversationId, payload.requestId, payload.text, delta => reveal.push(delta), payload.media,stage=>{if(version===revision)emit({progressStage:stage});},{signal,resume:payload.resume,resumeEvent:payload.resumeEvent});
             await reveal.finish();
             if (version !== revision)
                 return;
@@ -225,8 +229,10 @@ export function createChatSession(storage: Storage) {
         }
         if(state.paused&&(!media.length||state.paused.needsAttachment)&&/^(?:(?:iltimos|please|yana|endi|ha)\s+)?(?:davom\s*(?:et|ettir|qil)(?:ing|gin)?|davom|continue|resume|продолж(?:и|ить|ай|айте))(?:\s+(?:iltimos|please|дальше))?[.!?\s]*$/iu.test(text?.trim()??'')){
             if(state.paused.needsAttachment&&!media.length)return false;
-            const payload={...state.paused,resume:true,needsAttachment:false,media:media.length?media:state.paused.media};
-            const messages:ChatMessage[]=media.length?state.messages.flatMap(item=>item.id===payload.requestId?[{id:payload.requestId+'-media',kind:'media' as const,items:media,createdAt:item.createdAt},item]:[item]):state.messages;
+            const resumeEvent={id:storage.uuid(),text:text!.trim()};
+            const payload={...state.paused,resume:true,resumeEvent,needsAttachment:false,media:media.length?media:state.paused.media};
+            let messages:ChatMessage[]=media.length?state.messages.flatMap(item=>item.id===payload.requestId?[{id:payload.requestId+'-media',kind:'media' as const,items:media,createdAt:item.createdAt},item]:[item]):state.messages;
+            messages=[...messages,{id:'resume-'+resumeEvent.id,kind:'text',role:'user',text:resumeEvent.text,createdAt:Date.now()}];
             emit({pending:payload,paused:null,messages});void deliver(payload);return true;
         }
         const video=media.find(item=>item.type==='video');
@@ -271,7 +277,7 @@ export function createChatSession(storage: Storage) {
                 apply(saved!);pausedPayload={...pausedPayload,media:[...(savedTurn.images??[]),...(savedTurn.videos??[])].map(item=>({id:item.id,type:item.type,uri:api.chatMediaUrl(item.path),stored:true}))};
             }
             inFlight=null;controller=undefined;
-            emit({stopping:false,sending:false,pending:null,paused:pausedPayload,streamingText:'',progressStage:null,failureCode:null,error:null});
+            emit({stopping:false,sending:false,pending:null,paused:{...pausedPayload,lastMessageId:payload.resumeEvent?'resume-'+payload.resumeEvent.id:payload.requestId},streamingText:'',progressStage:null,failureCode:null,error:null});
         }catch{
             if(version===revision){emit({stopping:false});poll(payload.conversationId,version);}
         }

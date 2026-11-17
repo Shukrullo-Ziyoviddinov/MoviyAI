@@ -35,6 +35,8 @@ const turnSchema = new Schema({
     recommendations: {type:Schema.Types.Mixed,default:[]},
     catalogDispatch: { type: String, enum: ['none', 'pending', 'queued'], default: 'none', select: false },
     answer: { type: String, default: '' },
+    answerAt:{type:Date,default:null},
+    resumeEvents:{type:[new Schema({id:{type:String,required:true},text:{type:String,required:true},createdAt:{type:Date,required:true}},{_id:false})],default:[]},
     progressStage:{type:String,default:null},
     failureCode:{type:String,default:null},
     checkpoints:{type:Schema.Types.Mixed,default:{},select:false},

@@ -8,6 +8,28 @@ const ts = require('typescript');
 const source = fs.readFileSync(path.join(__dirname, '../src/stores/chat-session.ts'), 'utf8');
 const nativeSource = fs.readFileSync(path.join(__dirname, '../../clientNative/src/stores/chat-session.ts'), 'utf8');
 const tick = () => new Promise(resolve => setImmediate(resolve));
+
+test('video stop, greeting and resume stay chronological after the answer and reopening',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');
+ let release;h.hold(new Promise(resolve=>{release=resolve;}));
+ session.actions.sendMessage({text:'Find the video',media:[{id:'clip',type:'video',uri:'file://clip.mp4'}]});await tick();
+ const original=session.getState().pending.requestId;
+ await session.actions.stop();h.hold(null);
+ session.actions.sendMessage({text:'salom'});await tick();await tick();
+ release();await tick();
+ assert.equal(session.actions.sendMessage({text:'Davom et'}),true);await tick();await tick();
+ const chat=[...h.db.values()][0],greeting=chat.turns.find(turn=>turn.text==='salom');
+ // Use deliberately separated server timestamps, independent of machine speed.
+ chat.turns.find(turn=>turn.requestId===original).createdAt='2026-11-17T10:00:00.000Z';
+ greeting.createdAt='2026-11-17T10:00:10.000Z';greeting.answerAt='2026-11-17T10:00:11.000Z';
+ const resumed=chat.turns.find(turn=>turn.requestId===original);resumed.resumeEvents[0].createdAt='2026-11-17T10:00:20.000Z';resumed.answerAt='2026-11-17T10:00:25.000Z';
+ await session.actions.openChat(chat.id);
+ const expected=[original,greeting.requestId,greeting.requestId+'-ai','resume-'+resumed.resumeEvents[0].id,original+'-ai'];
+ assert.deepEqual([...session.getState().messages.filter(message=>message.kind==='text').map(message=>message.id)],expected);
+ const reopened=h.create();await reopened.actions.initialize('alice');
+ assert.deepEqual([...reopened.getState().messages.filter(message=>message.kind==='text').map(message=>message.id)],expected);
+ assert.equal(chat.turns.length,2);
+});
 function harness() {
   const db = new Map(), storage = new Map();
   let id = 0, fail = false, calls = 0, hold, deltas = [], failDelete = false, failPin = false;
@@ -31,13 +53,14 @@ function harness() {
       const chat = db.get(id);
       let turn = chat.turns.find(turn => turn.requestId === requestId);
       if (!turn) { turn = { requestId, text, images:media.filter(item=>item.type==='image').map((item,index)=>({id:item.id,type:'image',path:'/image-'+index+'.jpg'})),videos:media.filter(item=>item.type==='video').map(item=>({id:item.id,type:'video',path:'/video.mp4'})), answer: '', status: 'processing', createdAt: new Date().toISOString() }; chat.turns.push(turn); }
+      if(options.resumeEvent){turn.resumeEvents??=[];if(!turn.resumeEvents.some(event=>event.id===options.resumeEvent.id))turn.resumeEvents.push({...options.resumeEvent,createdAt:new Date().toISOString()});}
       chat.title = text;
       onProgress('searching');
       for (const delta of deltas) onDelta(delta);
       if (hold) await hold;
       if(options.signal?.aborted)throw new DOMException('Stopped','AbortError');
       if (fail) { turn.status = 'failed';turn.failureCode=typeof fail==='string'?fail:null; throw Object.assign(Error('provider failed'),{failureCode:turn.failureCode}); }
-      turn.status = 'completed'; turn.answer = 'Answer'; return copy(chat);
+      turn.status = 'completed';turn.answerAt=new Date().toISOString(); turn.answer = 'Answer'; return copy(chat);
     },
   };
   const exports = {};
@@ -62,7 +85,7 @@ test('stop unlocks composer, resume reuses the same request and late chunks are 
  assert.equal(session.getState().pending,null);assert.equal(session.getState().paused.requestId,request);
  h.hold(null);session.actions.sendMessage({text:'Davom et'});await tick();await tick();
  assert.equal(h.db.values().next().value.turns.length,1);
- assert.equal(session.getState().messages.filter(x=>x.role==='user').length,1);
+ assert.equal(session.getState().messages.filter(x=>x.role==='user').length,2);
  release();await tick();assert.equal(session.getState().sending,false);
 });
 

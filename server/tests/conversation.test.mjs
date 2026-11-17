@@ -22,9 +22,10 @@ function repository(conversation = false) {
   const rows = [];
   function matches(row, filter) {
     return Object.entries(filter).every(([key, value]) => {
+      const actual=key==='resumeEvents.id'?(row.resumeEvents??[]).map(event=>event.id):row[key];
       if (value && typeof value === 'object' && !(value instanceof Date)) {
         if ('$in' in value) return value.$in.includes(row[key]);
-        if ('$ne' in value) return row[key] !== value.$ne;
+        if ('$ne' in value) return Array.isArray(actual)?!actual.includes(value.$ne):actual !== value.$ne;
         if ('$lte' in value) return row[key] <= value.$lte;
       }
       return row[key] === value;
@@ -54,6 +55,7 @@ function repository(conversation = false) {
       for (const [key,value] of Object.entries(patch.$set ?? {})) {
         const path=key.split('.');let target=row;for(const part of path.slice(0,-1)){target[part]??={};target=target[part];}target[path.at(-1)]=value;
       }
+      for(const [key,value] of Object.entries(patch.$push??{})){row[key]??=[];row[key].push(value);}
       for(const key of Object.keys(patch.$unset ?? {})){const path=key.split('.');let target=row;for(const part of path.slice(0,-1))target=target[part];delete target[path.at(-1)];}
       row.updatedAt=new Date();
     }
@@ -143,7 +145,18 @@ test('continue resumes the stopped turn without creating another message',async(
  await h.sendConversationMessage('alice',id,randomUUID(),'davom et');
  assert.equal(h.ChatTurn.rows.length,1);assert.equal(h.ChatTurn.rows[0].requestId,requestId);
  assert.equal(h.ChatTurn.rows[0].text,'Original question');assert.equal(h.ChatTurn.rows[0].status,'completed');
+ assert.equal(h.ChatTurn.rows[0].resumeEvents.length,1);assert.equal(h.ChatTurn.rows[0].resumeEvents[0].text,'davom et');
+ assert.ok(h.ChatTurn.rows[0].answerAt>=h.ChatTurn.rows[0].resumeEvents[0].createdAt);
  assert.deepEqual(await h.stopConversationMessage('alice',id,requestId,'Original question'),{stopped:false});
+});
+
+test('explicit resume events survive completion and do not duplicate on replay',async()=>{
+ const h=harness(),id=randomUUID(),request=randomUUID(),event={id:randomUUID(),text:'Davom et'};await h.createConversation('alice',id);
+ await h.stopConversationMessage('alice',id,request,'Find');
+ const completed=await h.sendConversationMessage('alice',id,request,'Find',undefined,[],false,false,undefined,true,event);
+ assert.equal(completed.turns[0].resumeEvents[0].id,event.id);assert.ok(completed.turns[0].answerAt);
+ await h.sendConversationMessage('alice',id,request,'Find',undefined,[],false,false,undefined,true,event);
+ assert.equal(h.ChatTurn.rows[0].resumeEvents.length,1);
 });
 
 test('an upload stopped before metadata is saved cannot silently resume as text',async()=>{

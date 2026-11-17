@@ -13,7 +13,7 @@ import { FlatList, ScrollView, StyleSheet, Text } from 'react-native';
 type Props={messages:ChatMessage[];topInset?:number;bottomInset?:number};
 export function ChatMessageList({messages,topInset=0,bottomInset=0}:Props){
  const {t}=useTranslation();
- const paused=useChatStore(s=>s.paused?.requestId===s.messages.filter(item=>item.kind==='text'&&item.role==='user').at(-1)?.id && !!s.paused);
+ const paused=useChatStore(s=>(s.paused?.lastMessageId??s.paused?.requestId)===s.messages.filter(item=>item.kind==='text'&&item.role==='user').at(-1)?.id && !!s.paused);
  const list=useRef<FlatList<ChatMessage>>(null);
  const menuOpen=useSideMenuStore(s=>s.open);
  const following=useRef(true);

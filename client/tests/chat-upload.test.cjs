@@ -3,6 +3,12 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),ts=require('typescript');
 const {webcrypto}=require('node:crypto');
 
+for(const root of ['client','clientNative'])test(root+' resume event sends only the validated command fields',async()=>{
+ const api=load(root);await api.sendChat('chat','request','Original',()=>{},[],()=>{},{resume:true,resumeEvent:{id:'resume-id',text:'Davom et',createdAt:'old-server-time'}});
+ const body=JSON.parse(api.requests[0].options.body);
+ assert.deepEqual(body.resumeEvent,{id:'resume-id',text:'Davom et'});assert.equal(body.resume,true);
+});
+
 for(const root of ['client','clientNative'])test(root+' abort prevents new upload or AI requests',async()=>{
  const api=load(root),controller=new AbortController();controller.abort();
  await assert.rejects(()=>api.sendChat('chat','request','Find',()=>{},[],()=>{},{signal:controller.signal}));

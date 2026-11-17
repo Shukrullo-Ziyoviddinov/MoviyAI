@@ -78,6 +78,7 @@ export async function getConversation(userId: string, id: string) {
         id: row._id, title: row.title, pinned: Boolean(row.pinned), updatedAt: row.updatedAt,
         turns: await Promise.all(turns.map(async turn => ({
             requestId: turn.requestId, text: turn.text, answer: turn.answer,
+            answerAt:turn.answerAt??null,resumeEvents:turn.resumeEvents??[],
             needsAttachment:turn.status==='stopped'&&!!turn.attachmentKind&&!turn.images?.length&&!turn.videos?.length,
             images: (await chatImageUrls(userId, id, turn.requestId, turn.images)).map((image, index) => ({ id: `${turn.requestId}-${index}`, type: 'image' as const, path: image.fileUri })),
             videos:(await chatVideoUrls(userId,id,turn.requestId,turn.videos??[])).map((video,index)=>({id:`${turn.requestId}-video-${index}`,type:'video' as const,path:video.fileUri,duration:video.durationSeconds})),
@@ -91,14 +92,15 @@ export async function getConversation(userId: string, id: string) {
         }))),
     };
 }
-export async function sendConversationMessage(userId: string, id: string, requestId: string, text: string, onDelta?: (text: string) => void, uploadedImages: ChatImageInput[] = [], directImages = false,directVideo=false,onProgress?:ChatProgress,resume=false) {
+export async function sendConversationMessage(userId: string, id: string, requestId: string, text: string, onDelta?: (text: string) => void, uploadedImages: ChatImageInput[] = [], directImages = false,directVideo=false,onProgress?:ChatProgress,resume=false,resumeEvent?:{id:string;text:string}) {
     if(!uploadedImages.length&&!directImages&&!directVideo&&isContinueRequest(text)){
         const paused=await ChatTurn.findOne({userId,conversationId:id,status:'stopped'}).sort({createdAt:-1}).lean();
-        if(paused){requestId=paused.requestId;text=paused.text;resume=true;}
+        if(paused){resumeEvent??={id:requestId,text};requestId=paused.requestId;text=paused.text;resume=true;}
     }
     if(directVideo&&(directImages||uploadedImages.length))throw new ConversationError('Send one video or images separately',400);
     const existing = await ChatTurn.findOne({ userId, conversationId: id, requestId }).select('+checkpoints').lean();
     if(existing?.status==='stopped'&&!resume)throw new ChatFailure('stopped');
+    if(resume&&existing?.status==='stopped')resumeEvent??={id:randomUUID(),text:'Davom et'};
     if(resume&&existing?.attachmentKind&&!existing.images?.length&&!existing.videos?.length&&!directImages&&!directVideo&&!uploadedImages.length)throw new ConversationError('Attach the stopped upload again before resuming',409);
     if (existing && existing.text !== text)
         throw new ConversationError('Request ID already used for another message', 409);
@@ -148,12 +150,13 @@ export async function sendConversationMessage(userId: string, id: string, reques
         await ChatTurn.updateOne({ conversationId: id, userId, requestId,...(!resume?{status:{$ne:'stopped'}}:{}) }, {
             $set: { status: 'processing', attemptToken: lockToken,progressStage:null,failureCode:null,attachmentKind:directVideo?'video':directImages||images.length?'image':existing?.attachmentKind??null,...((directImages||images.length)?{images:references}:{}),...(directVideo?{videos:videoReferences}:{}) }, $setOnInsert: { text,...(!directImages&&!images.length?{images:references}:{}),...(!directVideo?{videos:videoReferences}:{}) },
         }, { upsert: true });
+        if(resume&&resumeEvent)await ChatTurn.updateOne({conversationId:id,userId,requestId,attemptToken:lockToken,status:'processing','resumeEvents.id':{$ne:resumeEvent.id}},{$push:{resumeEvents:{...resumeEvent,createdAt:new Date()}}});
         await runChatOperation({signal:controller.signal,checkpoints:existing?.checkpoints??{},save:async(key,value)=>{
           const saved=await ChatTurn.updateOne({conversationId:id,userId,requestId,attemptToken:lockToken,status:'processing'},{$set:{[`checkpoints.${key}`]:value}});
           if(saved.matchedCount===0)throw new ChatFailure('stopped');
         }},async()=>{
         const previous = await ChatTurn.find({ userId, conversationId: id, status: 'completed' })
-            .sort({ createdAt: -1, _id: -1 }).limit(15).lean();
+            .sort({ answerAt:-1,createdAt: -1, _id: -1 }).limit(15).lean();
         let history: AiHistoryMessage[] = previous.reverse().flatMap(turn => [
             { role: 'user' as const, text: turn.text }, { role: 'model' as const, text: turn.movie?.title
                 ? `${turn.answer}\nIdentified film: ${turn.movie.title} (${turn.movie.year ?? ''})` : `${turn.answer}${turn.recommendations?.length?'\nRecommended films: '+turn.recommendations.map((item:MovieRecommendation)=>`${item.movie.title} (${item.movie.year??''})`).join('; '):''}` },
@@ -205,7 +208,7 @@ export async function sendConversationMessage(userId: string, id: string, reques
             : locked.title;
         controller.signal.throwIfAborted();
         const completed=await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken,status:'processing' }, {
-            $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages,recommendations:result.recommendations??[],
+            $set: { status: 'completed',answerAt:new Date(), answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages,recommendations:result.recommendations??[],
                 progressStage:null,failureCode:null,catalogDispatch: isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie)) ? 'pending' : 'none' },$unset:{checkpoints:''},
         });
         if(completed.matchedCount===0)throw new ChatFailure('stopped');

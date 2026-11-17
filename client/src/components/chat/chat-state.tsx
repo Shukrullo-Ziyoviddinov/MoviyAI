@@ -144,7 +144,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   return (
     <ChatContext.Provider
       value={{
-        stop,stopping:snapshot.stopping,needsAttachment:!!snapshot.paused?.needsAttachment,paused:!!snapshot.paused && snapshot.paused.requestId===snapshot.messages.filter(item=>item.kind==='text'&&item.role==='user').at(-1)?.id,
+        stop,stopping:snapshot.stopping,needsAttachment:!!snapshot.paused?.needsAttachment,paused:!!snapshot.paused && (snapshot.paused.lastMessageId??snapshot.paused.requestId)===snapshot.messages.filter(item=>item.kind==='text'&&item.role==='user').at(-1)?.id,
         refreshMedia,
         pinningId,
         pinError,

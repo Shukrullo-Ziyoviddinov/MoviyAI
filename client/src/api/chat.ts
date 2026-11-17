@@ -10,6 +10,8 @@ export type ChatSummary = {
     updatedAt: string;
 };
 export type SavedTurn = {
+    answerAt?:string|null;
+    resumeEvents?:Array<{id:string;text:string;createdAt:string}>;
     needsAttachment?:boolean;
     progressStage?:ChatStage|null;
     failureCode?:ChatFailureCode|null;
@@ -50,7 +52,7 @@ async function request<T>(path: string, body?: unknown, method?: string,signal?:
 export const listChats = () => request<ChatSummary[]>('');
 export const createChat = (id: string) => request<SavedConversation>('', { id });
 export const getChat = (id: string) => request<SavedConversation>('/' + id);
-export async function sendChat(id: string, requestId: string, text: string, onDelta: (text: string) => void = () => { }, media: ChatMediaItem[] = [],onProgress:(stage:ChatStage)=>void=()=>{},options:{signal?:AbortSignal;resume?:boolean}={}): Promise<SavedConversation> {
+export async function sendChat(id: string, requestId: string, text: string, onDelta: (text: string) => void = () => { }, media: ChatMediaItem[] = [],onProgress:(stage:ChatStage)=>void=()=>{},options:{signal?:AbortSignal;resume?:boolean;resumeEvent?:{id:string;text:string}}={}): Promise<SavedConversation> {
     const token = readAuthToken();
     if (!token)
         throw new Error('Hisobingizga kiring.');
@@ -94,7 +96,7 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
         }
     }
     stopped();
-    const body = JSON.stringify({requestId,text,resume:options.resume??false,...(localImages.length ? {directImages:true} : {}),...(localVideos.length?{directVideo:true}:{})});
+    const body = JSON.stringify({requestId,text,resume:options.resume??false,...(options.resumeEvent?{resumeEvent:{id:options.resumeEvent.id,text:options.resumeEvent.text}}:{}),...(localImages.length ? {directImages:true} : {}),...(localVideos.length?{directVideo:true}:{})});
     const headers: Record<string,string> = {Accept:'text/event-stream',Authorization:'Bearer '+token,'Content-Type':'application/json'};
     const response = await fetch(apiBaseUrl + '/api/ai/conversations/' + id + '/messages', {
         method: 'POST', headers, body, signal: transferSignal(240000),
