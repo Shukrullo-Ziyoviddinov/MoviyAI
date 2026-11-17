@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createHmac, timingSafeEqual, randomUUID, randomBytes } from 'node:crypto';
 import { Readable, PassThrough, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { formatTelegramText, entitiesForChunk } from '../dist/bot/format.js';
 
 // Isolated dependencies: no production Telegram, Gemini, R2 or database calls.
 function load(name, deps, names) {
@@ -231,7 +232,7 @@ test('multiple recommendations clear an older movie identity and preserve every 
 test('partial delivery retries send only remaining text chunks after Telegram rate limiting', async () => {
   const bodies = [];
   let cursor = 0;
-  const api = load('api', { env, axios: {
+  const api = load('api', { env, formatTelegramText, entitiesForChunk, axios: {
     post: async (_url, body) => {
       bodies.push(body);
       return bodies.length === 2 ? { data: { ok: false, error_code: 429, parameters: { retry_after: 45 } } }
@@ -312,4 +313,33 @@ test('HEAD checks media headers without downloading video bytes; oversized respo
   const unsatisfied = relayHarness({ range: 'bytes=999-', status: 416 });
   await unsatisfied.run();
   assert.equal(unsatisfied.res.statusCode, 416); assert.equal(unsatisfied.reads(), 0);
+});
+
+test('Telegram headings, emphasis and lists render without Markdown markers and use UTF-16 offsets', () => {
+  const result = formatTelegramText('🎬\n## Kino haqida\nOddiy **muhim** va _izoh_.\n* Birinchi\n- Ikkinchi');
+  assert.equal(result.text, '🎬\nKino haqida\nOddiy muhim va izoh.\n• Birinchi\n• Ikkinchi');
+  const styled = result.entities.map(entity => [entity.type, result.text.slice(entity.offset, entity.offset + entity.length)]);
+  assert.deepEqual(styled, [['bold', 'Kino haqida'], ['bold', 'muhim'], ['italic', 'izoh']]);
+  assert.equal(result.entities[0].offset, 3);
+  assert.equal(formatTelegramText('<b>literal & safe</b>').text, '<b>literal & safe</b>');
+  assert.equal(formatTelegramText('file_name va 2 * 3 * 4').text, 'file_name va 2 * 3 * 4');
+  assert.equal(formatTelegramText('***Muhim***').text, 'Muhim');
+});
+test('long formatted Telegram responses retain valid entities across chunks and inline buttons on the last part', async () => {
+  const bodies = [];
+  const api = load('api', { env, formatTelegramText, entitiesForChunk, axios: {
+    post: async (_url, body) => { bodies.push(body); return { data: { ok: true, result: { message_id: bodies.length } } }; },
+    isAxiosError: () => false,
+  } }, ['sendTelegramMessage']);
+  const content = '🎬' + 'a'.repeat(8500);
+  await api.sendTelegramMessage(123, `**${content}**`, [[{ text: 'Manba', url: 'https://example.org' }]]);
+  assert.equal(bodies.map(body => body.text).join(''), content);
+  assert.equal(bodies.length, 3);
+  for (const body of bodies) {
+    assert.ok(body.text.length <= 4000);
+    assert.deepEqual(body.entities, [{ type: 'bold', offset: 0, length: body.text.length }]);
+    assert.equal(body.parse_mode, undefined);
+  }
+  assert.equal(bodies[0].reply_markup, undefined);
+  assert.equal(bodies.at(-1).reply_markup.inline_keyboard[0][0].text, 'Manba');
 });

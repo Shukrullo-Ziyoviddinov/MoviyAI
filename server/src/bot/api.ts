@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { env } from '../config/env.js';
 import type { InlineButton } from './types.js';
+import { formatTelegramText, entitiesForChunk } from './format.js';
 
 export class TelegramError extends Error {
   constructor(public readonly status: number, public readonly retryAfter = 30) { super('Telegram request failed'); }
@@ -20,12 +21,17 @@ export async function telegram<T>(method: string, body: object = {}): Promise<T>
 }
 function retrySeconds(value: unknown) { return typeof value === 'number' && Number.isFinite(value) ? Math.max(1, Math.min(3600, value)) : 30; }
 export async function sendTelegramMessage(chatId: number, text: string, buttons: InlineButton[][] = [], delivery: { start?: number; onSent?: (parts: number) => Promise<void> } = {}) {
-  const chunks = splitTelegramText(text);
+  const formatted = formatTelegramText(text);
+  const chunks = splitTelegramText(formatted.text);
+  let offset = 0;
   let last: { message_id: number } | undefined;
   for (const [index, chunk] of chunks.entries()) {
+    const entities = entitiesForChunk(formatted.entities, offset, chunk.length);
+    offset += chunk.length;
     if (index < (delivery.start ?? 0)) continue;
     last = await telegram<{ message_id: number }>('sendMessage', {
       chat_id: chatId, text: chunk,
+      ...(entities.length ? { entities } : {}),
       ...(buttons.length && index === chunks.length - 1 ? { reply_markup: { inline_keyboard: buttons } } : {}),
     });
     await delivery.onSent?.(index + 1);

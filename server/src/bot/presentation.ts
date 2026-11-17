@@ -31,6 +31,6 @@ export function botPresentation(result: BotResult, token: string) {
       }
     } catch { /* Invalid links are not converted to buttons. */ }
     return title;
-  }).replace(/\*\*([^*]+)\*\*/g, '$1');
+  });
   return { rich, text, buttons };
 }
