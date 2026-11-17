@@ -127,7 +127,7 @@ test('a result cannot be claimed by a different Telegram identity or rebound to 
 function workerHarness(options = {}) {
   let aiCalls = 0, sendCalls = 0;
   const job = { _id: '42', telegramId: '123', status: 'pending', nextAttemptAt: new Date(0), resultToken: 'a'.repeat(64),
-    createdAt: new Date(), conversationId: 'unused', update: { update_id: 42, message: { message_id: 7, text: 'salom' } } };
+    createdAt: new Date(), conversationId: 'unused', update: { update_id: 42, message: { message_id: 7, text: 'salom', ...(options.video ? { video: options.video } : {}) } } };
   const session = { _id: '123', conversationId: 'bot-thread', profileId: options.profileId ?? null, history: [], movie: options.previousMovie ?? null };
   const updates = {
     findOneAndUpdate: (_query, update) => ({ lean: async () => {
@@ -145,9 +145,20 @@ function workerHarness(options = {}) {
   const worker = load('worker', {
     randomUUID, randomBytes, BotUpdate: updates, BotSession: sessions,
     Conversation: { exists: async () => false },
-    answerBot: async () => { aiCalls++; return options.result ?? { text: 'Salom! Qanday kino izlayapsiz?', model: 'test' }; },
+    answerBot: async (_text, _media, _history, _movie, onProgress) => {
+      aiCalls++; onProgress?.('analyzing_video'); onProgress?.('searching');
+      if (options.answerError) throw options.answerError;
+      return options.result ?? { text: 'Salom! Qanday kino izlayapsiz?', model: 'test' };
+    },
     botPresentation, telegramMedia: async () => [],
-    runChatOperation: async (_context, work) => work(), ChatFailure: Error, chatFailureCode: () => 'unknown',
+    runChatOperation: async (_context, work) => work(), ChatFailure: Error, chatFailureCode: error => error?.failureCode ?? 'unknown',
+    createBotProgress: (_id, progressOptions) => ({
+      start: async stage => { options.events?.push(['start', stage]); await progressOptions.save(99); },
+      report: stage => { options.events?.push(['stage', stage]); },
+      finish: async text => { options.events?.push(['finish', text]); },
+      remove: async () => { options.events?.push(['remove']); },
+      dispose: () => { options.events?.push(['dispose']); },
+    }),
     isCatalogEligible: movie => !!movie?.title, drainBotCatalog: () => { options.onCatalog?.(); return Promise.resolve(); },
     TelegramError,
     publishResult: options.publishResult ?? (async () => { throw Error('Ordinary chat must not publish UI history'); }),
@@ -342,4 +353,70 @@ test('long formatted Telegram responses retain valid entities across chunks and 
   }
   assert.equal(bodies[0].reply_markup, undefined);
   assert.equal(bodies.at(-1).reply_markup.inline_keyboard[0][0].text, 'Manba');
+});
+
+test('real video analysis progress is forwarded to the Telegram status callback', async () => {
+  const stages = [];
+  const { answerBot } = load('ai', {
+    findMovieFromVideo: async (_text, _media, _delta, progress) => {
+      progress('analyzing_video'); progress('catalog'); progress('uzbek_links');
+      return { text: 'Film', model: 'test' };
+    },
+  }, ['answerBot']);
+  await answerBot('Top', [{ mimeType: 'video/mp4', fileUri: 'https://example.org/video', durationSeconds: 10 }], [], undefined, stage => stages.push(stage));
+  assert.deepEqual(stages, ['analyzing_video', 'catalog', 'uzbek_links', 'preparing']);
+});
+test('one progress message is edited by actual stages and cannot update after completion', async () => {
+  const calls = [], saved = [];
+  const { createBotProgress } = load('progress', { TelegramError }, ['createBotProgress']);
+  const progress = createBotProgress(123, { save: async id => { saved.push(id); } }, {
+    intervalMs: 0, now: Date.now,
+    telegram: async (method, body) => { calls.push({ method, body }); return { message_id: 99 }; },
+  });
+  await progress.start('checking_video');
+  progress.report('analyzing_video'); await new Promise(resolve => setImmediate(resolve));
+  progress.report('uzbek_links'); await new Promise(resolve => setImmediate(resolve));
+  await progress.finish('Done'); await progress.remove();
+  const count = calls.length;
+  progress.report('posters'); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.length, count);
+  assert.equal(calls.filter(call => call.method === 'sendMessage').length, 1);
+  assert.deepEqual(saved, [99]);
+  assert.match(calls[1].body.text, /sahnalar/);
+  assert.match(calls[2].body.text, /dublaj/);
+  assert.ok(calls.filter(call => call.method === 'editMessageText').every(call => call.body.message_id === 99));
+  assert.equal(calls.at(-1).method, 'deleteMessage');
+});
+test('status failures are optional and rapid stages are coalesced without keeping timers after finish', async () => {
+  const { createBotProgress } = load('progress', { TelegramError }, ['createBotProgress']);
+  const failed = createBotProgress(123, { save: async () => {} }, {
+    intervalMs: 0, now: Date.now, telegram: async () => { throw new TelegramError(503); },
+  });
+  await failed.start('checking_video'); failed.report('searching'); await failed.finish('Failed'); await failed.remove();
+  const calls = [];
+  const rapid = createBotProgress(123, { messageId: 99, save: async () => {} }, {
+    intervalMs: 60000, now: Date.now, telegram: async (method, body) => { calls.push({ method, body }); return true; },
+  });
+  await rapid.start('checking_video'); rapid.report('analyzing_video'); rapid.report('searching');
+  await rapid.finish('Done');
+  assert.equal(calls.length, 2); assert.equal(calls.at(-1).body.text, 'Done');
+  rapid.dispose();
+});
+test('video worker persists the progress message and removes it only after delivering the result', async () => {
+  const events = [];
+  const h = workerHarness({ fail: false, video: { file_id: 'video', duration: 10 }, events });
+  await h.worker.drainBotQueue();
+  assert.equal(h.job.progressMessageId, 99); assert.equal(h.job.status, 'sent');
+  assert.deepEqual(events.slice(0, 3), [['start', 'checking_video'], ['stage', 'analyzing_video'], ['stage', 'searching']]);
+  assert.equal(events.at(-2)[0], 'remove'); assert.equal(events.at(-1)[0], 'dispose');
+});
+test('a failed video search updates the status with the real failure and never reports success', async () => {
+  const events = [];
+  const h = workerHarness({ fail: false, video: { file_id: 'video', duration: 10 }, events,
+    answerError: Object.assign(Error('Provider failed'), { failureCode: 'provider_unavailable' }) });
+  await h.worker.drainBotQueue();
+  assert.equal(h.job.status, 'ready');
+  assert.match(events.find(event => event[0] === 'finish')[1], /AI xizmatida/);
+  assert.equal(events.some(event => event[0] === 'remove'), false);
+  assert.equal(events.some(event => event[0] === 'finish' && event[1].includes('✅')), false);
 });

@@ -35,6 +35,13 @@ No new npm packages or native builds are needed.
 
 ## Media
 
+During photo/video processing the bot creates one status message and updates it
+from the same real analysis/search progress callbacks used by the UI. Rapid
+updates are coalesced to reduce Telegram rate limiting. The message ID is saved
+for recovery; after final delivery the temporary status is removed. Status API
+failures never discard an AI result. On AI failure the status shows the actual
+mapped failure reason until the explanatory reply is delivered.
+
 Photo/video bytes are never uploaded to R2 or stored in MongoDB or on Render's
 disk. MongoDB holds Telegram file IDs and metadata. Google receives a short-lived
 signed streaming relay URL, not the token-bearing Telegram file URL.

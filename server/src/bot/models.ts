@@ -28,6 +28,7 @@ const job = new Schema({
   catalogNextAttemptAt: { type: Date, default: new Date(0) },
   notification: { type: Schema.Types.Mixed, default: null },
   deliveredParts: { type: Number, default: 0 },
+  progressMessageId: { type: Number, default: null },
   resultToken: { type: String, required: true, unique: true },
   conversationId: { type: String, required: true },
   publishedProfileId: { type: String, default: null },

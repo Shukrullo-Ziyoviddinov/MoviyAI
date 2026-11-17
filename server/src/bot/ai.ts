@@ -8,13 +8,14 @@ import { findUzbekMovieLinks, isUzbekMovieRequest, uzbekLookupReply, uzbekReleas
 import { findCharacterImages, type CharacterImage } from '../ai/services/character-image.service.js';
 import type { AiHistoryMessage, AiResult } from '../ai/types/ai.types.js';
 import type { ChatImageUrl, MovieSearchResult } from '../ai/types/movie-search.types.js';
+import type { ChatProgress } from '../ai/types/chat-progress.types.js';
 
 export type BotResult = AiResult & { rich?: boolean; telegramSources?: Array<{ title: string; url: string }>; movie?: MovieSearchResult; recommendations?: MovieRecommendation[]; characterImages?: CharacterImage[] };
-export async function answerBot(text: string, media: ChatImageUrl[], history: AiHistoryMessage[], previousMovie?: MovieSearchResult): Promise<BotResult> {
+export async function answerBot(text: string, media: ChatImageUrl[], history: AiHistoryMessage[], previousMovie?: MovieSearchResult, onProgress?: ChatProgress): Promise<BotResult> {
   let result: BotResult;
   const sourcesOnly = /(?:manba|sources?|источник)/iu.test(text) && !media.length;
-  if (media[0]?.mimeType.startsWith('video/')) result = await findMovieFromVideo(text, media);
-  else if (media.length) result = await findMovieFromImages(text, media);
+  if (media[0]?.mimeType.startsWith('video/')) result = await findMovieFromVideo(text, media, undefined, onProgress);
+  else if (media.length) result = await findMovieFromImages(text, media, undefined, undefined, undefined, onProgress);
   else if (sourcesOnly && previousMovie?.sources.length) result = { text: 'Manbalar:', model: 'bot-sources', telegramSources: previousMovie.sources };
   else if (previousMovie && isContextMovieFollowup(text, previousMovie)) result = await movieFollowup(text, previousMovie);
   else if (isMovieRecommendation(text)) result = await recommendMovies(text, history);
@@ -34,5 +35,6 @@ export async function answerBot(text: string, media: ChatImageUrl[], history: Ai
   }));
   if (sourcesOnly && result.movie?.sources.length) result.telegramSources = result.movie.sources;
   else if (/(?:aktyor|aktor|actor|cast|qahramon|character|акт[её]р|персонаж|геро)/iu.test(text)) result.rich = true;
+  onProgress?.('preparing');
   return result;
 }

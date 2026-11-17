@@ -12,6 +12,7 @@ import { drainBotCatalog } from './catalog.js';
 import type { AiHistoryMessage } from '../ai/types/ai.types.js';
 import type { TelegramUpdate } from './types.js';
 import { Conversation } from '../ai/models/conversation.model.js';
+import { createBotProgress } from './progress.js';
 
 const CONCURRENCY = 2;
 let running = 0;
@@ -79,7 +80,17 @@ export async function drainBotQueue() {
       }, 30000);
       heartbeat.unref();
       let notice = job.notification;
+      let progress: ReturnType<typeof createBotProgress> | undefined;
       try {
+        const incoming = (job.update as TelegramUpdate).message;
+        const hasMedia = !!(incoming?.video || incoming?.photo?.length || incoming?.document);
+        if (job.progressMessageId || !notice && hasMedia) {
+          progress = createBotProgress(Number(job.telegramId), {
+            messageId: job.progressMessageId,
+            save: async messageId => { await BotUpdate.updateOne({ _id: job._id, lockToken }, { $set: { progressMessageId: messageId } }); },
+          });
+          if (!notice) await progress.start(incoming?.video || incoming?.document?.mime_type?.startsWith('video/') ? 'checking_video' : 'analyzing_image');
+        }
         if (!notice) {
           if (await Conversation.exists({ _id: session.conversationId, deletedAt: { $ne: null } })) {
             session.conversationId = randomUUID();
@@ -99,7 +110,7 @@ export async function drainBotQueue() {
           } else {
             result = await runChatOperation({ signal: controller.signal, checkpoints: {}, save: async () => {} }, async () => {
               const media = await telegramMedia(job._id, update);
-              return answerBot(text || 'Ushbu kinoni top', media, session.history as AiHistoryMessage[], session.movie ?? undefined);
+              return answerBot(text || 'Ushbu kinoni top', media, session.history as AiHistoryMessage[], session.movie ?? undefined, progress?.report);
             });
           }
           controller.signal.throwIfAborted();
@@ -111,6 +122,7 @@ export async function drainBotQueue() {
           if (catalogPending) void drainBotCatalog();
         }
         const saved = await BotUpdate.findById(job._id).lean();
+        await progress?.finish(saved?.result ? '✅ Natija tayyor.' : '❗ So‘rov yakunlanmadi.');
         if (saved?.result) {
           const result = saved.result as BotResult;
           if (notice.rich && session.profileId) await publishResult(job._id, session.profileId)
@@ -135,8 +147,10 @@ export async function drainBotQueue() {
           },
         });
         await BotUpdate.updateOne({ _id: job._id, lockToken }, { $set: { status: 'sent', lockUntil: new Date(0) } });
+        await progress?.remove();
       } catch (error) {
         console.warn('[TELEGRAM_AI]', { event: 'request-failed', failureCode: chatFailureCode(error) });
+        await progress?.finish(notice ? '📨 Natija tayyor. Yuborish qayta urinilmoqda…' : `❗ ${failureMessage(error)}`);
         if (error instanceof TelegramError && [400, 403].includes(error.status)) {
           await BotUpdate.updateOne({ _id: job._id, lockToken }, { $set: { status: 'failed', lockUntil: new Date(0) } });
           continue;
@@ -148,6 +162,7 @@ export async function drainBotQueue() {
         const delay = error instanceof TelegramError ? error.retryAfter * 1000 : 30000;
         await BotUpdate.updateOne({ _id: job._id, lockToken }, { $set: { nextAttemptAt: new Date(Date.now() + delay), lockUntil: new Date(0) } });
       } finally {
+        progress?.dispose();
         clearTimeout(timer); clearInterval(heartbeat);
         await BotSession.updateOne({ _id: job.telegramId, lockToken }, { $set: { lockToken: '', lockUntil: new Date(0) } });
       }
