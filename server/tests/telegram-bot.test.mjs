@@ -12,6 +12,20 @@ function load(name, deps, names) {
   return new Function(...Object.keys(deps), `${source}\nreturn {${names.join(',')}};`)(...Object.values(deps));
 }
 const env = { telegramBotToken: 'test-only-token', telegramWebAppUrl: 'https://example.com/', publicUrl: 'https://api.example.com' };
+test('ordinary bot text uses the same streaming model transport as web and returns one completed answer', async () => {
+  let streamed = false;
+  const { answerBot } = load('ai', {
+    isContextMovieFollowup: () => false, isMovieRecommendation: () => false, isNamedMovieSearch: () => false,
+    chatWithGemma: async (request, onDelta) => {
+      assert.equal(request.text, 'Salom'); assert.equal(typeof onDelta, 'function');
+      onDelta('Salom!'); onDelta(' Qanday kino izlayapsiz?'); streamed = true;
+      return { text: 'Salom! Qanday kino izlayapsiz?', model: 'same-chat-model' };
+    },
+  }, ['answerBot']);
+  const result = await answerBot('Salom', [], []);
+  assert.equal(streamed, true); assert.equal(result.text, 'Salom! Qanday kino izlayapsiz?');
+  assert.equal(result.model, 'same-chat-model'); assert.deepEqual(result.characterImages, []);
+});
 test('long ordinary answers remain complete and emoji are not split across Telegram messages', () => {
   const { splitTelegramText } = load('api', {}, ['splitTelegramText']);
   const text = 'x'.repeat(3999) + '🎬' + 'y'.repeat(5000);

@@ -22,7 +22,11 @@ export async function answerBot(text: string, media: ChatImageUrl[], history: Ai
   else if (previousMovie && isUzbekMovieRequest(text)) {
     const links = await findUzbekMovieLinks(previousMovie);
     result = { text: uzbekLookupReply(text, links.length > 0), model: 'uzbek-movie-search', movie: { ...previousMovie, titleUz: uzbekReleaseTitle(links) ?? previousMovie.titleUz, uzbekLinks: links, linksOnly: true } };
-  } else result = await chatWithGemma({ text, history });
+  } else {
+    // Match the web/native streaming transport. Collect the completed answer
+    // server-side; Telegram receives no partial messages or token-by-token edits.
+    result = await chatWithGemma({ text, history }, () => {});
+  }
   result.characterImages = result.movie && !result.movie.linksOnly && !['brief', 'trailer', 'details'].includes(result.movie.presentation ?? '')
     ? await findCharacterImages(result.text, result.movie).catch(() => []) : [];
   if (result.recommendations) await Promise.all(result.recommendations.map(async item => {
