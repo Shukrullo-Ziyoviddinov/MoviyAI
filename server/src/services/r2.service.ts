@@ -1,3 +1,4 @@
+import {operationSignal} from '../ai/utils/chat-operation.js';
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -60,7 +61,7 @@ export async function putImage(
       Key: key,
       Body: body,
       ContentType: contentType,
-    }), { abortSignal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000) }
+    }), { abortSignal: signal ? AbortSignal.any([signal, operationSignal(20000)]) : operationSignal(20000) }
   );
   const name = key.slice(folder.length + 1);
   return { key, folder, fileName: name, path: `/img/${name}` };
@@ -100,7 +101,7 @@ export async function deleteImageKey(key: string) {
     new DeleteObjectCommand({
       Bucket: requireR2('R2_BUCKET', env.r2Bucket),
       Key: key,
-    }), { abortSignal: AbortSignal.timeout(20000) }
+    }), { abortSignal: operationSignal(20000) }
   );
 }
 
@@ -116,12 +117,12 @@ function validateChatKey(key: string) {
 export async function putChatImage(key: string, body: Buffer, contentType: string) {
   validateChatKey(key);
   await r2().send(new PutObjectCommand({ Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key,
-    Body: body, ContentType: contentType, CacheControl: 'private, no-store' }), { abortSignal: AbortSignal.timeout(20000) });
+    Body: body, ContentType: contentType, CacheControl: 'private, no-store' }), { abortSignal: operationSignal(20000) });
 }
 export async function getChatImage(key: string) {
   validateChatKey(key);
   try {
-    const object = await r2().send(new GetObjectCommand({ Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key }), { abortSignal: AbortSignal.timeout(20000) });
+    const object = await r2().send(new GetObjectCommand({ Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key }), { abortSignal: operationSignal(20000) });
     return object.Body ? Buffer.from(await object.Body.transformToByteArray()) : null;
   } catch (error) {
     const e = error as { name?: string; $metadata?: { httpStatusCode?: number } };
@@ -131,7 +132,7 @@ export async function getChatImage(key: string) {
 }
 export async function deleteChatImage(key: string) {
   validateChatKey(key);
-  await r2().send(new DeleteObjectCommand({ Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key }), { abortSignal: AbortSignal.timeout(20000) });
+  await r2().send(new DeleteObjectCommand({ Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key }), { abortSignal: operationSignal(20000) });
 }
 export async function signChatImage(key: string, method: 'GET' | 'PUT', mimeType?: string, size?: number, expiresIn?: number) {
   validateChatKey(key);
@@ -144,10 +145,10 @@ export async function signChatImage(key: string, method: 'GET' | 'PUT', mimeType
 export async function inspectChatImage(key: string) {
   validateChatKey(key);
   const input = { Bucket: requireR2('R2_BUCKET', env.r2Bucket), Key: key };
-  const meta = await r2().send(new HeadObjectCommand(input), { abortSignal: AbortSignal.timeout(10000) });
+  const meta = await r2().send(new HeadObjectCommand(input), { abortSignal: operationSignal(10000) });
   if (!meta.ContentLength || meta.ContentLength > 4 * 1024 * 1024) throw new Error('INVALID_CHAT_IMAGE_SIZE');
   // Inspect only the signature bytes; the image body never passes through Render.
-  const sample = await r2().send(new GetObjectCommand({ ...input, Range: 'bytes=0-11' }), { abortSignal: AbortSignal.timeout(10000) });
+  const sample = await r2().send(new GetObjectCommand({ ...input, Range: 'bytes=0-11' }), { abortSignal: operationSignal(10000) });
   if (!sample.Body || sample.ContentLength === undefined || sample.ContentLength > 12 || !sample.ContentRange?.startsWith('bytes 0-')) {
     (sample.Body as { destroy?: () => void } | undefined)?.destroy?.();
     throw new Error('INVALID_CHAT_IMAGE_RANGE');
@@ -158,9 +159,9 @@ export async function inspectChatImage(key: string) {
 export function chatVideoKey(conversationId:string,requestId:string,hash:string){return chatImageKey(conversationId,requestId,0,hash).replace(/^chatimg\//,'chatvideo/');}
 export async function inspectChatVideo(key:string){
  validateChatKey(key);if(!key.startsWith('chatvideo/'))throw Error('INVALID_VIDEO_KEY');
- const deadline=AbortSignal.timeout(30000);
+ const deadline=operationSignal(30000);
  const input={Bucket:requireR2('R2_BUCKET',env.r2Bucket),Key:key};
- const headSignal=AbortSignal.any([deadline,AbortSignal.timeout(10000)]);
+ const headSignal=AbortSignal.any([deadline,operationSignal(10000)]);
  const meta=await r2().send(new HeadObjectCommand(input),{abortSignal:headSignal})
   .catch(error=>{headSignal.throwIfAborted();throw error;});
  const {CHAT_VIDEO}=await import('../ai/config/chat-video.config.js');const {videoDuration}=await import('../ai/utils/video-metadata.js');
@@ -170,7 +171,7 @@ export async function inspectChatVideo(key:string){
  const read=videoRangeReader(size,async(offset,length)=>{
   deadline.throwIfAborted();
   total+=length;if(total>131072||length>65536||offset<0||offset+length>size)throw Error('VIDEO_METADATA_LIMIT');
-  const readSignal=AbortSignal.any([deadline,AbortSignal.timeout(10000)]);
+  const readSignal=AbortSignal.any([deadline,operationSignal(10000)]);
   const object=await r2().send(new GetObjectCommand({...input,Range:`bytes=${offset}-${offset+length-1}`}),{abortSignal:readSignal})
    .catch(error=>{readSignal.throwIfAborted();throw error;});
   if(!object.Body||object.ContentLength!==length||object.ContentRange!==`bytes ${offset}-${offset+length-1}/${size}`){(object.Body as {destroy?:()=>void}|undefined)?.destroy?.();throw Error('INVALID_VIDEO_RANGE');}

@@ -1,0 +1,14 @@
+{
+  "sample": "b",
+  "model": "gemini-3.5-flash-lite",
+  "duration": 68.288,
+  "transport": "local-copy",
+  "stages": [],
+  "searches": 0,
+  "error": {
+    "stage": "observe",
+    "status": null,
+    "kind": "Error"
+  },
+  "elapsedMs": 75058
+}

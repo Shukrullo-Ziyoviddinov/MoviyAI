@@ -18,8 +18,24 @@ import { isCatalogEligible } from '../catalog/utils/catalog-chat-input.js';
 import { wakeCatalogWorker } from '../catalog/services/catalog-worker.service.js';
 import {movieFollowup,isContextMovieFollowup} from './movie-followup.service.js';
 import {ChatFailure,chatFailureCode,type ChatProgress,type ChatStage} from '../types/chat-progress.types.js';
+import {runChatOperation,withoutChatOperation,chatCheckpoint,checkpointKey,isContinueRequest} from '../utils/chat-operation.js';
+const operations=new Map<string,AbortController>();
+const operationId=(user:string,id:string,request:string)=>`${user}:${id}:${request}`;
+
+export async function stopConversationMessage(userId:string,id:string,requestId:string,text:string,attachmentKind?:'image'|'video'){
+ if(!await Conversation.exists({_id:id,userId,deletedAt:null}))throw new ConversationError('Conversation not found',404);
+ const existing=await ChatTurn.findOne({userId,conversationId:id,requestId}).lean();
+ if(existing?.status==='completed')return {stopped:false};
+ try{
+  await ChatTurn.updateOne({userId,conversationId:id,requestId,status:{$ne:'completed'}},{$set:{status:'stopped',failureCode:null,progressStage:null,attachmentKind:existing?.attachmentKind??((existing?.videos?.length??0)>0?'video':(existing?.images?.length??0)>0?'image':attachmentKind??null)},$setOnInsert:{text,images:[],videos:[]}},{upsert:true});
+ }catch(error){if((error as {code?:number}).code!==11000)throw error;}
+ if(!await ChatTurn.exists({userId,conversationId:id,requestId,status:'stopped'}))return {stopped:false};
+ operations.get(operationId(userId,id,requestId))?.abort(new ChatFailure('stopped'));
+ await Conversation.updateOne({_id:id,userId,activeRequestId:requestId},{$set:{lockToken:'',activeRequestId:'',lockUntil:new Date(0)}});
+ return {stopped:true};
+}
 function notifyCatalogWorker() {
-    try { wakeCatalogWorker(); } catch { console.warn('[AI_CATALOG] Chat saved; background dispatch will retry'); }
+    try { withoutChatOperation(()=>wakeCatalogWorker()); } catch { console.warn('[AI_CATALOG] Chat saved; background dispatch will retry'); }
 }
 export class ConversationError extends Error {
     constructor(message: string, public readonly status: number) { super(message); }
@@ -62,6 +78,7 @@ export async function getConversation(userId: string, id: string) {
         id: row._id, title: row.title, pinned: Boolean(row.pinned), updatedAt: row.updatedAt,
         turns: await Promise.all(turns.map(async turn => ({
             requestId: turn.requestId, text: turn.text, answer: turn.answer,
+            needsAttachment:turn.status==='stopped'&&!!turn.attachmentKind&&!turn.images?.length&&!turn.videos?.length,
             images: (await chatImageUrls(userId, id, turn.requestId, turn.images)).map((image, index) => ({ id: `${turn.requestId}-${index}`, type: 'image' as const, path: image.fileUri })),
             videos:(await chatVideoUrls(userId,id,turn.requestId,turn.videos??[])).map((video,index)=>({id:`${turn.requestId}-video-${index}`,type:'video' as const,path:video.fileUri,duration:video.durationSeconds})),
             movie: turn.movie ?? null,
@@ -74,13 +91,19 @@ export async function getConversation(userId: string, id: string) {
         }))),
     };
 }
-export async function sendConversationMessage(userId: string, id: string, requestId: string, text: string, onDelta?: (text: string) => void, uploadedImages: ChatImageInput[] = [], directImages = false,directVideo=false,onProgress?:ChatProgress) {
+export async function sendConversationMessage(userId: string, id: string, requestId: string, text: string, onDelta?: (text: string) => void, uploadedImages: ChatImageInput[] = [], directImages = false,directVideo=false,onProgress?:ChatProgress,resume=false) {
+    if(!uploadedImages.length&&!directImages&&!directVideo&&isContinueRequest(text)){
+        const paused=await ChatTurn.findOne({userId,conversationId:id,status:'stopped'}).sort({createdAt:-1}).lean();
+        if(paused){requestId=paused.requestId;text=paused.text;resume=true;}
+    }
     if(directVideo&&(directImages||uploadedImages.length))throw new ConversationError('Send one video or images separately',400);
-    const existing = await ChatTurn.findOne({ userId, conversationId: id, requestId }).lean();
+    const existing = await ChatTurn.findOne({ userId, conversationId: id, requestId }).select('+checkpoints').lean();
+    if(existing?.status==='stopped'&&!resume)throw new ChatFailure('stopped');
+    if(resume&&existing?.attachmentKind&&!existing.images?.length&&!existing.videos?.length&&!directImages&&!directVideo&&!uploadedImages.length)throw new ConversationError('Attach the stopped upload again before resuming',409);
     if (existing && existing.text !== text)
         throw new ConversationError('Request ID already used for another message', 409);
     const images = uploadedImages.map(image => ({ ...image, hash: createHash('sha256').update(image.data).digest('hex') }));
-    if (existing && images.length && JSON.stringify((existing.images ?? []).map(image => image.hash)) !== JSON.stringify(images.map(image => image.hash))) {
+    if (existing && images.length && (!resume||(existing.images??[]).length) && JSON.stringify((existing.images ?? []).map(image => image.hash)) !== JSON.stringify(images.map(image => image.hash))) {
         throw new ConversationError('Request ID already used for different images', 409);
     }
     if (existing?.status === 'completed') { notifyCatalogWorker(); return getConversation(userId, id); }
@@ -89,12 +112,19 @@ export async function sendConversationMessage(userId: string, id: string, reques
     const progress=(stage:ChatStage)=>{onProgress?.(stage);progressWrites=progressWrites.then(async()=>{await ChatTurn.updateOne({conversationId:id,userId,requestId,attemptToken:lockToken,status:'processing'},{$set:{progressStage:stage}});}).catch(()=>{});};
     const locked = await Conversation.findOneAndUpdate({
         _id: id, userId, deletedAt: null, lockUntil: { $lte: new Date() },
-    }, { $set: { lockToken, lockUntil: new Date(Date.now() + 240000) } }, { returnDocument: 'after' });
+    }, { $set: { lockToken,activeRequestId:requestId, lockUntil: new Date(Date.now() + 240000) } }, { returnDocument: 'after' });
     if (!locked) {
         if (!await Conversation.exists({ _id: id, userId, deletedAt: null }))
             throw new ConversationError('Conversation not found', 404);
         throw new ConversationError('Conversation is processing another message', 409);
     }
+    const controller=new AbortController(),key=operationId(userId,id,requestId);
+    operations.set(key,controller);
+    let watching=false;
+    const watcher=setInterval(()=>{if(watching)return;watching=true;void Conversation.findOne({_id:id,userId}).select('lockToken').lean().then(row=>{
+      if(!row||row.lockToken!==lockToken)controller.abort(new ChatFailure('stopped'));
+    }).catch(()=>controller.abort(new ChatFailure('unknown'))).finally(()=>{watching=false;});},1000);
+    watcher.unref();
     try {
         // Recheck after acquiring the lock to avoid replaying a just-completed request.
         const replay = await ChatTurn.findOne({ userId, conversationId: id, requestId }).lean();
@@ -105,20 +135,26 @@ export async function sendConversationMessage(userId: string, id: string, reques
             return getConversation(userId, id);
         }
         // A later message must not bypass an unanswered earlier message.
-        if (await ChatTurn.exists({ userId, conversationId: id, requestId: { $ne: requestId }, status: { $ne: 'completed' } })) {
+        if (await ChatTurn.exists({ userId, conversationId: id, requestId: { $ne: requestId }, status: { $in: ['processing','failed'] } })) {
             throw new ConversationError('Retry the unanswered message before sending another', 409);
         }
-        const references = directImages ? await resolveDirectImages(userId, id, requestId) : imageReferences(id, requestId, images);
+        const metadataContext={signal:controller.signal,checkpoints:{},save:async()=>{}};
+        const references = directImages ? await runChatOperation(metadataContext,()=>resolveDirectImages(userId, id, requestId)) : imageReferences(id, requestId, images);
         let videoReferences:Awaited<ReturnType<typeof resolveDirectVideo>>=[];
-        if(directVideo)try{progress('checking_video');videoReferences=await resolveDirectVideo(userId,id,requestId);}catch(error){const code=(error as {message?:string;name?:string}).message??'';if(/^(?:VIDEO_CHANGED|UPLOAD_EXPIRED|INVALID_VIDEO|UNSUPPORTED_VIDEO|VIDEO_DURATION)/.test(code)||(error as {name?:string}).name==='NoSuchKey')throw new ChatFailure('video_unreadable');throw error;}
-        if(directVideo&&replay&&JSON.stringify((replay.videos??[]).map(video=>video.hash))!==JSON.stringify(videoReferences.map(video=>video.hash)))throw new ConversationError('Attachments already selected',409);
-        if (replay && directImages && JSON.stringify(replay.images.map(image => image.hash)) !== JSON.stringify(references.map(image => image.hash))) throw new ConversationError('Attachments already selected', 409);
-        await ChatTurn.updateOne({ conversationId: id, userId, requestId }, {
-            $set: { status: 'processing', attemptToken: lockToken,progressStage:null,failureCode:null }, $setOnInsert: { text, images: references,videos:videoReferences },
+        if(directVideo)try{progress('checking_video');videoReferences=await runChatOperation(metadataContext,()=>resolveDirectVideo(userId,id,requestId));}catch(error){const code=(error as {message?:string;name?:string}).message??'';if(/^(?:VIDEO_CHANGED|UPLOAD_EXPIRED|INVALID_VIDEO|UNSUPPORTED_VIDEO|VIDEO_DURATION)/.test(code)||(error as {name?:string}).name==='NoSuchKey')throw new ChatFailure('video_unreadable');throw error;}
+        if(directVideo&&replay&&(!resume||(replay.videos??[]).length)&&JSON.stringify((replay.videos??[]).map(video=>video.hash))!==JSON.stringify(videoReferences.map(video=>video.hash)))throw new ConversationError('Attachments already selected',409);
+        if (replay && directImages && (!resume||(replay.images??[]).length) && JSON.stringify((replay.images??[]).map(image => image.hash)) !== JSON.stringify(references.map(image => image.hash))) throw new ConversationError('Attachments already selected', 409);
+        controller.signal.throwIfAborted();
+        await ChatTurn.updateOne({ conversationId: id, userId, requestId,...(!resume?{status:{$ne:'stopped'}}:{}) }, {
+            $set: { status: 'processing', attemptToken: lockToken,progressStage:null,failureCode:null,attachmentKind:directVideo?'video':directImages||images.length?'image':existing?.attachmentKind??null,...((directImages||images.length)?{images:references}:{}),...(directVideo?{videos:videoReferences}:{}) }, $setOnInsert: { text,...(!directImages&&!images.length?{images:references}:{}),...(!directVideo?{videos:videoReferences}:{}) },
         }, { upsert: true });
+        await runChatOperation({signal:controller.signal,checkpoints:existing?.checkpoints??{},save:async(key,value)=>{
+          const saved=await ChatTurn.updateOne({conversationId:id,userId,requestId,attemptToken:lockToken,status:'processing'},{$set:{[`checkpoints.${key}`]:value}});
+          if(saved.matchedCount===0)throw new ChatFailure('stopped');
+        }},async()=>{
         const previous = await ChatTurn.find({ userId, conversationId: id, status: 'completed' })
             .sort({ createdAt: -1, _id: -1 }).limit(15).lean();
-        const history: AiHistoryMessage[] = previous.reverse().flatMap(turn => [
+        let history: AiHistoryMessage[] = previous.reverse().flatMap(turn => [
             { role: 'user' as const, text: turn.text }, { role: 'model' as const, text: turn.movie?.title
                 ? `${turn.answer}\nIdentified film: ${turn.movie.title} (${turn.movie.year ?? ''})` : `${turn.answer}${turn.recommendations?.length?'\nRecommended films: '+turn.recommendations.map((item:MovieRecommendation)=>`${item.movie.title} (${item.movie.year??''})`).join('; '):''}` },
         ]);
@@ -127,8 +163,11 @@ export async function sendConversationMessage(userId: string, id: string, reques
         const searchVideos=await chatVideoUrls(userId,id,requestId);
         if(searchVideos.length&&searchImages.length)throw new ConversationError('Send one video or images separately',400);
         const contextTurn=[...previous].reverse().find(turn=>turn.movie?.title||turn.recommendations?.length);
-        const previousMovie=(contextTurn?.movie??(contextTurn?.recommendations?.length===1?contextTurn.recommendations[0].movie:undefined)) as MovieSearchResult|undefined;
+        let previousMovie=(contextTurn?.movie??(contextTurn?.recommendations?.length===1?contextTurn.recommendations[0].movie:undefined)) as MovieSearchResult|undefined;
+        const savedContext=await chatCheckpoint(checkpointKey('conversation-context-v1',requestId),async()=>({history,previousMovie}));
+        history=savedContext.history;previousMovie=savedContext.previousMovie;
         let result:AiResult&{movie?:MovieSearchResult;recommendations?:MovieRecommendation[]};
+        const generateResult=async()=>{
         if(searchVideos.length){
             result=await findMovieFromVideo(text,searchVideos,onDelta,progress);
         } else if(!searchImages.length&&previousMovie&&isContextMovieFollowup(text,previousMovie)){
@@ -144,6 +183,10 @@ export async function sendConversationMessage(userId: string, id: string, reques
         } else result = searchImages.length
             ? await findMovieFromImages(text, searchImages, onDelta,undefined,undefined,progress)
             : await chatWithGemma({ text, history }, onDelta);
+        return result;
+        };
+        result=await chatCheckpoint(checkpointKey('conversation-result-v1',requestId),generateResult);
+        controller.signal.throwIfAborted();
         if(result.recommendations)await Promise.all(result.recommendations.map(async item=>{
             item.characterImages=await findCharacterImages(item.text,item.movie).catch(()=>[]);
         }));
@@ -160,10 +203,12 @@ export async function sendConversationMessage(userId: string, id: string, reques
             ? await conversationTitle(previous.length ? previous.slice(0, 1)
                 : [{ text, answer: result.text, movie: result.movie, recommendations: result.recommendations }])
             : locked.title;
-        await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken }, {
+        controller.signal.throwIfAborted();
+        const completed=await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken,status:'processing' }, {
             $set: { status: 'completed', answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages,recommendations:result.recommendations??[],
-                progressStage:null,failureCode:null,catalogDispatch: isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie)) ? 'pending' : 'none' },
+                progressStage:null,failureCode:null,catalogDispatch: isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie)) ? 'pending' : 'none' },$unset:{checkpoints:''},
         });
+        if(completed.matchedCount===0)throw new ChatFailure('stopped');
         await Conversation.updateOne({ _id: id, userId, deletedAt: null, lockToken }, { $set: { title, titleGenerated: true } })
             .catch(() => { console.warn('[CHAT_TITLE] Title update deferred; chat answer saved'); });
         if (result.movie?.linksOnly) await saveCatalogWatchLinks(result.movie)
@@ -171,16 +216,20 @@ export async function sendConversationMessage(userId: string, id: string, reques
         // The outbox flag is committed with the answer. Worker/R2/AI failures
         // cannot change a completed chat turn into a failed generation.
         if (isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie))) notifyCatalogWorker();
+        });
     }
     catch (error) {
         await progressWrites;
-        const failureCode=chatFailureCode(error);
+        const stopped=await ChatTurn.exists({userId,conversationId:id,requestId,status:'stopped'});
+        const failureCode=stopped?'stopped':controller.signal.aborted?chatFailureCode(controller.signal.reason):chatFailureCode(error);
         console.warn('[CHAT_FAILURE]',{failureCode});
-        await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken, status: 'processing' }, { $set: { status: 'failed',failureCode,progressStage:null } });
+        await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken, status: 'processing' }, { $set: { status:failureCode==='stopped'?'stopped':'failed',failureCode:failureCode==='stopped'?null:failureCode,progressStage:null } });
+        if(failureCode==='stopped')return getConversation(userId,id);
         throw error;
     }
     finally {
-        await Conversation.updateOne({ _id: id, userId, lockToken }, { $set: { lockToken: '', lockUntil: new Date(0) } });
+        clearInterval(watcher);if(operations.get(key)===controller)operations.delete(key);
+        await Conversation.updateOne({ _id: id, userId, lockToken }, { $set: { lockToken: '',activeRequestId:'', lockUntil: new Date(0) } });
     }
     return getConversation(userId, id);
 }

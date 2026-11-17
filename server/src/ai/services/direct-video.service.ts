@@ -8,8 +8,13 @@ export const ChatVideoUpload=model('AiChatVideoUpload',schema);
 export async function reserveVideo(userId:string,conversationId:string,requestId:string,input:{hash:string;size:number;mimeType:string}){
  if(!/^[a-f0-9]{64}$/.test(input.hash)||input.size<16||input.size>CHAT_VIDEO.maxBytes||!CHAT_VIDEO.mimeTypes.includes(input.mimeType as typeof CHAT_VIDEO.mimeTypes[number]))throw Error('INVALID_VIDEO_METADATA');
  if(!await Conversation.exists({_id:conversationId,userId,deletedAt:null}))throw Error('CONVERSATION_NOT_FOUND');
- const turn=await ChatTurn.findOne({userId,conversationId,requestId}).lean();if(turn&&(turn.images.length||turn.videos?.[0]?.hash!==input.hash))throw Error('ATTACHMENTS_ALREADY_SELECTED');
+ const turn=await ChatTurn.findOne({userId,conversationId,requestId}).lean();if(turn&&!(turn.status==='stopped'&&!(turn.images??[]).length&&!turn.videos?.length)&&((turn.images??[]).length||turn.videos?.[0]?.hash!==input.hash))throw Error('ATTACHMENTS_ALREADY_SELECTED');
  const key=chatVideoKey(conversationId,requestId,input.hash);
+ const previous=await ChatVideoUpload.findOne({userId,conversationId,requestId}).lean();
+ if(turn?.status==='stopped'&&!(turn.images??[]).length&&!turn.videos?.length&&previous&&previous.expiresAt>new Date()&&previous.hash!==input.hash){
+  // Keep the old key until its issued PUT expires; a late upload must still be cleaned.
+  await ChatVideoUpload.updateOne({_id:previous._id,userId,conversationId,requestId},{$set:{requestId:`${requestId}-abandoned-${previous._id}`}});
+ }
  await ChatVideoUpload.updateOne({userId,conversationId,requestId},{$setOnInsert:{...input,key,expiresAt:new Date(Date.now()+3600000)}},{upsert:true});
  const row=await ChatVideoUpload.findOne({userId,conversationId,requestId}).lean();
  if(!row||row.expiresAt<=new Date()||row.hash!==input.hash||row.size!==input.size||row.mimeType!==input.mimeType)throw Error('VIDEO_RESERVATION_CHANGED');
@@ -36,7 +41,11 @@ export async function cleanupExpiredVideos(){
   if(await Conversation.exists({_id:row.conversationId,userId:row.userId,deletedAt:null,lockUntil:{$gt:new Date()}}))continue;
   const active=await Conversation.exists({_id:row.conversationId,userId:row.userId,deletedAt:null});
   const turn=active?await ChatTurn.findOne({userId:row.userId,conversationId:row.conversationId,requestId:row.requestId}).lean():null;
-  if(!turn?.videos?.some(video=>video.key===row.key))await deleteChatImage(row.key);
+  if(!turn?.videos?.some(video=>video.key===row.key)){
+   const referenced=active&&await ChatTurn.exists({userId:row.userId,conversationId:row.conversationId,'videos.key':row.key});
+   const reserved=await ChatVideoUpload.exists({_id:{$ne:row._id},userId:row.userId,conversationId:row.conversationId,key:row.key,expiresAt:{$gt:new Date()}});
+   if(!referenced&&!reserved)await deleteChatImage(row.key);
+  }
   await ChatVideoUpload.deleteOne({_id:row._id});
  }catch{console.warn('[CHAT_VIDEO_CLEANUP] Cleanup pending');}
 }

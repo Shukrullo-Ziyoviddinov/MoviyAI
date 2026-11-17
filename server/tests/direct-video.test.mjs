@@ -4,19 +4,27 @@ import {readFileSync} from 'node:fs';
 import {CHAT_VIDEO} from '../dist/ai/config/chat-video.config.js';
 const source=readFileSync(new URL('../dist/ai/services/direct-video.service.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/\bexport /g,'');
 function harness(){
- const rows=[],removed=[];let deleted=false,locked=false,saved=false,duration=12;
- const match=(row,q)=>Object.entries(q).every(([key,value])=>value?.$lte?row[key]<=value.$lte:row[key]===value);
- const uploads={updateOne:async(q,p)=>{if(!rows.some(r=>match(r,q)))rows.push({_id:'v',...q,...p.$setOnInsert});},findOne:q=>({lean:async()=>rows.find(r=>match(r,q))}),find:q=>({limit(){return this;},lean:async()=>rows.filter(r=>match(r,q))}),deleteOne:async q=>{const i=rows.findIndex(r=>match(r,q));if(i>=0)rows.splice(i,1);}};
+ const rows=[],removed=[];let deleted=false,locked=false,saved=false,duration=12,stopped=false;
+ const match=(row,q)=>Object.entries(q).every(([key,value])=>value?.$lte?row[key]<=value.$lte:value?.$gt?row[key]>value.$gt:value?.$ne?row[key]!==value.$ne:row[key]===value);
+ const uploads={exists:async q=>rows.some(r=>match(r,q)),updateOne:async(q,p,options)=>{const row=rows.find(r=>match(r,q));if(row)Object.assign(row,p.$set??{});else if(options?.upsert)rows.push({_id:'v'+rows.length,...q,...p.$setOnInsert});},findOne:q=>({lean:async()=>rows.find(r=>match(r,q))}),find:q=>({limit(){return this;},lean:async()=>rows.filter(r=>match(r,q))}),deleteOne:async q=>{const i=rows.findIndex(r=>match(r,q));if(i>=0)rows.splice(i,1);}};
  class Schema{index(){}}
  const Conversation={exists:async q=>q.userId==='alice'&&!deleted&&(!q.lockUntil||locked)};
- const turn=()=>saved?{images:[],videos:[{...rows[0],duration}]}:null;
- const ChatTurn={findOne:()=>({lean:async()=>turn()}),find:()=>({lean:async()=>turn()?[turn()]:[]})};
+ const turn=()=>stopped?{status:'stopped',images:[],videos:[]}:saved?{images:[],videos:[{...rows[0],duration}]}:null;
+ const ChatTurn={exists:async()=>false,findOne:()=>({lean:async()=>turn()}),find:()=>({lean:async()=>turn()?[turn()]:[]})};
  const key=(c,r,h)=>`chatvideo/${c}/${r}/0-${h}`;
  const api=new Function('Schema','model','Conversation','ChatTurn','chatVideoKey','signChatImage','inspectChatVideo','deleteChatImage','CHAT_VIDEO',source+'\nreturn {reserveVideo,resolveDirectVideo,chatVideoUrls,cleanupConversationVideos,cleanupExpiredVideos};')
  (Schema,()=>uploads,Conversation,ChatTurn,key,async(k,m)=>`https://r2.example/${m}/${k}`,async()=>({size:100,mimeType:'video/mp4',duration}),async k=>{removed.push(k);},CHAT_VIDEO);
- return {...api,rows,removed,deleted:()=>deleted=true,locked:value=>locked=value,saved:()=>saved=true,duration:value=>duration=value};
+ return {...api,rows,removed,stopped:()=>{stopped=true;},deleted:()=>deleted=true,locked:value=>locked=value,saved:()=>saved=true,duration:value=>duration=value};
 }
 const input={hash:'a'.repeat(64),size:100,mimeType:'video/mp4'};
+
+test('a stopped unfinished video can be re-encoded while old PUT keys remain scheduled for cleanup',async()=>{
+ const h=harness();await h.reserveVideo('alice','c','r',input);const old=h.rows[0],key=old.key;
+ h.stopped();await h.reserveVideo('alice','c','r',{...input,hash:'b'.repeat(64)});
+ assert.equal(h.rows.length,2);assert.match(old.requestId,/abandoned/);assert.equal(h.rows[1].requestId,'r');
+ old.expiresAt=new Date(0);await h.cleanupExpiredVideos();
+ assert.deepEqual(h.removed,[key]);assert.equal(h.rows.length,1);assert.equal(h.rows[0].requestId,'r');
+});
 test('video reservations are owner-scoped, idempotent and cannot replace attachments',async()=>{
  const h=harness();await assert.rejects(()=>h.reserveVideo('bob','c','r',input));
  const first=await h.reserveVideo('alice','c','r',input);assert.match(first.url,/\/PUT\/chatvideo\//);

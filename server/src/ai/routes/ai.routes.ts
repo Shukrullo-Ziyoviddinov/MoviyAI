@@ -75,6 +75,7 @@ router.get('/conversations/:id', requireAuth, asyncHandler(conversations.get));
 router.delete('/conversations/:id', requireAuth, asyncHandler(conversations.remove));
 router.patch('/conversations/:id/pin', requireAuth, asyncHandler(conversations.pin));
 router.post('/conversations/:id/messages', requireAuth, aiLimit, parseChatImages, asyncHandler(conversations.send));
+router.post('/conversations/:id/stop',requireAuth,asyncHandler(conversations.stop));
 router.post('/conversations/:id/uploads', requireAuth, aiLimit, asyncHandler(conversations.prepareImages));
 router.post('/conversations/:id/video-upload', requireAuth, aiLimit, asyncHandler(conversations.prepareVideo));
 router.get('/conversations/:id/messages/:requestId/images/:index', asyncHandler(conversations.image));

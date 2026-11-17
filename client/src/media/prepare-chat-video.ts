@@ -4,7 +4,8 @@ let aacReady:Promise<void>|undefined;
 function failure(code:'compression_unsupported'|'compression_failed'|'video_too_large'|'timeout'):Error{return Object.assign(new Error(code),{failureCode:code});}
 
 /** Local-only conversion. No file bytes are sent to an encoder service. */
-async function compress(file:Blob):Promise<Blob>{
+async function compress(file:Blob,signal?:AbortSignal):Promise<Blob>{
+ signal?.throwIfAborted();
  if(!('VideoEncoder'in globalThis)||!('VideoDecoder'in globalThis))throw failure('compression_unsupported');
  const bunny=await import('mediabunny');
  const input=new bunny.Input({source:new bunny.BlobSource(file),formats:bunny.ALL_FORMATS});
@@ -13,6 +14,7 @@ async function compress(file:Blob):Promise<Blob>{
   const duration=await input.computeDuration(),audio=await input.getPrimaryAudioTrack();
   if(audio){aacReady??=(async()=>{if(!await bunny.canEncodeAudio('aac')){const {registerAacEncoder}=await import('@mediabunny/aac-encoder');registerAacEncoder();}})().catch(error=>{aacReady=undefined;throw error;});await aacReady;}
   for(let attempt=0;attempt<2;attempt++){
+   signal?.throwIfAborted();
    const plan=videoCompressionPlan(duration,video.displayWidth,video.displayHeight,attempt);
    const output=new bunny.Output({format:new bunny.Mp4OutputFormat({fastStart:'in-memory'}),target:new bunny.BufferTarget()});
    const conversion=await bunny.Conversion.init({input,output,
@@ -23,7 +25,9 @@ async function compress(file:Blob):Promise<Blob>{
    let timedOut=false,oversized=false;
    const timer=setTimeout(()=>{timedOut=true;void conversion.cancel();},300000);
    const stop=output.target.on('write',({end})=>{if(end>AI_VIDEO_MAX_BYTES){oversized=true;void conversion.cancel();}});
-   try{await conversion.execute();}catch(error){if(timedOut)throw failure('timeout');if(!oversized)throw error;}finally{clearTimeout(timer);stop();if(conversion.state!=='done')await conversion.cancel();}
+   const onAbort=()=>{void conversion.cancel().catch(()=>{});};
+   signal?.addEventListener('abort',onAbort,{once:true});
+   try{signal?.throwIfAborted();await conversion.execute();signal?.throwIfAborted();}catch(error){signal?.throwIfAborted();if(timedOut)throw failure('timeout');if(!oversized)throw error;}finally{signal?.removeEventListener('abort',onAbort);clearTimeout(timer);stop();if(conversion.state!=='done')await conversion.cancel();}
    const bytes=output.target.buffer;
    if(!oversized&&bytes&&bytes.byteLength>0&&bytes.byteLength<=AI_VIDEO_MAX_BYTES){
     const result=new Blob([bytes],{type:'video/mp4'});
@@ -33,13 +37,16 @@ async function compress(file:Blob):Promise<Blob>{
    }
   }
   throw failure('video_too_large');
- }catch(error){if((error as {failureCode?:string})?.failureCode)throw error;throw failure('compression_failed');}finally{input.dispose();}
+ }catch(error){signal?.throwIfAborted();if((error as {failureCode?:string})?.failureCode)throw error;throw failure('compression_failed');}finally{input.dispose();}
 }
 
-export function prepareChatVideo(file:Blob):Promise<Blob>{
+export function prepareChatVideo(file:Blob,signal?:AbortSignal):Promise<Blob>{
+ if(signal?.aborted)return Promise.reject(signal.reason);
  if(!file.size||file.size>VIDEO_INPUT_MAX_BYTES)return Promise.reject(failure('video_too_large'));
  if(file.size<=AI_VIDEO_MAX_BYTES)return Promise.resolve(file);
  let task=prepared.get(file);
- if(!task){task=compress(file).catch(error=>{prepared.delete(file);if(['compression_unsupported','compression_failed','video_too_large','timeout'].includes((error as {failureCode?:string})?.failureCode??''))throw error;throw failure('compression_failed');});prepared.set(file,task);}
- return task;
+ if(!task){const pending=compress(file,signal).catch(error=>{if(prepared.get(file)===pending)prepared.delete(file);signal?.throwIfAborted();if(['compression_unsupported','compression_failed','video_too_large','timeout'].includes((error as {failureCode?:string})?.failureCode??''))throw error;throw failure('compression_failed');});task=pending;prepared.set(file,task);}
+ const onAbort=()=>{if(prepared.get(file)===task)prepared.delete(file);};
+ signal?.addEventListener('abort',onAbort,{once:true});
+ return task.finally(()=>signal?.removeEventListener('abort',onAbort));
 }

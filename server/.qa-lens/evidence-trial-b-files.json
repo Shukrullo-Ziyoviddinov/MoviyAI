@@ -1,0 +1,155 @@
+{
+  "sample": "b",
+  "model": "gemini-3.5-flash-lite",
+  "duration": 68.288,
+  "transport": "google-file",
+  "stages": [
+    {
+      "stage": "observe",
+      "elapsedMs": 17455,
+      "attempts": 2
+    },
+    {
+      "stage": "plan",
+      "elapsedMs": 3705,
+      "attempts": 1
+    },
+    {
+      "stage": "verify",
+      "elapsedMs": 2708,
+      "attempts": 1
+    }
+  ],
+  "searches": 2,
+  "observations": {
+    "moments": [
+      {
+        "seconds": 0,
+        "action": "A person in an orange jacket touches the thin, bruised knees of someone seated in a wheelchair indoors.",
+        "setting": "Indoor room with dim lighting and seated people in the background",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 15.325,
+        "action": "A woman embraces a young girl tightly while other seated people look on.",
+        "setting": "Indoor gathering space with chairs and medical equipment",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 35.378,
+        "action": "A man stands up, takes off his jacket and undershirt, revealing a torso covered in bruises and sores.",
+        "setting": "Indoor room filled with seated spectators",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 49.336,
+        "action": "The person in the orange jacket places a hand directly on the bare, bruised chest of the man who took off his shirt.",
+        "setting": "Indoor room surrounded by spectators",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 58.269,
+        "action": "Spectators in the background react emotionally, some standing up and shouting in distress.",
+        "setting": "Indoor assembly room with rows of chairs",
+        "visibleText": null,
+        "dialogue": "Ehu dayim!"
+      },
+      {
+        "seconds": 59.954,
+        "action": "A man in an orange jacket stands facing the crowd and speaks to them.",
+        "setting": "Indoor room with a crowd of people watching",
+        "visibleText": null,
+        "dialogue": "Abadiy hayot. Abadiy yoshlik yangi ilohingiz bilan barcha kasalliklaringizga men orqali davo topasiz. Har qanday kasallikka davo bor."
+      }
+    ],
+    "uncertainties": [
+      "The exact nature of the relationship between the individuals and the gathering remains ambiguous."
+    ]
+  },
+  "plan": {
+    "queries": [
+      "Abadiy hayot Abadiy yoshlik yangi ilohingiz",
+      "Ehu dayim"
+    ]
+  },
+  "sources": [
+    {
+      "title": "Shukur Xolmirzayev. Hayot abadiy (hikoya)",
+      "url": "https://n.ziyouz.com/portal-haqida/xarita/uzbek-nasri/shukur-xolmirzayev-1940-2005/shukur-xolmirzayev-hayot-abadiy-hikoya",
+      "snippet": "Shukur Xolmirzayev. Hayot abadiy (hikoya). Sovxozning bosh agronomi Nodir Ro'ziqulov majlisdan qattiq tanqid yeb chiqdi. Uyga kelib, o'zi ..."
+    },
+    {
+      "title": "Hayot abadiy — Şukur Xolmirzayev: audiokitob va e-kitob",
+      "url": "https://mutolaa.com/uz/book/hayot-abadiy",
+      "snippet": "Audiokitob va elektron kitob. Reyting 5.0 (32 şarh). Hikoyadan: “Nodir köçaga çiqib, özini qopmoqçi bölgan qöşnisining itiga kesak otgan edi, itga qattiq…"
+    },
+    {
+      "title": "\"Abadiy hayot\" tabletkasi yaratilmoqda",
+      "url": "https://www.youtube.com/shorts/neiIevkCVKU",
+      "snippet": "\"Abadiy hayot\" tabletkasi yaratilmoqda. RAYHONNING JIYANI NEGA U BILAN GAPLASHMAYDI? 1-QISM. 24. 3. Share. Video unavailable."
+    },
+    {
+      "title": "“Abadiy yoshlik”: Yoshini hech qachon taxmin qilib bo ...",
+      "url": "https://daryo.uz/2024/08/31/abadiy-yoshlik-yoshini-hech-qachon-taxmin-qilib-bolmaydigan-gollivud-yulduzlari/",
+      "snippet": "Farrell Uilyamsning yoshini bilmasangiz, uni yosh avlodning istiqbolli reperi deb o'ylashingiz mumkin. Aslida yulduz allaqachon 50 dan oshgan."
+    },
+    {
+      "title": "View of SHUKUR XOLMIRZAYEVNING “HAYOT ABADIY ...",
+      "url": "https://journalss.org/index.php/ust/article/view/32932/31866",
+      "snippet": "Return to Article Details SHUKUR XOLMIRZAYEVNING “HAYOT ABADIY” HIKOYASIDA HAYOT FALSAFASI Download Download PDF. Thumbnails Document Outline Attachments"
+    },
+    {
+      "title": "Hayotimining abadiy va oliy maqsadi – ezgulikdir. Yaxshilikni ...",
+      "url": "https://www.hikmatlar.uz/quote/2473",
+      "snippet": "Hayotimining abadiy va oliy maqsadi – ezgulikdir. Yaxshilikni biz qanday tushunmaylik, hayotimizning o'zi yaxshilikka intilishdan boshqa narsa emas."
+    },
+    {
+      "title": "Hertz Dayim Equipment Rental Expands Within Saudi ...",
+      "url": "https://newsroom.hertz.com/press-releases/press-release-details/hertz-dayim-equipment-rental-expands-within-saudi-arabia-joint-venture-between-hertz-equip/",
+      "snippet": "The aim of our new Jeddah operations is to provide customers a first class, value-added equipment rental supplier in the Western Province of ..."
+    },
+    {
+      "title": "Interview: Dayim's Middle East expansion",
+      "url": "https://www.internationalrentalnews.com/news/interview-dayims-middle-east-expansion/8024508.article",
+      "snippet": "Hertz Dayim, as it was formerly known, was formed in 2010 and was 51% owned by Hertz Equipment Rental in the US and 49% owned by investment ..."
+    },
+    {
+      "title": "Dayim Equipment: Heavy Equipment Rental Saudi Arabia ...",
+      "url": "https://dayimrentals.com/",
+      "snippet": "Rent generators, aerial platforms, forklifts & more across Saudi Arabia, UAE & GCC. 15 years of expertise. 24/7 support. Get a quote today."
+    },
+    {
+      "title": "Companies",
+      "url": "https://www.dayim.com.sa/companies/",
+      "snippet": "Dayim Equipment is a leading provider of equipment rental solutions across the GCC, with operations in Saudi Arabia, Qatar, Kuwait, Bahrain, and the UAE. The ..."
+    },
+    {
+      "title": "Dayim Operational Update: GCC Security Situation",
+      "url": "https://www.linkedin.com/posts/dayim-equipment-rental_dayim-operational-update-regional-security-activity-7434295725116579840-14KH",
+      "snippet": "We are currently facilitating secure logistics and security-backed transitions from Dubai to the Sultanate of Oman, with full operational ..."
+    },
+    {
+      "title": "Dayim Equipment Rental",
+      "url": "https://www.linkedin.com/posts/hertz-dayim-equipment-rental_dayimequipment-dayimtrucks-heavyequipment-activity-7264276801953169408-xsOl",
+      "snippet": "... Dayim Trucks Rental Company and Dayim Equipment have in store for us. Let's get ready to rumble! #heatshow2024 #dayimequipment #dayimtrucks."
+    }
+  ],
+  "verification": {
+    "matched": false,
+    "title": "",
+    "year": null,
+    "contradictions": [],
+    "evidence": []
+  },
+  "accepted": null,
+  "evaluation": {
+    "expectedKnown": true,
+    "correct": null
+  },
+  "temporaryFileDeleted": true,
+  "elapsedMs": 78958
+}

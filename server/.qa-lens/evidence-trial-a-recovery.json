@@ -1,0 +1,151 @@
+{
+  "sample": "a",
+  "model": "gemini-3.5-flash-lite",
+  "duration": 49.224,
+  "transport": "local-frames",
+  "stages": [
+    {
+      "stage": "plan",
+      "elapsedMs": 1888,
+      "attempts": 1
+    },
+    {
+      "stage": "verify",
+      "elapsedMs": 4741,
+      "attempts": 1
+    }
+  ],
+  "searches": 2,
+  "observations": {
+    "moments": [
+      {
+        "seconds": 0,
+        "action": "A woman with pink hair faces the camera, speaking directly while gesturing with her hands.",
+        "setting": "A dimly lit room with purple and blue lighting, shelves with candles and a 'love' neon sign in the background.",
+        "visibleText": "love",
+        "dialogue": "Yangi yilgacha yigitni bo'ladimi?"
+      },
+      {
+        "seconds": 6.1,
+        "action": "A young man wearing a pink robe and holding a pink pig savings bank walks into a room and speaks to a woman.",
+        "setting": "A bathroom decorated with blue and purple lights, a crescent moon prop, and candles.",
+        "visibleText": "love",
+        "dialogue": "Xo'sh, boy-friend bilan aloqa o'rnatishga tayyormisan?"
+      },
+      {
+        "seconds": 15,
+        "action": "The man and woman kiss in the doorway of the bathroom while another woman watches from an adjacent room.",
+        "setting": "A dimly lit corridor connecting a hallway and a bathroom.",
+        "visibleText": null,
+        "dialogue": "Aloqani uzma."
+      },
+      {
+        "seconds": 33.3,
+        "action": "A different woman with dark hair and tattoos kisses the man holding the pink pig savings bank.",
+        "setting": "Inside the bathroom with neon lights and candles.",
+        "visibleText": "love",
+        "dialogue": null
+      },
+      {
+        "seconds": 38.6,
+        "action": "The man in the pink robe celebrates happily while holding the pig savings bank, walking past a seated woman.",
+        "setting": "A hallway outside the bathroom.",
+        "visibleText": null,
+        "dialogue": "Qo'shimcha daromad!"
+      },
+      {
+        "seconds": 47.1,
+        "action": "The man holds out a handful of cash toward the camera, smiling with the pink pig savings bank under his arm.",
+        "setting": "Bathroom interior with blue and purple ambient lighting.",
+        "visibleText": null,
+        "dialogue": "Afsus, bankomat ishlamaydi. Xafa bo'lma."
+      }
+    ],
+    "uncertainties": [
+      "Exact translation and spelling of regional names or slang terms used in dialogue.",
+      "The relationship dynamic between the characters observing from outside and the main couple inside."
+    ]
+  },
+  "observationsReused": true,
+  "plan": {
+    "queries": [
+      "movie scene man in pink robe holding pink pig savings bank and cash",
+      "Yangi yilgacha yigitni bo'ladimi"
+    ]
+  },
+  "sources": [
+    {
+      "title": "Toddler in Piggy Bank Costume Trick-or-Treating for Halloween",
+      "url": "https://www.facebook.com/thesouthernholidayhome/videos/walker-wanted-money-on-his-back-so-everyone-knew-he-was-a-piggy-bank-hamm-not-a-/956603513837735/",
+      "snippet": "A young boy named Walker is shown dressed in a pink pig costume for Halloween. To make it clear he is not a pig, he has placed money on his back ..."
+    },
+    {
+      "title": "AICPA TV Commercial For Piggy Bank",
+      "url": "https://www.ispot.tv/ad/7O_L/aicpa-piggy-bank",
+      "snippet": ""
+    },
+    {
+      "title": "Ted Danson Drains a Giant Piggy Bank for Consumer Cellular",
+      "url": "https://musebyclios.com/film-tv/ted-danson-drains-a-giant-piggybank-for-consumer-cellular/",
+      "snippet": "When you pair a kaiju-sized piggy bank with regular-sized Ted Danson, you darn well better let Ted smash open porky so we can watch all the ..."
+    },
+    {
+      "title": "BANDITS (2001) | Robbing A Bank With A Magic Marker | MGM",
+      "url": "https://www.youtube.com/watch?v=-wp1SWYlb1k",
+      "snippet": "Two bank robbers fall in love with the girl they've kidnapped."
+    },
+    {
+      "title": "You'd never know the piggy bank was there  #WallaceandGromit",
+      "url": "https://www.facebook.com/wallaceandgromit/videos/youd-never-know-the-piggy-bank-was-there-wallaceandgromit/1285040423841709/",
+      "snippet": ""
+    },
+    {
+      "title": "Close-up man holding a pink pig piggy bank and collecting coins in ...",
+      "url": "https://www.vecteezy.com/photo/6983379-close-up-man-holding-a-pink-pig-piggy-bank-and-collecting-coins-in-a-piggy-bank-concept-of-men-collects-money-for-a-home-and-car-payment-during-covid-or-coronavirus-outbreak-blurred-white-background",
+      "snippet": "Close-up man holding a pink pig piggy bank and collecting coins in a piggy bank. Concept of men collects money for a home and car payment during COVID or ..."
+    },
+    {
+      "title": "yangi yilgacha 1k bo'lilig",
+      "url": "https://www.youtube.com/shorts/fBy8T6vTMaY",
+      "snippet": "Subscribe. yangi yilgacha 1k bo'lilig. Like. 0. Share. Video unavailable. This content isn't available. Skip video."
+    },
+    {
+      "title": "| English in Amharic",
+      "url": "https://www.youtube.com/watch?v=AtG-oX8UJAM",
+      "snippet": "Share your videos with friends, family, and the world."
+    },
+    {
+      "title": "1-Bob. Yangi Yil Kechasi | PDF",
+      "url": "https://www.scribd.com/document/975491319/Ajdarafsungarlarakademiyasidayangiyil-034017-2",
+      "snippet": "1-bob. Yangi yil kechasi. Moʻjizalar oshiyoni boʻlmish qish mening eng sevimli bayramimni oʻz ichiga qamrab olgan. Yangi yil! Kimga qanaqa bilmadim-kuya bu ..."
+    },
+    {
+      "title": "Bu yerda beixtiyor savol tug'iladi: yosh yigitni bunday ishga ...",
+      "url": "https://www.instagram.com/reel/DdWJRTboB8f/",
+      "snippet": "Bugungi kunda ko'plab joylarda kuzatuv kameralari va xavfsizlik tizimlari mavjud. Har qanday noqonuniy harakat jiddiy oqibatlarga olib kelishi ..."
+    },
+    {
+      "title": "Nyingtik Yabshyi",
+      "url": "https://rigpawiki.org/index.php?title=Nyingtik_Yabshyi",
+      "snippet": "Nyingtik Yabshyi (Tib. སྙིང་ཐིག་ཡ་བཞི, Wyl. snying thig ya bzhi) literally means the 'Four Parts of the Nyingtik'. It consists of the. Vima Nyingtik,; Lama ..."
+    },
+    {
+      "title": "Home - beteZION",
+      "url": "https://www.betezion.com/resource-read?type=article&id=hZzJvQYyqrT",
+      "snippet": "A growing library of Tigrinya Bible, Mezmur and Church resources, all in one place."
+    }
+  ],
+  "verification": {
+    "matched": false,
+    "title": "",
+    "year": null,
+    "contradictions": [],
+    "evidence": []
+  },
+  "accepted": null,
+  "evaluation": {
+    "expectedKnown": true,
+    "correct": null
+  },
+  "elapsedMs": 11570
+}

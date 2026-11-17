@@ -238,6 +238,10 @@
       "compression_failed": "The video could not be prepared. Send another MP4 file or a shorter clip.",
       "video_too_large": "The video could not be reduced to the required size. Send a file smaller than 14 MB or a shorter clip."
     },
-    "retry": "Try again"
+    "retry": "Try again",
+    "attachmentRequired": "The upload was stopped before completion. Select the file again and send “Continue”.",
+    "stop": "Stop",
+    "send": "Send",
+    "stopped": "Stopped. Type “Continue” to resume, or send a new question."
   }
 }

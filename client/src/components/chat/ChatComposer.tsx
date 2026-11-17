@@ -11,7 +11,7 @@ const mediaBtn = "flex h-9 w-9 items-center justify-center rounded-full border";
 
 export function ChatComposer() {
   const { colors } = useTheme();
-  const { selectedMedia, removeMedia, send, pick, picking, sending, loading, error, deletingId, pinningId } = useChat();
+  const { stop,stopping,selectedMedia, removeMedia, send, pick, picking, sending, loading, error, deletingId, pinningId } = useChat();
   const t = useT();
   const [text, setText] = useState("");
   const canSend = !pinningId && !deletingId && !loading && !sending && !error && (!selectedMedia.some(item=>item.type==='video')||selectedMedia.length===1) && (text.trim().length > 0 || selectedMedia.length > 0);
@@ -45,13 +45,13 @@ export function ChatComposer() {
         />
         <button
           type="button"
-          aria-label="Yuborish"
-          onClick={handleSend}
-          disabled={!canSend}
+          aria-label={t(sending ? "chat.stop" : "chat.send")}
+          onClick={() => { if(sending)void stop();else handleSend(); }}
+          disabled={stopping || (!sending && !canSend)}
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-          style={{ backgroundColor: colors.accent, opacity: canSend ? 1 : 0.45 }}
+          style={{ backgroundColor: colors.accent, opacity: (sending || canSend) && !stopping ? 1 : 0.45 }}
         >
-          <SendIcon size={18} color={colors.textOnAccent} />
+          {sending ? <span aria-hidden="true" className="h-4 w-4 rounded-[3px]" style={{backgroundColor:colors.textOnAccent}} /> : <SendIcon size={18} color={colors.textOnAccent} />}
         </button>
       </div>
       <div className="mt-3 flex items-center gap-2">

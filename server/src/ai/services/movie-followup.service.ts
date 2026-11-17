@@ -1,3 +1,4 @@
+import {operationSignal} from '../utils/chat-operation.js';
 import {findCatalogChatCandidates} from './catalog-chat-lookup.service.js';
 import {researchMovieSources,MOVIE_FACT_INSTRUCTION,hasCoreMovieFacts} from './movie-source-research.service.js';
 import {dossierSchema,verifiedDossier,emptyDossier} from './movie-dossier.js';
@@ -42,9 +43,9 @@ export function createMovieFollowup(deps={lookup:findCatalogChatCandidates,resea
   if(!ready){
    const ai=new GoogleGenAI({apiKey:AI_CONFIG.apiKey,httpOptions:{timeout:30000,retryOptions:{attempts:1}}});
    details=await deps.research(movie,movie.sources,details,async(evidence,known)=>{
-    const response=await ai.models.generateContent({model:AI_CONFIG.models.image,contents:JSON.stringify({film:{title:movie.title,year:movie.year},known,sources:evidence.map((source,index)=>({index,...source}))}),config:{systemInstruction:MOVIE_FACT_INSTRUCTION+' Output language: '+language,responseMimeType:'application/json',responseJsonSchema:z.toJSONSchema(dossierSchema),maxOutputTokens:8192,abortSignal:AbortSignal.timeout(30000)}});
+    const response=await ai.models.generateContent({model:AI_CONFIG.models.image,contents:JSON.stringify({film:{title:movie.title,year:movie.year},known,sources:evidence.map((source,index)=>({index,...source}))}),config:{systemInstruction:MOVIE_FACT_INSTRUCTION+' Output language: '+language,responseMimeType:'application/json',responseJsonSchema:z.toJSONSchema(dossierSchema),maxOutputTokens:8192,abortSignal:operationSignal(30000)}});
     return verifiedDossier(dossierSchema.parse(JSON.parse(response.text??'')),evidence);
-   },AbortSignal.timeout(90000),requested);
+   },operationSignal(90000),requested);
   }
   movie.details=structuredClone(details);movie.trailer=null;
   movie.sourceResearchComplete=hasCoreMovieFacts(details);

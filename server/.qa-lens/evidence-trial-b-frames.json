@@ -1,0 +1,134 @@
+{
+  "sample": "b",
+  "model": "gemini-3.5-flash-lite",
+  "duration": 68.288,
+  "transport": "local-frames",
+  "stages": [
+    {
+      "stage": "observe",
+      "elapsedMs": 13852,
+      "attempts": 1
+    },
+    {
+      "stage": "plan",
+      "elapsedMs": 9248,
+      "attempts": 1
+    },
+    {
+      "stage": "verify",
+      "elapsedMs": 11038,
+      "attempts": 1
+    }
+  ],
+  "searches": 2,
+  "observations": {
+    "moments": [
+      {
+        "seconds": 6,
+        "action": "A young man wearing an orange zip-up jacket leans forward, looking downwards with an intense expression inside a decorated indoor space with flower arrangements.",
+        "setting": "Indoor venue decorated with flowers and stage lights",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 36,
+        "action": "A group of people stand in a corridor, with a man in the foreground wearing a dark blue jacket raising his arm as if reacting or moving.",
+        "setting": "Indoors, corridor with fluorescent lighting",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 50,
+        "action": "A shirtless man with facial hair and visible skin markings on his chest looks forward while another person's hand gestures in the foreground.",
+        "setting": "Indoor setting with dim background",
+        "visibleText": null,
+        "dialogue": null
+      }
+    ],
+    "uncertainties": [
+      "Dialogue cannot be transcribed because audio is absent.",
+      "Exact relationships between characters are unknown."
+    ]
+  },
+  "plan": {
+    "queries": [
+      "young man orange zip up jacket flower arrangements",
+      "shirtless man facial hair skin markings chest"
+    ]
+  },
+  "sources": [
+    {
+      "title": "25+ Floral Hoodies for Men Full Zip for sale",
+      "url": "https://www.ebay.com/b/Floral-Hoodies-for-Men-Full-Zip/155183/bn_120344582",
+      "snippet": "Get the best deals on Floral Hoodies for Men Full Zip. Floral Cross Zip Up Hoodie ・ $1,800.00 or Best Offer$6.41. US $129.99 or Best ・ $24.86 or Best Offer$6 ..."
+    },
+    {
+      "title": "Tropical Orange Wildflower Floral Arrangement Pullover ...",
+      "url": "https://www.amazon.com/Tropical-Wildflower-Floral-Arrangement-Pullover/dp/B0GWQWGXNG",
+      "snippet": "Delicate boho floral artwork flows in a sweeping diagonal full of tropical orange blooms teal accents and layered greenery"
+    },
+    {
+      "title": "Wrapping flowers in a hoodie creates a cozy and sustainable ...",
+      "url": "https://www.instagram.com/reel/DaKeNVGEV6M/",
+      "snippet": "How to make cute little fabric flowers that can be used for gift wrapping, handmade cards or added to tote bags and pouches."
+    },
+    {
+      "title": "Boutonnière",
+      "url": "https://en.wikipedia.org/wiki/Boutonni%C3%A8re",
+      "snippet": "A boutonnière or buttonhole (British English) is a floral decoration, typically a single flower or bud, worn on the lapel of a tuxedo or suit jacket."
+    },
+    {
+      "title": "Ron Jon Orange Beach AL Floral Surf Hoodie",
+      "url": "https://www.ronjonsurfshop.com/products/ron-jon-orange-beach-al-floral-surf-hoodie/10420949?srsltid=AYCX9vKp4qj14FMJkLHZiyYMgH38wF04mFZvrD1-IPOhm1szBgoSb-n0",
+      "snippet": "The captivating design on the back of this pull-over hoodie features the iconic Ron Jon logo layered over tropical flowers and palm leaves."
+    },
+    {
+      "title": "Flower Hoodie Men",
+      "url": "https://www.etsy.com/market/flower_hoodie_men",
+      "snippet": "Discover unique flower hoodies for men, blending artistry and comfort. Explore gothic floral, vintage Japanese, and botanical streetwear styles, Wildflower Zip ..."
+    },
+    {
+      "title": "I have started taking better care of my skin | Austin von ...",
+      "url": "https://www.facebook.com/MandatoryFunDay/videos/i-have-started-taking-better-care-of-my-skin/837062325852260/",
+      "snippet": "This video features a man, Luis Capecchi, performing a \"skin check\" transformation. It begins with on-screen text \"BEFORE FACIAL\" and ..."
+    },
+    {
+      "title": "How to Maintain Results After Male Breast Reduction",
+      "url": "https://swetnamcosmetic.com/how-to-maintain-results-after-male-breast-reduction-tips-for-long-term-success/",
+      "snippet": "Excess fat and glandular tissue in the chest, commonly referred to as gynecomastia, can be frustrating and even embarrassing for many men."
+    },
+    {
+      "title": "Unmasked I'm Negan cinematic portrait",
+      "url": "https://www.facebook.com/negan.morgan.352751/posts/create-an-ultra-photorealistic-high-end-cinematic-male-fitness-and-glamour-portr/1162842552940045/",
+      "snippet": "POSE: He stands shirtless beneath a heavy outdoor rain shower, his torso slightly twisted toward the camera. One muscular tattooed arm is raised ..."
+    },
+    {
+      "title": "Mason Vs Princess Superstar / Radio Edit",
+      "url": "https://open.spotify.com/track/4HVKFkc7fvFV7jwg6IUl5F",
+      "snippet": "The hair, the eyes, the skin, the waist. You see what I can do on this microphone. So guess what I'm gonna do to you at home. The look, the lips, the hips, the ..."
+    },
+    {
+      "title": "Canon EOS R5, 85mm lens, f/4, 1/160s, ISO ...",
+      "url": "https://www.instagram.com/p/Dd7d63oFGhq/",
+      "snippet": "Create a chest-up portrait of the shirtless adult man wearing fine gold glasses and a pendant, warm highlights defining his shoulders. black ..."
+    },
+    {
+      "title": "Best Laser Stretch Mark Treatment Boston, MA",
+      "url": "https://finesselaser.com/medspa-boston-ma/laser/laser-stretch-mark-treatment/",
+      "snippet": "Stretch marks occur when the dermis – the middle layer of the skin – is stretched to a point where its elasticity breaks down."
+    }
+  ],
+  "verification": {
+    "matched": false,
+    "title": "",
+    "year": null,
+    "contradictions": [],
+    "evidence": []
+  },
+  "accepted": null,
+  "evaluation": {
+    "expectedKnown": true,
+    "correct": null
+  },
+  "elapsedMs": 38842
+}

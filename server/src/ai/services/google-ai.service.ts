@@ -1,3 +1,4 @@
+import {operationSignal,chatCheckpoint,checkpointKey} from '../utils/chat-operation.js';
 import { GoogleGenAI, type Content } from '@google/genai';
 import { AI_CONFIG } from '../config/ai.config.js';
 import type { AiHistoryMessage, AiResult } from '../types/ai.types.js';
@@ -18,7 +19,7 @@ export function historyContents(history: AiHistoryMessage[] = []): Content[] {
   });
 }
 
-export async function generateAiResponse(
+async function generateAiResponseFresh(
   model: string,
   contents: Content[],
   systemInstruction: string,
@@ -35,7 +36,7 @@ export async function generateAiResponse(
     const params = {
       model,
       contents,
-      config: { systemInstruction, maxOutputTokens: 4096, abortSignal: AbortSignal.timeout(60_000) },
+      config: { systemInstruction, maxOutputTokens: 4096, abortSignal: operationSignal(60_000) },
     };
     if (onDelta) {
       const stream = await ai.models.generateContentStream(params);
@@ -74,4 +75,8 @@ export async function generateAiResponse(
       typeof status === 'number' ? status : undefined,
     );
   }
+}
+
+export function generateAiResponse(model:string,contents:Content[],systemInstruction:string,onDelta?:(text:string)=>void):Promise<AiResult>{
+ return chatCheckpoint(checkpointKey('google-response-v1',[model,contents,systemInstruction]),()=>generateAiResponseFresh(model,contents,systemInstruction,onDelta));
 }

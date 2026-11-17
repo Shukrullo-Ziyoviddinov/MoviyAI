@@ -21,7 +21,8 @@ function remove(file: File, original: File) {
 }
 
 /** Local device encoding only. Neither source nor output is sent to Render. */
-export async function prepareChatVideo(original: File): Promise<File> {
+export async function prepareChatVideo(original: File,signal?:AbortSignal): Promise<File> {
+  signal?.throwIfAborted();
   if (!original.exists || original.size <= 0) throw failure('video_unreadable');
   if (original.size > MAX_INPUT) throw failure('video_too_large');
   if (original.size <= MAX_OUTPUT) return original;
@@ -32,29 +33,33 @@ export async function prepareChatVideo(original: File): Promise<File> {
     if (prepared.exists && prepared.size > 0) return prepared;
     cache.delete(key);
   }
-  const pending = compress(original).catch(error => { cache.delete(key); throw error; });
+  const pending = compress(original,signal).catch(error => { if(cache.get(key)===pending)cache.delete(key); throw error; });
   cache.set(key, pending);
+  const onAbort=()=>{if(cache.get(key)===pending)cache.delete(key);};
+  signal?.addEventListener('abort',onAbort,{once:true});
   // Retain a small retry cache, not an ever-growing collection of encoded videos.
   while (cache.size > 3) {
     const oldest = cache.entries().next().value!;
     cache.delete(oldest[0]);
     void oldest[1].then(file => remove(file, original)).catch(() => {});
   }
-  return pending;
+  try{return await pending;}finally{signal?.removeEventListener('abort',onAbort);}
 }
 
-async function compress(original: File): Promise<File> {
+async function compress(original: File,signal?:AbortSignal): Promise<File> {
   let compressor: typeof import('react-native-compressor');
   try { compressor = await import('react-native-compressor'); }
   catch { throw failure('compression_unsupported'); }
   try {
     const metadata = await compressor.getVideoMetaData(original.uri);
+    signal?.throwIfAborted();
     const duration = metadata.duration;
     if (!Number.isFinite(duration) || duration <= 0 || duration > 180) throw failure('video_unreadable');
     for (let attempt = 0; attempt < 2; attempt++) {
       let cancellationId = '';
       let expired = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
+      signal?.throwIfAborted();
       const encoding = compressor.Video.compress(original.uri, {
         compressionMethod: 'manual', maxSize: encoderEdge(metadata.width, metadata.height, attempt ? 480 : 720),
         bitrate: Math.max(160_000, Math.min(2_500_000, Math.floor((12_000_000 * 8 / duration - 192_000) * (attempt ? 0.6 : 1)))),
@@ -66,15 +71,19 @@ async function compress(original: File): Promise<File> {
         return file;
       });
       let output: File;
+      let onAbort:(()=>void)|undefined;
       try {
-        output = await Promise.race([encoding, new Promise<never>((_, reject) => {
+        output = await Promise.race([encoding,new Promise<never>((_,reject)=>{
+          onAbort=()=>{expired=true;try{if(cancellationId)compressor.Video.cancelCompression(cancellationId);}catch{/* Already stopped. */}reject(signal?.reason);};
+          signal?.addEventListener('abort',onAbort,{once:true});if(signal?.aborted)onAbort();
+        }), new Promise<never>((_, reject) => {
           timer = setTimeout(() => {
             expired = true;
             try { if (cancellationId) compressor.Video.cancelCompression(cancellationId); } catch { /* Already stopped. */ }
             reject(failure('timeout'));
           }, 300_000);
         })]);
-      } finally { if (timer) clearTimeout(timer); }
+      } finally { if(onAbort)signal?.removeEventListener('abort',onAbort);if (timer) clearTimeout(timer); }
       if (output.uri === original.uri || !output.exists || output.size <= 0) throw failure('compression_failed');
       try {
         if (output.size > MAX_OUTPUT) continue;
@@ -86,6 +95,7 @@ async function compress(original: File): Promise<File> {
     }
     throw failure('video_too_large');
   } catch (error) {
+    signal?.throwIfAborted();
     if ((error as { failureCode?: string })?.failureCode) throw error;
     throw failure('compression_failed');
   }

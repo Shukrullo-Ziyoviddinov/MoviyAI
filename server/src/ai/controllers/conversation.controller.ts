@@ -55,7 +55,7 @@ export async function pin(req: Request, res: Response) {
 }
 export async function send(req: Request, res: Response) {
     const id = idSchema.safeParse(req.params.id);
-    const input = z.object({ requestId: idSchema, text: z.string().trim().min(1).max(20000), directImages: z.boolean().optional(),directVideo:z.boolean().optional() }).strict().refine(value=>!(value.directImages&&value.directVideo)).safeParse(req.body);
+    const input = z.object({ requestId: idSchema, text: z.string().trim().min(1).max(20000),resume:z.boolean().optional(), directImages: z.boolean().optional(),directVideo:z.boolean().optional() }).strict().refine(value=>!(value.directImages&&value.directVideo)).safeParse(req.body);
     if (!id.success || !input.success) {
         res.status(400).json({ ok: false, error: 'Invalid chat input' });
         return;
@@ -88,7 +88,7 @@ export async function send(req: Request, res: Response) {
         res.once('close', () => clearInterval(heartbeat));
         try {
             const chat = await service.sendConversationMessage((req as AuthRequest).userId, id.data,
-                input.data.requestId, input.data.text, text => write({ type: 'delta', text }), images, input.data.directImages,input.data.directVideo,stage=>write({type:'progress',stage}));
+                input.data.requestId, input.data.text, text => write({ type: 'delta', text }), images, input.data.directImages,input.data.directVideo,stage=>write({type:'progress',stage}),input.data.resume);
             write({ type: 'done', data: chat });
         } catch (error) {
             const code=chatFailureCode(error);
@@ -101,7 +101,14 @@ export async function send(req: Request, res: Response) {
         }
         return;
     }
-    await respond(res, () => service.sendConversationMessage((req as AuthRequest).userId, id.data, input.data.requestId, input.data.text, undefined, images, input.data.directImages,input.data.directVideo));
+    await respond(res, () => service.sendConversationMessage((req as AuthRequest).userId, id.data, input.data.requestId, input.data.text, undefined, images, input.data.directImages,input.data.directVideo,undefined,input.data.resume));
+}
+
+export async function stop(req:Request,res:Response){
+ const id=idSchema.safeParse(req.params.id);
+ const input=z.object({requestId:idSchema,text:z.string().trim().min(1).max(20000),attachmentKind:z.enum(['image','video']).optional()}).strict().safeParse(req.body);
+ if(!id.success||!input.success){res.status(400).json({ok:false,error:'Invalid stop input'});return;}
+ await respond(res,()=>service.stopConversationMessage((req as AuthRequest).userId,id.data,input.data.requestId,input.data.text,input.data.attachmentKind));
 }
 
 export async function image(req: Request, res: Response) {

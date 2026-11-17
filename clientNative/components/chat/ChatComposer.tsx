@@ -16,6 +16,8 @@ import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native';
 export function ChatComposer() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const stop=useChatStore(state=>state.stop);
+  const stopping=useChatStore(state=>state.stopping);
   const sending = useChatStore(state => state.sending);
   const loading = useChatStore(state => state.loading);
   const error = useChatStore(state => state.error);
@@ -76,12 +78,14 @@ export function ChatComposer() {
           style={[
             styles.sendBtn,
             { backgroundColor: colors.accent },
-            !canSend && styles.sendBtnDisabled,
+            (stopping || (!sending && !canSend)) && styles.sendBtnDisabled,
           ]}
-          onPress={handleSend}
-          disabled={!canSend}
+          accessibilityRole="button"
+          accessibilityLabel={t(sending?'chat.stop':'chat.send')}
+          onPress={() => { if(sending)void stop();else handleSend(); }}
+          disabled={stopping || (!sending && !canSend)}
         >
-          <SendIcon size={18} color={colors.textOnAccent} />
+          {sending ? <View style={{width:16,height:16,borderRadius:3,backgroundColor:colors.textOnAccent}}/> : <SendIcon size={18} color={colors.textOnAccent} />}
         </Pressable>
       </View>
 

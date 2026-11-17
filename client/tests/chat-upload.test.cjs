@@ -2,6 +2,12 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),ts=require('typescript');
 const {webcrypto}=require('node:crypto');
+
+for(const root of ['client','clientNative'])test(root+' abort prevents new upload or AI requests',async()=>{
+ const api=load(root),controller=new AbortController();controller.abort();
+ await assert.rejects(()=>api.sendChat('chat','request','Find',()=>{},[],()=>{},{signal:controller.signal}));
+ assert.equal(api.requests.length,0);
+});
 function load(root){
  const requests=[];const exports={};let failPut=false;
  const perform=async(url,options)=>{requests.push({url,options});if(options.method==='PUT')return {ok:!failPut};return {ok:true,json:async()=>({ok:true,data:[{url:'https://r2.example/upload',headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store'}}]})};};

@@ -1,0 +1,133 @@
+{
+  "sample": "a",
+  "model": "gemini-3.5-flash-lite",
+  "duration": 49.224,
+  "transport": "local-frames",
+  "stages": [
+    {
+      "stage": "observe",
+      "elapsedMs": 11122,
+      "attempts": 1
+    },
+    {
+      "stage": "plan",
+      "elapsedMs": 9090,
+      "attempts": 1
+    },
+    {
+      "stage": "verify",
+      "elapsedMs": 10069,
+      "attempts": 1
+    }
+  ],
+  "searches": 2,
+  "observations": {
+    "moments": [
+      {
+        "seconds": 6,
+        "action": "A person wearing a pink bathrobe stands inside a dimly lit blue-toned bathroom, holding a pink piggy bank.",
+        "setting": "A small bathroom with a washing machine, tiled walls, and neon lights.",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 18,
+        "action": "A young woman with reddish-brown hair sits inside a room next to a shelving unit with bathroom items.",
+        "setting": "An interior room with a metal shelving unit and white walls.",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 33,
+        "action": "A person in a pink bathrobe and another person with pink hair stand together interacting with a pink piggy bank.",
+        "setting": "A brightly lit bathroom doorway with a shelf and neon lettering.",
+        "visibleText": "love",
+        "dialogue": null
+      }
+    ],
+    "uncertainties": [
+      "Audio is entirely absent, so dialogue cannot be determined."
+    ]
+  },
+  "plan": {
+    "queries": [
+      "pink bathrobe piggy bank bathroom movie",
+      "pink hair pink bathrobe piggy bank"
+    ]
+  },
+  "sources": [
+    {
+      "title": "The Bathrobe: 12 movies that chose this iconic clothing to set the scene…",
+      "url": "https://www.juliannarae.com/blog/the-bathrobe-12-movies-that-chose-this-iconic-clothing-to-set-the-scene?srsltid=AYCX9vIsj3u6gB3K6nZ37bECvhpinXZXpUsKA1OuF-btxBIaBfNNdZqn",
+      "snippet": "Since we love robes so much we thought it would be fun to take a look at 12 movies with iconic bathrobe scenes. Marilyn Monroe – Niagara. Monroe's robe is super ..."
+    },
+    {
+      "title": "Pretty in Pink (1/7) Movie CLIP - Bathroom Inspection (1986) HD",
+      "url": "https://www.youtube.com/watch?v=17dU___xcdA",
+      "snippet": "Duckie (Jon Cryer) gets thrown into the girls' bathroom where he complains about the inequalities between boys and girls. Bathroom Inspection ( ..."
+    },
+    {
+      "title": "Mad Money — three ordinary women risk it all for one bold plan… but every ...",
+      "url": "https://www.facebook.com/cielo.gaabucayan/videos/mad-money-three-ordinary-women-risk-it-all-for-one-bold-plan-but-every-move-come/1498717121920119/",
+      "snippet": "This video features a scene from the 2008 heist comedy film 'Mad Money'. It depicts characters played by Katie Holmes and Diane Keaton executing ..."
+    },
+    {
+      "title": "Mad Money Movie Plot: Cleaner Steals Millions from a Bank",
+      "url": "https://www.tiktok.com/@longscpxsdm/video/7479838373473946926",
+      "snippet": ""
+    },
+    {
+      "title": "Drums, Candy, and an Overflowing Tub #ScreenBites #Hop | Screen Bites",
+      "url": "https://www.facebook.com/ScreenBitesOfficial/videos/drums-candy-and-an-overflowing-tubscreenbites-hop/1322290789334346/",
+      "snippet": ""
+    },
+    {
+      "title": "MY SPANISH PIGGY BANK (TRAILER) A silent film starring Charlie Rowe ...",
+      "url": "https://www.instagram.com/reel/DZM3YMyAAF-/?hl=en",
+      "snippet": ""
+    },
+    {
+      "title": "Princess Alexandria Pink Ceramic Piggy Bank for Kids",
+      "url": "https://childtocherish.com/products/princess-alexandria-pink-hair",
+      "snippet": "Her flowing pink hair and sparkling lavender gown, accented with glitter highlights, make this bank both a functional keepsake and a charming decorative piece."
+    },
+    {
+      "title": "Amazon.com : SOBEIT Crown Piggy Bank, Small Coin ...",
+      "url": "https://www.amazon.com/SOBEIT-Glazed-Porcelain-Craftsmanship-Pink/dp/B0D95ZN46N",
+      "snippet": "Our small piggy bank measures: 5.31\" L x 4.52\" W x 5.19\" H; Perfect size for children's hands. Available in pink and white colors. Easy to Access: Our piggy ..."
+    },
+    {
+      "title": "Pink Hair Princess Peony Piggy Bank - Child To Cherish",
+      "url": "https://lillyjacekids.com/products/pink-hair-princess-peony-piggy-bank-child-to-cherish?srsltid=AYCX9vIyE_dDNmoGrxoAuB01fc15CFWj5GaObvEDj9g1K5m98MTx3Spg",
+      "snippet": "All of our banks are made from only the highest quality ceramic, known as dolomite, for increased durability. They feature a base that is deep glazed, ..."
+    },
+    {
+      "title": "Pink Piggy Bank Haul: Unboxing & My Shopping Addiction",
+      "url": "https://www.tiktok.com/@rebalasha/video/7634002567755779359",
+      "snippet": "This latest haul features an incredibly cute piggy bank, and the fact that it's pink only makes it better! Who else struggles with the ..."
+    },
+    {
+      "title": "Pink Doll House Ceramic Piggy Bank",
+      "url": "https://littlebearsmocks.com/products/pink-doll-house-ceramic-piggy-bank?srsltid=AYCX9vIFI9OxhHy2qrCTg0m1-EVtrViR1CGBb_35fTWJMiGRNujVWHk6",
+      "snippet": "This charming piggy bank is crafted from high-quality dolomite ceramic, ensuring durability and a lasting finish."
+    },
+    {
+      "title": "Vintage Ceramic Piggy Bank for Children, Girl With Pink ...",
+      "url": "https://www.etsy.com/listing/4376758421/vintage-ceramic-girl-piggy-bank-with",
+      "snippet": "Vintage ceramic piggy bank for children, girl with pink hair, retro style, bedroom decoration. TrouvaillesParSylvia. Star Seller."
+    }
+  ],
+  "verification": {
+    "matched": false,
+    "title": "",
+    "year": null,
+    "contradictions": [],
+    "evidence": []
+  },
+  "accepted": null,
+  "evaluation": {
+    "expectedKnown": true,
+    "correct": null
+  },
+  "elapsedMs": 34496
+}

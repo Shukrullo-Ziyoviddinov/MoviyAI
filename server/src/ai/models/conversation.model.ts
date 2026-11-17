@@ -10,6 +10,7 @@ const schema = new Schema({
     cleanupAttempts: { type: Number, default: 0 },
     cleanupNextAttemptAt: { type: Date, default: new Date(0) },
     lockToken: { type: String, default: '' },
+    activeRequestId:{type:String,default:''},
     lockUntil: { type: Date, default: new Date(0) },
 }, { timestamps: true, collection: 'ai_conversations' });
 schema.index({ userId: 1, updatedAt: -1 });
@@ -36,8 +37,10 @@ const turnSchema = new Schema({
     answer: { type: String, default: '' },
     progressStage:{type:String,default:null},
     failureCode:{type:String,default:null},
+    checkpoints:{type:Schema.Types.Mixed,default:{},select:false},
+    attachmentKind:{type:String,enum:['image','video',null],default:null},
     model: { type: String, default: '' },
-    status: { type: String, enum: ['processing', 'completed', 'failed'], required: true },
+    status: { type: String, enum: ['processing', 'completed', 'failed', 'stopped'], required: true },
 }, { timestamps: true, collection: 'ai_chat_turns' });
 turnSchema.index({ conversationId: 1, requestId: 1 }, { unique: true });
 turnSchema.index({ userId: 1, conversationId: 1, createdAt: 1 });

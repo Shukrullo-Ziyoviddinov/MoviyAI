@@ -1,3 +1,5 @@
+import * as operationHelpers from '../dist/ai/utils/chat-operation.js';
+const serviceFunction=(...args)=>new Function(...Object.keys(operationHelpers),...args).bind(null,...Object.values(operationHelpers));
 import {cleanupRetryDelay,cleanupErrorInfo} from '../dist/ai/utils/cleanup-retry.js';
 import {isMovieRecommendation} from '../dist/ai/services/movie-recommendation.service.js';
 import {conversationTitle} from '../dist/ai/services/conversation-title.service.js';
@@ -21,6 +23,7 @@ function repository(conversation = false) {
   function matches(row, filter) {
     return Object.entries(filter).every(([key, value]) => {
       if (value && typeof value === 'object' && !(value instanceof Date)) {
+        if ('$in' in value) return value.$in.includes(row[key]);
         if ('$ne' in value) return row[key] !== value.$ne;
         if ('$lte' in value) return row[key] <= value.$lte;
       }
@@ -49,7 +52,7 @@ function repository(conversation = false) {
     }
     if (row) {
       for (const [key,value] of Object.entries(patch.$set ?? {})) {
-        const path=key.split('.');let target=row;for(const part of path.slice(0,-1))target=target[part];target[path.at(-1)]=value;
+        const path=key.split('.');let target=row;for(const part of path.slice(0,-1)){target[part]??={};target=target[part];}target[path.at(-1)]=value;
       }
       for(const key of Object.keys(patch.$unset ?? {})){const path=key.split('.');let target=row;for(const part of path.slice(0,-1))target=target[part];delete target[path.at(-1)];}
       row.updatedAt=new Date();
@@ -87,9 +90,9 @@ function harness() {
   const putChatImage=async(key,data)=>{if(storageFailure)throw Error('R2 unavailable');objects.set(key,Buffer.from(data));};
   const getChatImage=async key=>objects.get(key)??null;
   const deleteChatImage=async key=>{if(storageFailure)throw Error('R2 unavailable');objects.delete(key);};
-  const storage=new Function('cleanupRetryDelay','cleanupErrorInfo','cleanupConversationVideos','cleanupExpiredVideos','ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages','catalogDispatcher',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(cleanupRetryDelay,cleanupErrorInfo,async()=>{},async()=>{},ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{},{preserveConversation:async()=>{}});
-  const service = new Function('saveCatalogWatchLinks','conversationTitle','ChatFailure','chatFailureCode','isContextMovieFollowup','movieFollowup','resolveDirectVideo','chatVideoUrls','findMovieFromVideo','isMovieRecommendation','recommendMovies','isNamedMovieSearch','findMovieFromText','uzbekReleaseTitle', 'Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', 'isCatalogEligible', 'wakeCatalogWorker', source +
-    '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage,deleteConversation,pinConversation};')
+  const storage=serviceFunction('cleanupRetryDelay','cleanupErrorInfo','cleanupConversationVideos','cleanupExpiredVideos','ChatTurn','Conversation','chatImageKey','putChatImage','getChatImage','deleteChatImage','signChatImage','cleanupReservedImages','catalogDispatcher',storageSource+'\nreturn {imageReferences,uploadChatImages,loadChatImages,cleanupConversationImages,chatImageUrls};')(cleanupRetryDelay,cleanupErrorInfo,async()=>{},async()=>{},ChatTurn,Conversation,chatImageKey,putChatImage,getChatImage,deleteChatImage,async key=>'https://r2.example/'+key,async()=>{},{preserveConversation:async()=>{}});
+  const service = serviceFunction('saveCatalogWatchLinks','conversationTitle','ChatFailure','chatFailureCode','isContextMovieFollowup','movieFollowup','resolveDirectVideo','chatVideoUrls','findMovieFromVideo','isMovieRecommendation','recommendMovies','isNamedMovieSearch','findMovieFromText','uzbekReleaseTitle', 'Conversation', 'ChatTurn', 'chatWithGemma', 'randomUUID', 'createHash', 'findMovieFromImages', 'imagePath', 'imageReferences', 'uploadChatImages', 'chatImageUrls', 'cleanupConversationImages', 'resolveDirectImages', 'findCharacterImages', 'findUzbekMovieLinks', 'isUzbekMovieRequest', 'uzbekLookupReply', 'isCatalogEligible', 'wakeCatalogWorker', source +
+    '\nreturn {createConversation,getConversation,listConversations,sendConversationMessage,stopConversationMessage,deleteConversation,pinConversation};')
     (async movie=>{savedWatchLinks.push(movie.uzbekLinks);},turns=>conversationTitle(turns,async()=>"Kino mavzusi"),ChatFailure,chatFailureCode,isContextMovieFollowup,async(text,movie)=>({text:"Requested movie section",movie:{...movie,presentation:"details"},model:"test"}),async()=>[{key:"video-key",hash:"v".repeat(64),mimeType:"video/mp4",size:200,duration:6}],async(_owner,_id,requestId,saved)=>{const videos=saved??ChatTurn.rows.find(turn=>turn.requestId===requestId)?.videos??[];return videos.map(video=>({fileUri:"https://r2.example/"+video.key,mimeType:video.mimeType,durationSeconds:video.duration}));},(text,videos)=>findMovieFromImages(text,videos),isMovieRecommendation,async()=>({text:'Recommendations',model:'gemma',recommendations:[{text:'Dossier 1',movie:(await findMovieFromImages('One',[])).movie},{text:'Dossier 2',movie:{...(await findMovieFromImages('Two',[])).movie,title:'Second'}}]}),isNamedMovieSearch,(text)=>findMovieFromImages(text,[]),uzbekReleaseTitle, Conversation, ChatTurn, chatWithGemma, randomUUID, createHash, findMovieFromImages, imagePath, storage.imageReferences, storage.uploadChatImages, storage.chatImageUrls, storage.cleanupConversationImages, async()=>{throw Error('not reserved');}, async()=>[{label:'Belle',imageUrl:'https://example.com/belle.jpg',sourceUrl:null}],async()=>[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],isUzbekMovieRequest,uzbekLookupReply,isCatalogEligible,()=>{wakes++;if(wakeError)throw Error('scheduler failure');});
   return { ...service, ...storage, objects, savedWatchLinks, storageFailure: value=>{storageFailure=value;}, Conversation, ChatTurn, fail: value => { fail = value; }, hold: value => { hold = value; },
     wakes:()=>wakes,wakeError:value=>{wakeError=value;},calls: () => calls, captured: () => captured };
@@ -102,6 +105,72 @@ test('owners can list/reopen their chats; other accounts cannot read or write th
     () => h.sendConversationMessage('bob', id, randomUUID(), 'Private')]) {
     await assert.rejects(action, error => error.status === 404);
   }
+});
+
+test('stopping releases the chat for a new question and a late answer cannot overwrite it',async()=>{
+ const h=harness(),id=randomUUID(),requestId=randomUUID();await h.createConversation('alice',id);
+ let release;h.hold(new Promise(resolve=>{release=resolve;}));
+ const old=h.sendConversationMessage('alice',id,requestId,'Old question');
+ await new Promise(resolve=>setImmediate(resolve));
+ await assert.rejects(()=>h.stopConversationMessage('bob',id,requestId,'Old question'),e=>e.status===404);
+ await h.stopConversationMessage('alice',id,requestId,'Old question');
+ assert.equal(h.ChatTurn.rows[0].status,'stopped');
+ h.hold(null);await h.sendConversationMessage('alice',id,randomUUID(),'New question');
+ release();await old;
+ assert.equal(h.ChatTurn.rows[0].status,'stopped');assert.equal(h.ChatTurn.rows[0].answer??'','');
+ assert.equal(h.ChatTurn.rows[1].status,'completed');
+});
+
+test('stop winning the final save race cannot dispatch catalog side effects',async()=>{
+ const h=harness(),id=randomUUID(),request=randomUUID();await h.createConversation('alice',id);
+ const update=h.ChatTurn.updateOne;
+ h.ChatTurn.updateOne=async(filter,patch,options)=>{
+  if(patch.$set?.status==='completed'){
+   await h.stopConversationMessage('alice',id,request,'Interstellar 2014 kinosini top');
+   return {matchedCount:0};
+  }
+  return update(filter,patch,options);
+ };
+ await h.sendConversationMessage('alice',id,request,'Interstellar 2014 kinosini top');
+ assert.equal(h.ChatTurn.rows[0].status,'stopped');assert.equal(h.wakes(),0);
+ assert.equal(h.ChatTurn.rows[0].catalogDispatch,undefined);
+});
+
+test('continue resumes the stopped turn without creating another message',async()=>{
+ const h=harness(),id=randomUUID(),requestId=randomUUID();await h.createConversation('alice',id);
+ await h.stopConversationMessage('alice',id,requestId,'Original question');
+ await assert.rejects(()=>h.sendConversationMessage('alice',id,requestId,'Original question'),e=>e.failureCode==='stopped');
+ await h.sendConversationMessage('alice',id,randomUUID(),'davom et');
+ assert.equal(h.ChatTurn.rows.length,1);assert.equal(h.ChatTurn.rows[0].requestId,requestId);
+ assert.equal(h.ChatTurn.rows[0].text,'Original question');assert.equal(h.ChatTurn.rows[0].status,'completed');
+ assert.deepEqual(await h.stopConversationMessage('alice',id,requestId,'Original question'),{stopped:false});
+});
+
+test('an upload stopped before metadata is saved cannot silently resume as text',async()=>{
+ const h=harness(),id=randomUUID(),request=randomUUID();await h.createConversation('alice',id);
+ await h.stopConversationMessage('alice',id,request,'Find the video','video');
+ const chat=await h.getConversation('alice',id);assert.equal(chat.turns[0].needsAttachment,true);
+ await assert.rejects(()=>h.sendConversationMessage('alice',id,randomUUID(),'continue'),error=>error.status===409);
+ assert.equal(h.calls(),0);assert.equal(h.ChatTurn.rows[0].status,'stopped');
+});
+
+test('reattaching media to a pre-upload stop fills the existing turn instead of losing references',async()=>{
+ const h=harness(),id=randomUUID(),request=randomUUID();await h.createConversation('alice',id);
+ await h.stopConversationMessage('alice',id,request,'Find','image');
+ await h.sendConversationMessage('alice',id,request,'Find',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,255])}],false,false,undefined,true);
+ assert.equal(h.ChatTurn.rows.length,1);assert.equal(h.ChatTurn.rows[0].images.length,1);assert.equal(h.ChatTurn.rows[0].status,'completed');
+});
+
+test('resuming after a different question retains the original request history',async()=>{
+ const h=harness(),id=randomUUID(),requestId=randomUUID();await h.createConversation('alice',id);
+ let release;h.hold(new Promise(resolve=>{release=resolve;}));
+ const old=h.sendConversationMessage('alice',id,requestId,'Original');await new Promise(resolve=>setImmediate(resolve));
+ await h.stopConversationMessage('alice',id,requestId,'Original');
+ h.hold(null);await h.sendConversationMessage('alice',id,randomUUID(),'Different topic');
+ release();await old;
+ await h.sendConversationMessage('alice',id,randomUUID(),'continue');
+ assert.equal(h.captured().text,'Original');assert.deepEqual(h.captured().history,[]);
+ assert.equal(h.ChatTurn.rows.length,2);
 });
 test('a confirmed failure code persists on the turn and is returned on reopen',async()=>{
  const h=harness(),id=randomUUID(),request=randomUUID();await h.createConversation('alice',id);h.fail('provider_unavailable');

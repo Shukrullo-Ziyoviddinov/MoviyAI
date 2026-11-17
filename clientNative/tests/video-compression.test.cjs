@@ -1,12 +1,20 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const ts=require('typescript');
-function harness({sizes=[10_000_000],duration=32,fail=false}={}){
+function harness({sizes=[10_000_000],duration=32,fail=false,hold=false}={}){
  const files=new Map([['file://input.mp4',{size:21_000_000,duration}]]);const calls=[];const deleted=[];
  class File{constructor(uri){this.uri=uri;}get exists(){return files.has(this.uri);}get size(){return files.get(this.uri)?.size??0;}get modificationTime(){return 1;}delete(){deleted.push(this.uri);files.delete(this.uri);}}
- const compressor={getVideoMetaData:async uri=>({duration:files.get(uri).duration,width:1920,height:1080}),Video:{compress:async(uri,options)=>{calls.push(options);if(fail)throw Error('codec');const path='file://compressed'+calls.length+'.mp4';files.set(path,{size:sizes[calls.length-1]??20_000_000,duration});return path;},cancelCompression(){}}};
+ let rejectPending,cancelled=0;
+ const compressor={getVideoMetaData:async uri=>({duration:files.get(uri).duration,width:1920,height:1080}),Video:{compress:async(uri,options)=>{calls.push(options);options.getCancellationId?.('test-job');if(hold)return new Promise((_,reject)=>{rejectPending=reject;});if(fail)throw Error('codec');const path='file://compressed'+calls.length+'.mp4';files.set(path,{size:sizes[calls.length-1]??20_000_000,duration});return path;},cancelCompression(){cancelled++;rejectPending?.(Error('Cancelled'));}}};
  const code=ts.transpileModule(fs.readFileSync('src/media/prepare-chat-video.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  const module={exports:{}};new Function('require','exports','module',code)(name=>name==='expo-file-system'?{File}:compressor,module.exports,module);
- return {prepare:module.exports.prepareChatVideo,File,files,calls,deleted};
+ return {prepare:module.exports.prepareChatVideo,File,files,calls,deleted,cancelled:()=>cancelled,unhold:()=>{hold=false;}};
 }
+
+test('stop cancels the native encoder and the same video can be prepared again',async()=>{
+ const h=harness({hold:true,sizes:[10_000_000,9_000_000]}),controller=new AbortController(),input=new h.File('file://input.mp4');
+ const encoding=h.prepare(input,controller.signal);await new Promise(resolve=>setImmediate(resolve));
+ controller.abort();await assert.rejects(encoding,error=>error.name==='AbortError');assert.equal(h.cancelled(),1);
+ h.unhold();assert.equal((await h.prepare(input)).size,9_000_000);
+});
 test('small videos remain original; large videos are encoded and reused on retry',async()=>{
  const h=harness();h.files.set('file://small.mp4',{size:3_000_000});const small=new h.File('file://small.mp4');assert.equal(await h.prepare(small),small);
  const input=new h.File('file://input.mp4');const output=await h.prepare(input);assert.equal(output.size,10_000_000);assert.equal(await h.prepare(input),output);assert.equal(h.calls.length,1);const edge=h.calls[0].maxSize;assert.ok(edge<=720);assert.equal(edge%2,0);assert.equal(Math.trunc(Math.fround(Math.fround(edge/1920)*1080))%2,0);assert.equal(h.calls[0].minimumFileSizeForCompress,0);

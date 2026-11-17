@@ -25,7 +25,8 @@ function harness() {
       if (!db.has(id)) throw Error('not found');
       return copy(db.get(id));
     },
-    sendChat: async (id, requestId, text, onDelta, media = [],onProgress=()=>{}) => {
+    stopChat:async(id,requestId,text)=>{const chat=db.get(id);let turn=chat.turns.find(t=>t.requestId===requestId);if(turn?.status==='completed')return {stopped:false};if(!turn){turn={requestId,text,answer:'',createdAt:new Date().toISOString()};chat.turns.push(turn);}turn.status='stopped';return {stopped:true};},
+    sendChat: async (id, requestId, text, onDelta, media = [],onProgress=()=>{},options={}) => {
       calls++;
       const chat = db.get(id);
       let turn = chat.turns.find(turn => turn.requestId === requestId);
@@ -34,6 +35,7 @@ function harness() {
       onProgress('searching');
       for (const delta of deltas) onDelta(delta);
       if (hold) await hold;
+      if(options.signal?.aborted)throw new DOMException('Stopped','AbortError');
       if (fail) { turn.status = 'failed';turn.failureCode=typeof fail==='string'?fail:null; throw Object.assign(Error('provider failed'),{failureCode:turn.failureCode}); }
       turn.status = 'completed'; turn.answer = 'Answer'; return copy(chat);
     },
@@ -44,11 +46,64 @@ function harness() {
   vm.runInNewContext(ts.transpileModule(revealSource, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText,
     { exports: revealExports, setTimeout, clearTimeout });
   vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText,
-    { exports, require: name => name.includes('text-reveal') ? revealExports : api, Date, URL, setTimeout, clearTimeout });
+    { exports, require: name => name.includes('text-reveal') ? revealExports : api, Date, URL, AbortController, setTimeout, clearTimeout });
   const create = () => exports.createChatSession({ read: async key => storage.get(key) ?? null,
     write: async (key, value) => { storage.set(key, value); }, uuid: () => `id-${++id}` });
   return { create, db, storage, api, fail: value => { fail = value; }, failPin:value=>{failPin=value;}, failDelete: value => { failDelete=value; }, hold: value => { hold = value; }, deltas: value => { deltas = value; }, calls: () => calls };
 }
+
+test('stop unlocks composer, resume reuses the same request and late chunks are ignored',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');
+ let release;h.hold(new Promise(resolve=>{release=resolve;}));
+ session.actions.sendMessage({text:'Old question'});await tick();
+ const request=session.getState().pending.requestId;
+ await session.actions.stop();
+ assert.equal(session.getState().sending,false);assert.equal(session.getState().error,null);
+ assert.equal(session.getState().pending,null);assert.equal(session.getState().paused.requestId,request);
+ h.hold(null);session.actions.sendMessage({text:'Davom et'});await tick();await tick();
+ assert.equal(h.db.values().next().value.turns.length,1);
+ assert.equal(session.getState().messages.filter(x=>x.role==='user').length,1);
+ release();await tick();assert.equal(session.getState().sending,false);
+});
+
+test('a stopped request does not block an unrelated new question',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');
+ let release;h.hold(new Promise(resolve=>{release=resolve;}));
+ session.actions.sendMessage({text:'Old'});await tick();await session.actions.stop();
+ h.hold(null);assert.equal(session.actions.sendMessage({text:'New'}),true);await tick();await tick();
+ assert.equal(session.getState().messages.filter(x=>x.role==='user').length,2);
+ release();await tick();assert.equal(session.getState().error,null);
+});
+
+test('a stopped conversation can be reopened and continued using the saved turn',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');
+ let release;h.hold(new Promise(resolve=>{release=resolve;}));
+ session.actions.sendMessage({text:'Keep my request'});await tick();await session.actions.stop();
+ const reopened=h.create();await reopened.actions.initialize('alice');
+ assert.equal(reopened.getState().sending,false);assert.equal(reopened.getState().paused.text,'Keep my request');
+ h.hold(null);assert.equal(reopened.actions.sendMessage({text:'continue'}),true);await tick();await tick();
+ assert.equal(h.db.values().next().value.turns.length,1);
+ release();await tick();
+});
+
+test('a completed-stop response arriving after logout cannot restore the old chat',async()=>{
+ const h=harness(),session=h.create();await session.actions.initialize('alice');
+ let release;h.hold(new Promise(resolve=>{release=resolve;}));session.actions.sendMessage({text:'Private'});await tick();
+ const chat=[...h.db.values()][0];h.api.stopChat=async()=>({stopped:false});
+ let finishRead;h.api.getChat=()=>new Promise(resolve=>{finishRead=()=>resolve(chat);});
+ const stopping=session.actions.stop();await tick();await session.actions.initialize(null);
+ finishRead();await stopping;release();await tick();
+ assert.equal(session.getState().owner,null);assert.equal(session.getState().messages.length,0);
+});
+
+test('an interrupted upload asks for a file and can continue the same turn after reattachment',async()=>{
+ const h=harness(),session=h.create();await h.api.createChat('chat');
+ h.db.get('chat').turns.push({requestId:'old-request',text:'Find the image',answer:'',createdAt:new Date().toISOString(),status:'stopped',needsAttachment:true});
+ h.storage.set('moviy.activeChat.alice','chat');await session.actions.initialize('alice');
+ assert.equal(session.actions.sendMessage({text:'continue'}),false);assert.equal(session.getState().error,null);
+ assert.equal(session.actions.sendMessage({text:'continue',media:[{id:'new-image',type:'image',uri:'file://image.jpg'}]}),true);
+ await tick();await tick();assert.equal(h.db.get('chat').turns.length,1);assert.equal(h.db.get('chat').turns[0].requestId,'old-request');
+});
 
 test('web and native use identical session behavior', () => assert.equal(source, nativeSource));
 

@@ -1,3 +1,4 @@
+import {operationSignal,chatCheckpoint,checkpointKey} from '../utils/chat-operation.js';
 import { AI_CONFIG } from '../config/ai.config.js';
 import type {
   SerperImagesResponse,
@@ -16,7 +17,7 @@ export class SerperError extends Error {
   }
 }
 
-async function request<T>(
+async function requestFresh<T>(
   endpoint: 'search' | 'images' | 'videos',
   query: string,
   options: SerperSearchOptions,
@@ -44,7 +45,7 @@ async function request<T>(
       method: 'POST',
       headers: { 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({ q, ...options }),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: operationSignal(REQUEST_TIMEOUT_MS),
     });
   } catch {
     // Do not expose request headers or credentials in errors.
@@ -65,6 +66,9 @@ async function request<T>(
   }
 }
 
+function request<T>(endpoint:'search'|'images'|'videos',query:string,options:SerperSearchOptions):Promise<T>{
+ return chatCheckpoint(checkpointKey('serper-v1',[endpoint,query,options]),()=>requestFresh<T>(endpoint,query,options));
+}
 export function searchWeb(
   query: string,
   options: SerperSearchOptions = {},

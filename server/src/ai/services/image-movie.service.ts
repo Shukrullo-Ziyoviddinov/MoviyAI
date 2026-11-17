@@ -1,3 +1,4 @@
+import {operationSignal,chatCheckpoint,checkpointKey} from '../utils/chat-operation.js';
 import {researchMovieSources,MOVIE_FACT_INSTRUCTION,hasCoreMovieFacts} from './movie-source-research.service.js';
 import { GoogleGenAI, type Part } from '@google/genai';
 import { z } from 'zod';
@@ -61,13 +62,13 @@ export function createImageMovieSearch(deps: { searchWeb: typeof searchWeb; sear
     // Both analysis calls still share the existing three-minute overall deadline.
     const callTimeout=isVideo?75_000:40_000;
     const ai = new GoogleGenAI({ apiKey, httpOptions: { timeout: callTimeout, retryOptions: { attempts: 1 } } });
-    const deadline = signal?AbortSignal.any([signal,AbortSignal.timeout(180_000)]):AbortSignal.timeout(180_000);
+    const deadline = signal?AbortSignal.any([signal,operationSignal(180_000)]):operationSignal(180_000);
     const mediaModel=isVideo?AI_CONFIG.models.video:AI_CONFIG.models.image;
-    async function structured<T>(schema: z.ZodType<T>, parts: Part[], instruction: string): Promise<T> {
+    async function structuredFresh<T>(schema: z.ZodType<T>, parts: Part[], instruction: string): Promise<T> {
       let callSignal:AbortSignal|undefined;
       for(let attempt=0;attempt<=PROVIDER_RETRY_DELAYS.length;attempt++)try {
         deadline.throwIfAborted();
-        callSignal=AbortSignal.any([deadline,AbortSignal.timeout(callTimeout)]);
+        callSignal=AbortSignal.any([deadline,operationSignal(callTimeout)]);
         const response = await ai.models.generateContent({ model: mediaModel,
           contents: [{ role: 'user', parts }], config: {
             systemInstruction: instruction, responseMimeType: 'application/json', responseJsonSchema: z.toJSONSchema(schema),
@@ -92,6 +93,10 @@ export function createImageMovieSearch(deps: { searchWeb: typeof searchWeb; sear
         throw new AiServiceError('Kino rasmini tahlil qilishda xato yuz berdi.', status);
       }
       throw new AiServiceError('Kino tahlili yakunlanmadi.');
+    }
+    function structured<T>(schema:z.ZodType<T>,parts:Part[],instruction:string):Promise<T>{
+      const stable=parts.map(part=>part.text?{text:part.text}:part.fileData?{mime:part.fileData.mimeType,video:part.videoMetadata}:{mime:part.inlineData?.mimeType});
+      return chatCheckpoint(checkpointKey('structured-v1',[instruction,stable]),()=>structuredFresh(schema,parts,instruction));
     }
     const mediaParts: Part[] = images.map(image => 'fileUri' in image
       ? { fileData: { mimeType: image.mimeType, fileUri: image.fileUri },...(image.mimeType.startsWith('video/')?{videoMetadata:{fps:1,startOffset:'0s',endOffset:videoEndOffset(image.durationSeconds??180)}}:{}) }

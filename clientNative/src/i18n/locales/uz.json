@@ -242,6 +242,10 @@
       "compression_failed": "Videoni tayyorlab bo‘lmadi. Boshqa MP4 video yoki qisqaroq parcha yuboring.",
       "video_too_large": "Videoni kerakli hajmgacha kichraytirib bo‘lmadi. 14 MB’dan kichikroq yoki qisqaroq video yuboring."
     },
-    "retry": "Qayta urinish"
+    "retry": "Qayta urinish",
+    "attachmentRequired": "Yuklash tugamasdan to‘xtatilgan. Davom ettirish uchun faylni qayta tanlab, “Davom et” deb yuboring.",
+    "stop": "To‘xtatish",
+    "send": "Yuborish",
+    "stopped": "To‘xtatildi. Davom ettirish uchun “Davom et” deb yozing yoki yangi savol yuboring."
   }
 }

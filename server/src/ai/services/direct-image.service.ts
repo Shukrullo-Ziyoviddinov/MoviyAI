@@ -15,7 +15,12 @@ export async function reserveImages(userId: string, conversationId: string, requ
   if (!await Conversation.exists({ _id: conversationId, userId, deletedAt: null })) throw new Error('Conversation not found');
   const references = images.map((image, index) => ({ ...image, key: chatImageKey(conversationId, requestId, index, image.hash) }));
   const turn = await ChatTurn.findOne({ userId, conversationId, requestId }).lean();
-  if (turn && JSON.stringify(turn.images.map(image => image.hash)) !== JSON.stringify(images.map(image => image.hash))) throw new Error('Attachments already selected');
+  if (turn && !(turn.status==='stopped'&&!(turn.images??[]).length) && JSON.stringify((turn.images??[]).map(image => image.hash)) !== JSON.stringify(images.map(image => image.hash))) throw new Error('Attachments already selected');
+  const previous=await ChatUpload.findOne({userId,conversationId,requestId}).lean();
+  if(turn?.status==='stopped'&&!(turn.images??[]).length&&!turn.videos?.length&&previous&&previous.expiresAt>new Date()&&JSON.stringify(previous.images.map(image=>[image.hash,image.size,image.mimeType]))!==JSON.stringify(images.map(image=>[image.hash,image.size,image.mimeType]))){
+    // Do not lose the old R2 keys: a still-valid PUT may finish after cancellation.
+    await ChatUpload.updateOne({_id:previous._id,userId,conversationId,requestId},{$set:{requestId:`${requestId}-abandoned-${previous._id}`}});
+  }
   await ChatUpload.updateOne({ userId, conversationId, requestId }, { $setOnInsert: { images: references, expiresAt: new Date(Date.now() + 3600000) } }, { upsert: true });
   const reservation = await ChatUpload.findOne({ userId, conversationId, requestId }).lean();
   if (!reservation || reservation.expiresAt <= new Date() || JSON.stringify(reservation.images.map(image => [image.hash,image.size,image.mimeType])) !== JSON.stringify(images.map(image => [image.hash,image.size,image.mimeType]))) throw new Error('Upload reservation expired or changed');
@@ -48,7 +53,11 @@ export async function cleanupExpiredUploads() {
     if (await Conversation.exists({ _id: row.conversationId, userId: row.userId, deletedAt: null, lockUntil: { $gt: new Date() } })) continue;
     const active = await Conversation.exists({ _id: row.conversationId, userId: row.userId, deletedAt: null });
     const turn = active ? await ChatTurn.findOne({ userId: row.userId, conversationId: row.conversationId, requestId: row.requestId }).select('-images.data').lean() : null;
-    for (const image of row.images) if (image.key && !turn?.images.some(saved => saved.key === image.key)) await deleteChatImage(image.key);
+    for (const image of row.images) if (image.key && !turn?.images?.some(saved => saved.key === image.key)) {
+      const referenced=active&&await ChatTurn.exists({userId:row.userId,conversationId:row.conversationId,'images.key':image.key});
+      const reserved=await ChatUpload.exists({_id:{$ne:row._id},userId:row.userId,conversationId:row.conversationId,expiresAt:{$gt:new Date()},'images.key':image.key});
+      if(!referenced&&!reserved)await deleteChatImage(image.key);
+    }
     await ChatUpload.deleteOne({ _id: row._id });
     } catch { console.warn('[CHAT_IMAGE_CLEANUP] Reserved upload cleanup pending; will retry'); }
   }

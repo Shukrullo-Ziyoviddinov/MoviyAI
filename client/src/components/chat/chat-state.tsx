@@ -9,6 +9,10 @@ import type {ChatStage,ChatFailureCode} from '@/types/chat-progress';
 import { useAuth } from '@/components/auth/auth-state';
 
 type ChatContextValue = {
+  stop:()=>Promise<void>;
+  stopping:boolean;
+  paused:boolean;
+  needsAttachment:boolean;
   progressStage:ChatStage|null;
   failureCode:ChatFailureCode|null;
   refreshMedia: () => Promise<void>;
@@ -63,7 +67,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [session] = useState(() => createChatSession(webChatStorage));
   const snapshot = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const { messages, sending, loading, error, conversations, activeId, streamingText, deletingId, deleteError, pinningId, pinError, listLoading,progressStage,failureCode } = snapshot;
-  const { refreshMedia, retry, openChat, newChat, deleteConversation, setPinned } = session.actions;
+  const { stop,refreshMedia, retry, openChat, newChat, deleteConversation, setPinned } = session.actions;
   const owner = ready ? profile?.id ?? null : null;
   useEffect(() => { void session.actions.initialize(owner); }, [session, owner]);
   useEffect(() => {
@@ -140,6 +144,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   return (
     <ChatContext.Provider
       value={{
+        stop,stopping:snapshot.stopping,needsAttachment:!!snapshot.paused?.needsAttachment,paused:!!snapshot.paused && snapshot.paused.requestId===snapshot.messages.filter(item=>item.kind==='text'&&item.role==='user').at(-1)?.id,
         refreshMedia,
         pinningId,
         pinError,

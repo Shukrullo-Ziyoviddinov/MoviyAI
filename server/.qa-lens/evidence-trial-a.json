@@ -1,0 +1,155 @@
+{
+  "sample": "a",
+  "model": "gemini-3.5-flash-lite",
+  "duration": 49.224,
+  "transport": "local-copy",
+  "stages": [
+    {
+      "stage": "observe",
+      "elapsedMs": 62013,
+      "attempts": 3
+    },
+    {
+      "stage": "plan",
+      "elapsedMs": 9145,
+      "attempts": 1
+    },
+    {
+      "stage": "verify",
+      "elapsedMs": 14581,
+      "attempts": 1
+    }
+  ],
+  "searches": 2,
+  "observations": {
+    "moments": [
+      {
+        "seconds": 0,
+        "action": "A woman with pink hair faces the camera, speaking directly while gesturing with her hands.",
+        "setting": "A dimly lit room with purple and blue lighting, shelves with candles and a 'love' neon sign in the background.",
+        "visibleText": "love",
+        "dialogue": "Yangi yilgacha yigitni bo'ladimi?"
+      },
+      {
+        "seconds": 6.1,
+        "action": "A young man wearing a pink robe and holding a pink pig savings bank walks into a room and speaks to a woman.",
+        "setting": "A bathroom decorated with blue and purple lights, a crescent moon prop, and candles.",
+        "visibleText": "love",
+        "dialogue": "Xo'sh, boy-friend bilan aloqa o'rnatishga tayyormisan?"
+      },
+      {
+        "seconds": 15,
+        "action": "The man and woman kiss in the doorway of the bathroom while another woman watches from an adjacent room.",
+        "setting": "A dimly lit corridor connecting a hallway and a bathroom.",
+        "visibleText": null,
+        "dialogue": "Aloqani uzma."
+      },
+      {
+        "seconds": 33.3,
+        "action": "A different woman with dark hair and tattoos kisses the man holding the pink pig savings bank.",
+        "setting": "Inside the bathroom with neon lights and candles.",
+        "visibleText": "love",
+        "dialogue": null
+      },
+      {
+        "seconds": 38.6,
+        "action": "The man in the pink robe celebrates happily while holding the pig savings bank, walking past a seated woman.",
+        "setting": "A hallway outside the bathroom.",
+        "visibleText": null,
+        "dialogue": "Qo'shimcha daromad!"
+      },
+      {
+        "seconds": 47.1,
+        "action": "The man holds out a handful of cash toward the camera, smiling with the pink pig savings bank under his arm.",
+        "setting": "Bathroom interior with blue and purple ambient lighting.",
+        "visibleText": null,
+        "dialogue": "Afsus, bankomat ishlamaydi. Xafa bo'lma."
+      }
+    ],
+    "uncertainties": [
+      "Exact translation and spelling of regional names or slang terms used in dialogue.",
+      "The relationship dynamic between the characters observing from outside and the main couple inside."
+    ]
+  },
+  "plan": {
+    "queries": [
+      "Yangi yilgacha yigitni bo'ladimi?",
+      "pink pig savings bank pink robe movie"
+    ]
+  },
+  "sources": [
+    {
+      "title": "YANGI YILGACHA 10K BOLAYLIK",
+      "url": "https://www.youtube.com/watch?v=kk1upIk-gUA",
+      "snippet": "KIMGA ZAVAYVATEL KERAK OLIB BERAMAN QANI GAZ STRIMGA KIRINGLAR BIRGA OYNAYMIZ. ALIY PLAY ; IQ si BALAND YUMORLAR | BZ JAMOASI | IXA REAKSIYA. IXA ..."
+    },
+    {
+      "title": "Yangi yilgacha 1000 ta bo'lamizmi, jigarlar? 🇺🇿#standoff2 ...",
+      "url": "https://www.youtube.com/shorts/tb3Gf3KWC3w",
+      "snippet": "Yangi yilgacha 1000 ta bo'lamizmi, jigarlar? #standoff2 #so2 #uzbekistan #gaming #standoff2uz · TENTATEKK (Ultra Slowed) · Riversmelt & ..."
+    },
+    {
+      "title": "Yangi yilgacha 20 k bolamiz | Islomjon Samandarov",
+      "url": "https://www.facebook.com/100091990742223/videos/yangi-yilgacha-20-k-bolamiz/2041468199851009/",
+      "snippet": "Yangi yilgacha 20 k bolamiz. ... Shunqa shallaqilardan ehtiyod bo'linglar #uzbekistan #yaponya #reels #samarkand #instagram."
+    },
+    {
+      "title": "YANGI YILGACHA 10K BOLAYLIK",
+      "url": "https://www.youtube.com/watch?v=udrFifqrQcI",
+      "snippet": "GUMBOK PUBGM. YANGI YILGACHA 10K BOLAYLIK. @GUMBOK_pubgm 49 likes 5.2K views Streamed 3d ago. more. Subscribe. Comments. Comment."
+    },
+    {
+      "title": "Bu yerda beixtiyor savol tug'iladi: yosh yigitni bunday ishga ...",
+      "url": "https://www.instagram.com/reel/DdWJRTboB8f/",
+      "snippet": "Tasavvur qiling: turmush o'rtog'ingiz to'lg'oq tutdi va uni shifoxonaga imkon qadar tezroq yetkazishingiz kerak. Shu sababli yo'l harakati ..."
+    },
+    {
+      "title": "yangi yilgacha 1k bo'lilig",
+      "url": "https://www.youtube.com/shorts/fBy8T6vTMaY",
+      "snippet": "yangi yilgacha 1k bo'lilig."
+    },
+    {
+      "title": "Charming Pink Piggy Bank - Ideal Birthday or Christmas ...",
+      "url": "https://www.ebay.com/itm/820331664043",
+      "snippet": "This adorable piggy bank, inspired by a beloved movie character, is the perfect gift for young savers and collectors alike. Crafted from high-quality, ..."
+    },
+    {
+      "title": "Toy Coin Child Piggy Bank for Girls Saving Money",
+      "url": "https://www.youtube.com/watch?v=jES6gr_-Geo",
+      "snippet": "UNBOXING: Cute Pig Piggy Bank Review 2022 | Toy Coin Child Piggy Bank for Girls Saving Money · Comments."
+    },
+    {
+      "title": "Pink Piggy Bank Haul: Unboxing & My Shopping Addiction",
+      "url": "https://www.tiktok.com/@rebalasha/video/7634002567755779359",
+      "snippet": "This latest haul features an incredibly cute piggy bank, and the fact that it's pink only makes it better! Who else struggles with the ..."
+    },
+    {
+      "title": "Pink Piggy Bank Stock Photos",
+      "url": "https://www.gettyimages.com/photos/pink-piggy-bank",
+      "snippet": "Browse 5,012 authentic pink piggy bank stock photos, high-res images, and pictures, or explore additional pink piggy bank icon or pink piggy bank isolated ..."
+    },
+    {
+      "title": "Piggy Bank, Unbreakable Plastic Money Box, Pink Pig ...",
+      "url": "https://www.amazon.com/Piggy-Bank-Unbreakable-Pig-Practical/dp/B0GHNFHX4K",
+      "snippet": "Your First Piggy Banks: The piggy bank features an utterly adorable, The pig has large, standout ears that perk up on either side of its head, ..."
+    },
+    {
+      "title": "This No-Face piggy bank is so cute  You can buy it here",
+      "url": "https://www.facebook.com/TheGhibliFamily/videos/this-no-face-piggy-bank-is-so-cute-/165871149153667/",
+      "snippet": "The video showcases a pink piggy bank and an electronic safe that features working buttons and a motorized bill feeder. The content is presented ..."
+    }
+  ],
+  "verification": {
+    "matched": false,
+    "title": "",
+    "year": null,
+    "contradictions": [],
+    "evidence": []
+  },
+  "accepted": null,
+  "evaluation": {
+    "expectedKnown": true,
+    "correct": null
+  },
+  "elapsedMs": 89898
+}

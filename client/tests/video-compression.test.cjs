@@ -2,6 +2,20 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 function load(name,dependencies={},globals={}){const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(__dirname,'../src/media/'+name+'.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports,require:name=>{if(dependencies[name])return dependencies[name];throw Error('Unexpected module: '+name);},Blob,WeakMap,Promise,setTimeout,clearTimeout,...globals});return exports;}
 const plan=load('video-compression-plan');
 
+test('stop cancels web conversion and does not poison a later preparation',async()=>{
+ const bunny=await import('mediabunny');const video={displayWidth:1920,displayHeight:1080};
+ let held=true,rejectEncoding,cancelled=0;
+ class Input{async getPrimaryVideoTrack(){return video;}async getPrimaryAudioTrack(){return null;}async computeDuration(){return 60;}dispose(){}}
+ class Target{on(){return ()=>{};}}
+ class Output{constructor({target}){this.target=target;}}
+ const fake={...bunny,Input,BlobSource:class{},BufferTarget:Target,Output,Mp4OutputFormat:class{},Conversion:{init:async args=>({isValid:true,utilizedTracks:[video],state:'pending',cancel:async function(){cancelled++;this.state='cancelled';rejectEncoding?.(Error('Cancelled'));},execute:async function(){if(held)return new Promise((_,reject)=>{rejectEncoding=reject;});args.output.target.buffer=new Uint8Array(100).buffer;this.state='done';}})}};
+ const {prepareChatVideo}=load('prepare-chat-video',{'./video-compression-plan':plan,mediabunny:fake},{VideoEncoder:function(){},VideoDecoder:function(){}});
+ const blob=new Blob([new Uint8Array(20_000_000)],{type:'video/mp4'}),controller=new AbortController();
+ const pending=prepareChatVideo(blob,controller.signal);await new Promise(resolve=>setImmediate(resolve));controller.abort();
+ await assert.rejects(pending,error=>error.name==='AbortError');assert.ok(cancelled>=1);
+ held=false;assert.equal((await prepareChatVideo(blob)).size,100);
+});
+
 test('large conversion budgets AAC in bits per second using the installed Quality API',async()=>{
  const bunny=await import('mediabunny');
  const video={displayWidth:1920,displayHeight:1080},audio={};

@@ -3,12 +3,16 @@ import * as api from '../api/chat';
 import type { ChatMessage, ChatMediaItem } from '../types/chat';
 import type {ChatStage,ChatFailureCode} from '../types/chat-progress';
 type Pending = {
+    needsAttachment?:boolean;
+    resume?:boolean;
     media?: ChatMediaItem[];
     conversationId: string;
     requestId: string;
     text: string;
 };
 type State = {
+    stopping:boolean;
+    paused:Pending|null;
     progressStage:ChatStage|null;
     failureCode:ChatFailureCode|null;
     pinningId: string | null;
@@ -33,9 +37,11 @@ type Storage = {
 };
 export function createChatSession(storage: Storage) {
     let revision = 0;
+    let controller:AbortController|undefined;
+    let inFlight:Pending|null=null;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const listeners = new Set<() => void>();
-    let state: State = { progressStage:null,failureCode:null,listLoading: false, pinningId: null, pinError: null, deletingId: null, deleteError: null, streamingText: '', owner: null, activeId: null, conversations: [], messages: [], loading: false, sending: false, error: null, pending: null };
+    let state: State = { stopping:false,paused:null, progressStage:null,failureCode:null,listLoading: false, pinningId: null, pinError: null, deletingId: null, deleteError: null, streamingText: '', owner: null, activeId: null, conversations: [], messages: [], loading: false, sending: false, error: null, pending: null };
     const emit = (patch: Partial<State>) => { state = { ...state, ...patch }; listeners.forEach(fn => fn()); };
     const key = (owner: string) => 'moviy.activeChat.' + owner;
     const remember = async (id: string) => {
@@ -45,8 +51,12 @@ export function createChatSession(storage: Storage) {
     function apply(chat: api.SavedConversation) {
         state = { ...state, conversations: state.conversations.map(item => item.id === chat.id
             ? { ...item, title: chat.title, updatedAt: chat.updatedAt } : item) };
+        const processing=chat.turns.find(turn=>turn.status==='processing');
+        inFlight=processing?{conversationId:chat.id,requestId:processing.requestId,text:processing.text}:null;
+        const stopped=[...chat.turns].reverse().find(turn=>turn.status==='stopped');
+        const paused=stopped?{needsAttachment:stopped.needsAttachment,conversationId:chat.id,requestId:stopped.requestId,text:stopped.text,resume:true,media:[...(stopped.images??[]),...(stopped.videos??[])].map(item=>({id:item.id,type:item.type,uri:api.chatMediaUrl(item.path),stored:true}))}:null;
         const failed = chat.turns.find(turn => turn.status === 'failed');
-        emit({ progressStage:chat.turns.find(turn=>turn.status==='processing')?.progressStage??null,failureCode:failed?.failureCode??null,streamingText: '', activeId: chat.id, messages: chat.turns.flatMap(turn => {
+        emit({ paused,stopping:false,progressStage:chat.turns.find(turn=>turn.status==='processing')?.progressStage??null,failureCode:failed?.failureCode??null,streamingText: '', activeId: chat.id, messages: chat.turns.flatMap(turn => {
                 const messages: ChatMessage[] = [];
                 const media = [...(turn.images??[]),...(turn.videos??[])].map(image => ({ id: image.id, type: image.type, uri: api.chatMediaUrl(image.path), stored: true }));
                 if (media.length)
@@ -125,7 +135,7 @@ export function createChatSession(storage: Storage) {
         const version = ++revision;
         clearTimeout(timer);
         timer = undefined;
-        emit({ progressStage:null,failureCode:null,pinningId: null, pinError: null, deletingId: null, deleteError: null, streamingText: '', listLoading: !!owner, owner, activeId: null, conversations: [], messages: [], loading: !!owner, sending: false, error: null, pending: null });
+        emit({ paused:null,stopping:false,progressStage:null,failureCode:null,pinningId: null, pinError: null, deletingId: null, deleteError: null, streamingText: '', listLoading: !!owner, owner, activeId: null, conversations: [], messages: [], loading: !!owner, sending: false, error: null, pending: null });
         if (!owner)
             return;
         try {
@@ -148,14 +158,16 @@ export function createChatSession(storage: Storage) {
         ++revision;
         clearTimeout(timer);
         timer = undefined;
-        emit({ progressStage:null,failureCode:null,listLoading: false, streamingText: '', activeId: null, messages: [], pending: null, error: null });
+        emit({ paused:null,stopping:false,progressStage:null,failureCode:null,listLoading: false, streamingText: '', activeId: null, messages: [], pending: null, error: null });
         void remember('');
     }
     async function deliver(payload: Pending) {
         if (state.sending || !state.owner)
             return;
         const version = revision;
-        emit({ sending: true, error: null,failureCode:null,progressStage:'preparing', streamingText: '' });
+        inFlight=payload;controller=new AbortController();
+        const signal=controller.signal;
+        emit({ stopping:false,sending: true, error: null,failureCode:null,progressStage:'preparing', streamingText: '' });
         const reveal = createTextReveal(text => emit({ streamingText: text }), () => version === revision);
         try {
             await remember(payload.conversationId);
@@ -166,7 +178,7 @@ export function createChatSession(storage: Storage) {
                 return;
             if (!state.conversations.some(chat => chat.id === payload.conversationId))
                 emit({ conversations: [{ id: payload.conversationId, pinned: false, title: 'Yangi chat', updatedAt: new Date().toISOString() }, ...state.conversations] });
-            const chat = await api.sendChat(payload.conversationId, payload.requestId, payload.text, delta => reveal.push(delta), payload.media,stage=>{if(version===revision)emit({progressStage:stage});});
+            const chat = await api.sendChat(payload.conversationId, payload.requestId, payload.text, delta => reveal.push(delta), payload.media,stage=>{if(version===revision)emit({progressStage:stage});},{signal,resume:payload.resume});
             await reveal.finish();
             if (version !== revision)
                 return;
@@ -198,8 +210,7 @@ export function createChatSession(storage: Storage) {
         }
         finally {
             reveal.cancel();
-            if (version === revision && !timer)
-                emit({ sending: false });
+            if (version === revision && !timer){inFlight=null;controller=undefined;emit({ sending: false });}
         }
     }
     function sendMessage({ text, media = [] }: {
@@ -211,6 +222,12 @@ export function createChatSession(storage: Storage) {
         if (!state.owner) {
             emit({ error: 'Hisobingizga kiring.' });
             return false;
+        }
+        if(state.paused&&(!media.length||state.paused.needsAttachment)&&/^(?:(?:iltimos|please|yana|endi|ha)\s+)?(?:davom\s*(?:et|ettir|qil)(?:ing|gin)?|davom|continue|resume|продолж(?:и|ить|ай|айте))(?:\s+(?:iltimos|please|дальше))?[.!?\s]*$/iu.test(text?.trim()??'')){
+            if(state.paused.needsAttachment&&!media.length)return false;
+            const payload={...state.paused,resume:true,needsAttachment:false,media:media.length?media:state.paused.media};
+            const messages:ChatMessage[]=media.length?state.messages.flatMap(item=>item.id===payload.requestId?[{id:payload.requestId+'-media',kind:'media' as const,items:media,createdAt:item.createdAt},item]:[item]):state.messages;
+            emit({pending:payload,paused:null,messages});void deliver(payload);return true;
         }
         const video=media.find(item=>item.type==='video');
         if(video){
@@ -232,6 +249,32 @@ export function createChatSession(storage: Storage) {
         emit({ activeId: payload.conversationId, pending: payload, messages: [...state.messages, ...next] });
         void deliver(payload);
         return true;
+    }
+    async function stop(){
+        if(!state.sending||state.stopping)return;
+        const payload=state.pending??inFlight;if(!payload)return;
+        const owner=state.owner,id=state.activeId;
+        const oldController=controller;
+        const version=++revision;clearTimeout(timer);timer=undefined;
+        emit({stopping:true});
+        try{
+            await api.createChat(payload.conversationId);
+            const result=await api.stopChat(payload.conversationId,payload.requestId,payload.text,payload.media?.[0]?.type);
+            oldController?.abort();
+            if(version!==revision||state.owner!==owner||state.activeId!==id)return;
+            if(!result.stopped){const chat=await api.getChat(payload.conversationId);if(version===revision&&state.owner===owner&&state.activeId===id)apply(chat);return;}
+            const saved=await api.getChat(payload.conversationId).catch(()=>null);
+            if(version!==revision)return;
+            let pausedPayload={...payload,resume:true};
+            const savedTurn=saved?.turns.find(turn=>turn.requestId===payload.requestId);
+            if(savedTurn&&((savedTurn.images?.length??0)+(savedTurn.videos?.length??0)>0)){
+                apply(saved!);pausedPayload={...pausedPayload,media:[...(savedTurn.images??[]),...(savedTurn.videos??[])].map(item=>({id:item.id,type:item.type,uri:api.chatMediaUrl(item.path),stored:true}))};
+            }
+            inFlight=null;controller=undefined;
+            emit({stopping:false,sending:false,pending:null,paused:pausedPayload,streamingText:'',progressStage:null,failureCode:null,error:null});
+        }catch{
+            if(version===revision){emit({stopping:false});poll(payload.conversationId,version);}
+        }
     }
     async function deleteConversation(id: string): Promise<boolean> {
         if (!state.owner || state.sending || state.loading || state.deletingId || state.pinningId)
@@ -303,7 +346,7 @@ export function createChatSession(storage: Storage) {
             emit({messages:state.messages.map(message=>message.kind==='media'?{...message,items:message.items.map(item=>urls.has(item.id)?{...item,uri:urls.get(item.id)!}:item)}:message)});
         } catch { /* Retry link renewal on the next interval. */ }
     }
-    const actions = { refreshMedia, setPinned, deleteConversation, initialize, openChat, newChat, sendMessage, retry: () => {
+    const actions = { stop,refreshMedia, setPinned, deleteConversation, initialize, openChat, newChat, sendMessage, retry: () => {
             if (state.pending)
                 void deliver(state.pending);
             else if (state.activeId)

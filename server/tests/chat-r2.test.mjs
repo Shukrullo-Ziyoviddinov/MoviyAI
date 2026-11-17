@@ -1,3 +1,5 @@
+import * as operationHelpers from '../dist/ai/utils/chat-operation.js';
+const serviceFunction=(...args)=>new Function(...Object.keys(operationHelpers),...args).bind(null,...Object.values(operationHelpers));
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -15,7 +17,7 @@ function harness() {
       ContentRange: ignoredRange ? undefined : 'bytes 0-11/68', Body: {destroy(){},transformToByteArray:async()=>new Uint8Array(12)} };
     return { Body: { transformToByteArray: async () => new Uint8Array([1,2,3]) } };
   } }
-  const api = new Function('S3Client','PutObjectCommand','GetObjectCommand','DeleteObjectCommand','HeadObjectCommand','env',source+
+  const api = serviceFunction('S3Client','PutObjectCommand','GetObjectCommand','DeleteObjectCommand','HeadObjectCommand','env',source+
     '\nreturn {chatImageKey,putChatImage,getChatImage,deleteChatImage,isImageFolder,inspectChatImage};')
     (S3Client,Command,Command,Command,HeadCommand,{r2Endpoint:'https://example.com',r2AccessKeyId:'test',r2SecretAccessKey:'test',r2Bucket:'test'});
   return {...api,commands,ignoreRange:()=>{ignoredRange=true;},missing:()=>{missing=true;}};

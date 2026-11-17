@@ -1,0 +1,150 @@
+{
+  "sample": "b",
+  "model": "gemini-3.5-flash-lite",
+  "duration": 68.288,
+  "transport": "local-frames",
+  "stages": [
+    {
+      "stage": "plan",
+      "elapsedMs": 1521,
+      "attempts": 1
+    },
+    {
+      "stage": "verify",
+      "elapsedMs": 2738,
+      "attempts": 1
+    }
+  ],
+  "searches": 2,
+  "observations": {
+    "moments": [
+      {
+        "seconds": 0,
+        "action": "A person in an orange jacket touches the thin, bruised knees of someone seated in a wheelchair indoors.",
+        "setting": "Indoor room with dim lighting and seated people in the background",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 15.325,
+        "action": "A woman embraces a young girl tightly while other seated people look on.",
+        "setting": "Indoor gathering space with chairs and medical equipment",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 35.378,
+        "action": "A man stands up, takes off his jacket and undershirt, revealing a torso covered in bruises and sores.",
+        "setting": "Indoor room filled with seated spectators",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 49.336,
+        "action": "The person in the orange jacket places a hand directly on the bare, bruised chest of the man who took off his shirt.",
+        "setting": "Indoor room surrounded by spectators",
+        "visibleText": null,
+        "dialogue": null
+      },
+      {
+        "seconds": 58.269,
+        "action": "Spectators in the background react emotionally, some standing up and shouting in distress.",
+        "setting": "Indoor assembly room with rows of chairs",
+        "visibleText": null,
+        "dialogue": "Ehu dayim!"
+      },
+      {
+        "seconds": 59.954,
+        "action": "A man in an orange jacket stands facing the crowd and speaks to them.",
+        "setting": "Indoor room with a crowd of people watching",
+        "visibleText": null,
+        "dialogue": "Abadiy hayot. Abadiy yoshlik yangi ilohingiz bilan barcha kasalliklaringizga men orqali davo topasiz. Har qanday kasallikka davo bor."
+      }
+    ],
+    "uncertainties": [
+      "The exact nature of the relationship between the individuals and the gathering remains ambiguous."
+    ]
+  },
+  "observationsReused": true,
+  "plan": {
+    "queries": [
+      "film scene man removes shirt showing bruised chest and person in orange jacket touches him",
+      "Abadiy hayot Abadiy yoshlik yangi ilohingiz bilan barcha kasalliklaringizga"
+    ]
+  },
+  "sources": [
+    {
+      "title": "Private Pyle's Full Breakdown | Warner Bros. Rewind",
+      "url": "https://www.youtube.com/watch?v=ZaKergmoKWE",
+      "snippet": "A compilation of scenes that led to Private Pyle (Vincent D'Onofrio) breaking down including some of Gny. Sgt. Hartman's (R. Lee Ermey) best ..."
+    },
+    {
+      "title": "The Man in the Orange Jacket [Review]",
+      "url": "https://modernhorrors.com/man-orange-jacket-review/",
+      "snippet": "The most unfortunate thing about The Man in the Orange Jacket is that it's a technically sound film. The camera work is superb, ..."
+    },
+    {
+      "title": "Robin ate Troy right on up in this scene! #WaitingtoExhale ...",
+      "url": "https://www.instagram.com/reel/C3viFFANQoS/?hl=en",
+      "snippet": "Dubbed as the male version of the 1995 film Waiting to Exhale, this film traces the journey of four African-American men as they take on love, ..."
+    },
+    {
+      "title": "He Pulled a Vest Out of His Chest . . . . . . . | Cinema Hub",
+      "url": "https://www.facebook.com/61587320062066/videos/he-pulled-a-vest-out-of-his-chestmovierecap-flimrecap-newmovies-reels-moviesreca/1279876047569248/",
+      "snippet": "This video is a movie recap about a man who, after being warned about an ancient relic vest, gains supernatural powers."
+    },
+    {
+      "title": "The Man in the Orange Jacket Official Trailer (2014) HD",
+      "url": "https://www.youtube.com/watch?v=AaGKgDvQCk4",
+      "snippet": "The Man in the Orange Jacket Official Trailer directed by Aik Karapetian A young man is fired from his job at the sea port and begins to ..."
+    },
+    {
+      "title": "Why is this guy one giant bruise? #johnwick #movies ...",
+      "url": "https://www.facebook.com/CollegeHumor/videos/why-is-this-guy-one-giant-bruise-johnwick-movies-collegehumor/1655802585062656/",
+      "snippet": "This video features a dramatic scene from the movie \"John Wick: First Blood.\" The clip begins with the protagonist, John Wick, confronting a man ..."
+    },
+    {
+      "title": "Jahongir Xolmirzayev. Faqat hayot abadiy (hikoya)",
+      "url": "https://n.ziyouz.com/portal-haqida/xarita/uzbek-nasri/jahongir-xolmirzayev-1974-2016/jahongir-xolmirzayev-faqat-hayot-abadiy-hikoya",
+      "snippet": "Holbuki menga pichoq urganlari yo'q, zaharlashgani ham yo'q, kasal ham emasman, sog'-salomatman. Keyin, shu kasalni topdilar."
+    },
+    {
+      "title": "Hayot abadiy — Şukur Xolmirzayev: audiokitob va e-kitob",
+      "url": "https://mutolaa.com/uz/book/hayot-abadiy",
+      "snippet": "Audiokitob va elektron kitob. Reyting 5.0 (32 şarh). Hikoyadan: “Nodir köçaga çiqib, özini qopmoqçi bölgan qöşnisining itiga kesak otgan edi, itga qattiq…"
+    },
+    {
+      "title": "\"Abadiy hayot\" tabletkasi yaratilmoqda",
+      "url": "https://www.youtube.com/shorts/neiIevkCVKU",
+      "snippet": "\"Abadiy hayot\" tabletkasi yaratilmoqda. RAYHONNING JIYANI NEGA U BILAN GAPLASHMAYDI? 1-QISM. 24."
+    },
+    {
+      "title": "Abadiy hayot bormi?",
+      "url": "https://www.gotquestions.org/Uzbek/Abadiy-hayot.html",
+      "snippet": "Abadiy hayot bormi? Injil abadiy hayotga aniq yo'lni ko'rsatadi. Oxir-oqibatda barcha gunohlarimiz abadiy ・ abadiy hayotdir \" . bob, 23-oyat). Imonimiz bilan ..."
+    },
+    {
+      "title": "Hayotimining abadiy va oliy maqsadi – ezgulikdir. Yaxshilikni ...",
+      "url": "https://www.hikmatlar.uz/quote/2473",
+      "snippet": "Hayotimining abadiy va oliy maqsadi – ezgulikdir. Yaxshilikni biz qanday tushunmaylik, hayotimizning o'zi yaxshilikka intilishdan boshqa narsa emas."
+    },
+    {
+      "title": "“Abadiy yoshlik”: Yoshini hech qachon taxmin qilib bo ...",
+      "url": "https://daryo.uz/2024/08/31/abadiy-yoshlik-yoshini-hech-qachon-taxmin-qilib-bolmaydigan-gollivud-yulduzlari/",
+      "snippet": "Ular muzlatkichda uxlaydi, yoshartiruvchi olma iste'mol qiladi yoki shunchaki bu dunyoning odami emas — mashhurlarning tashqi ko'rinishi va ..."
+    }
+  ],
+  "verification": {
+    "matched": false,
+    "title": "",
+    "year": null,
+    "contradictions": [],
+    "evidence": []
+  },
+  "accepted": null,
+  "evaluation": {
+    "expectedKnown": true,
+    "correct": null
+  },
+  "elapsedMs": 8358
+}
