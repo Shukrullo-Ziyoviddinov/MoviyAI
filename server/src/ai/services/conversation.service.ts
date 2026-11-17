@@ -160,7 +160,7 @@ export async function sendConversationMessage(userId: string, id: string, reques
         let history: AiHistoryMessage[] = previous.reverse().flatMap(turn => [
             { role: 'user' as const, text: turn.text }, { role: 'model' as const, text: turn.movie?.title
                 ? `${turn.answer}\nIdentified film: ${turn.movie.title} (${turn.movie.year ?? ''})` : `${turn.answer}${turn.recommendations?.length?'\nRecommended films: '+turn.recommendations.map((item:MovieRecommendation)=>`${item.movie.title} (${item.movie.year??''})`).join('; '):''}` },
-        ]);
+        ]).filter(message => message.text.trim());
         if (images.length) await uploadChatImages(id, requestId, images);
         const searchImages = await chatImageUrls(userId, id, requestId);
         const searchVideos=await chatVideoUrls(userId,id,requestId);

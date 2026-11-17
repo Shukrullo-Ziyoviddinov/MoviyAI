@@ -9,6 +9,26 @@ const source = fs.readFileSync(path.join(__dirname, '../src/stores/chat-session.
 const nativeSource = fs.readFileSync(path.join(__dirname, '../../clientNative/src/stores/chat-session.ts'), 'utf8');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
+test('a result is acknowledged as opened only after a successful load and a failed load remains retryable', async () => {
+ const h=harness(), session=h.create();await session.actions.initialize('alice');
+ assert.equal(await session.actions.openChat('later-result'),false);
+ h.db.set('later-result',{id:'later-result',title:'Film',pinned:false,updatedAt:new Date().toISOString(),turns:[]});
+ assert.equal(await session.actions.openChat('later-result'),true);
+ assert.equal(session.getState().activeId,'later-result');
+});
+
+test('opening a Telegram result adds the result to history without inventing a user prompt', async () => {
+ const h=harness(),session=h.create();await session.actions.initialize('alice');
+ h.db.set('telegram-result',{id:'telegram-result',title:'Film',pinned:false,updatedAt:new Date().toISOString(),turns:[{
+   requestId:'telegram-42',text:'',answer:'Film answer',status:'completed',model:'test',createdAt:new Date().toISOString(),images:[],videos:[]
+ }]});
+ await session.actions.openChat('telegram-result');
+ assert.equal(session.getState().conversations.some(item=>item.id==='telegram-result'),true);
+ assert.equal(session.getState().messages.length,1);
+ assert.equal(session.getState().messages[0].role,'model');
+ assert.equal(session.getState().messages[0].text,'Film answer');
+});
+
 test('video stop, greeting and resume stay chronological after the answer and reopening',async()=>{
  const h=harness(),session=h.create();await session.actions.initialize('alice');
  let release;h.hold(new Promise(resolve=>{release=resolve;}));

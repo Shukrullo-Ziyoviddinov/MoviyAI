@@ -29,5 +29,6 @@ export const env = {
   r2Endpoint: process.env.R2_ENDPOINT || '',
   adminPassword: process.env.ADMIN_PASSWORD || '',
   telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
+  telegramWebAppUrl: process.env.TELEGRAM_WEB_APP_URL || 'https://www.moviyai.uz',
   publicUrl: (process.env.PUBLIC_URL || 'https://moviyai.onrender.com').replace(/\/$/, ''),
 };

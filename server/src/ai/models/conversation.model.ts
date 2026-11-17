@@ -20,7 +20,8 @@ const turnSchema = new Schema({
     userId: { type: String, required: true },
     requestId: { type: String, required: true },
     attemptToken: { type: String, default: '' },
-    text: { type: String, required: true, maxlength: 20000 },
+    origin: { type: String, enum: ['ui', 'telegram'], default: 'ui' },
+    text: { type: String, default: '', required: function(this: { origin?: string }) { return this.origin !== 'telegram'; }, maxlength: 20000 },
     images: { type: [new Schema({
         mimeType: { type: String, required: true },
         key: { type: String },

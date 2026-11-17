@@ -22,6 +22,7 @@ type TelegramBackButton = {
 };
 
 type TelegramWebApp = {
+  initData?: string;
   platform?: string;
   isFullscreen?: boolean;
   safeAreaInset?: Insets;

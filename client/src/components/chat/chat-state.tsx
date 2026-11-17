@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useContext, useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { ChatMediaItem, ChatMessage } from "@/types/chat";
 import { createChatSession } from '@/stores/chat-session';
 import { webChatStorage } from '@/stores/web-chat-storage';
@@ -9,6 +9,7 @@ import type {ChatStage,ChatFailureCode} from '@/types/chat-progress';
 import { useAuth } from '@/components/auth/auth-state';
 
 type ChatContextValue = {
+  initialized: boolean;
   stop:()=>Promise<void>;
   stopping:boolean;
   paused:boolean;
@@ -27,7 +28,7 @@ type ChatContextValue = {
   activeId: string | null;
   loading: boolean;
   listLoading: boolean;
-  openChat: (id: string) => Promise<void>;
+  openChat: (id: string) => Promise<boolean>;
   newChat: () => void;
   sending: boolean;
   error: string | null;
@@ -69,7 +70,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const { messages, sending, loading, error, conversations, activeId, streamingText, deletingId, deleteError, pinningId, pinError, listLoading,progressStage,failureCode } = snapshot;
   const { stop,refreshMedia, retry, openChat, newChat, deleteConversation, setPinned } = session.actions;
   const owner = ready ? profile?.id ?? null : null;
-  useEffect(() => { void session.actions.initialize(owner); }, [session, owner]);
+  const [initializedOwner, setInitializedOwner] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    let alive = true;
+    void session.actions.initialize(owner).then(() => { if (alive) setInitializedOwner(owner); });
+    return () => { alive = false; };
+  }, [session, owner]);
   useEffect(() => {
     const onReturn = (event: PageTransitionEvent) => {
       if (!event.persisted || !owner) return;
@@ -83,6 +89,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [selectedMedia, setSelectedMedia] = useState<ChatMediaItem[]>([]);
   const [picking, setPicking] = useState(false);
   const [viewer, setViewer] = useState<ChatMediaItem | null>(null);
+  const openSavedChat = useCallback(async (id: string) => {
+    const before = session.getSnapshot();
+    if (before.sending || before.deletingId || before.pinningId) return false;
+    setSelectedMedia([]); setViewer(null);
+    return openChat(id);
+  }, [openChat, session]);
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const pickType = useRef<"image" | "video">("image");
@@ -144,6 +156,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   return (
     <ChatContext.Provider
       value={{
+        initialized: ready && initializedOwner === owner,
         stop,stopping:snapshot.stopping,needsAttachment:!!snapshot.paused?.needsAttachment,paused:!!snapshot.paused && (snapshot.paused.lastMessageId??snapshot.paused.requestId)===snapshot.messages.filter(item=>item.kind==='text'&&item.role==='user').at(-1)?.id,
         refreshMedia,
         pinningId,
@@ -159,7 +172,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         activeId,
         loading,
         listLoading,
-        openChat: async id => { setSelectedMedia([]); setViewer(null); await openChat(id); },
+        openChat: openSavedChat,
         newChat: () => { newChat(); setSelectedMedia([]); setViewer(null); },
         sending,
         error,

@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/components/language/language-state";
 import { SideMenu } from "@/components/menu/SideMenu";
 import { TelegramBackButton, TelegramChromeProvider } from "@/components/telegram/TelegramFullscreen";
 import { ThemeProvider } from "@/components/theme/theme-state";
+import { TelegramResult } from '@/components/telegram/TelegramResult';
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <LanguageProvider>
           <AuthProvider>
             <ChatProvider>
+              <TelegramResult />
               <SideMenu>{children}</SideMenu>
               <GoogleAuthModal />
             </ChatProvider>

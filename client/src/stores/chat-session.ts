@@ -51,8 +51,10 @@ export function createChatSession(storage: Storage) {
             await storage.write(key(state.owner), id).catch(() => undefined);
     };
     function apply(chat: api.SavedConversation) {
-        state = { ...state, conversations: state.conversations.map(item => item.id === chat.id
-            ? { ...item, title: chat.title, updatedAt: chat.updatedAt } : item) };
+        const summary = { id: chat.id, title: chat.title, pinned: chat.pinned, updatedAt: chat.updatedAt };
+        state = { ...state, conversations: state.conversations.some(item => item.id === chat.id)
+            ? state.conversations.map(item => item.id === chat.id ? summary : item)
+            : [summary, ...state.conversations] };
         const processing=chat.turns.find(turn=>turn.status==='processing');
         inFlight=processing?{conversationId:chat.id,requestId:processing.requestId,text:processing.text}:null;
         const stopped=[...chat.turns].reverse().find(turn=>turn.status==='stopped');
@@ -92,7 +94,7 @@ export function createChatSession(storage: Storage) {
     }
     async function openChat(id: string) {
         if (state.sending || state.deletingId || state.pinningId)
-            return;
+            return false;
         const version = ++revision;
         clearTimeout(timer);
         timer = undefined;
@@ -100,15 +102,17 @@ export function createChatSession(storage: Storage) {
         try {
             const chat = await api.getChat(id);
             if (version !== revision)
-                return;
+                return false;
             apply(chat);
             await remember(id);
             if (state.sending)
                 poll(id, version);
+            return true;
         }
         catch {
             if (version === revision)
                 emit({ error: 'Suhbatni ochib bo\'lmadi. Qayta tanlang.' });
+            return false;
         }
         finally {
             if (version === revision)
