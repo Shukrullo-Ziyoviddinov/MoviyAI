@@ -16,11 +16,21 @@ const labels: Record<ChatStage, string> = {
 };
 
 /** One status message; real AI stage callbacks update it without blocking AI. */
-export function createBotProgress(chatId: number, options: { messageId?: number | null; save: (id: number) => Promise<void> }, deps = { telegram, intervalMs: 1500, now: Date.now }) {
+export function createBotProgress(chatId: number, options: { messageId?: number | null; typing?: boolean; save: (id: number) => Promise<void> }, deps = { telegram, intervalMs: 1500, now: Date.now }) {
   let messageId = options.messageId ?? undefined;
   let closed = false, lastText = '', pending = '', nextAt = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let inFlight: Promise<void> | undefined;
+  let typingTimer: ReturnType<typeof setInterval> | undefined;
+  let typingBusy = false, nextTypingAt = 0;
+  function typing() {
+    if (closed || typingBusy || deps.now() < nextTypingAt) return;
+    typingBusy = true;
+    void deps.telegram('sendChatAction', { chat_id: chatId, action: 'typing' })
+      .catch(error => { if (error instanceof TelegramError && error.status === 429) nextTypingAt = deps.now() + error.retryAfter * 1000; })
+      .finally(() => { typingBusy = false; });
+  }
+  function stopTyping() { clearInterval(typingTimer); typingTimer = undefined; }
   async function edit(text: string) {
     if (!messageId || text === lastText) return;
     try {
@@ -54,18 +64,23 @@ export function createBotProgress(chatId: number, options: { messageId?: number 
         }
         nextAt = deps.now() + deps.intervalMs;
       } catch { /* An optional status message never fails a movie search. */ }
+      if (options.typing && !typingTimer && !closed) {
+        typing(); typingTimer = setInterval(typing, 4500); typingTimer.unref();
+      }
     },
     report(stage: ChatStage) { if (!closed) { pending = labels[stage]; pump(); } },
     async finish(text: string) {
+      stopTyping();
       closed = true; pending = ''; clearTimeout(timer); timer = undefined;
       await inFlight;
       await edit(text);
     },
     async remove() {
+      stopTyping();
       closed = true; pending = ''; clearTimeout(timer); timer = undefined;
       await inFlight;
       if (messageId) try { await deps.telegram('deleteMessage', { chat_id: chatId, message_id: messageId }); } catch { /* Keep the terminal status if deletion is unavailable. */ }
     },
-    dispose() { closed = true; pending = ''; clearTimeout(timer); timer = undefined; },
+    dispose() { closed = true; pending = ''; clearTimeout(timer); timer = undefined; stopTyping(); },
   };
 }

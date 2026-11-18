@@ -153,7 +153,7 @@ function workerHarness(options = {}) {
     botPresentation, telegramMedia: async () => [],
     runChatOperation: async (_context, work) => work(), ChatFailure: Error, chatFailureCode: error => error?.failureCode ?? 'unknown',
     createBotProgress: (_id, progressOptions) => ({
-      start: async stage => { options.events?.push(['start', stage]); await progressOptions.save(99); },
+      start: async stage => { options.onProgressOptions?.(progressOptions); options.events?.push(['start', stage]); await progressOptions.save(99); },
       report: stage => { options.events?.push(['stage', stage]); },
       finish: async text => { options.events?.push(['finish', text]); },
       remove: async () => { options.events?.push(['remove']); },
@@ -419,4 +419,43 @@ test('a failed video search updates the status with the real failure and never r
   assert.match(events.find(event => event[0] === 'finish')[1], /AI xizmatida/);
   assert.equal(events.some(event => event[0] === 'remove'), false);
   assert.equal(events.some(event => event[0] === 'finish' && event[1].includes('✅')), false);
+});
+
+test('ordinary text shows a preparing status with typing enabled and removes it after the answer', async () => {
+  const events = [];
+  let typing;
+  const h = workerHarness({ fail: false, events, onProgressOptions: options => { typing = options.typing; } });
+  await h.worker.drainBotQueue();
+  assert.deepEqual(events[0], ['start', 'preparing']);
+  assert.equal(typing, true);
+  assert.equal(h.job.status, 'sent'); assert.equal(h.sendCalls(), 1);
+  assert.equal(events.at(-2)[0], 'remove'); assert.equal(events.at(-1)[0], 'dispose');
+});
+test('typing is refreshed while preparing, respects Telegram rate limits and stops on completion', async () => {
+  const calls = [];
+  let tick, active = false, now = 1000, fail = true;
+  const { createBotProgress } = load('progress', {
+    TelegramError,
+    setInterval: callback => { tick = callback; active = true; return { unref() {} }; },
+    clearInterval: () => { active = false; },
+  }, ['createBotProgress']);
+  const progress = createBotProgress(123, { typing: true, save: async () => {} }, {
+    intervalMs: 0, now: () => now,
+    telegram: async (method, body) => {
+      calls.push({ method, body });
+      if (method === 'sendChatAction' && fail) { fail = false; throw new TelegramError(429, 10); }
+      return { message_id: 99 };
+    },
+  });
+  await progress.start('preparing'); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls[0].method, 'sendMessage');
+  assert.equal(calls[1].method, 'sendChatAction'); assert.equal(calls[1].body.action, 'typing');
+  tick(); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.filter(call => call.method === 'sendChatAction').length, 1);
+  now += 11000; tick(); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.filter(call => call.method === 'sendChatAction').length, 2);
+  await progress.finish('Done'); assert.equal(active, false);
+  tick(); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.filter(call => call.method === 'sendChatAction').length, 2);
+  await progress.remove(); progress.dispose();
 });

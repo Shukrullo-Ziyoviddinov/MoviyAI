@@ -84,12 +84,14 @@ export async function drainBotQueue() {
       try {
         const incoming = (job.update as TelegramUpdate).message;
         const hasMedia = !!(incoming?.video || incoming?.photo?.length || incoming?.document);
-        if (job.progressMessageId || !notice && hasMedia) {
+        const immediateCommand = /^\/(?:start|help|new)(?:@\w+)?(?:\s|$)/.test(incoming?.text?.trim() ?? '');
+        if (job.progressMessageId || !notice && !immediateCommand) {
           progress = createBotProgress(Number(job.telegramId), {
             messageId: job.progressMessageId,
+            typing: !hasMedia,
             save: async messageId => { await BotUpdate.updateOne({ _id: job._id, lockToken }, { $set: { progressMessageId: messageId } }); },
           });
-          if (!notice) await progress.start(incoming?.video || incoming?.document?.mime_type?.startsWith('video/') ? 'checking_video' : 'analyzing_image');
+          if (!notice) await progress.start(!hasMedia ? 'preparing' : incoming?.video || incoming?.document?.mime_type?.startsWith('video/') ? 'checking_video' : 'analyzing_image');
         }
         if (!notice) {
           if (await Conversation.exists({ _id: session.conversationId, deletedAt: { $ne: null } })) {

@@ -2,6 +2,7 @@ import {operationSignal,chatCheckpoint,checkpointKey} from '../utils/chat-operat
 import { GoogleGenAI, type Content } from '@google/genai';
 import { AI_CONFIG } from '../config/ai.config.js';
 import type { AiHistoryMessage, AiResult } from '../types/ai.types.js';
+import { PROVIDER_RETRY_DELAYS, waitForProviderRetry } from '../utils/provider-retry.js';
 
 export class AiServiceError extends Error {
   constructor(message: string, public readonly status?: number) {
@@ -19,11 +20,12 @@ export function historyContents(history: AiHistoryMessage[] = []): Content[] {
   });
 }
 
-async function generateAiResponseFresh(
+async function generateAiResponseAttempt(
   model: string,
   contents: Content[],
   systemInstruction: string,
   onDelta?: (text: string) => void,
+  signal = operationSignal(60_000),
 ): Promise<AiResult> {
   const apiKey = AI_CONFIG.apiKey?.trim();
   if (!apiKey) throw new AiServiceError('GOOGLE_AI_API_KEY sozlanmagan.');
@@ -36,7 +38,7 @@ async function generateAiResponseFresh(
     const params = {
       model,
       contents,
-      config: { systemInstruction, maxOutputTokens: 4096, abortSignal: operationSignal(60_000) },
+      config: { systemInstruction, maxOutputTokens: 4096, abortSignal: signal },
     };
     if (onDelta) {
       const stream = await ai.models.generateContentStream(params);
@@ -74,6 +76,33 @@ async function generateAiResponseFresh(
       'Google AI so‘rovi bajarilmadi.',
       typeof status === 'number' ? status : undefined,
     );
+  }
+}
+
+async function generateAiResponseFresh(model: string, contents: Content[], systemInstruction: string, onDelta?: (text: string) => void): Promise<AiResult> {
+  // All attempts share one deadline. Once streamed text is visible, do not
+  // restart it: web/native must never receive a duplicated answer prefix.
+  const signal = operationSignal(60_000);
+  let emitted = false;
+  for (let attempt = 0; ; attempt++) {
+    signal.throwIfAborted();
+    try {
+      const result = await generateAiResponseAttempt(model, contents, systemInstruction, onDelta ? text => {
+        if (text) emitted = true;
+        onDelta(text);
+      } : undefined, signal);
+      signal.throwIfAborted();
+      return result;
+    } catch (error) {
+      if (signal.aborted) throw signal.reason;
+      const status = error instanceof AiServiceError ? error.status : undefined;
+      const delay = PROVIDER_RETRY_DELAYS[attempt];
+      const retry = !emitted && [500, 502, 503, 504].includes(status ?? 0) && delay !== undefined;
+      console.warn('[AI_TEXT]', { event: retry ? 'provider-retry' : 'provider-failed', model, status: status ?? null,
+        attempt: attempt + 1, ...(retry ? { delayMs: delay } : {}) });
+      if (!retry) throw error;
+      await waitForProviderRetry(delay, signal);
+    }
   }
 }
 

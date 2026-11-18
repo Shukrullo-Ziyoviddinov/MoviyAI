@@ -42,6 +42,11 @@ for recovery; after final delivery the temporary status is removed. Status API
 failures never discard an AI result. On AI failure the status shows the actual
 mapped failure reason until the explanatory reply is delivered.
 
+Ordinary AI text messages also show a preparing status and Telegram's native
+typing indicator. Typing is refreshed while the answer is being generated and
+stops on completion, failure or disposal. Fast `/start`, `/help` and `/new`
+commands reply directly without a waiting message.
+
 Photo/video bytes are never uploaded to R2 or stored in MongoDB or on Render's
 disk. MongoDB holds Telegram file IDs and metadata. Google receives a short-lived
 signed streaming relay URL, not the token-bearing Telegram file URL.
