@@ -39,3 +39,8 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Local video-import tools and isolated downloader trials
+/server/.tools/video-import/
+/server/.qa-video-import/
+/server/.video-import-tmp/

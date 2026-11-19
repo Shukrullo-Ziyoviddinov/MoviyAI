@@ -5,6 +5,7 @@ import { createHmac, timingSafeEqual, randomUUID, randomBytes } from 'node:crypt
 import { Readable, PassThrough, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { formatTelegramText, entitiesForChunk } from '../dist/bot/format.js';
+import { hasVideoPlatformLink } from '../dist/ai/video-import/services/video-import-chat.service.js';
 
 // Isolated dependencies: no production Telegram, Gemini, R2 or database calls.
 function load(name, deps, names) {
@@ -127,7 +128,7 @@ test('a result cannot be claimed by a different Telegram identity or rebound to 
 function workerHarness(options = {}) {
   let aiCalls = 0, sendCalls = 0;
   const job = { _id: '42', telegramId: '123', status: 'pending', nextAttemptAt: new Date(0), resultToken: 'a'.repeat(64),
-    createdAt: new Date(), conversationId: 'unused', update: { update_id: 42, message: { message_id: 7, text: 'salom', ...(options.video ? { video: options.video } : {}) } } };
+    createdAt: new Date(), conversationId: 'unused', update: { update_id: 42, message: { message_id: 7, text: options.text ?? 'salom', ...(options.video ? { video: options.video } : {}) } } };
   const session = { _id: '123', conversationId: 'bot-thread', profileId: options.profileId ?? null, history: [], movie: options.previousMovie ?? null };
   const updates = {
     findOneAndUpdate: (_query, update) => ({ lean: async () => {
@@ -143,6 +144,12 @@ function workerHarness(options = {}) {
     updateOne: async (_query, update) => { Object.assign(session, update.$set); return { matchedCount: 1 }; },
   };
   const worker = load('worker', {
+    hasVideoPlatformLink,
+    findMovieFromVideoUrl:async(owner,conversationId,requestId,text,settings)=>{
+      if(!hasVideoPlatformLink(text))return null;
+      assert.deepEqual(owner,{kind:'telegram',id:'123'});assert.equal(conversationId,'bot-thread');assert.equal(requestId,'telegram-42');
+      await settings.onImport('a'.repeat(64));return options.result;
+    },
     randomUUID, randomBytes, BotUpdate: updates, BotSession: sessions,
     Conversation: { exists: async () => false },
     answerBot: async (_text, _media, _history, _movie, onProgress) => {
@@ -176,6 +183,14 @@ test('delivery retries reuse a durable AI answer and do not duplicate private co
   assert.equal(aiCalls(), 1); assert.equal(sendCalls(), 2); assert.equal(job.status, 'sent');
   assert.equal(session.history.length, 2);
   assert.equal(job.conversationId, 'bot-thread');
+});
+
+test('a Telegram platform link bypasses ordinary AI and exposes only the existing result button',async()=>{
+ const h=workerHarness({text:'https://www.instagram.com/reel/fixture/',fail:false,
+  result:{text:'Kino topildi',model:'existing-video',movie:{title:'Fixture'}}});
+ await h.worker.drainBotQueue();assert.equal(h.aiCalls(),0);assert.equal(h.job.videoImportId,'a'.repeat(64));
+ assert.equal(h.job.notification.rich,true);assert.ok(h.job.notification.buttons[0][0].web_app);
+ assert.equal(h.job.catalogPending,false);assert.equal(h.job.media,undefined);
 });
 
 test('a permanently rejected Telegram delivery ends without blocking the next user requests', async () => {

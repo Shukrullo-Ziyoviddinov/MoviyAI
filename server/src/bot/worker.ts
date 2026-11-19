@@ -13,6 +13,7 @@ import type { AiHistoryMessage } from '../ai/types/ai.types.js';
 import type { TelegramUpdate } from './types.js';
 import { Conversation } from '../ai/models/conversation.model.js';
 import { createBotProgress } from './progress.js';
+import { findMovieFromVideoUrl, hasVideoPlatformLink } from '../ai/video-import/services/video-import-chat.service.js';
 
 const CONCURRENCY = 2;
 let running = 0;
@@ -67,7 +68,7 @@ export async function drainBotQueue() {
         continue;
       }
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(new ChatFailure('timeout')), 220000);
+      const timer = setTimeout(() => controller.abort(new ChatFailure('timeout')), hasVideoPlatformLink(job.update.message?.text ?? job.update.message?.caption ?? '') ? 600000 : 220000);
       let renewing = false;
       const heartbeat = setInterval(() => {
         if (renewing) return;
@@ -111,6 +112,14 @@ export async function drainBotQueue() {
             result = { text: 'Yangi suhbat boshlandi. Qanday kino izlayapsiz?', model: 'bot-help' };
           } else {
             result = await runChatOperation({ signal: controller.signal, checkpoints: {}, save: async () => {} }, async () => {
+              const imported = await findMovieFromVideoUrl({kind:'telegram',id:job.telegramId},job.conversationId,`telegram-${job._id}`,text,{
+                signal:controller.signal,onProgress:progress?.report,hasMedia,
+                onImport:async videoImportId=>{
+                  const saved=await BotUpdate.updateOne({_id:job._id,lockToken},{$set:{videoImportId}});
+                  if(!saved.matchedCount)throw new ChatFailure('stopped');
+                },
+              });
+              if(imported)return imported;
               const media = await telegramMedia(job._id, update);
               return answerBot(text || 'Ushbu kinoni top', media, session.history as AiHistoryMessage[], session.movie ?? undefined, progress?.report);
             });
@@ -118,7 +127,7 @@ export async function drainBotQueue() {
           controller.signal.throwIfAborted();
           notice = botPresentation(result, job.resultToken);
           // Persist response before sending: a Telegram delivery retry never reruns AI.
-          const catalogPending = isCatalogEligible(result.movie) || !!result.recommendations?.some(item => isCatalogEligible(item.movie)) || !!result.movie?.linksOnly;
+          const catalogPending = !hasVideoPlatformLink(text) && (isCatalogEligible(result.movie) || !!result.recommendations?.some(item => isCatalogEligible(item.movie)) || !!result.movie?.linksOnly);
           const written = await BotUpdate.updateOne({ _id: job._id, lockToken }, { $set: { result, resultAt: new Date(), notification: notice, status: 'ready', catalogPending } });
           if (written.matchedCount === 0) continue;
           if (catalogPending) void drainBotCatalog();

@@ -211,6 +211,10 @@
     },
     "videoPrompt": "Find the movie in this video.",
     "progress": {
+      "waiting_import": "Waiting for download slot",
+      "checking_link": "Checking link",
+      "downloading_video": "Downloading video",
+      "preparing_analysis": "Preparing for analysis",
       "checking_video": "Checking uploaded video",
       "upload_video": "Uploading video",
       "upload_image": "Uploading image",

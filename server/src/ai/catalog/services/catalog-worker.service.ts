@@ -5,10 +5,15 @@ import { processCatalogChatSave } from './catalog-chat-save.service.js';
 import type { CatalogJobProcessor, CatalogJobRepository } from '../types/catalog-job.types.js';
 import { catalogFailureDetails, catalogOperation } from '../utils/catalog-diagnostics.js';
 import {runActorBackfillOnce} from './catalog-actor-backfill.service.js';
+import { videoImportCatalogDispatcher } from '../../video-import/services/video-import-catalog.service.js';
 
 const LEASE_MS = 10 * 60 * 1000;
 export function createCatalogWorker(deps: { jobs: CatalogJobRepository; dispatch: () => Promise<number>; process: CatalogJobProcessor; now: () => Date } = {
-  jobs: catalogJobRepository, dispatch: () => catalogDispatcher.dispatch(), process: processCatalogChatSave, now: () => new Date(),
+  jobs: catalogJobRepository, dispatch: async () => {
+    const rows = await Promise.allSettled([catalogDispatcher.dispatch(), videoImportCatalogDispatcher.dispatch()]);
+    if (rows.some(row => row.status === 'rejected')) throw new Error('CATALOG_OUTBOX_PENDING');
+    return rows.reduce((count, row) => count + (row.status === 'fulfilled' ? row.value : 0), 0);
+  }, process: processCatalogChatSave, now: () => new Date(),
 }) {
   let running = false;
   return { async runOnce(): Promise<void> {

@@ -5,6 +5,7 @@ import type { ChatImageInput } from '../types/movie-search.types.js';
 import { catalogDispatcher } from '../catalog/services/catalog-dispatch.service.js';
 import {cleanupConversationVideos,cleanupExpiredVideos} from './direct-video.service.js';
 import {cleanupRetryDelay,cleanupErrorInfo} from '../utils/cleanup-retry.js';
+import { videoImportCleanup } from '../video-import/services/video-import-cleanup.service.js';
 
 export function imageReferences(conversationId: string, requestId: string, images: (ChatImageInput & { hash: string })[]) {
   return images.map((image, index) => ({ key: chatImageKey(conversationId, requestId, index, image.hash),
@@ -47,6 +48,8 @@ export async function cleanupConversationImages(userId: string, conversationId: 
   let operation='preserve-catalog';
   try {
   await catalogDispatcher.preserveConversation(userId, conversationId);
+  operation='imported-videos';
+  if (!await videoImportCleanup.conversation(userId,conversationId)) return;
   operation='reserved-images';
   await cleanupReservedImages(userId, conversationId);
   operation='videos';

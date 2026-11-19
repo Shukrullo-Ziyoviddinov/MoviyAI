@@ -20,7 +20,7 @@ test('native and web share the stream parser and text reveal behavior', () => {
 });
 
 test('all progress and failure labels exist in Uzbek, Russian and English on both clients',()=>{
- const stages=['upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'];
+ const stages=['waiting_import','checking_link','downloading_video','preparing_analysis','upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'];
  const failures=['insufficient_evidence','identity_unconfirmed','provider_unavailable','search_unavailable','rate_limited','timeout','video_unreadable','upload_failed','unknown'];
  for(const language of ['uz','ru','en']){
   const web=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/i18n/locales/'+language+'.json'),'utf8')).chat;
@@ -51,6 +51,11 @@ test('stream errors and premature disconnect are not mistaken for completed answ
 test('real progress stages cross fragmented SSE without becoming answer text',async()=>{
  const stages=[],deltas=[];const input=response('data: {"type":"progress","stage":"analyzing_video"}\n\ndata: {"type":"progress","stage":"invented"}\n\ndata: {"type":"progress","stage":"searching"}\n\ndata: {"type":"delta","text":"Result"}\n\ndata: {"type":"done","data":{"id":"chat","turns":[]}}\n\n',2);
  await consumeChatStream(input,text=>deltas.push(text),stage=>stages.push(stage));assert.deepEqual(stages,['analyzing_video','searching']);assert.deepEqual(deltas,['Result']);
+});
+test('URL-specific stages are delivered to the status callback, not to answer text',async()=>{
+ const expected=['checking_link','waiting_import','downloading_video','preparing_analysis'],stages=[],deltas=[];
+ const text=expected.map(stage=>'data: '+JSON.stringify({type:'progress',stage})+'\n\n').join('')+'data: {"type":"done","data":{"id":"chat","turns":[]}}\n\n';
+ await consumeChatStream(response(text,2),value=>deltas.push(value),stage=>stages.push(stage));assert.deepEqual(stages,expected);assert.deepEqual(deltas,[]);
 });
 test('SSE failures preserve whitelisted cause codes and ignore arbitrary error text',async()=>{
  for(const [code,expected] of [['video_unreadable','video_unreadable'],['timeout','timeout'],['invented','unknown']]){

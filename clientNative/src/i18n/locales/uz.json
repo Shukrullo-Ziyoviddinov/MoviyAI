@@ -211,6 +211,10 @@
     },
     "videoPrompt": "Videodagi kinoni toping.",
     "progress": {
+      "waiting_import": "Yuklash navbati kutilmoqda",
+      "checking_link": "Havola tekshirilmoqda",
+      "downloading_video": "Video yuklab olinmoqda",
+      "preparing_analysis": "Tahlilga tayyorlanmoqda",
       "checking_video": "Video tekshirilmoqda",
       "upload_video": "Video yuklanmoqda",
       "upload_image": "Rasm yuklanmoqda",

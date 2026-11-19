@@ -99,7 +99,7 @@ export async function sendChat(id: string, requestId: string, text: string, onDe
     const body = JSON.stringify({requestId,text,resume:options.resume??false,...(options.resumeEvent?{resumeEvent:{id:options.resumeEvent.id,text:options.resumeEvent.text}}:{}),...(localImages.length ? {directImages:true} : {}),...(localVideos.length?{directVideo:true}:{})});
     const headers: Record<string,string> = {Accept:'text/event-stream',Authorization:'Bearer '+token,'Content-Type':'application/json'};
     const response = await fetch(apiBaseUrl + '/api/ai/conversations/' + id + '/messages', {
-        method: 'POST', headers, body, signal: transferSignal(240000),
+        method: 'POST', headers, body, signal: transferSignal(600000),
     });
     return consumeChatStream(response, onDelta,onProgress);
 }

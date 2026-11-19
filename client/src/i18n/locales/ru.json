@@ -211,7 +211,11 @@
     },
     "videoPrompt": "Найди фильм по этому видео.",
     "progress": {
-      "checking_video": "??????????? ?????",
+      "waiting_import": "Ожидаем очередь загрузки",
+      "checking_link": "Проверяем ссылку",
+      "downloading_video": "Скачиваем видео",
+      "preparing_analysis": "Готовим к анализу",
+      "checking_video": "Проверяем видео",
       "upload_video": "Видео загружается",
       "upload_image": "Изображение загружается",
       "analyzing_video": "Анализируем сцены видео",

@@ -33,6 +33,7 @@ const job = new Schema({
   conversationId: { type: String, required: true },
   publishedProfileId: { type: String, default: null },
   media: { type: Schema.Types.Mixed, default: null },
+  videoImportId: { type: String, default: null, select: false },
   // Telegram prompts/media references are private bot history, never UI turns.
   expiresAt: { type: Date, default: () => new Date(Date.now() + 30 * 86400000), index: { expires: 0 } },
 }, { timestamps: true, collection: 'telegram_ai_updates' });

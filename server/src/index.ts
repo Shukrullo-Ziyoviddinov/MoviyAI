@@ -12,6 +12,8 @@ import apiRoutes from './routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
 import { startChatImageCleanup } from './ai/services/chat-image-storage.service.js';
 import { startCatalogWorker } from './ai/catalog/services/catalog-worker.service.js';
+import { startVideoImportWorker } from './ai/video-import/services/video-import-chat.service.js';
+import { startVideoImportCleanup } from './ai/video-import/services/video-import-cleanup.service.js';
 
 async function bootstrap() {
   await connectDb();
@@ -46,7 +48,7 @@ async function bootstrap() {
   );
 
   app.get('/health', (_req, res) => {
-    res.json({ ok: true, service: 'moviyai-server' });
+    res.json({ ok: true, service: 'moviyai-server', revision: process.env.RENDER_GIT_COMMIT?.slice(0,12) ?? null });
   });
 
   app.use('/api', apiRoutes);
@@ -58,6 +60,8 @@ async function bootstrap() {
     void connectTelegramBot();
     startChatImageCleanup();
     startCatalogWorker();
+    startVideoImportWorker();
+    startVideoImportCleanup();
   });
 }
 

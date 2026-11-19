@@ -35,6 +35,9 @@ function r2() {
   return client;
 }
 
+// Shared lazy client; import workers use the same credentials and bucket setup.
+export function getR2Client() { return r2(); }
+
 export function isImageFolder(value: string): value is ImageFolder {
   return (IMAGE_FOLDERS as readonly string[]).includes(value);
 }

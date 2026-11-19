@@ -19,18 +19,21 @@ import { wakeCatalogWorker } from '../catalog/services/catalog-worker.service.js
 import {movieFollowup,isContextMovieFollowup} from './movie-followup.service.js';
 import {ChatFailure,chatFailureCode,type ChatProgress,type ChatStage} from '../types/chat-progress.types.js';
 import {runChatOperation,withoutChatOperation,chatCheckpoint,checkpointKey,isContinueRequest} from '../utils/chat-operation.js';
+import { findMovieFromVideoUrl, hasVideoPlatformLink } from '../video-import/services/video-import-chat.service.js';
+import { pauseVideoImport } from '../video-import/services/video-import-stop.service.js';
 const operations=new Map<string,AbortController>();
 const operationId=(user:string,id:string,request:string)=>`${user}:${id}:${request}`;
 
 export async function stopConversationMessage(userId:string,id:string,requestId:string,text:string,attachmentKind?:'image'|'video'){
  if(!await Conversation.exists({_id:id,userId,deletedAt:null}))throw new ConversationError('Conversation not found',404);
- const existing=await ChatTurn.findOne({userId,conversationId:id,requestId}).lean();
+ const existing=await ChatTurn.findOne({userId,conversationId:id,requestId}).select('+videoImportId').lean();
  if(existing?.status==='completed')return {stopped:false};
  try{
   await ChatTurn.updateOne({userId,conversationId:id,requestId,status:{$ne:'completed'}},{$set:{status:'stopped',failureCode:null,progressStage:null,attachmentKind:existing?.attachmentKind??((existing?.videos?.length??0)>0?'video':(existing?.images?.length??0)>0?'image':attachmentKind??null)},$setOnInsert:{text,images:[],videos:[]}},{upsert:true});
  }catch(error){if((error as {code?:number}).code!==11000)throw error;}
  if(!await ChatTurn.exists({userId,conversationId:id,requestId,status:'stopped'}))return {stopped:false};
  operations.get(operationId(userId,id,requestId))?.abort(new ChatFailure('stopped'));
+ if(existing?.videoImportId)try{await pauseVideoImport({kind:'user',id:userId},existing.videoImportId);}catch{console.warn('[VIDEO_IMPORT]',{event:'pause-deferred'});}
  await Conversation.updateOne({_id:id,userId,activeRequestId:requestId},{$set:{lockToken:'',activeRequestId:'',lockUntil:new Date(0)}});
  return {stopped:true};
 }
@@ -114,7 +117,7 @@ export async function sendConversationMessage(userId: string, id: string, reques
     const progress=(stage:ChatStage)=>{onProgress?.(stage);progressWrites=progressWrites.then(async()=>{await ChatTurn.updateOne({conversationId:id,userId,requestId,attemptToken:lockToken,status:'processing'},{$set:{progressStage:stage}});}).catch(()=>{});};
     const locked = await Conversation.findOneAndUpdate({
         _id: id, userId, deletedAt: null, lockUntil: { $lte: new Date() },
-    }, { $set: { lockToken,activeRequestId:requestId, lockUntil: new Date(Date.now() + 240000) } }, { returnDocument: 'after' });
+    }, { $set: { lockToken,activeRequestId:requestId, lockUntil: new Date(Date.now() + (hasVideoPlatformLink(text) ? 600000 : 240000)) } }, { returnDocument: 'after' });
     if (!locked) {
         if (!await Conversation.exists({ _id: id, userId, deletedAt: null }))
             throw new ConversationError('Conversation not found', 404);
@@ -171,7 +174,15 @@ export async function sendConversationMessage(userId: string, id: string, reques
         history=savedContext.history;previousMovie=savedContext.previousMovie;
         let result:AiResult&{movie?:MovieSearchResult;recommendations?:MovieRecommendation[]};
         const generateResult=async()=>{
-        if(searchVideos.length){
+        const imported=await findMovieFromVideoUrl({kind:'user',id:userId},id,requestId,text,{
+          signal:controller.signal,onDelta,onProgress:progress,hasMedia:!!(searchVideos.length||searchImages.length),
+          onImport:async videoImportId=>{
+            const saved=await ChatTurn.updateOne({conversationId:id,userId,requestId,attemptToken:lockToken,status:'processing'},{$set:{videoImportId}});
+            if(saved.matchedCount===0)throw new ChatFailure('stopped');
+          },
+        });
+        if(imported){result=imported;}
+        else if(searchVideos.length){
             result=await findMovieFromVideo(text,searchVideos,onDelta,progress);
         } else if(!searchImages.length&&previousMovie&&isContextMovieFollowup(text,previousMovie)){
             result=await movieFollowup(text,previousMovie,onDelta);
@@ -209,7 +220,7 @@ export async function sendConversationMessage(userId: string, id: string, reques
         controller.signal.throwIfAborted();
         const completed=await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken,status:'processing' }, {
             $set: { status: 'completed',answerAt:new Date(), answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages,recommendations:result.recommendations??[],
-                progressStage:null,failureCode:null,catalogDispatch: isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie)) ? 'pending' : 'none' },$unset:{checkpoints:''},
+                progressStage:null,failureCode:null,catalogDispatch: !hasVideoPlatformLink(text)&&(isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie))) ? 'pending' : 'none' },$unset:{checkpoints:''},
         });
         if(completed.matchedCount===0)throw new ChatFailure('stopped');
         await Conversation.updateOne({ _id: id, userId, deletedAt: null, lockToken }, { $set: { title, titleGenerated: true } })

@@ -9,7 +9,7 @@ export async function consumeChatStream(response: StreamResponse, onDelta: (text
   if(!value.startsWith('data: '))return;
   const event=JSON.parse(value.slice(6));
   if(event.type==='delta' && typeof event.text==='string')onDelta(event.text);
-  else if(event.type==='progress'&&['checking_video','upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'].includes(event.stage))onProgress(event.stage);
+  else if(event.type==='progress'&&['waiting_import','checking_link','downloading_video','preparing_analysis','checking_video','upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'].includes(event.stage))onProgress(event.stage);
   else if(event.type==='done' && typeof event.data?.id==='string' && Array.isArray(event.data.turns))result=event.data;
   else if(event.type==='error')throw Object.assign(new Error('AI javobi olinmadi. Qayta urining.'),{failureCode:['insufficient_evidence','identity_unconfirmed','provider_unavailable','search_unavailable','rate_limited','timeout','video_unreadable','unknown'].includes(event.code)?event.code:'unknown'});
  }
