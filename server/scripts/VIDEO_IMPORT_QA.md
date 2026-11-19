@@ -53,3 +53,19 @@ Until those checks are performed, three-platform production readiness is not
 claimed. TikTok timeout remains an explicit unresolved external-access result.
 
 Render Node version precedence: https://render.com/docs/node-version
+
+## Follow-up: production import timeout
+
+Render Telegram logs showed repeated PROCESS_TIMEOUT in VIDEO_IMPORT before
+recognition. The old logs did not identify the exact subprocess; its cause must
+not be asserted as a verified Gemini failure. Local profiling of the supplied
+short found unnecessary video conversion. The new format policy selected ready
+H.264/AAC media and produced converted=false (856,679 bytes, 11.434667 seconds).
+Local total time was about 20 seconds, not a proven Render performance result.
+
+Conversion is now bounded to 60 seconds and a preparation timeout is not
+automatically retried; users receive a preparation-specific error. Existing
+compatible Full HD videos avoid resizing. Phase diagnostics identify the exact
+timed-out operation without recording raw provider output or media URLs.
+Backend tests after this change: 404 passed; web 88; native 35. Render must be
+retested with the new commit before declaring this production timeout resolved.

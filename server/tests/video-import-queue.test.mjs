@@ -209,6 +209,14 @@ test('the worker never marks a cancelled or stopped operation completed', async 
   await worker.runOnce();
   assert.notEqual((await h.service.get(alice, queued.id)).status, 'completed');
 });
+test('preparation timeouts fail once instead of automatically repeating CPU-heavy conversion',async()=>{
+ const h=harness(),queued=await h.service.enqueue(alice,input);let calls=0;
+ const worker=createVideoImportWorker({jobs:h.repository,now:h.now,process:async(_job,_signal,checkpoint)=>{
+  calls++;await checkpoint({stage:'probing'});throw Object.assign(Error('preparation timed out'),{code:'PREPARATION_TIMEOUT'});
+ }});
+ await worker.runOnce();h.advance(60000);await worker.runOnce();const saved=await h.service.get(alice,queued.id);
+ assert.equal(calls,1);assert.equal(saved.status,'failed');assert.equal(saved.errorCode,'PREPARATION_TIMEOUT');assert.equal(saved.attempts,1);
+});
 
 test('checkpoint identity and final metadata cannot change the requested film source or point to another job object', async () => {
   const h = harness(); await h.service.enqueue(alice, input); const job = await claim(h, 'token');

@@ -211,6 +211,7 @@
     },
     "videoPrompt": "Videodagi kinoni toping.",
     "progress": {
+      "waiting_analysis": "Tahlil navbati kutilmoqda",
       "waiting_import": "Yuklash navbati kutilmoqda",
       "checking_link": "Havola tekshirilmoqda",
       "downloading_video": "Video yuklab olinmoqda",
@@ -239,6 +240,7 @@
       "search_unavailable": "Internet qidiruvini bajarib bo‘lmadi. Qayta urinib ko‘ring.",
       "rate_limited": "Xizmatning so‘rovlar chegarasiga yetildi. Biroz kutib, qayta urinib ko‘ring.",
       "timeout": "So‘rov uchun ajratilgan vaqt tugadi. Qisqaroq parcha yuboring yoki qayta urinib ko‘ring.",
+      "video_prepare_timeout": "Videoni tayyorlash uchun ajratilgan vaqt tugadi. Qisqaroq video yoki boshqa havola yuboring.",
       "video_unreadable": "Yuklangan videoni o‘qib bo‘lmadi. Videoni qayta yuklang.",
       "upload_failed": "Faylni yuklab bo‘lmadi. Qayta yuklang.",
       "unknown": "So‘rovni yakunlab bo‘lmadi. Qayta urinib ko‘ring.",

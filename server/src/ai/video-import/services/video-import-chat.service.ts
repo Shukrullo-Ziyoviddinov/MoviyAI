@@ -51,11 +51,13 @@ export function createVideoImportChat(deps = defaults) {
         await deps.delay(1000, undefined, { signal });
       }
       // Recognition capacity is separately bounded across server instances.
+      let waitingForAnalysis = false;
       for (;;) try {
         signal.throwIfAborted();
         return await deps.pipeline.recognize(owner, id, { text, signal, onDelta: options.onDelta, onProgress: options.onProgress });
       } catch (error) {
         if ((error as { code?: string })?.code !== 'ANALYSIS_BUSY') throw error;
+        if (!waitingForAnalysis) { options.onProgress?.('waiting_analysis'); waitingForAnalysis = true; }
         await deps.delay(1000, undefined, { signal });
       }
     } catch (error) {
@@ -66,6 +68,7 @@ export function createVideoImportChat(deps = defaults) {
       if (signal.aborted) throw new ChatFailure(options.signal?.aborted ? chatFailureCode(options.signal.reason) : 'timeout');
       if (error instanceof ChatFailure) throw error;
       const code = (error as { code?: string })?.code;
+      if (code === 'PREPARATION_TIMEOUT') throw new ChatFailure('video_prepare_timeout');
       if (['PROCESS_TIMEOUT', 'LINK_TIMEOUT', 'JOB_TIMEOUT'].includes(code ?? '')) throw new ChatFailure('timeout');
       if (['ANALYSIS_LEASE_LOST'].includes(code ?? '')) throw new ChatFailure('stopped');
       if (code) {

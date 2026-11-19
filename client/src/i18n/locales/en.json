@@ -211,6 +211,7 @@
     },
     "videoPrompt": "Find the movie in this video.",
     "progress": {
+      "waiting_analysis": "Waiting for analysis slot",
       "waiting_import": "Waiting for download slot",
       "checking_link": "Checking link",
       "downloading_video": "Downloading video",
@@ -235,6 +236,7 @@
       "search_unavailable": "The online search could not be completed. Please try again.",
       "rate_limited": "The service request limit was reached. Wait a moment and try again.",
       "timeout": "The request time limit was reached. Send a shorter clip or try again.",
+      "video_prepare_timeout": "Video preparation timed out. Send a shorter video or another link.",
       "video_unreadable": "The uploaded video could not be read. Upload it again.",
       "upload_failed": "The file could not be uploaded. Upload it again.",
       "unknown": "The request could not be completed. Please try again.",

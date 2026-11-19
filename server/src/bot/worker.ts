@@ -38,6 +38,7 @@ function failureMessage(error: unknown) {
   if (message === 'BOT_VIDEO_DURATION') return '3 daqiqagacha bo‘lgan videoni video sifatida yuboring.';
   if (message === 'BOT_MEDIA_FORMAT') return 'Ushbu fayl formati qo‘llanmaydi. JPG, PNG rasm yoki MP4 video yuboring.';
   const code = chatFailureCode(error);
+  if (code === 'video_prepare_timeout') return 'Videoni tayyorlash uchun ajratilgan vaqt tugadi. Qisqaroq video yoki boshqa havola yuboring.';
   if (code === 'provider_unavailable') return 'AI xizmatida vaqtinchalik muammo. Qayta urinib ko‘ring.';
   if (code === 'timeout') return 'Tahlil uchun ajratilgan vaqt tugadi. Qisqaroq parcha bilan qayta urinib ko‘ring.';
   if (code === 'identity_unconfirmed' || code === 'insufficient_evidence') return 'Ushbu parchadan kinoni ishonchli aniqlab bo‘lmadi. Boshqa sahnani yuboring.';

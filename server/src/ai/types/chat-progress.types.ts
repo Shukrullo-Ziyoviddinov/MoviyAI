@@ -1,7 +1,7 @@
-export const CHAT_STAGES=['waiting_import','checking_link','downloading_video','preparing_analysis','checking_video','upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'] as const;
+export const CHAT_STAGES=['waiting_analysis','waiting_import','checking_link','downloading_video','preparing_analysis','checking_video','upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'] as const;
 export type ChatStage=typeof CHAT_STAGES[number];
 export type ChatProgress=(stage:ChatStage)=>void;
-export const CHAT_FAILURES=['stopped','insufficient_evidence','identity_unconfirmed','provider_unavailable','search_unavailable','rate_limited','timeout','video_unreadable','unknown'] as const;
+export const CHAT_FAILURES=['stopped','insufficient_evidence','identity_unconfirmed','provider_unavailable','search_unavailable','rate_limited','timeout','video_prepare_timeout','video_unreadable','unknown'] as const;
 export type ChatFailureCode=typeof CHAT_FAILURES[number];
 export class ChatFailure extends Error{
  constructor(public readonly failureCode:ChatFailureCode){super('CHAT_'+failureCode.toUpperCase());this.name='ChatFailure';}

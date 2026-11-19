@@ -4,6 +4,10 @@ URL import emits real transitions: checking_link, waiting_import (queued/retry),
 downloading_video, preparing_analysis (probe/format preparation), upload_video,
 then the existing recognition/search stages. Labels and SSE allowlists are
 shared by web/native in Uzbek/Russian/English; Telegram uses the same callbacks.
+Recognition-slot contention emits waiting_analysis instead of leaving the
+previous preparation status visible. Preparation timeout has its own user-facing
+failure code and does not repeat CPU-heavy conversion automatically. Safe phase
+logs identify metadata/download/probe/conversion/decode/hash and elapsed time.
 
 Stopping preserves the private import ID on the existing turn. Ownership is
 checked before download cancellation or recognition pause. Local controllers

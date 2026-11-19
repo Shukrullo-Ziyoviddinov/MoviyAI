@@ -9,7 +9,7 @@ function failure(error: unknown) {
   const code = (error as { code?: unknown; name?: string })?.code;
   const known = new Set(['NETWORK_ERROR', 'DNS_FAILED', 'LINK_TIMEOUT', 'PROCESS_TIMEOUT', 'PLATFORM_BLOCKED', 'VIDEO_UNAVAILABLE',
     'INVALID_METADATA', 'VIDEO_TOO_LONG', 'VIDEO_TOO_LARGE', 'LIVE_VIDEO', 'INVALID_ARTIFACT', 'TOOL_MISSING', 'TOOL_FAILED',
-    'JS_RUNTIME_UNSUPPORTED', 'UNSAFE_URL', 'UNSAFE_ADDRESS', 'UNSUPPORTED_PLATFORM', 'UNSUPPORTED_VIDEO_URL', 'INVALID_URL',
+    'JS_RUNTIME_UNSUPPORTED', 'PREPARATION_TIMEOUT', 'UNSAFE_URL', 'UNSAFE_ADDRESS', 'UNSUPPORTED_PLATFORM', 'UNSUPPORTED_VIDEO_URL', 'INVALID_URL',
     'REDIRECT_LIMIT', 'REDIRECT_LOOP', 'CROSS_PLATFORM_REDIRECT', 'SHORT_URL_UNRESOLVED', 'LINK_UNAVAILABLE', 'INVALID_JOB', 'JOB_TIMEOUT', 'PROCESS_OUTPUT_LIMIT', 'R2_UNAVAILABLE', 'INVALID_R2_OBJECT']);
   const safe = typeof code === 'string' && known.has(code) ? code : (error as { name?: string })?.name === 'TimeoutError' ? 'JOB_TIMEOUT' : 'WORKER_FAILED';
   return { code: safe, retry: ['NETWORK_ERROR', 'DNS_FAILED', 'LINK_TIMEOUT', 'PROCESS_TIMEOUT', 'JOB_TIMEOUT', 'WORKER_FAILED', 'R2_UNAVAILABLE'].includes(safe) };
@@ -60,7 +60,7 @@ export function createVideoImportWorker(options: { process: VideoImportProcessor
           const status = info.retry && claimed.attempts < VIDEO_IMPORT_QUEUE.maxAttempts ? 'retry' : 'failed';
           const delay = VIDEO_IMPORT_QUEUE.retryMs[Math.min(Math.max(0, claimed.attempts - 1), VIDEO_IMPORT_QUEUE.retryMs.length - 1)];
           await jobs.defer(claimed, status, info.code, new Date(now().getTime() + delay), now());
-          console.warn('[VIDEO_IMPORT]', { event: status, jobId: claimed.id, code: info.code, attempt: claimed.attempts });
+          console.warn('[VIDEO_IMPORT]', { event: status, jobId: claimed.id, stage: claimed.stage, elapsedMs: Math.max(0,now().getTime()-started.getTime()), code: info.code, attempt: claimed.attempts });
         }
       } finally {
         clearTimeout(deadline); clearInterval(heartbeat);

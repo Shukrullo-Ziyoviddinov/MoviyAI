@@ -2,6 +2,7 @@ import { telegram, TelegramError } from './api.js';
 import type { ChatStage } from '../ai/types/chat-progress.types.js';
 
 const labels: Record<ChatStage, string> = {
+  waiting_analysis: 'Tahlil navbati kutilmoqda…',
   waiting_import: 'Yuklash navbati kutilmoqda…',
   checking_link: 'Havola tekshirilmoqda…',
   downloading_video: 'Video yuklab olinmoqda…',

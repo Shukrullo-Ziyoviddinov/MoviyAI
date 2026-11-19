@@ -20,8 +20,8 @@ test('native and web share the stream parser and text reveal behavior', () => {
 });
 
 test('all progress and failure labels exist in Uzbek, Russian and English on both clients',()=>{
- const stages=['waiting_import','checking_link','downloading_video','preparing_analysis','upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'];
- const failures=['insufficient_evidence','identity_unconfirmed','provider_unavailable','search_unavailable','rate_limited','timeout','video_unreadable','upload_failed','unknown'];
+ const stages=['waiting_analysis','waiting_import','checking_link','downloading_video','preparing_analysis','upload_video','upload_image','analyzing_video','analyzing_image','verifying','catalog','searching','uzbek_links','posters','preparing'];
+ const failures=['video_prepare_timeout','insufficient_evidence','identity_unconfirmed','provider_unavailable','search_unavailable','rate_limited','timeout','video_unreadable','upload_failed','unknown'];
  for(const language of ['uz','ru','en']){
   const web=JSON.parse(fs.readFileSync(path.join(__dirname,'../src/i18n/locales/'+language+'.json'),'utf8')).chat;
   const native=JSON.parse(fs.readFileSync(path.join(__dirname,'../../clientNative/src/i18n/locales/'+language+'.json'),'utf8')).chat;
@@ -58,7 +58,7 @@ test('URL-specific stages are delivered to the status callback, not to answer te
  await consumeChatStream(response(text,2),value=>deltas.push(value),stage=>stages.push(stage));assert.deepEqual(stages,expected);assert.deepEqual(deltas,[]);
 });
 test('SSE failures preserve whitelisted cause codes and ignore arbitrary error text',async()=>{
- for(const [code,expected] of [['video_unreadable','video_unreadable'],['timeout','timeout'],['invented','unknown']]){
+ for(const [code,expected] of [['video_prepare_timeout','video_prepare_timeout'],['video_unreadable','video_unreadable'],['timeout','timeout'],['invented','unknown']]){
   const input=response('data: '+JSON.stringify({type:'error',code,message:'SECRET'})+'\n\n');
   await assert.rejects(()=>consumeChatStream(input,()=>{}),error=>error.failureCode===expected&&!error.message.includes('SECRET'));
  }

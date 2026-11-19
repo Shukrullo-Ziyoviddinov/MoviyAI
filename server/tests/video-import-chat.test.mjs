@@ -29,6 +29,7 @@ test('waits for real queue stages and waits for recognition capacity rather than
  h.deps.pipeline.recognize=async()=>{if(++recognition===1)throw Object.assign(Error(),{code:'ANALYSIS_BUSY'});return h.result;};
  const stages=[];assert.deepEqual(await h.call(link,{onProgress:stage=>stages.push(stage)}),h.result);
  assert.equal(recognition,2);assert.equal(h.events.filter(e=>e[0]==='enqueue').length,1);assert.ok(stages.includes('downloading_video'));
+ assert.ok(stages.includes('waiting_analysis'));
 });
 test('multiple URLs and simultaneous URL/file attachments are rejected before enqueue',async()=>{
  const h=harness();await assert.rejects(()=>h.call(link+' https://youtu.be/abcdefghijk'),e=>e.failureCode==='video_unreadable');
@@ -47,7 +48,7 @@ test('a stopped chat checkpoint cancels an import even before the queue worker s
 });
 
 test('storage/tool failures are not misreported as an AI provider outage',async()=>{
- for(const [code,failure] of [['R2_UNAVAILABLE','unknown'],['TOOL_MISSING','unknown'],['VIDEO_TOO_LARGE','video_unreadable'],['PROCESS_TIMEOUT','timeout']]){
+ for(const [code,failure] of [['R2_UNAVAILABLE','unknown'],['TOOL_MISSING','unknown'],['VIDEO_TOO_LARGE','video_unreadable'],['PROCESS_TIMEOUT','timeout'],['PREPARATION_TIMEOUT','video_prepare_timeout']]){
   const h=harness();h.row.status='failed';h.row.errorCode=code;h.deps.imports.resume=async()=>false;
   await assert.rejects(()=>h.call(),error=>error.failureCode===failure);
  }

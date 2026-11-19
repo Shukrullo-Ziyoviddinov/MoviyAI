@@ -19,6 +19,8 @@ export function videoDownloaderArguments(platform: VideoPlatform, jsPath: string
     '--no-remote-components', '--no-js-runtimes', '--js-runtimes', `node:${jsPath}`,
     '--use-extractors', `${platform},end`, '--xff', 'never', '--socket-timeout', '15', '--retries', '1', '--fragment-retries', '1',
     ...(isAbsolute(ffmpegPath) ? ['--ffmpeg-location', dirname(ffmpegPath)] : []),
-    '-f', 'bv*[height<=720][ext=mp4]+ba[ext=m4a]/b[height<=720][ext=mp4]/b[height<=720]/b',
+    // Prefer already-compatible public streams over forcing AV1/VP9 -> H.264
+    // conversion on a small worker. Fall back to the smallest offered file.
+    '-f', 'b[height<=720][ext=mp4][vcodec^=avc1][acodec^=mp4a]/bv*[height<=720][ext=mp4][vcodec^=avc1]+ba[ext=m4a]/b[height<=1080][ext=mp4][vcodec^=avc1][acodec^=mp4a]/b[height<=720][ext=mp4]/bv*[height<=720][ext=mp4]+ba[ext=m4a]/b[height<=720]/worst',
     '--max-filesize', String(VIDEO_PROBE_LIMITS.maxBytes)];
 }

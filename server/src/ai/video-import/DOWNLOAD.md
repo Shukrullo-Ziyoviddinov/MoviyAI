@@ -13,7 +13,11 @@ duration is allowed here, but the actual downloaded file must pass ffprobe.
 - Real file: regular non-symlink, recognized container, video stream, dimensions,
   duration and size; decode a real frame before handing it to the consumer.
 - Compatible H.264/AAC MP4 is retained; only necessary remux/audio/video
-  conversion runs. Oversized dimensions are reduced, never enlarged.
+  conversion runs. Compatible Full HD media is kept without resizing when no
+  smaller compatible source is offered; larger media is reduced, never enlarged.
+  Source selection prefers ready H.264/AAC streams and uses the smallest offered
+  file as its final fallback. Necessary conversion is bounded to 60 seconds;
+  PREPARATION_TIMEOUT is terminal for automatic retries, preserving manual retry.
 - Private workspace and HTTPS proxy transfer budget: 160 MiB each; download and
   preparation budget 180 seconds, total consumer budget 240 seconds.
 - Subprocess arguments are arrays, no shell/config/plugins/cookies. Secrets from

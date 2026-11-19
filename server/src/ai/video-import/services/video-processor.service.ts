@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { runVideoProcess } from './video-process.service.js';
 import { videoTools, VIDEO_PROBE_LIMITS } from '../config/video-tools.config.js';
 import { VideoProbeError } from '../types/video-probe.types.js';
+import { videoImportPhase } from './video-import-diagnostics.service.js';
 
 type Stream = { index?: number; codec_type?: string; codec_name?: string; width?: number; height?: number; disposition?: { attached_pic?: number } };
 export type VideoInspection = {
@@ -26,7 +27,9 @@ export function parseVideoInspection(value: unknown, size: number, mp4Header: bo
   return { duration, size, width: video.width!, height: video.height!, audio: !!audio, videoCodec: video.codec_name,
     audioCodec: audio?.codec_name ?? null, videoIndex: video.index!, mp4: mp4Header && typeof data?.format?.format_name === 'string' && data.format.format_name.split(',').includes('mp4') };
 }
-function dimensionsFit(video: VideoInspection) { return Math.min(video.width, video.height) <= 720 && Math.max(video.width, video.height) <= 1280; }
+// Prefer <=720p sources, but keep an already-compatible Full HD file rather
+// than spend worker CPU resizing it. Duration/byte limits are unchanged.
+function dimensionsFit(video: VideoInspection) { return Math.min(video.width, video.height) <= 1080 && Math.max(video.width, video.height) <= 1920; }
 export function videoPreparationArguments(input: string, output: string, video: VideoInspection) {
   const encodeVideo = video.videoCodec !== 'h264' || !dimensionsFit(video);
   const encodeAudio = video.audio && video.audioCodec !== 'aac';
@@ -39,6 +42,12 @@ export function videoPreparationArguments(input: string, output: string, video: 
 }
 
 export function createVideoProcessor(deps = { runVideoProcess, videoTools }) {
+  async function prepareStep<T>(phase: Parameters<typeof videoImportPhase>[0], work: () => Promise<T>) {
+    return videoImportPhase(phase, async () => {
+      try { return await work(); }
+      catch (error) { if ((error as {code?:string})?.code === 'PROCESS_TIMEOUT') throw new VideoProbeError('PREPARATION_TIMEOUT'); throw error; }
+    });
+  }
   async function inspect(file: string, directory: string, signal: AbortSignal) {
     signal.throwIfAborted();
     if (dirname(file) !== directory) throw new VideoProbeError('INVALID_ARTIFACT');
@@ -57,17 +66,19 @@ export function createVideoProcessor(deps = { runVideoProcess, videoTools }) {
     return parseVideoInspection(data, info.size, mp4Header);
   }
   return { inspect, async prepare(file: string, directory: string, signal: AbortSignal) {
-    const initial = await inspect(file, directory, signal);
+    const initial = await prepareStep('probe_source', () => inspect(file, directory, signal));
     const output = join(directory, 'ready.mp4');
     const args = videoPreparationArguments(file, output, initial);
-    if (args) await deps.runVideoProcess(deps.videoTools().ffmpeg, args, { cwd: directory, signal });
-    const ready = args ? output : file, final = args ? await inspect(ready, directory, signal) : initial;
+    console.info('[VIDEO_IMPORT]', { event: 'media-plan', videoCodec: /^[a-z0-9_]{1,32}$/.test(initial.videoCodec) ? initial.videoCodec : 'other',
+      width: initial.width, height: initial.height, action: !args ? 'keep' : args[args.indexOf('-c:v') + 1] === 'copy' ? 'remux-or-audio' : 'encode' });
+    if (args) await prepareStep('prepare_format', () => deps.runVideoProcess(deps.videoTools().ffmpeg, args, { cwd: directory, signal, timeoutMs: 60000 }));
+    const ready = args ? output : file, final = args ? await prepareStep('probe_prepared', () => inspect(ready, directory, signal)) : initial;
     if (!final.mp4 || final.videoCodec !== 'h264' || final.audio && final.audioCodec !== 'aac' || !dimensionsFit(final)) throw new VideoProbeError('INVALID_ARTIFACT');
     // Decode a real frame as well as checking header/metadata. No full video is held in RAM.
-    await deps.runVideoProcess(deps.videoTools().ffmpeg, ['-nostdin', '-hide_banner', '-loglevel', 'error', '-max_alloc', '67108864', '-threads', '1',
-      '-protocol_whitelist', 'file', '-i', ready, '-map', `0:${final.videoIndex}`, '-frames:v', '1', '-an', '-f', 'null', '-'], { cwd: directory, signal, timeoutMs: 15000 });
+    await prepareStep('decode_sample', () => deps.runVideoProcess(deps.videoTools().ffmpeg, ['-nostdin', '-hide_banner', '-loglevel', 'error', '-max_alloc', '67108864', '-threads', '1',
+      '-protocol_whitelist', 'file', '-i', ready, '-map', `0:${final.videoIndex}`, '-frames:v', '1', '-an', '-f', 'null', '-'], { cwd: directory, signal, timeoutMs: 15000 }));
     const hash = createHash('sha256');
-    for await (const chunk of createReadStream(ready, { signal })) hash.update(chunk);
+    await prepareStep('hash_media', async () => { for await (const chunk of createReadStream(ready, { signal })) hash.update(chunk); });
     signal.throwIfAborted();
     return { filePath: ready, sha256: hash.digest('hex'), converted: !!args,
       metadata: { durationSeconds: final.duration, sizeBytes: final.size, width: final.width, height: final.height, mimeType: 'video/mp4' as const, hasAudio: final.audio } };

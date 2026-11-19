@@ -9,13 +9,17 @@ import { createVideoEgress } from '../dist/ai/video-import/services/video-egress
 import { runVideoProcess } from '../dist/ai/video-import/services/video-process.service.js';
 import { videoTools } from '../dist/ai/video-import/config/video-tools.config.js';
 import { createVideoDownloader } from '../dist/ai/video-import/services/video-downloader.service.js';
+import { VideoProbeError } from '../dist/ai/video-import/types/video-probe.types.js';
+import { videoImportPhase } from '../dist/ai/video-import/services/video-import-diagnostics.service.js';
 
 const inspection = (overrides = {}) => ({ duration: 5, size: 1024, width: 640, height: 360, audio: true, videoCodec: 'h264', audioCodec: 'aac', videoIndex: 0, mp4: true, ...overrides });
 test('preparation preserves compatible media, remuxes containers and only encodes when necessary', () => {
   assert.equal(videoPreparationArguments('input','output',inspection()), null);
   const remux = videoPreparationArguments('input','output',inspection({mp4:false}));
   assert.equal(remux[remux.indexOf('-c:v')+1], 'copy');
-  const resize = videoPreparationArguments('input','output',inspection({width:1920,height:1080}));
+  assert.equal(videoPreparationArguments('input','output',inspection({width:1920,height:1080})),null);
+  assert.equal(videoPreparationArguments('input','output',inspection({width:1080,height:1920})),null);
+  const resize = videoPreparationArguments('input','output',inspection({width:3840,height:2160}));
   assert.equal(resize[resize.indexOf('-c:v')+1], 'libx264');
   assert.ok(resize.includes('-protocol_whitelist'));
 });
@@ -32,16 +36,35 @@ test('real FFmpeg validates frames, preserves compatible MP4 and resizes a large
   try {
     try { await runVideoProcess(videoTools().ffmpeg,['-version'],{cwd:workspace.directory}); }
     catch(error) { if(error.code==='TOOL_MISSING'){t.skip('FFmpeg not installed');return;} throw error; }
-    for (const [size,converted] of [['320x240',false],['1440x900',true]]) {
+    for (const [size,converted] of [['320x240',false],['1920x1080',false],['2048x1152',true]]) {
       const file = join(workspace.directory,`fixture-${size}.mp4`);
       await runVideoProcess(videoTools().ffmpeg,['-nostdin','-v','error','-f','lavfi','-i',`color=c=blue:s=${size}:d=0.3`,'-c:v','libx264','-threads','1','-pix_fmt','yuv420p','-y',file],{cwd:workspace.directory});
       const result = await createVideoProcessor().prepare(file,workspace.directory,new AbortController().signal);
       assert.equal(result.converted,converted); assert.equal(result.sha256.length,64);
-      assert.ok(result.metadata.width<=1280); assert.ok(result.metadata.height<=720);
+      assert.ok(result.metadata.width<=(converted?1280:1920)); assert.ok(result.metadata.height<=(converted?720:1080));
       assert.ok(result.metadata.durationSeconds>0); await access(result.filePath);
     }
   } finally { await workspace.cleanup(); }
   await assert.rejects(()=>access(workspace.directory),{code:'ENOENT'});
+});
+test('preparation timeout is bounded and distinct from a transient download timeout',async()=>{
+ const workspace=await createVideoWorkspace();let conversionTimeout;
+ try{
+  const file=join(workspace.directory,'source.mp4'),bytes=Buffer.alloc(64);bytes.write('ftypisom',4);await writeFile(file,bytes);
+  const processor=createVideoProcessor({videoTools,runVideoProcess:async(_exe,args,options)=>{
+   if(args.includes('-show_format'))return{stdout:JSON.stringify({format:{duration:'10',format_name:'mp4'},streams:[{index:0,codec_type:'video',codec_name:'av1',width:640,height:360}]}),stderr:''};
+   conversionTimeout=options.timeoutMs;throw new VideoProbeError('PROCESS_TIMEOUT');
+  }});
+  await assert.rejects(()=>processor.prepare(file,workspace.directory,new AbortController().signal),{code:'PREPARATION_TIMEOUT'});assert.equal(conversionTimeout,60000);
+ }finally{await workspace.cleanup();}
+});
+test('phase diagnostics preserve safe phase/code/duration without logging raw errors or signed URLs',async()=>{
+ const rows=[],info=console.info,warn=console.warn;console.info=(...args)=>rows.push(args);console.warn=(...args)=>rows.push(args);
+ const error=Object.assign(Error('https://secret.example/?token=private'),{code:'PREPARATION_TIMEOUT'});
+ try{await assert.rejects(()=>videoImportPhase('prepare_format',async()=>{throw error;}),error);}
+ finally{console.info=info;console.warn=warn;}
+ const text=JSON.stringify(rows);assert.equal(text.includes('secret.example'),false);assert.equal(text.includes('token='),false);
+ assert.ok(text.includes('prepare_format'));assert.ok(text.includes('PREPARATION_TIMEOUT'));assert.ok(text.includes('elapsedMs'));
 });
 test('egress refuses unauthenticated tunnels and private DNS destinations', async () => {
   let connects=0;

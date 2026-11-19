@@ -9,6 +9,7 @@ import { validateProbeMetadata, videoDownloaderArguments } from './video-downloa
 import { videoTools, VIDEO_PROBE_LIMITS } from '../config/video-tools.config.js';
 import { VideoProbeError } from '../types/video-probe.types.js';
 import type { DownloadOptions, DownloadedVideo } from '../types/video-download.types.js';
+import { videoImportPhase } from './video-import-diagnostics.service.js';
 
 const defaults = { resolveVideoUrl, runVideoProcess, createVideoWorkspace, createVideoEgress, videoProcessor, videoTools };
 /** Owns the artifact until the consumer finishes (for example, a later R2 upload).
@@ -33,9 +34,9 @@ export function createVideoDownloader(deps = defaults) {
         const childSignal = AbortSignal.any([egress.signal, downloadDeadline.signal]);
         const tools = deps.videoTools();
         const base = [...videoDownloaderArguments(source.platform, tools.js, tools.ffmpeg), '--proxy', egress.url];
-        const raw = await deps.runVideoProcess(tools.ytdlp, [...base, '--dump-single-json', '--skip-download', '--', source.canonicalUrl], {
+        const raw = await videoImportPhase('source_metadata', () => deps.runVideoProcess(tools.ytdlp, [...base, '--dump-single-json', '--skip-download', '--', source.canonicalUrl], {
           cwd: workspace.directory, signal: childSignal, timeoutMs: VIDEO_PROBE_LIMITS.metadataMs,
-        });
+        }));
         let data: unknown;
         try { data = JSON.parse(raw.stdout); } catch { throw new VideoProbeError('INVALID_METADATA'); }
         const metadata = validateProbeMetadata(data);
@@ -46,8 +47,8 @@ export function createVideoDownloader(deps = defaults) {
           checking = workspace.checkBudget().catch(error => budget.abort(error)).finally(() => { checking = undefined; });
         }, 250); watch.unref();
         await options.onProgress?.('downloading');
-        await deps.runVideoProcess(tools.ytdlp, [...base, '--downloader', 'native', '--merge-output-format', 'mp4',
-          '-o', join(workspace.directory, 'source.%(ext)s'), '--', source.canonicalUrl], { cwd: workspace.directory, signal: childSignal });
+        await videoImportPhase('source_download', () => deps.runVideoProcess(tools.ytdlp, [...base, '--downloader', 'native', '--merge-output-format', 'mp4',
+          '-o', join(workspace.directory, 'source.%(ext)s'), '--', source.canonicalUrl], { cwd: workspace.directory, signal: childSignal }));
         await workspace.checkBudget();
         const files = (await readdir(workspace.directory)).filter(name => /^source\.(mp4|webm|mkv|mov|m4v)$/.test(name));
         if (files.length !== 1) throw new VideoProbeError('INVALID_ARTIFACT');
