@@ -56,7 +56,7 @@ function harness({badYear=false,wrongFilm=false,unavailable=false,imageError=fal
  class GoogleGenAI{models={generateContent:async request=>{if(request.config.maxOutputTokens===300)return {text:JSON.stringify({queries:[recoverAlias?'SupportedLocalName 2014':'Interstellar 2014 uzbek']})};calls.push(request);if(transientError&&calls.length===1)throw Error('Temporary provider failure');if(imageError&&request.contents[0].parts.some(part=>part.fileData))throw Error('Poster inaccessible');return {text:JSON.stringify({matches:[{index:0,title:'Interstellar',sameFilm:!wrongFilm,yearConfirmed:!badYear,identityEvidence:'Interstellar, 2014, Christopher Nolan'},{index:99,title:'Invented',sameFilm:true,yearConfirmed:true,identityEvidence:'Invented evidence string'}]})};}};}
  const searchWeb=async query=>{queries++;searchQueries.push(query);if(recoverAlias&&!query.includes('SupportedLocalName'))return {organic:[]};return {organic:[{title:'Movie',link:query.includes('site:uzmovi.net')?valid:'https://untrusted.example/film'}]};};
  const readPage=async url=>unavailable?null:{url,title:'Interstellar Uzbek tilida',text:'Interstellar, 2014, Christopher Nolan',posterUrl:'https://uzmovi.net/uploads/poster.jpg'};
- const api=serviceFunction('GoogleGenAI','z','AI_CONFIG','searchWeb',source+'\nreturn createUzbekMovieSearch;')(GoogleGenAI,z,{apiKey:'fake',models:{image:'image-model'}},searchWeb)({searchWeb,readPage});
+ const api=serviceFunction('GoogleGenAI','z','AI_CONFIG','searchWeb','watchProvider',source+'\nreturn createUzbekMovieSearch;')(GoogleGenAI,z,{apiKey:'fake',models:{image:'image-model'}},searchWeb,()=>null)({searchWeb,readPage});
  return {api,calls,searchQueries,queries:()=>queries};
 }
 const film={title:'Interstellar',titleUz:null,titleRu:null,year:2014};

@@ -1,11 +1,13 @@
 ﻿const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('fs');const path=require('path');const ts=require('typescript');
 function load(file,mocks={}){const module={exports:{}};const source=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;new Function('require','exports','module',source)(name=>Object.hasOwn(mocks,name)?mocks[name]:require(name),module.exports,module);return module.exports;}
 const watchOptions=load(path.join(__dirname,'../src/utils/watch-options.ts')).watchOptions;
+const provider=load(path.join(__dirname,'../src/utils/watch-provider.ts'));
 const first='https://asilmedia.org/123-film.html',second='https://uzmovi.net/456-film.html';
 function component(native){
  const state=[],opened=[];let before=0;
  const mocks={react:{useState:()=>[false,value=>state.push(value)],useEffect(){},useRef:()=>({current:null})},'@/components/icons':{},
   '@/utils/watch-options':{watchOptions},'@/src/utils/watch-options':{watchOptions},
+  '@/utils/watch-provider':provider,'@/src/utils/watch-provider':provider,'@/api/client':{apiBaseUrl:'https://api.example.com'},'@/src/api/client':{apiBaseUrl:'https://api.example.com'},'./WatchPlayerModal':{WatchPlayerModal:'player'},
   '@/components/theme/theme-state':{useTheme:()=>({colors:{}})},'@/src/stores/useThemeStore':{useTheme:()=>({colors:{}})},
   '@/components/language/language-state':{useLanguage:()=>({language:'uz'})},'./watch-modal-history':{watchModalHistory(){}},'@/i18n':{translate:(_lang,key)=>key},
   'react-dom':{createPortal(){}},'react-i18next':{useTranslation:()=>({t:key=>key})},'react-native-safe-area-context':{useSafeAreaInsets:()=>({bottom:0})},
@@ -28,4 +30,25 @@ test('web, native and server normalize the same URL list without truncating alte
  const movie={watchUrl:all[0],watchUrls:[...all,all[0]+'#top','javascript:alert(1)']};
  const expected=watchOptions(movie);assert.equal(expected.length,7);assert.equal(expected[0].domain,'site.example');
  for(const file of ['../../clientNative/src/utils/watch-options.ts','../../server/src/utils/watch-options.ts'])assert.deepEqual(load(path.join(__dirname,file)).watchOptions(movie),expected);
+});
+
+for(const native of [false,true])test(`${native?'native':'web'}: verifies VK first and falls back to OK before opening player`,async context=>{
+ const requests=[];
+ context.mock.method(globalThis,'fetch',async value=>{
+  const page=new URL(value).searchParams.get('url');requests.push(page);
+  return {json:async()=>({source:page.includes('ok.ru')?{embedUrl:'https://ok.ru/videoembed/123'}:null})};
+ });
+ const h=component(native),tree=h.button({watchUrls:[first,'https://mover.uz/watch/Ab12/','https://ok.ru/video/123','https://vkvideo.ru/video-12_34']});
+ tree.props.children[0].props[native?'onPress':'onClick']();
+ await new Promise(resolve=>setTimeout(resolve,10));
+ assert.deepEqual(requests,['https://vkvideo.ru/video-12_34','https://ok.ru/video/123']);
+ assert.ok(h.state.includes('https://ok.ru/video/123'));assert.deepEqual(h.opened,[]);
+});
+
+for(const native of [false,true])test(`${native?'native':'web'}: unavailable embeds preserve the existing source selector`,async context=>{
+ context.mock.method(globalThis,'fetch',async()=>({json:async()=>({source:null})}));
+ const h=component(native),tree=h.button({watchUrls:[first,'https://ok.ru/video/123']});
+ tree.props.children[0].props[native?'onPress':'onClick']();
+ await new Promise(resolve=>setTimeout(resolve,10));
+ assert.ok(h.state.includes(true));assert.ok(!h.state.includes('https://ok.ru/video/123'));assert.deepEqual(h.opened,[]);
 });

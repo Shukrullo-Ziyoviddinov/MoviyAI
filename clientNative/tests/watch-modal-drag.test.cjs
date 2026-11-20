@@ -7,6 +7,7 @@ function modal(visible=true){
   Animated,Easing:{out:fn=>fn,cubic:()=>{}},Modal:'modal',View:'view',Text:'text',Pressable:'pressable',ScrollView:'scrollview',StyleSheet:{create:s=>s,absoluteFill:{}},useWindowDimensions:()=>({height:800}),PanResponder:{create(config){pan=config;return {panHandlers:{}};}},
  },'react-native-safe-area-context':{useSafeAreaInsets:()=>({top:0,bottom:0})},'react-i18next':{useTranslation:()=>({t:key=>key})},'@/components/icons':{PlayIcon:'play'},'@/src/stores/useThemeStore':{useTheme:()=>({colors:{}})},'@/src/utils/watch-options':{watchOptions:()=>[{url:'https://one.example/film',domain:'one.example'},{url:'https://two.example/film',domain:'two.example'}]}};
  const module={exports:{}};const code=ts.transpileModule(fs.readFileSync('components/movie/WatchOptionModal.tsx','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+ mocks['@/src/utils/watch-provider']={watchProvider:()=>null,verifiedEmbed:()=>null};mocks['@/src/api/client']={apiBaseUrl:'https://api.example.com'};mocks['./WatchPlayerModal']={WatchPlayerModal:'player'};
  new Function('require','exports','module',code)(name=>mocks[name]??require(name),module.exports,module);
  const tree=module.exports.WatchOptionModal({visible,onClose:()=>closed++,movie:{},onSelect(){}});
  for(const effect of effects)effect();

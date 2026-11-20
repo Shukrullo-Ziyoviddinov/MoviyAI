@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { cachedWatchEmbed } from '../services/watch-embed.service.js';
 import aiRoutes from '../ai/routes/ai.routes.js';
 import aboutRoutes from './about.routes.js';
 import actorRoutes from './actor.routes.js';
@@ -13,6 +14,12 @@ import privacyRoutes from './privacy.routes.js';
 import wishlistRoutes from './wishlist.routes.js';
 
 const router = Router();
+router.get('/watch-embed', async (req, res) => {
+  const result = typeof req.query.url === 'string' && req.query.url.length < 2000
+    ? await cachedWatchEmbed(req.query.url) : null;
+  res.setHeader('Cache-Control', 'private, max-age=60');
+  res.json({ ok: true, source: result });
+});
 
 router.use('/ai', aiRoutes);
 

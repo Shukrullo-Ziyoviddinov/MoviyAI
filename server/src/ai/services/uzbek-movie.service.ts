@@ -3,6 +3,8 @@ import { GoogleGenAI, type Part } from '@google/genai';
 import { z } from 'zod';
 import { AI_CONFIG } from '../config/ai.config.js';
 import { searchWeb } from './serper.service.js';
+import { watchProvider } from '../../utils/watch-provider.js';
+import { findPriorityWatchLinks } from './priority-watch-search.service.js';
 
 export const UZBEK_MOVIE_SITES = ['uzmovi.net', 'asilmedia.org', 'kinochilar.com', 'kino-olami.uz', 'playuz.net'] as const;
 export interface UzbekMovieLink { title: string; url: string; site: string }
@@ -11,7 +13,7 @@ export function isSeriesIdentity(film:Identity):boolean{return film.mediaType===
 
 /** A display name copied from a verified local release heading, never translated. */
 export function uzbekReleaseTitle(links: UzbekMovieLink[]):string|null {
- const link=links.find(link=>uzbekDetailUrl(link.url)&&link.title.trim());
+ const link=links.find(link=>!watchProvider(link.url)&&uzbekDetailUrl(link.url)&&link.title.trim());
  if(!link)return null;
  return link.title.split(/\s+\/\s+/)[0].replace(/\s+(?:(?:19|20)\d{2}\s+)?(?:uzbek|o[‘’'`ʻ]?zbek|ўзбек|узбек)\b[\s\S]*$/i,'').replace(/\s+(?:19|20)\d{2}\s*$/,'').trim()||null;
 }
@@ -21,6 +23,7 @@ function siteUrl(value:string):string|null {
 }
 
 export function uzbekDetailUrl(value: string): string|null {
+  const provider = watchProvider(value); if (provider) return provider.url;
   try {
     const url = new URL(value);
     if(url.protocol !== 'https:' || url.username || url.password || url.port) return null;
@@ -150,7 +153,11 @@ export function createUzbekMovieSearch(deps:{searchWeb:typeof searchWeb;readPage
  };
 }
 const uzbekLookup=createUzbekMovieSearch();
-export const findUzbekMovieLinks=(film:Identity,parts:Part[]=[])=>chatCheckpoint(checkpointKey('uzbek-links-v1',film),()=>uzbekLookup(film,parts));
+export const findUzbekMovieLinks=(film:Identity,parts:Part[]=[])=>chatCheckpoint(checkpointKey('uzbek-links-v2',film),async()=>{
+ const priority=await chatCheckpoint(checkpointKey('priority-watch-v1',film),()=>findPriorityWatchLinks(film));
+ const local=await uzbekLookup(film,parts);
+ return [...priority,...local].filter((link,index,all)=>all.findIndex(other=>other.url===link.url)===index);
+});
 
 export function isUzbekMovieRequest(text:string):boolean {
  const normalized=text.toLowerCase().replace(/[‘’ʻ`]/g,"'");

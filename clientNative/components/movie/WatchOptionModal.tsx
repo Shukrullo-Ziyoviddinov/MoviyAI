@@ -5,6 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlayIcon } from '@/components/icons';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { watchOptions } from '@/src/utils/watch-options';
+import { watchProvider } from '@/src/utils/watch-provider';
+import { WatchPlayerModal } from './WatchPlayerModal';
+import { verifiedEmbed } from '@/src/utils/watch-provider';
+import { apiBaseUrl } from '@/src/api/client';
 
 type WatchMovie = { watchUrl?: string | null; watchUrls?: string[] };
 
@@ -119,17 +123,48 @@ export function WatchButton({ movie, title, children, style, onBeforeOpen }: {
   movie: WatchMovie; title?: string; children: ReactNode; style?: StyleProp<ViewStyle>; onBeforeOpen?: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const opening = useRef<AbortController | null>(null);
+  const switching = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => { opening.current?.abort(); clearTimeout(switching.current); }, []);
   const { t } = useTranslation();
   const options = watchOptions(movie);
   const select = async (url: string) => {
     setOpen(false);
+    if (watchProvider(url)) {
+      clearTimeout(switching.current);
+      if (open && !active) switching.current = setTimeout(() => setActive(url), 340); else setActive(url);
+      return;
+    }
+    if (open && active) switching.current = setTimeout(() => setActive(null), 340); else setActive(null);
     try { await Linking.openURL(url); }
     catch { Alert.alert(t('common.error'), t('movie.watchOpenFailed')); }
   };
+  const preferred = ['vk', 'ok', 'mover'].flatMap(provider => options.filter(option => watchProvider(option.url)?.provider === provider))[0];
+  const begin = async () => {
+    opening.current?.abort(); const controller = new AbortController(); opening.current = controller; setChecking(true);
+    try {
+      for (const provider of ['vk', 'ok', 'mover']) {
+        for (const option of options.filter(option => watchProvider(option.url)?.provider === provider).slice(0, 1)) {
+          try {
+            const data = await fetch(`${apiBaseUrl}/api/watch-embed?url=${encodeURIComponent(option.url)}`, { signal: controller.signal }).then(response => response.json());
+            if (controller.signal.aborted) return;
+            if (data.source?.embedUrl && verifiedEmbed(option.url, data.source.embedUrl)) { await select(option.url); return; }
+          } catch { if (controller.signal.aborted) return; }
+        }
+      }
+      if (options.length === 1) { try { await Linking.openURL(options[0].url); } catch { Alert.alert(t('common.error'), t('movie.watchOpenFailed')); } }
+      else setOpen(true);
+    } finally { if (!controller.signal.aborted) setChecking(false); }
+  };
+  const alternatives = { watchUrls: options.filter(option => option.url !== active).map(option => option.url) };
   return <>
-    <Pressable style={[style, !options.length && { opacity: 0.6 }]} disabled={!options.length} accessibilityRole="button"
-      onPress={() => { onBeforeOpen?.(); if (options.length === 1) void select(options[0].url); else setOpen(true); }}>{children}</Pressable>
-    <WatchOptionModal visible={open} onClose={() => setOpen(false)} movie={movie} title={title} onSelect={url => { void select(url); }} />
+    <Pressable style={[style, !options.length && { opacity: 0.6 }]} disabled={!options.length || checking} accessibilityRole="button" accessibilityState={{ busy: checking }}
+      onPress={() => { onBeforeOpen?.(); if (preferred) void begin(); else if (options.length === 1) void select(options[0].url); else setOpen(true); }}>{checking ? <Text style={{ color: '#fff' }}>…</Text> : children}</Pressable>
+    {active ? <WatchPlayerModal url={active} title={title} onClose={() => { clearTimeout(switching.current); setOpen(false); setActive(null); }} onOther={() => setOpen(true)} hasOther={alternatives.watchUrls.length > 0}>
+      <WatchOptionModal visible={open} onClose={() => setOpen(false)} movie={alternatives} title={title} onSelect={url => { void select(url); }} />
+    </WatchPlayerModal> : <WatchOptionModal visible={open} onClose={() => setOpen(false)} movie={movie} title={title} onSelect={url => { void select(url); }} />}
   </>;
 }
 

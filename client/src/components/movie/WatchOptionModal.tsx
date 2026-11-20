@@ -8,11 +8,14 @@ import { useTheme } from "@/components/theme/theme-state";
 import { watchModalHistory } from './watch-modal-history';
 import { translate } from "@/i18n";
 import { watchOptions } from "@/utils/watch-options";
+import { watchProvider, verifiedEmbed } from '@/utils/watch-provider';
+import { apiBaseUrl } from '@/api/client';
+import { WatchPlayerModal } from './WatchPlayerModal';
 
 type WatchMovie = { watchUrl?: string | null; watchUrls?: string[] };
 
-export function WatchOptionModal({ open, onClose, movie, title }: {
-  open: boolean; onClose: () => void; movie: WatchMovie; title?: string;
+export function WatchOptionModal({ open, onClose, movie, title, onSelect }: {
+  open: boolean; onClose: () => void; movie: WatchMovie; title?: string; onSelect?: (url: string) => void;
 }) {
   const { colors } = useTheme();
   const { language } = useLanguage();
@@ -132,7 +135,7 @@ export function WatchOptionModal({ open, onClose, movie, title }: {
         </button>
       </div>
       <div className="min-h-0 overflow-y-auto px-5 pb-[max(20px,env(safe-area-inset-bottom))]">
-        {options.map(option => <a key={option.url} href={option.url} target="_blank" rel="noopener noreferrer" onClick={onClose}
+        {options.map(option => <a key={option.url} href={option.url} target="_blank" rel="noopener noreferrer" onClick={event => { if (onSelect) { event.preventDefault(); onSelect(option.url); } else onClose(); }}
           className="mb-2 flex min-h-16 items-center gap-3 rounded-2xl border px-4 py-3 transition-opacity hover:opacity-80"
           style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft, color: colors.text }}>
           <PlayIcon size={20} color={colors.accentBright} />
@@ -149,11 +152,55 @@ export function WatchButton({ movie, title, children, className, style }: {
   movie: WatchMovie; title?: string; children: ReactNode; className?: string; style?: CSSProperties;
 }) {
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState<string | null>(null);
+  const [embed, setEmbed] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const opening = useRef<AbortController | null>(null);
+  const switching = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => { opening.current?.abort(); clearTimeout(switching.current); }, []);
   const options = watchOptions(movie);
-  if (options.length === 1) return <a href={options[0].url} target="_blank" rel="noopener noreferrer" className={className} style={style}>{children}</a>;
+  useEffect(() => {
+    if (!active) return; const controller = new AbortController();
+    void fetch(`${apiBaseUrl}/api/watch-embed?url=${encodeURIComponent(active)}`, { signal: controller.signal })
+      .then(response => response.json()).then(data => { if (!controller.signal.aborted) setEmbed(data.source?.embedUrl ? verifiedEmbed(active, data.source.embedUrl) : null); })
+      .catch(() => {}).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [active]);
+  const select = (url: string) => {
+    setOpen(false); clearTimeout(switching.current);
+    if (!watchProvider(url)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      if (open && active) switching.current = setTimeout(() => setActive(null), 340); else setActive(null);
+      return;
+    }
+    const apply = () => { setEmbed(null); setLoading(true); setActive(url); };
+    // Let the source sheet release its history entry before replacing its parent.
+    if (open && watchProvider(url)) switching.current = setTimeout(apply, 340); else apply();
+  };
+  const preferred = ['vk', 'ok', 'mover'].flatMap(provider => options.filter(option => watchProvider(option.url)?.provider === provider))[0];
+  const begin = async () => {
+    opening.current?.abort(); const controller = new AbortController(); opening.current = controller; setChecking(true);
+    try {
+      for (const provider of ['vk', 'ok', 'mover']) {
+        for (const option of options.filter(option => watchProvider(option.url)?.provider === provider).slice(0, 1)) {
+          try {
+            const data = await fetch(`${apiBaseUrl}/api/watch-embed?url=${encodeURIComponent(option.url)}`, { signal: controller.signal }).then(response => response.json());
+            if (controller.signal.aborted) return;
+            if (data.source?.embedUrl && verifiedEmbed(option.url, data.source.embedUrl)) { select(option.url); return; }
+          } catch { if (controller.signal.aborted) return; }
+        }
+      }
+      if (options.length === 1) window.location.assign(options[0].url); else setOpen(true);
+    } finally { if (!controller.signal.aborted) setChecking(false); }
+  };
+  const alternatives = { watchUrls: options.filter(option => option.url !== active).map(option => option.url) };
+  if (options.length === 1 && !preferred) return <a href={options[0].url} target="_blank" rel="noopener noreferrer" className={className} style={style}>{children}</a>;
   return <>
-    <button type="button" disabled={!options.length} onClick={() => setOpen(true)} className={className}
-      style={{ ...style, ...(!options.length ? { opacity: 0.6 } : {}) }}>{children}</button>
-    <WatchOptionModal open={open} onClose={() => setOpen(false)} movie={movie} title={title} />
+    <button type="button" disabled={!options.length || checking} aria-busy={checking} onClick={() => preferred ? void begin() : setOpen(true)} className={className}
+      style={{ ...style, ...(!options.length ? { opacity: 0.6 } : {}) }}>{checking ? '…' : children}</button>
+    {active ? <WatchPlayerModal url={active} embedUrl={embed} title={title} loading={loading} onClose={() => { clearTimeout(switching.current); setOpen(false); setActive(null); }} onOther={() => setOpen(true)} hasOther={alternatives.watchUrls.length > 0}>
+      <WatchOptionModal open={open} onClose={() => setOpen(false)} movie={alternatives} title={title} onSelect={select} />
+    </WatchPlayerModal> : <WatchOptionModal open={open} onClose={() => setOpen(false)} movie={movie} title={title} onSelect={select} />}
   </>;
 }
