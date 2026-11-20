@@ -35,9 +35,9 @@ export function WatchPlayerModal({ url, embedUrl, title, loading, onClose, onOth
           referrerPolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-presentation allow-forms" className="aspect-video max-h-full w-full border-0" />
           : <p role="status">{loading ? labels.loading : labels.unavailable}</p>}
       </div>
-      <footer className="flex flex-wrap justify-center gap-3 py-4">
-        {hasOther && <button type="button" onClick={onOther} className="rounded-2xl bg-blue-700 px-5 py-3 font-semibold">{labels.other}</button>}
-        <a href={url} target="_blank" rel="noopener noreferrer" onClick={onClose} className="rounded-2xl bg-white/10 px-5 py-3">{labels.site} ↗</a>
+      <footer className="flex w-full items-stretch gap-3 py-4">
+        {hasOther && <button type="button" onClick={onOther} className="flex min-h-12 min-w-0 flex-1 items-center justify-center rounded-2xl bg-blue-700 px-3 py-3 text-center text-sm font-semibold">{labels.other}</button>}
+        <a href={url} target="_blank" rel="noopener noreferrer" onClick={onClose} className="flex min-h-12 min-w-0 flex-1 items-center justify-center rounded-2xl bg-white/10 px-3 py-3 text-center text-sm">{labels.site} ↗</a>
       </footer>{children}
     </div>
   </dialog>, document.body);

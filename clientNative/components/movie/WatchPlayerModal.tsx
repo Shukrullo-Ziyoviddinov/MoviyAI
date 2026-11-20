@@ -36,8 +36,10 @@ export function WatchPlayerModal({ url, title, onClose, onOther, hasOther, child
           onError={() => { setEmbed(null); setLoading(false); }} style={{ backgroundColor: '#000' }} /></View>
           : <Text style={{ color: '#fff', textAlign: 'center', padding: 20 }}>{loading ? labels[2] : labels[3]}</Text>}
       </View>
-      {hasOther && <Pressable onPress={onOther} style={{ margin: 16, padding: 16, borderRadius: 16, backgroundColor: '#214bd0' }}><Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600' }}>{labels[0]}</Text></Pressable>}
-      <Pressable onPress={() => { onClose(); void Linking.openURL(url).catch(() => {}); }} style={{ padding: 16 }}><Text style={{ color: '#fff', textAlign: 'center' }}>{labels[1]} ↗</Text></Pressable>
+      <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: 12, paddingHorizontal: 16, paddingVertical: 16 }}>
+        {hasOther && <Pressable onPress={onOther} style={{ flex: 1, minWidth: 0, minHeight: 48, justifyContent: 'center', padding: 12, borderRadius: 16, backgroundColor: '#214bd0' }}><Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600', fontSize: 14 }}>{labels[0]}</Text></Pressable>}
+        <Pressable onPress={() => { onClose(); void Linking.openURL(url).catch(() => {}); }} style={{ flex: 1, minWidth: 0, minHeight: 48, justifyContent: 'center', padding: 12, borderRadius: 16, backgroundColor: '#ffffff1a' }}><Text style={{ color: '#fff', textAlign: 'center', fontSize: 14 }}>{labels[1]} ↗</Text></Pressable>
+      </View>
       {children}
     </View>
   </Modal>;
