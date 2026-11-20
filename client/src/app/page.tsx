@@ -57,7 +57,7 @@ function ChatScreen() {
   }
 
   return (
-    <main className="relative flex h-dvh w-full flex-col" style={{ backgroundColor: colors.bg }}>
+    <main className="relative flex h-full w-full flex-col" style={{ backgroundColor: colors.bg }}>
       {hasMessages ? (
         <div className="min-h-0 flex-1 overflow-y-auto">
           <ChatMessageList topInset={topInset} bottomInset={viewer ? 24 : composerH} />
@@ -85,7 +85,7 @@ function ChatScreen() {
       {viewer ? null : (
         <div
           ref={dockRef}
-          className="absolute inset-x-0 bottom-0 z-20 px-3 pb-[max(10px,env(safe-area-inset-bottom))]"
+          className="absolute inset-x-0 bottom-0 z-20 px-3 pb-[max(10px,var(--app-bottom-inset,env(safe-area-inset-bottom)))]"
         >
           <ChatComposer />
         </div>

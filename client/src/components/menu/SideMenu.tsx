@@ -133,6 +133,7 @@ export function SideMenu({ children }: { children: ReactNode }) {
     <SideMenuContext.Provider value={{ desktopOpen, mobileOpen, openMenu, closeMenu }}>
       <div
         className="flex h-dvh w-full overflow-hidden"
+        style={{ height: 'var(--app-viewport-height, 100dvh)' }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}

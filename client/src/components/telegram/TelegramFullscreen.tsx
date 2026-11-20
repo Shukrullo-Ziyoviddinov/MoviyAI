@@ -3,16 +3,15 @@
 import { Suspense, createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/components/theme/theme-state";
+import { telegramViewportLayout, type TelegramViewport } from './telegram-viewport';
 
-type Chrome = { active: boolean; back: number };
+type Chrome = { active: boolean; back: number; bottom: number };
 
-const ChromeContext = createContext<Chrome>({ active: false, back: 0 });
+const ChromeContext = createContext<Chrome>({ active: false, back: 0, bottom: 0 });
 
 export function useTelegramChrome() {
   return useContext(ChromeContext);
 }
-
-type Insets = { top?: number };
 
 type TelegramBackButton = {
   show: () => void;
@@ -21,12 +20,10 @@ type TelegramBackButton = {
   offClick: (cb: () => void) => void;
 };
 
-type TelegramWebApp = {
+type TelegramWebApp = TelegramViewport & {
   initData?: string;
   platform?: string;
   isFullscreen?: boolean;
-  safeAreaInset?: Insets;
-  contentSafeAreaInset?: Insets;
   BackButton?: TelegramBackButton;
   ready: () => void;
   expand: () => void;
@@ -53,7 +50,7 @@ function readBack(tg: TelegramWebApp) {
 
 export function TelegramChromeProvider({ children }: { children: ReactNode }) {
   const { colors } = useTheme();
-  const [chrome, setChrome] = useState<Chrome>({ active: false, back: 0 });
+  const [chrome, setChrome] = useState<Chrome>({ active: false, back: 0, bottom: 0 });
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
@@ -68,7 +65,9 @@ export function TelegramChromeProvider({ children }: { children: ReactNode }) {
       root.style.removeProperty("--tg-home-gap");
       root.style.removeProperty("--tg-home-pad");
       root.style.removeProperty("--tg-home-row");
-      setChrome({ active: false, back: 0 });
+      root.style.removeProperty('--app-viewport-height');
+      root.style.removeProperty('--app-bottom-inset');
+      setChrome({ active: false, back: 0, bottom: 0 });
     };
 
     const apply = () => {
@@ -78,13 +77,16 @@ export function TelegramChromeProvider({ children }: { children: ReactNode }) {
       }
       const back = readBack(tg);
       const root = document.documentElement;
+      const viewport = telegramViewportLayout(tg, window.innerHeight);
+      if (viewport.height) root.style.setProperty('--app-viewport-height', `${viewport.height}px`);
+      root.style.setProperty('--app-bottom-inset', `max(${viewport.bottom}px, env(safe-area-inset-bottom, 0px))`);
       root.style.setProperty("--tg-back", `${back}px`);
       root.style.setProperty("--tg-chrome", `${back}px`);
       root.style.setProperty("--tg-safe-pad", "0px");
       root.style.setProperty("--tg-home-gap", "8px");
       root.style.setProperty("--tg-home-pad", "0px");
       root.style.setProperty("--tg-home-row", "62px");
-      setChrome({ active: true, back });
+      setChrome({ active: true, back, bottom: viewport.bottom });
     };
 
     tg.ready();
@@ -105,7 +107,7 @@ export function TelegramChromeProvider({ children }: { children: ReactNode }) {
       narrow.removeEventListener("change", apply);
       for (const event of events) tg.offEvent?.(event, apply);
     };
-  }, [colors.bg]);
+  }, [colors.bg, colors.panel]);
 
   return <ChromeContext.Provider value={chrome}>{children}</ChromeContext.Provider>;
 }

@@ -38,7 +38,7 @@ export default function FavoritesPage() {
   const columns = desktopOpen ? "md:grid-cols-5" : "md:grid-cols-7";
   const gridClass = `grid content-start grid-cols-2 gap-x-3 gap-y-3.5 md:gap-x-2.5 md:gap-y-3 ${columns}`;
   const listClass =
-    "no-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pb-[max(94px,calc(80px+env(safe-area-inset-bottom)))] md:pb-6";
+    "no-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pb-[max(94px,calc(80px+var(--app-bottom-inset,env(safe-area-inset-bottom))))] md:pb-6";
   const listPad = {
     paddingTop: "calc(var(--tg-chrome, 0px) + max(64px, calc(env(safe-area-inset-top) + 64px), calc(var(--tg-home-row, 0px) + 16px)))",
   };

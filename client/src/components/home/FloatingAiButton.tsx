@@ -3,12 +3,22 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BOTTOM_NAV_BAR, BOTTOM_NAV_LIFT } from "@/components/nav/BottomNav";
+import { useTelegramChrome } from '@/components/telegram/TelegramFullscreen';
 
 const MOBILE_SIZE = 68;
 const DESKTOP_SIZE = 80;
 
+function maxButtonY(parent: HTMLElement, size: number, gap: number) {
+  const bounds = parent.getBoundingClientRect();
+  const nav = parent.querySelector<HTMLElement>('[data-bottom-nav]');
+  const navTop = nav && nav.getClientRects().length ? nav.getBoundingClientRect().top - bounds.top
+    : bounds.height - BOTTOM_NAV_BAR - BOTTOM_NAV_LIFT;
+  return Math.max(8, navTop - size - gap);
+}
+
 export function FloatingAiButton() {
   const router = useRouter();
+  const { bottom } = useTelegramChrome();
   const wrapRef = useRef<HTMLButtonElement>(null);
   const drag = useRef<{ x: number; y: number; left: number; top: number; moved: boolean } | null>(null);
   const [point, setPoint] = useState({ x: 0, y: 0 });
@@ -33,14 +43,16 @@ export function FloatingAiButton() {
       const bounds = parent.getBoundingClientRect();
       setPoint({
         x: Math.max(8, bounds.width - size - 8),
-        y: Math.max(8, bounds.height - size - BOTTOM_NAV_BAR - BOTTOM_NAV_LIFT - 18),
+        y: maxButtonY(parent, size, 18),
       });
       setReady(true);
     };
     place();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place);
+    observer?.observe(parent);
     window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
-  }, [size]);
+    return () => { observer?.disconnect(); window.removeEventListener("resize", place); };
+  }, [size, bottom]);
 
   function onPointerDown(event: React.PointerEvent<HTMLButtonElement>) {
     drag.current = { x: event.clientX, y: event.clientY, left: point.x, top: point.y, moved: false };
@@ -59,7 +71,7 @@ export function FloatingAiButton() {
     setDragging(true);
     const bounds = parent.getBoundingClientRect();
     const maxX = Math.max(8, bounds.width - size - 8);
-    const maxY = Math.max(8, bounds.height - size - BOTTOM_NAV_BAR - BOTTOM_NAV_LIFT - 12);
+    const maxY = maxButtonY(parent, size, 12);
     setPoint({
       x: Math.min(maxX, Math.max(8, state.left + dx)),
       y: Math.min(maxY, Math.max(8, state.top + dy)),
