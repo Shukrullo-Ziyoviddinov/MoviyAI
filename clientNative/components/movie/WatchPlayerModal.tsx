@@ -29,12 +29,14 @@ export function WatchPlayerModal({ url, title, onClose, onOther, hasOther, child
         <Text numberOfLines={1} style={{ flex: 1, color: '#fff', fontWeight: '700', fontSize: 18 }}>{title}</Text>
         <Pressable onPress={onClose} accessibilityLabel={labels[4]} style={{ padding: 12 }}><Text style={{ color: '#fff', fontSize: 26 }}>×</Text></Pressable>
       </View>
-      <View style={{ flex: 1, justifyContent: 'center' }}>
-        {embed && verifiedEmbed(url, embed) && foreground ? <View style={{ width: '100%', aspectRatio: 16 / 9 }}><WebView key={embed} source={{ uri: embed }} allowsFullscreenVideo allowsInlineMediaPlayback
+      <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
+        <View style={{ width: '100%', aspectRatio: 16 / 9, justifyContent: 'center', backgroundColor: '#111827', borderRadius: 10, borderWidth: 1, borderColor: '#ffffff1a', padding: 8, overflow: 'hidden' }}>
+        {embed && verifiedEmbed(url, embed) && foreground ? <WebView key={embed} source={{ uri: embed }} allowsFullscreenVideo allowsInlineMediaPlayback
           javaScriptCanOpenWindowsAutomatically={false} setSupportMultipleWindows={false}
           onShouldStartLoadWithRequest={request => request.isTopFrame === false && request.url.startsWith('https://') || !!verifiedEmbed(url, request.url) || request.url === 'about:blank'}
-          onError={() => { setEmbed(null); setLoading(false); }} style={{ backgroundColor: '#000' }} /></View>
+          onError={() => { setEmbed(null); setLoading(false); }} style={{ flex: 1, backgroundColor: '#000', borderRadius: 6 }} />
           : <Text style={{ color: '#fff', textAlign: 'center', padding: 20 }}>{loading ? labels[2] : labels[3]}</Text>}
+        </View>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: 12, paddingHorizontal: 16, paddingVertical: 16 }}>
         {hasOther && <Pressable onPress={onOther} style={{ flex: 1, minWidth: 0, minHeight: 48, justifyContent: 'center', padding: 12, borderRadius: 16, backgroundColor: '#214bd0' }}><Text style={{ color: '#fff', textAlign: 'center', fontWeight: '600', fontSize: 14 }}>{labels[0]}</Text></Pressable>}

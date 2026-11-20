@@ -31,9 +31,11 @@ export function WatchPlayerModal({ url, embedUrl, title, loading, onClose, onOth
       <header className="flex items-center justify-between gap-4 py-3"><h2 className="truncate font-semibold">{title}</h2>
         <button type="button" aria-label={labels.close} onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10"><CloseIcon size={22} color="currentColor" /></button></header>
       <div className="flex min-h-0 flex-1 items-center justify-center">
+        <div className="flex aspect-video max-h-full w-full items-center justify-center overflow-hidden rounded-[10px] bg-[#111827] p-2 ring-1 ring-inset ring-white/10">
         {embedUrl ? <iframe key={embedUrl} src={embedUrl} title={title || 'Video'} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-presentation allow-forms" className="aspect-video max-h-full w-full border-0" />
+          referrerPolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-presentation allow-forms" className="h-full w-full rounded-md border-0" />
           : <p role="status">{loading ? labels.loading : labels.unavailable}</p>}
+        </div>
       </div>
       <footer className="flex w-full items-stretch gap-3 py-4">
         {hasOther && <button type="button" onClick={onOther} className="flex min-h-12 min-w-0 flex-1 items-center justify-center rounded-2xl bg-blue-700 px-3 py-3 text-center text-sm font-semibold">{labels.other}</button>}
