@@ -38,8 +38,8 @@ export function WatchPlayerModal({ url, embedUrl, title, loading, onClose, onOth
         </div>
       </div>
       <footer className="flex w-full items-stretch gap-3 py-4">
-        {hasOther && <button type="button" onClick={onOther} className="flex min-h-12 min-w-0 flex-1 items-center justify-center rounded-2xl bg-blue-700 px-3 py-3 text-center text-sm font-semibold">{labels.other}</button>}
-        <a href={url} target="_blank" rel="noopener noreferrer" onClick={onClose} className="flex min-h-12 min-w-0 flex-1 items-center justify-center rounded-2xl bg-white/10 px-3 py-3 text-center text-sm">{labels.site} ↗</a>
+        {hasOther && <button type="button" onClick={onOther} className="flex min-h-12 min-w-0 flex-1 items-center justify-center rounded-2xl bg-blue-700 px-3 py-3 text-center text-sm font-semibold md:flex-none md:px-5">{labels.other}</button>}
+        <a href={url} target="_blank" rel="noopener noreferrer" onClick={onClose} className="flex min-h-12 min-w-0 flex-1 items-center justify-center rounded-2xl bg-white/10 px-3 py-3 text-center text-sm md:flex-none md:px-5">{labels.site} ↗</a>
       </footer>{children}
     </div>
   </dialog>, document.body);
