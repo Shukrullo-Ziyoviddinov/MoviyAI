@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { CloseIcon } from '@/components/icons';
 import { useLanguage } from '@/components/language/language-state';
 import { watchModalHistory } from './watch-modal-history';
+import { TelegramNav, useTelegramChrome } from '@/components/telegram/TelegramFullscreen';
 
 export function watchLabels(language: string) {
   return language.startsWith('ru') ? { other: 'Смотреть из других источников', site: 'Открыть на сайте', loading: 'Проверяем плеер…', unavailable: 'Встроенный плеер недоступен. Откройте источник.', close: 'Закрыть' }
@@ -16,6 +17,7 @@ export function WatchPlayerModal({ url, embedUrl, title, loading, onClose, onOth
 }) {
   const dialog = useRef<HTMLDialogElement>(null), close = useRef(onClose);
   const { language } = useLanguage(); const labels = watchLabels(language);
+  const { active: telegram } = useTelegramChrome();
   useEffect(() => { close.current = onClose; }, [onClose]);
   useEffect(() => {
     const node = dialog.current; if (!node) return;
@@ -27,7 +29,9 @@ export function WatchPlayerModal({ url, embedUrl, title, loading, onClose, onOth
   if (typeof document === 'undefined') return null;
   return createPortal(<dialog ref={dialog} onCancel={event => { if (event.target !== event.currentTarget) return; event.preventDefault(); event.stopPropagation(); onClose(); }}
     className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-[#05070d] p-0 text-white">
-    <div className="flex h-full flex-col px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(16px,env(safe-area-inset-top))]">
+    {telegram && <TelegramNav />}
+    <div className="flex h-full flex-col px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(16px,env(safe-area-inset-top))]"
+      style={telegram ? { paddingTop: 'calc(var(--tg-chrome, 0px) + 16px)' } : undefined}>
       <header className="flex items-center justify-between gap-4 py-3"><h2 className="truncate font-semibold">{title}</h2>
         <button type="button" aria-label={labels.close} onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10"><CloseIcon size={22} color="currentColor" /></button></header>
       <div className="flex min-h-0 flex-1 items-center justify-center">
