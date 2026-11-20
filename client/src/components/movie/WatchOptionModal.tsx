@@ -149,8 +149,8 @@ export function WatchOptionModal({ open, onClose, movie, title, onSelect }: {
   </dialog>, document.body);
 }
 
-export function WatchButton({ movie, title, children, className, style }: {
-  movie: WatchMovie; title?: string; children: ReactNode; className?: string; style?: CSSProperties;
+export function WatchButton({ movie, title, children, className, style, sourceUrl }: {
+  movie: WatchMovie; title?: string; children: ReactNode; className?: string; style?: CSSProperties; sourceUrl?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
@@ -198,9 +198,11 @@ export function WatchButton({ movie, title, children, className, style }: {
     } finally { if (!controller.signal.aborted) setChecking(false); }
   };
   const alternatives = { watchUrls: options.filter(option => option.url !== active).map(option => option.url) };
-  if (options.length === 1 && !preferred) return <a href={options[0].url} target="_blank" rel="noopener noreferrer" className={className} style={style}>{children}</a>;
+  const requested = sourceUrl && options.find(option => option.url === watchOptions({ watchUrl: sourceUrl })[0]?.url);
+  if (requested && !watchProvider(requested.url)) return <a href={requested.url} target="_blank" rel="noopener noreferrer" className={className} style={style}>{children}</a>;
+  if (!sourceUrl && options.length === 1 && !preferred) return <a href={options[0].url} target="_blank" rel="noopener noreferrer" className={className} style={style}>{children}</a>;
   return <>
-    <button type="button" disabled={!options.length || checking} aria-busy={checking} onClick={() => preferred ? void begin() : setOpen(true)} className={className}
+    <button type="button" disabled={!options.length || checking || !!sourceUrl && !requested} aria-busy={checking} onClick={() => requested ? select(requested.url) : preferred ? void begin() : setOpen(true)} className={className}
       style={{ ...style, ...(!options.length ? { opacity: 0.6 } : {}) }}>{checking ? '…' : children}</button>
     {active ? <WatchPlayerModal url={active} embedUrl={embed} title={title} loading={loading} onClose={() => { clearTimeout(switching.current); setOpen(false); setActive(null); }} onOther={() => setOpen(true)} hasOther={alternatives.watchUrls.length > 0}>
       <WatchOptionModal open={open} onClose={() => setOpen(false)} movie={alternatives} title={title} onSelect={select} />

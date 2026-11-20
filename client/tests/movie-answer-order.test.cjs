@@ -26,6 +26,8 @@ test('render order is about, names, posters, table, characters, cast, sources, t
     if(name.includes('theme-state'))return {useTheme:()=>({colors})};
     if(name.includes('useT'))return {useT:()=>key=>key.split('.').reduce((value,key)=>value?.[key],locale)??key};
     if(name==='./chat-state')return {useChat:()=>({openViewer(){}})};
+    // Player behavior is covered by watch-options tests; this test checks answer section order.
+    if(name==='@/components/movie/WatchOptionModal')return {WatchButton:({sourceUrl,children,className,style})=>require('react').createElement('a',{href:sourceUrl,className,style},children)};
     if(name.startsWith('.')){const target=path.resolve(path.dirname(file),name);return load(fs.existsSync(target+'.tsx')?target+'.tsx':target+'.ts');}
     return require(name);
    },

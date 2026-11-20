@@ -119,8 +119,8 @@ export function WatchOptionModal({ visible, onClose, movie, title, onSelect }: {
   </Modal>;
 }
 
-export function WatchButton({ movie, title, children, style, onBeforeOpen }: {
-  movie: WatchMovie; title?: string; children: ReactNode; style?: StyleProp<ViewStyle>; onBeforeOpen?: () => void;
+export function WatchButton({ movie, title, children, style, onBeforeOpen, sourceUrl }: {
+  movie: WatchMovie; title?: string; children: ReactNode; style?: StyleProp<ViewStyle>; onBeforeOpen?: () => void; sourceUrl?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
@@ -162,9 +162,10 @@ export function WatchButton({ movie, title, children, style, onBeforeOpen }: {
     } finally { if (!controller.signal.aborted) setChecking(false); }
   };
   const alternatives = { watchUrls: options.filter(option => option.url !== active).map(option => option.url) };
+  const requested = sourceUrl && options.find(option => option.url === watchOptions({ watchUrl: sourceUrl })[0]?.url);
   return <>
-    <Pressable style={[style, !options.length && { opacity: 0.6 }]} disabled={!options.length || checking} accessibilityRole="button" accessibilityState={{ busy: checking }}
-      onPress={() => { onBeforeOpen?.(); if (preferred) void begin(); else if (options.length === 1) void select(options[0].url); else setOpen(true); }}>{checking ? <Text style={{ color: '#fff' }}>…</Text> : children}</Pressable>
+    <Pressable style={[style, !options.length && { opacity: 0.6 }]} disabled={!options.length || checking || !!sourceUrl && !requested} accessibilityRole="button" accessibilityState={{ busy: checking }}
+      onPress={() => { onBeforeOpen?.(); if (requested) void select(requested.url); else if (preferred) void begin(); else if (options.length === 1) void select(options[0].url); else setOpen(true); }}>{checking ? <Text style={{ color: '#fff' }}>…</Text> : children}</Pressable>
     {active ? <WatchPlayerModal url={active} title={title} onClose={() => { if (open) { setOpen(false); return; } clearTimeout(switching.current); setOpen(false); setActive(null); }} onOther={() => setOpen(true)} hasOther={alternatives.watchUrls.length > 0}>
       <WatchOptionModal visible={open} onClose={() => setOpen(false)} movie={alternatives} title={title} onSelect={url => { void select(url); }} />
     </WatchPlayerModal> : <WatchOptionModal visible={open} onClose={() => setOpen(false)} movie={movie} title={title} onSelect={url => { void select(url); }} />}

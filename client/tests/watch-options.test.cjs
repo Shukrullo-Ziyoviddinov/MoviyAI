@@ -17,7 +17,7 @@ function component(native,initial=[]){
   'react-native':{Alert:{alert(){}},Linking:{openURL:async url=>{opened.push(url);}},Modal:'modal',Pressable:'pressable',ScrollView:'scrollview',StyleSheet:{create:s=>s},Text:'text',View:'view'},
  };
  const module=load(path.join(__dirname,native?'../../clientNative/components/movie/WatchOptionModal.tsx':'../src/components/movie/WatchOptionModal.tsx'),mocks);
- return {button:movie=>module.WatchButton({movie,children:'Watch',onBeforeOpen:()=>{before++;}}),state,opened,before:()=>before};
+ return {button:(movie,props={})=>module.WatchButton({movie,children:'Watch',onBeforeOpen:()=>{before++;},...props}),state,opened,before:()=>before};
 }
 for(const native of [false,true])test(`${native?'native':'web'}: single choice opens directly; multiple choices show selection; empty choices disable`,async()=>{
  const single=component(native),one=single.button({watchUrl:first,watchUrls:[first]});
@@ -78,4 +78,31 @@ test('native: a close request while sources are open closes only the source shee
  const active='https://ok.ru/video/123',h=component(true,[true,active]);
  h.button({watchUrls:[active,first]}).props.children[1].props.onClose();
  assert.deepEqual(h.state,[false]);
+});
+
+for(const native of [false,true])for(const requested of ['https://ok.ru/video/123','https://mover.uz/watch/Ab12/','https://vkvideo.ru/video-12_34'])test(`${native?'native':'web'}: chat opens the clicked ${requested} instead of a higher-priority source`,()=>{
+ const h=component(native),tree=h.button({watchUrls:['https://vkvideo.ru/video-12_34','https://ok.ru/video/123','https://mover.uz/watch/Ab12/',first]},{sourceUrl:requested});
+ tree.props.children[0].props[native?'onPress':'onClick']();
+ assert.ok(h.state.includes(requested));assert.deepEqual(h.opened,[]);
+});
+for(const native of [false,true])test(`${native?'native':'web'}: an external chat link still opens its own website`,async()=>{
+ const h=component(native),tree=h.button({watchUrls:['https://ok.ru/video/123',first]},{sourceUrl:first});
+ if(native){tree.props.children[0].props.onPress();await Promise.resolve();assert.deepEqual(h.opened,[first]);}
+ else{assert.equal(tree.type,'a');assert.equal(tree.props.href,first);}
+});
+
+for(const native of [false,true])test(`${native?'native':'web'}: a missing or unsafe requested source never falls back to an unrelated link`,()=>{
+ for(const sourceUrl of ['javascript:alert(1)','https://ok.ru/video/999']){
+  const h=component(native),tree=h.button({watchUrls:[first]},{sourceUrl});
+  assert.equal(tree.props.children[0].props.disabled,true);
+ }
+});
+
+for(const native of [false,true])test(`${native?'native':'web'}: chat cards pass the clicked source and every alternative to the shared player`,()=>{
+ const links=[{title:'Film',url:'https://ok.ru/video/123',site:'ok.ru'},{title:'Film',url:first,site:'asilmedia.org'}];
+ const mocks={'@/components/movie/WatchOptionModal':{WatchButton:'watch-button'},'@/components/theme/theme-state':{useTheme:()=>({colors:{}})},'@/src/stores/useThemeStore':{useTheme:()=>({colors:{}})},'@/i18n/useT':{useT:()=>key=>key},'react-i18next':{useTranslation:()=>({t:key=>key})},'react-native':{Text:'text',View:'view'}};
+ const module=load(path.join(__dirname,native?'../../clientNative/components/chat/UzbekMovieLinks.tsx':'../src/components/chat/UzbekMovieLinks.tsx'),mocks);
+ const cards=[];function visit(node){if(!node||typeof node!=='object')return;if(node.type==='watch-button')cards.push(node);for(const child of [node.props?.children].flat(Infinity))visit(child);}
+ visit(module.UzbekMovieLinks({links}));assert.equal(cards.length,2);
+ for(let index=0;index<cards.length;index++){assert.equal(cards[index].props.sourceUrl,links[index].url);assert.deepEqual(cards[index].props.movie.watchUrls,links.map(link=>link.url));}
 });
