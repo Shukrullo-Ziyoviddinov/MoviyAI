@@ -4,8 +4,7 @@ import { readFileSync } from 'node:fs';
 import { watchProvider, verifiedEmbed } from '../dist/utils/watch-provider.js';
 import { resolveWatchEmbed } from '../dist/services/watch-embed.service.js';
 import { uzbekDetailUrl, uzbekReleaseTitle } from '../dist/ai/services/uzbek-movie.service.js';
-import { z } from 'zod';
-import * as operations from '../dist/ai/utils/chat-operation.js';
+import { createPriorityWatchSearch } from '../dist/ai/services/priority-watch-search.service.js';
 
 test('provider policy rejects hostile hosts, credentials, ports and unrelated pages', () => {
   for (const url of ['https://ok.ru.evil.com/video/12', 'http://ok.ru/video/12', 'https://user@ok.ru/video/12', 'https://ok.ru:444/video/12', 'https://ok.ru/profile/12', 'https://127.0.0.1/video/12']) assert.equal(watchProvider(url), null);
@@ -34,20 +33,16 @@ test('web native and server enforce identical provider policies', () => {
   for (const path of ['../../client/src/utils/watch-provider.ts', '../../clientNative/src/utils/watch-provider.ts']) assert.equal(readFileSync(new URL(path, import.meta.url), 'utf8'), source);
 });
 
-test('priority search queries VK then OK then Mover, preserving all confirmed alternatives', async () => {
-  const queries = [], urls = ['https://vkvideo.ru/video-12_34', 'https://ok.ru/video/123', 'https://mover.uz/watch/Ab12/'];
-  const source = readFileSync(new URL('../dist/ai/services/priority-watch-search.service.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, '').replace(/\bexport /g, '');
-  class GoogleGenAI { models = { generateContent: async request => {
-    assert.match(request.config.systemInstruction, /Reject trailers/); return { text: JSON.stringify({ indices: [0, 1, 2, 99] }) };
-  } }; }
-  const budgets=[];
-  const searchWeb = async (query,options,budget) => { queries.push(query);budgets.push(budget); return { organic: [{ title: 'Film 2004 uzbek tilida toliq', link: urls[queries.length - 1], snippet: 'Full film, 120 minutes, Uzbek dub' }] }; };
-  const lookup = new Function('GoogleGenAI', 'z', 'AI_CONFIG', 'searchWeb', 'watchProvider', 'operationSignal', 'operationCheck', 'fetch', source + '\nreturn findPriorityWatchLinks;')(
-    GoogleGenAI, z, { apiKey: 'fake', serperApiKey: 'fake', models: { image: 'model' } }, searchWeb, watchProvider, operations.operationSignal, operations.operationCheck,
-    async () => new Response('<h1>Film 2004 uzbek tilida toliq</h1>', { headers: { 'content-type': 'text/html' } }));
-  const links = await lookup({ title: 'Film', titleUz: 'Mahalliy nom', titleRu: 'Russian name', year: 2004 });
-  assert.deepEqual(queries.map(query => /site:([^ ]+)/.exec(query)[1]), ['vkvideo.ru', 'ok.ru', 'mover.uz']);
-  assert.deepEqual(links.map(link => link.url), urls);
-  assert.ok(budgets[0] instanceof AbortSignal);assert.ok(budgets.every(signal=>signal===budgets[0]));
-  for(const query of queries){assert.ok(query.includes('"Film"'));assert.ok(query.includes('"Mahalliy nom"'));assert.ok(query.includes('"Russian name"'));}
+test('Google discovery preserves provider priority and skips unnecessary internal searches', async () => {
+  const urls = ['https://mover.uz/watch/Ab12/', 'https://ok.ru/video/123', 'https://vkvideo.ru/video-12_34'];
+  const queries = [], internal = [];
+  const lookup = createPriorityWatchSearch({
+    searchWeb: async (query, options, signal) => { queries.push(query); assert.ok(signal instanceof AbortSignal); return { organic: urls.map(link => ({title:'Film 2004 Uzbek',link,snippet:'Full movie',position:1})) }; },
+    readPage: async () => ({title:'Film 2004 Uzbek',description:'',duration:6000,text:''}),
+    searchProvider: async site => { internal.push(site); return {status:'ok',candidates:[]}; },
+    verify: async (film, candidates) => candidates, log() {},
+  });
+  const links = await lookup({ title:'Film', titleUz:'Mahalliy nom', titleRu:'Russian name', year:2004 });
+  assert.equal(queries.length,1); assert.equal(queries[0],'Mahalliy nom 2004'); assert.deepEqual(internal,[]);
+  assert.deepEqual(links.map(link=>link.site),['vkvideo.ru','ok.ru','mover.uz']);
 });

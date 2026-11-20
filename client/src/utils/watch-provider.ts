@@ -7,7 +7,7 @@ export function watchProvider(value: string) {
     if (['vkvideo.ru', 'vk.com', 'vk.ru'].includes(host) && vk)
       return { provider: 'vk', url: `https://vkvideo.ru/video${vk[1]}_${vk[2]}`, owner: vk[1], id: vk[2] };
     const ok = /^\/video\/(\d+)\/?$/.exec(u.pathname);
-    if (host === 'ok.ru' && ok) return { provider: 'ok', url: `https://ok.ru/video/${ok[1]}`, id: ok[1] };
+    if (['ok.ru', 'm.ok.ru'].includes(host) && ok) return { provider: 'ok', url: `https://ok.ru/video/${ok[1]}`, id: ok[1] };
     const mover = /^\/watch\/([A-Za-z0-9]+)\/?$/.exec(u.pathname);
     if (host === 'mover.uz' && mover) return { provider: 'mover', url: `https://mover.uz/watch/${mover[1]}/`, id: mover[1] };
   } catch { /* Invalid URL. */ }

@@ -153,8 +153,8 @@ export function createUzbekMovieSearch(deps:{searchWeb:typeof searchWeb;readPage
  };
 }
 const uzbekLookup=createUzbekMovieSearch();
-export const findUzbekMovieLinks=(film:Identity,parts:Part[]=[])=>chatCheckpoint(checkpointKey('uzbek-links-v2',film),async()=>{
- const priority=await chatCheckpoint(checkpointKey('priority-watch-v1',film),()=>findPriorityWatchLinks(film));
+export const findUzbekMovieLinks=(film:Identity,parts:Part[]=[])=>chatCheckpoint(checkpointKey('uzbek-links-v3',film),async()=>{
+ const priority=await chatCheckpoint(checkpointKey('priority-watch-v2',film),()=>findPriorityWatchLinks(film));
  const local=await uzbekLookup(film,parts);
  return [...priority,...local].filter((link,index,all)=>all.findIndex(other=>other.url===link.url)===index);
 });
