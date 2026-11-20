@@ -25,7 +25,7 @@ export default function ProfilePage() {
     >
       <ProfileHeader
         name={profile?.name || t("auth.title")}
-        email={profile?.email || t("auth.loginRequired")}
+        email={profile?.email || (profile?.telegramId ? profile.telegramUsername ? `@${profile.telegramUsername}` : 'Telegram' : t("auth.loginRequired"))}
         picture={profile?.picture}
         onSettingsPress={() => router.push("/settings")}
         onProfilePress={() => {

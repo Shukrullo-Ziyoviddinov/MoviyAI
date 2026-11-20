@@ -2,18 +2,31 @@ export const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_URL ?? "https://moviyai.onrender.com";
 
 const TOKEN_KEY = "moviy.authToken";
+let telegramToken = '';
+
+export function authStorageKey(key: string) {
+  return typeof window !== 'undefined' && window.Telegram?.WebApp?.initData ? `${key}.telegram` : key;
+}
 
 export function readAuthToken() {
   if (typeof window === "undefined") return "";
-  return window.localStorage.getItem(TOKEN_KEY) ?? "";
+  // Mini App launches must authenticate their current signed identity first.
+  if (window.Telegram?.WebApp?.initData) return telegramToken;
+  return window.localStorage.getItem(authStorageKey(TOKEN_KEY)) ?? "";
 }
 
 export function writeAuthToken(token: string) {
-  window.localStorage.setItem(TOKEN_KEY, token);
+  if (window.Telegram?.WebApp?.initData) { telegramToken = token; return; }
+  window.localStorage.setItem(authStorageKey(TOKEN_KEY), token);
 }
 
 export function clearAuthToken() {
-  window.localStorage.removeItem(TOKEN_KEY);
+  if (window.Telegram?.WebApp?.initData) {
+    telegramToken = '';
+    try { window.localStorage.removeItem(authStorageKey(TOKEN_KEY)); } catch { /* Mini App tokens live in memory. */ }
+    return;
+  }
+  window.localStorage.removeItem(authStorageKey(TOKEN_KEY));
 }
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {

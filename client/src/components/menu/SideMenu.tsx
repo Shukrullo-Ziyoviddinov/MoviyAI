@@ -336,7 +336,7 @@ function MenuBody({
                   {profile?.name || t("auth.title")}
                 </span>
                 <span className="mt-[3px] block truncate text-[13px]" style={{ color: colors.textMuted }}>
-                  {profile?.email || t("auth.loginRequired")}
+                  {profile?.email || (profile?.telegramId ? profile.telegramUsername ? `@${profile.telegramUsername}` : 'Telegram' : t("auth.loginRequired"))}
                 </span>
               </span>
               <ChevronRightIcon size={18} color={colors.textMuted} />

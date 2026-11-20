@@ -12,6 +12,16 @@ export type GoogleLoginResult = {
   profile: AuthProfile;
 };
 
+export async function loginWithTelegram(initData: string, signal?: AbortSignal): Promise<GoogleLoginResult> {
+  const response = await fetch('/api/auth/telegram', {
+    method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData }), cache: 'no-store', signal,
+  });
+  const data = await response.json() as ApiResponse<GoogleLoginResult>;
+  if (!response.ok || !data.ok || !data.data?.token) throw new Error(data.error || 'Telegram orqali kirib bo‘lmadi.');
+  return data.data;
+}
+
 export async function loginWithGoogleIdToken(idToken: string): Promise<GoogleLoginResult> {
   const response = await fetch("/api/auth/google", {
     method: "POST",

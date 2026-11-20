@@ -44,6 +44,9 @@ export function TelegramResult() {
     return () => { alive = false; controller.abort(); };
   }, [token, ready, owner, initialized, retry, openChat]);
   if (!token || !ready) return null;
+  // Telegram authentication has its own retry notice; never ask Mini App users
+  // to sign in with Google just to claim a bot result.
+  if (!profile && window.Telegram?.WebApp?.initData) return null;
   if (!profile) return <div className="fixed inset-x-4 top-28 z-50 rounded-2xl bg-slate-900 p-4 text-white shadow-xl">
     <p>Telegram natijasini saqlash va ko‘rish uchun Moviy AI akkauntingizga kiring.</p>
     <button type="button" onClick={openAuthModal} className="mt-3 rounded-xl bg-blue-600 px-4 py-2">Kirish</button>

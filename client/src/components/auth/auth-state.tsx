@@ -1,9 +1,10 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { AuthRequestError, fetchAuthMe, loginWithGoogleIdToken } from "@/api/auth";
-import { clearAuthToken, readAuthToken, writeAuthToken } from "@/api/client";
+import { AuthRequestError, fetchAuthMe, loginWithGoogleIdToken, loginWithTelegram } from "@/api/auth";
+import { authStorageKey, clearAuthToken, readAuthToken, writeAuthToken } from "@/api/client";
 import type { AuthProfile } from "@/types/auth";
+import { TelegramAuthNotice } from './TelegramAuthNotice';
 
 const PROFILE_KEY = "moviy.authProfile";
 
@@ -28,11 +29,11 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function readCachedProfile() {
-  const raw = window.localStorage.getItem(PROFILE_KEY);
-  if (!raw) return null;
   try {
+    const raw = window.localStorage.getItem(authStorageKey(PROFILE_KEY));
+    if (!raw) return null;
     const parsed = JSON.parse(raw) as AuthProfile;
-    if (!parsed?.email) return null;
+    if (!parsed?.id || (!parsed.email && !parsed.telegramId)) return null;
     return parsed;
   } catch {
     return null;
@@ -40,11 +41,10 @@ function readCachedProfile() {
 }
 
 function writeProfile(profile: AuthProfile | null) {
-  if (!profile) {
-    window.localStorage.removeItem(PROFILE_KEY);
-    return;
-  }
-  window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  try {
+    if (!profile) window.localStorage.removeItem(authStorageKey(PROFILE_KEY));
+    else window.localStorage.setItem(authStorageKey(PROFILE_KEY), JSON.stringify(profile));
+  } catch { /* A private Mini App can authenticate without a disk cache. */ }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -53,40 +53,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [telegramError, setTelegramError] = useState('');
+  const [telegramRetry, setTelegramRetry] = useState(0);
 
   useEffect(() => {
-    const saved = readAuthToken();
-    if (!saved) {
-      setReady(true);
-      return;
-    }
-    setToken(saved);
-    setProfile(readCachedProfile());
     let alive = true;
-    fetchAuthMe()
-      .then((fresh) => {
+    const controller = new AbortController();
+    async function restoreSession() {
+      if (!alive) return;
+      const initData = window.Telegram?.WebApp?.initData;
+      if (initData) {
+        // Never expose another Telegram user's cache before verification.
+        clearAuthToken();
+        writeProfile(null);
+        setToken(null);
+        setProfile(null);
+        setReady(false);
+        setBusy(true);
+        setTelegramError('');
+        try {
+          const result = await loginWithTelegram(initData, AbortSignal.any([controller.signal, AbortSignal.timeout(70000)]));
+          if (!alive) return;
+          writeAuthToken(result.token);
+          writeProfile(result.profile);
+          setToken(result.token);
+          setProfile(result.profile);
+        } catch {
+          if (alive) setTelegramError('telegram_login_failed');
+        } finally {
+          if (alive) { setReady(true); setBusy(false); }
+        }
+        return;
+      }
+      const saved = readAuthToken();
+      if (!saved) { setReady(true); return; }
+      setToken(saved);
+      setProfile(readCachedProfile());
+      try {
+        const fresh = await fetchAuthMe();
         if (!alive) return;
         const nextToken = fresh.token || saved;
         writeAuthToken(nextToken);
         writeProfile(fresh.profile);
         setToken(nextToken);
         setProfile(fresh.profile);
-      })
-      .catch((err) => {
-        if (!alive) return;
-        if (!(err instanceof AuthRequestError) || err.status !== 401) return;
+      } catch (err) {
+        if (!alive || !(err instanceof AuthRequestError) || err.status !== 401) return;
         clearAuthToken();
         writeProfile(null);
         setToken(null);
         setProfile(null);
-      })
-      .finally(() => {
+      } finally {
         if (alive) setReady(true);
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
+      }
+    }
+    void Promise.resolve().then(restoreSession);
+    return () => { alive = false; controller.abort(); };
+  }, [telegramRetry]);
+
+  function openAuthModal() {
+    if (window.Telegram?.WebApp?.initData) {
+      if (busy) return;
+      setTelegramRetry(value => value + 1);
+      return;
+    }
+    setModalOpen(true);
+  }
 
   async function loginWithIdToken(idToken: string) {
     setBusy(true);
@@ -117,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function requireAuth() {
     if (token && profile) return true;
-    setModalOpen(true);
+    openAuthModal();
     return false;
   }
 
@@ -129,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ready,
         busy,
         modalOpen,
-        openAuthModal: () => setModalOpen(true),
+        openAuthModal,
         closeAuthModal: () => setModalOpen(false),
         requireAuth,
         loginWithIdToken,
@@ -138,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {telegramError && <TelegramAuthNotice onRetry={() => setTelegramRetry(value => value + 1)} />}
     </AuthContext.Provider>
   );
 }

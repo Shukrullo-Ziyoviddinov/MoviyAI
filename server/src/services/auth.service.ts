@@ -7,6 +7,8 @@ export type AuthProfile = {
   id: string;
   googleId: string;
   email: string;
+  telegramId?: string;
+  telegramUsername?: string;
   name: string;
   picture: string;
   searchGuideUnderstood: boolean;
@@ -60,8 +62,10 @@ export async function verifyGoogleIdToken(idToken: string) {
 
 export function toAuthProfile(doc: {
   _id: { toString(): string };
-  googleId: string;
-  email: string;
+  googleId?: string | null;
+  email?: string | null;
+  telegramId?: string | null;
+  telegramUsername?: string | null;
   name: string;
   picture?: string | null;
   searchGuideUnderstood?: boolean | null;
@@ -69,8 +73,9 @@ export function toAuthProfile(doc: {
 }): AuthProfile {
   return {
     id: doc._id.toString(),
-    googleId: doc.googleId,
-    email: doc.email,
+    googleId: doc.googleId ?? '',
+    email: doc.email ?? '',
+    ...(doc.telegramId ? { telegramId: doc.telegramId, telegramUsername: doc.telegramUsername ?? '' } : {}),
     name: doc.name,
     picture: doc.picture ?? '',
     searchGuideUnderstood: Boolean(doc.searchGuideUnderstood),

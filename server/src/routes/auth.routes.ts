@@ -6,6 +6,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 const router = Router();
 
 router.post('/google', asyncHandler(authController.googleLogin));
+router.post('/telegram', asyncHandler(authController.telegramLogin));
 router.get('/me', requireAuth, asyncHandler(authController.me));
 router.post(
   '/search-guide/dismiss',

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 async function forward(request: Request, method: "GET" | "POST", path: string[]) {
   const suffix = path.join("/");
-  const allowed = method === "POST" ? suffix === "google" : suffix === "me";
+  const allowed = method === "POST" ? ["google", "telegram"].includes(suffix) : suffix === "me";
   if (!allowed) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
@@ -24,7 +24,7 @@ async function forward(request: Request, method: "GET" | "POST", path: string[])
     headers,
     body,
     cache: "no-store",
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(suffix === 'telegram' ? 65000 : 15000),
   });
   const text = await response.text();
   let data: unknown = { ok: false, error: "Server error" };

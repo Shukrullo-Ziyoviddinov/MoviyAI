@@ -14,9 +14,11 @@ import { startChatImageCleanup } from './ai/services/chat-image-storage.service.
 import { startCatalogWorker } from './ai/catalog/services/catalog-worker.service.js';
 import { startVideoImportWorker } from './ai/video-import/services/video-import-chat.service.js';
 import { startVideoImportCleanup } from './ai/video-import/services/video-import-cleanup.service.js';
+import { ensureProfileIdentityIndexes } from './services/profile-indexes.service.js';
 
 async function bootstrap() {
   await connectDb();
+  await ensureProfileIdentityIndexes();
 
   const app = express();
 

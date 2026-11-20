@@ -1,6 +1,21 @@
 import type { Request, Response } from 'express';
 import * as authService from '../services/auth.service.js';
 import type { AuthRequest } from '../middleware/requireAuth.js';
+import { loginWithTelegram } from '../services/telegram-auth.service.js';
+
+export async function telegramLogin(req: Request, res: Response) {
+  const initData = req.body?.initData;
+  if (typeof initData !== 'string' || !initData || initData.length > 16000) {
+    res.status(400).json({ ok: false, error: 'Invalid Telegram data' });
+    return;
+  }
+  try { res.json({ ok: true, data: await loginWithTelegram(initData) }); }
+  catch (error) {
+    const reason = error instanceof Error ? error.message : '';
+    const status = reason === 'INVALID_TELEGRAM_DATA' ? 401 : reason === 'TELEGRAM_ACCOUNT_CONFLICT' ? 409 : 503;
+    res.status(status).json({ ok: false, error: 'Telegram orqali kirib bo‘lmadi. Qayta urining yoki ilovani bot orqali qayta oching.' });
+  }
+}
 
 export async function googleLogin(req: Request, res: Response) {
   const idToken = String(req.body?.idToken ?? '').trim();
