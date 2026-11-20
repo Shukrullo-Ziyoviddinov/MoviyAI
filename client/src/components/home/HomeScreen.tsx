@@ -8,12 +8,19 @@ import { HomeHeader } from "@/components/home/HomeHeader";
 import { HomeMovies } from "@/components/home/HomeMovies";
 import { BottomNav } from "@/components/nav/BottomNav";
 import { useTheme } from "@/components/theme/theme-state";
+import { useTelegramChrome } from '@/components/telegram/TelegramFullscreen';
 
 export function HomeScreen({ banners, movies }: { banners: Banner[] | null; movies: HomeMovie[] | null }) {
   const { colors } = useTheme();
+  const { active: telegram } = useTelegramChrome();
 
   return (
-    <main className="relative h-full" style={{ backgroundColor: colors.bg }}>
+    <main className="relative h-full" style={{
+      backgroundColor: colors.bg,
+      // Contain the first child's Telegram header margin. Otherwise it can
+      // collapse through main and shift its absolute bottom navigation offscreen.
+      display: telegram ? 'flow-root' : undefined,
+    }}>
       <div
         className="@container no-scrollbar overflow-y-auto pb-[max(94px,calc(80px+var(--app-bottom-inset,env(safe-area-inset-bottom))))] md:pb-6"
         style={{ marginTop: "var(--tg-chrome)", height: "calc(100% - var(--tg-chrome))" }}
