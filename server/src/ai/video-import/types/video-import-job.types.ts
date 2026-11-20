@@ -4,7 +4,7 @@ export type VideoImportOwner = { kind: 'user' | 'telegram'; id: string };
 export type VideoImportStatus = 'queued' | 'processing' | 'retry' | 'completed' | 'failed' | 'cancelled';
 export type VideoImportStage = 'queued' | 'url_check' | 'downloading' | 'probing' | 'uploading' | 'ready';
 export type VideoImportMetadata = {
-  durationSeconds: number | null; sizeBytes: number | null; mimeType: 'video/mp4' | null;
+  durationSeconds: number | null; sizeBytes: number | null; mimeType: 'video/mp4' | 'video/webm' | null;
   width: number | null; height: number | null; hasAudio: boolean | null;
 };
 export type VideoImportCheckpoint = {
@@ -13,7 +13,7 @@ export type VideoImportCheckpoint = {
 };
 export type VideoImportResult = {
   canonicalUrl: string; videoId: string; r2Key: string;
-  metadata: { durationSeconds: number; sizeBytes: number; mimeType: 'video/mp4'; width: number; height: number; hasAudio: boolean };
+  metadata: { durationSeconds: number; sizeBytes: number; mimeType: 'video/mp4' | 'video/webm'; width: number; height: number; hasAudio: boolean };
 };
 export type VideoImportJob = {
   id: string; owner: VideoImportOwner; conversationId: string; requestId: string;

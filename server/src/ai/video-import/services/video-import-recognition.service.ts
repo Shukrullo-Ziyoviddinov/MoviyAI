@@ -44,7 +44,7 @@ export function createVideoImportRecognition(deps = defaults) {
       const fileUri = await deps.storage.signForAnalysis(media.r2Key, signal);
       const result = await runChatOperation({ signal, checkpoints, save: async (key, value) => {
         if (!await deps.results.checkpoint(job.id, token, key, value)) throw new VideoRecognitionError('ANALYSIS_LEASE_LOST');
-      } }, () => deps.findMovie(text, [{ mimeType: 'video/mp4', fileUri, durationSeconds: media.metadata.durationSeconds }], options.onDelta, options.onProgress));
+      } }, () => deps.findMovie(text, [{ mimeType: media.metadata.mimeType, fileUri, durationSeconds: media.metadata.durationSeconds }], options.onDelta, options.onProgress));
       signal.throwIfAborted();
       if (!await deps.results.complete(job.id, token, result)) throw new VideoRecognitionError('ANALYSIS_LEASE_LOST');
       // The result and catalog outbox flag are committed together, independently

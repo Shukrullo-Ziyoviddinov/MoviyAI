@@ -2,7 +2,7 @@ import { Schema, model } from 'mongoose';
 
 const metadata = new Schema({
   durationSeconds: { type: Number, default: null }, sizeBytes: { type: Number, default: null },
-  mimeType: { type: String, enum: ['video/mp4', null], default: null },
+  mimeType: { type: String, enum: ['video/mp4', 'video/webm', null], default: null },
   width: { type: Number, default: null }, height: { type: Number, default: null }, hasAudio: { type: Boolean, default: null },
 }, { _id: false });
 const schema = new Schema({

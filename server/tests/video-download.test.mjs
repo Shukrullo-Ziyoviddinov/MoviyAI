@@ -13,6 +13,20 @@ import { VideoProbeError } from '../dist/ai/video-import/types/video-probe.types
 import { videoImportPhase } from '../dist/ai/video-import/services/video-import-diagnostics.service.js';
 
 const inspection = (overrides = {}) => ({ duration: 5, size: 1024, width: 640, height: 360, audio: true, videoCodec: 'h264', audioCodec: 'aac', videoIndex: 0, mp4: true, ...overrides });
+test('VP9 uses WebM stream copy instead of full video encoding', async () => {
+  const args = videoPreparationArguments('input', 'output.webm', inspection({ videoCodec: 'vp9', audioCodec: 'opus', mp4: false }));
+  assert.equal(args[args.indexOf('-c:v') + 1], 'copy');
+  assert.equal(args[args.indexOf('-f') + 1], 'webm');
+  const workspace = await createVideoWorkspace();
+  try {
+    const file = join(workspace.directory, 'fixture.webm');
+    await runVideoProcess(videoTools().ffmpeg, ['-nostdin', '-v', 'error', '-f', 'lavfi', '-i', 'color=c=blue:s=960x720:d=0.3', '-c:v', 'libvpx-vp9', '-threads', '1', '-y', file], { cwd: workspace.directory });
+    const result = await createVideoProcessor().prepare(file, workspace.directory, new AbortController().signal);
+    assert.equal(result.metadata.mimeType, 'video/webm');
+    assert.equal(result.metadata.width, 960);
+    assert.ok(result.filePath.endsWith('.webm'));
+  } finally { await workspace.cleanup(); }
+});
 test('preparation preserves compatible media, remuxes containers and only encodes when necessary', () => {
   assert.equal(videoPreparationArguments('input','output',inspection()), null);
   const remux = videoPreparationArguments('input','output',inspection({mp4:false}));

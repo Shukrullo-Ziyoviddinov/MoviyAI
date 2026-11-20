@@ -18,7 +18,7 @@ export function createVideoImportCleanup(deps = defaults) {
         await deps.repository.defer(marked, marked.cleanupNotBefore, marked.cleanupAttempts ?? 0, true); return false;
       }
       const keys = [...new Set([marked.r2Key, ...(marked.reservedKeys ?? [])].filter((key): key is string => !!key))];
-      for (const key of keys) if (!key.startsWith(`videoimport/${row._id}/`) || !/^videoimport\/[a-f0-9]{64}\/[a-f0-9]{64}\.mp4$/.test(key)) throw Error('INVALID_IMPORT_CLEANUP_KEY');
+      for (const key of keys) if (!key.startsWith(`videoimport/${row._id}/`) || !/^videoimport\/[a-f0-9]{64}\/[a-f0-9]{64}\.(?:mp4|webm)$/.test(key)) throw Error('INVALID_IMPORT_CLEANUP_KEY');
       for (const key of keys) await deps.storage.remove(key, AbortSignal.timeout(20000));
       await deps.repository.complete(marked, now);
       return true;

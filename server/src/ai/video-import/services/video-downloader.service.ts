@@ -47,7 +47,7 @@ export function createVideoDownloader(deps = defaults) {
           checking = workspace.checkBudget().catch(error => budget.abort(error)).finally(() => { checking = undefined; });
         }, 250); watch.unref();
         await options.onProgress?.('downloading');
-        await videoImportPhase('source_download', () => deps.runVideoProcess(tools.ytdlp, [...base, '--downloader', 'native', '--merge-output-format', 'mp4',
+        await videoImportPhase('source_download', () => deps.runVideoProcess(tools.ytdlp, [...base, '--downloader', 'native', '--merge-output-format', 'mp4/webm/mkv',
           '-o', join(workspace.directory, 'source.%(ext)s'), '--', source.canonicalUrl], { cwd: workspace.directory, signal: childSignal }));
         await workspace.checkBudget();
         const files = (await readdir(workspace.directory)).filter(name => /^source\.(mp4|webm|mkv|mov|m4v)$/.test(name));

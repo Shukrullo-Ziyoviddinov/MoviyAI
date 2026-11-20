@@ -8,7 +8,7 @@ export const videoOwnerSchema = z.object({ kind: z.enum(['user', 'telegram']), i
 export const videoJobInputSchema = z.object({ conversationId: id, requestId: id, url: z.string().max(2048) }).strict();
 const fields = {
   durationSeconds: z.number().positive().max(CHAT_VIDEO.maxSeconds),
-  sizeBytes: z.number().int().min(16).max(CHAT_VIDEO.maxBytes), mimeType: z.literal('video/mp4'),
+  sizeBytes: z.number().int().min(16).max(CHAT_VIDEO.maxBytes), mimeType: z.enum(['video/mp4', 'video/webm']),
   width: z.number().int().positive().max(16384), height: z.number().int().positive().max(16384), hasAudio: z.boolean(),
 };
 const finalMetadata = z.object(fields).strict();
@@ -25,7 +25,7 @@ function identity(job: ClaimedVideoImportJob, patch: { canonicalUrl?: string; vi
   if (source.platform !== job.platform || videoId && (source.needsResolution || source.videoId !== videoId) || job.videoId && videoId !== job.videoId)
     throw new VideoImportJobError('INVALID_JOB');
   const prefix = `videoimport/${job.id}/`;
-  if (patch.r2Key && (!patch.r2Key.startsWith(prefix) || !/^[a-f0-9]{64}\.mp4$/.test(patch.r2Key.slice(prefix.length)))) throw new VideoImportJobError('INVALID_JOB');
+  if (patch.r2Key && (!patch.r2Key.startsWith(prefix) || !/^[a-f0-9]{64}\.(?:mp4|webm)$/.test(patch.r2Key.slice(prefix.length)))) throw new VideoImportJobError('INVALID_JOB');
   return source;
 }
 export function validateVideoCheckpoint(job: ClaimedVideoImportJob, patch: VideoImportCheckpoint): VideoImportCheckpoint {
@@ -39,5 +39,6 @@ export function validateVideoResult(job: ClaimedVideoImportJob, result: VideoImp
   if (!parsed.success) throw new VideoImportJobError('INVALID_JOB');
   const source = identity(job, parsed.data);
   if (source.needsResolution) throw new VideoImportJobError('INVALID_JOB');
+  if (!parsed.data.r2Key.endsWith(parsed.data.metadata.mimeType === 'video/webm' ? '.webm' : '.mp4')) throw new VideoImportJobError('INVALID_JOB');
   return { ...parsed.data, canonicalUrl: source.canonicalUrl };
 }

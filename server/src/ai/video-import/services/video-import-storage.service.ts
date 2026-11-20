@@ -9,13 +9,13 @@ import { CHAT_VIDEO } from '../../config/chat-video.config.js';
 export class VideoImportStorageError extends Error {
   constructor(public readonly code: 'R2_UNAVAILABLE' | 'INVALID_R2_OBJECT') { super(code); this.name = 'VideoImportStorageError'; }
 }
-export function videoImportObjectKey(jobId: string, sha256: string) {
+export function videoImportObjectKey(jobId: string, sha256: string, mimeType: 'video/mp4' | 'video/webm' = 'video/mp4') {
   if (!/^[a-f0-9]{64}$/.test(jobId) || !/^[a-f0-9]{64}$/.test(sha256)) throw new VideoImportStorageError('INVALID_R2_OBJECT');
-  return `videoimport/${jobId}/${sha256}.mp4`;
+  return `videoimport/${jobId}/${sha256}.${mimeType === 'video/webm' ? 'webm' : 'mp4'}`;
 }
 function validateKey(key: string) {
-  if (!/^videoimport\/[a-f0-9]{64}\/[a-f0-9]{64}\.mp4$/.test(key)) throw new VideoImportStorageError('INVALID_R2_OBJECT');
-  return key.slice(key.lastIndexOf('/') + 1, -4);
+  if (!/^videoimport\/[a-f0-9]{64}\/[a-f0-9]{64}\.(?:mp4|webm)$/.test(key)) throw new VideoImportStorageError('INVALID_R2_OBJECT');
+  return key.slice(key.lastIndexOf('/') + 1, key.lastIndexOf('.'));
 }
 const defaults = { client: getR2Client, bucket: () => env.r2Bucket };
 export function createVideoImportStorage(deps = defaults) {
@@ -47,7 +47,7 @@ export function createVideoImportStorage(deps = defaults) {
       const meta = await send(new HeadObjectCommand(input(key)), AbortSignal.any([signal, AbortSignal.timeout(10000)]));
       if (!meta) return null;
       const head = meta as { ContentLength?: number; ContentType?: string; Metadata?: Record<string, string> };
-      if (!head.ContentLength || head.ContentLength < 16 || head.ContentLength > CHAT_VIDEO.maxBytes || head.ContentType !== 'video/mp4'
+      if (!head.ContentLength || head.ContentLength < 16 || head.ContentLength > CHAT_VIDEO.maxBytes || head.ContentType !== (key.endsWith('.webm') ? 'video/webm' : 'video/mp4')
         || head.Metadata?.sha256 !== hash) throw new VideoImportStorageError('INVALID_R2_OBJECT');
       return { sizeBytes: head.ContentLength, sha256: hash };
     },
@@ -64,7 +64,7 @@ export function createVideoImportStorage(deps = defaults) {
         // Attach immediately: abort/read errors must never become unhandled errors.
         const drained = finished(body).catch(() => {});
         try {
-          await send(new PutObjectCommand({ ...target, Body: body, ContentLength: sizeBytes, ContentType: 'video/mp4',
+          await send(new PutObjectCommand({ ...target, Body: body, ContentLength: sizeBytes, ContentType: key.endsWith('.webm') ? 'video/webm' : 'video/mp4',
             CacheControl: 'private, no-store', Metadata: { sha256: hash },
             // Already computed by the processor; avoids SDK buffering/trailer calculation.
             ChecksumSHA256: Buffer.from(hash, 'hex').toString('base64'),

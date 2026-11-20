@@ -17,7 +17,7 @@ export function createVideoImportProcessor(deps = { downloader: videoDownloader,
     }
     return deps.downloader.withVideo(job.canonicalUrl, async (video, uploadSignal) => {
       const result = validateVideoResult(job, { canonicalUrl: video.source.canonicalUrl, videoId: video.source.videoId,
-        metadata: video.metadata, r2Key: videoImportObjectKey(job.id, video.sha256) });
+        metadata: video.metadata, r2Key: videoImportObjectKey(job.id, video.sha256, video.metadata.mimeType) });
       // Durable reservation precedes PUT. A crash never leaves an untracked key.
       await checkpoint({ ...result, stage: 'uploading' });
       uploadSignal.throwIfAborted();

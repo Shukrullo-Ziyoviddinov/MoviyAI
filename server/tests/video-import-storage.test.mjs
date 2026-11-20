@@ -10,6 +10,15 @@ import { createVideoImportProcessor } from '../dist/ai/video-import/services/vid
 
 const metadata={durationSeconds:1,sizeBytes:32,width:320,height:240,mimeType:'video/mp4',hasAudio:false};
 const job=()=>({id:'a'.repeat(64),canonicalUrl:'https://www.instagram.com/reel/fixture/',platform:'instagram',videoId:'fixture',metadata:{...metadata},r2Key:null});
+test('WebM keys preserve the hash and enforce matching R2 content type', async () => {
+ const hash='b'.repeat(64), key=videoImportObjectKey('a'.repeat(64),hash,'video/webm');
+ assert.ok(key.endsWith('.webm'));
+ let type='video/webm';
+ const storage=createVideoImportStorage({bucket:()=> 'test',client:()=>({send:async()=>({ContentLength:32,ContentType:type,Metadata:{sha256:hash}})})});
+ assert.equal((await storage.inspect(key,new AbortController().signal)).sha256,hash);
+ type='video/mp4';
+ await assert.rejects(()=>storage.inspect(key,new AbortController().signal),{code:'INVALID_R2_OBJECT'});
+});
 test('R2 upload uses a bounded file stream, explicit length/checksum and private key namespace',async()=>{
   const workspace=await createVideoWorkspace();const file=join(workspace.directory,'fixture.mp4');
   const bytes=Buffer.alloc(32,1),hash=createHash('sha256').update(bytes).digest('hex'),key=videoImportObjectKey('a'.repeat(64),hash);

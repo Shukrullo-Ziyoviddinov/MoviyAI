@@ -10,7 +10,7 @@ import { videoImportPhase } from './video-import-diagnostics.service.js';
 type Stream = { index?: number; codec_type?: string; codec_name?: string; width?: number; height?: number; disposition?: { attached_pic?: number } };
 export type VideoInspection = {
   duration: number; size: number; width: number; height: number; audio: boolean;
-  videoCodec: string; audioCodec: string | null; videoIndex: number; mp4: boolean;
+  videoCodec: string; audioCodec: string | null; videoIndex: number; mp4: boolean; webm?: boolean;
 };
 export function parseVideoInspection(value: unknown, size: number, mp4Header: boolean): VideoInspection {
   const data = value as { format?: { duration?: string; format_name?: string }; streams?: Stream[] } | null;
@@ -31,6 +31,8 @@ export function parseVideoInspection(value: unknown, size: number, mp4Header: bo
 // than spend worker CPU resizing it. Duration/byte limits are unchanged.
 function dimensionsFit(video: VideoInspection) { return Math.min(video.width, video.height) <= 1080 && Math.max(video.width, video.height) <= 1920; }
 export function videoPreparationArguments(input: string, output: string, video: VideoInspection) {
+  const webm = ['vp8', 'vp9'].includes(video.videoCodec) && dimensionsFit(video);
+  if (webm) return ['-nostdin', '-hide_banner', '-loglevel', 'error', '-max_alloc', '67108864', '-threads', '1', '-protocol_whitelist', 'file', '-i', input, '-map', `0:${video.videoIndex}`, '-map', '0:a:0?', '-sn', '-dn', '-map_metadata', '-1', '-c:v', 'copy', ...(video.audio && !['opus', 'vorbis'].includes(video.audioCodec ?? '') ? ['-c:a', 'libopus', '-b:a', '64k'] : ['-c:a', 'copy']), '-f', 'webm', '-y', output];
   const encodeVideo = video.videoCodec !== 'h264' || !dimensionsFit(video);
   const encodeAudio = video.audio && video.audioCodec !== 'aac';
   if (!encodeVideo && !encodeAudio && video.mp4) return null;
@@ -63,17 +65,21 @@ export function createVideoProcessor(deps = { runVideoProcess, videoTools }) {
       '-show_format', '-show_streams', '-of', 'json', '-i', file], { cwd: directory, signal, timeoutMs: 15000 });
     let data: unknown;
     try { data = JSON.parse(raw.stdout); } catch { throw new VideoProbeError('INVALID_ARTIFACT'); }
-    return parseVideoInspection(data, info.size, mp4Header);
+    const result = parseVideoInspection(data, info.size, mp4Header);
+    const format = (data as {format?: {format_name?: string}})?.format?.format_name;
+    result.webm = header.readUInt32BE(0) === 0x1a45dfa3 && !!format?.split(',').includes('webm');
+    return result;
   }
   return { inspect, async prepare(file: string, directory: string, signal: AbortSignal) {
     const initial = await prepareStep('probe_source', () => inspect(file, directory, signal));
-    const output = join(directory, 'ready.mp4');
+    const useWebm = ['vp8', 'vp9'].includes(initial.videoCodec) && dimensionsFit(initial);
+    const output = join(directory, useWebm ? 'ready.webm' : 'ready.mp4');
     const args = videoPreparationArguments(file, output, initial);
     console.info('[VIDEO_IMPORT]', { event: 'media-plan', videoCodec: /^[a-z0-9_]{1,32}$/.test(initial.videoCodec) ? initial.videoCodec : 'other',
       width: initial.width, height: initial.height, action: !args ? 'keep' : args[args.indexOf('-c:v') + 1] === 'copy' ? 'remux-or-audio' : 'encode' });
     if (args) await prepareStep('prepare_format', () => deps.runVideoProcess(deps.videoTools().ffmpeg, args, { cwd: directory, signal, timeoutMs: 60000 }));
     const ready = args ? output : file, final = args ? await prepareStep('probe_prepared', () => inspect(ready, directory, signal)) : initial;
-    if (!final.mp4 || final.videoCodec !== 'h264' || final.audio && final.audioCodec !== 'aac' || !dimensionsFit(final)) throw new VideoProbeError('INVALID_ARTIFACT');
+    if (!(useWebm ? final.webm && ['vp8', 'vp9'].includes(final.videoCodec) && (!final.audio || ['opus', 'vorbis'].includes(final.audioCodec ?? '')) : final.mp4 && final.videoCodec === 'h264' && (!final.audio || final.audioCodec === 'aac')) || !dimensionsFit(final)) throw new VideoProbeError('INVALID_ARTIFACT');
     // Decode a real frame as well as checking header/metadata. No full video is held in RAM.
     await prepareStep('decode_sample', () => deps.runVideoProcess(deps.videoTools().ffmpeg, ['-nostdin', '-hide_banner', '-loglevel', 'error', '-max_alloc', '67108864', '-threads', '1',
       '-protocol_whitelist', 'file', '-i', ready, '-map', `0:${final.videoIndex}`, '-frames:v', '1', '-an', '-f', 'null', '-'], { cwd: directory, signal, timeoutMs: 15000 }));
@@ -81,7 +87,7 @@ export function createVideoProcessor(deps = { runVideoProcess, videoTools }) {
     await prepareStep('hash_media', async () => { for await (const chunk of createReadStream(ready, { signal })) hash.update(chunk); });
     signal.throwIfAborted();
     return { filePath: ready, sha256: hash.digest('hex'), converted: !!args,
-      metadata: { durationSeconds: final.duration, sizeBytes: final.size, width: final.width, height: final.height, mimeType: 'video/mp4' as const, hasAudio: final.audio } };
+      metadata: { durationSeconds: final.duration, sizeBytes: final.size, width: final.width, height: final.height, mimeType: (useWebm ? 'video/webm' : 'video/mp4') as 'video/webm' | 'video/mp4', hasAudio: final.audio } };
   } };
 }
 export const videoProcessor = createVideoProcessor();
