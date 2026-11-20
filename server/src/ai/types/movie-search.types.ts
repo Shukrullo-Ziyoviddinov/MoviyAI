@@ -1,5 +1,5 @@
 export interface ChatImageInput { mimeType: string; data: Buffer }
-export interface ChatImageUrl { mimeType: string; fileUri: string;durationSeconds?:number }
+export interface ChatImageUrl { mimeType: string; fileUri: string;durationSeconds?:number;analysisSeconds?:number }
 export interface MovieSearchResult {
   mediaType?:'movie'|'series';
   presentation?:'brief'|'details'|'cast'|'characters'|'trailer'|'full';

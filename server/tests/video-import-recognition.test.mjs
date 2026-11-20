@@ -37,6 +37,31 @@ test('foreign owners, incomplete imports and changed text cannot start recogniti
  h.row.status='processing';await assert.rejects(()=>h.run(),{code:'IMPORT_NOT_READY'});assert.equal(h.events.includes('sign'),false);
  h.row.status='completed';await h.run();await assert.rejects(()=>h.run({text:'Changed prompt'}),{code:'ANALYSIS_CONFLICT'});
 });
+test('native YouTube recognition uses the same result/outbox flow without R2 and caches its completed result', async () => {
+ const h=harness();
+ Object.assign(h.row,{platform:'youtube',transport:'youtube',canonicalUrl:'https://www.youtube.com/watch?v=pt4zDSv4ZoY',videoId:'pt4zDSv4ZoY',
+  r2Key:null,analysisSeconds:180,metadata:{durationSeconds:null,sizeBytes:null,mimeType:null,width:null,height:null,hasAudio:null}});
+ h.deps.findMovie=async(_text,media)=>{
+  h.events.push('youtube');assert.equal(media[0].fileUri,h.row.canonicalUrl);assert.equal(media[0].analysisSeconds,180);
+  assert.equal(media[0].durationSeconds,undefined);return h.answer;
+ };
+ assert.deepEqual(await h.run(),h.answer);assert.deepEqual(await h.run(),h.answer);
+ assert.equal(h.events.filter(e=>e==='youtube').length,1);
+ assert.equal(h.events.includes('head'),false);assert.equal(h.events.includes('sign'),false);
+ assert.ok(h.events.includes('complete'));assert.ok(h.events.includes('notify'));
+});
+test('native YouTube resumes completed checkpoints after interruption without downloading media', async () => {
+ const h=harness();let attempts=0,clues=0;
+ Object.assign(h.row,{platform:'youtube',transport:'youtube',canonicalUrl:'https://www.youtube.com/watch?v=pt4zDSv4ZoY',videoId:'pt4zDSv4ZoY',r2Key:null,analysisSeconds:180,
+  metadata:{durationSeconds:null,sizeBytes:null,mimeType:null,width:null,height:null,hasAudio:null}});
+ h.deps.findMovie=async()=>{
+  await chatCheckpoint(checkpointKey('youtube-test','clues'),async()=>{clues++;return{observations:['scene']};});
+  if(++attempts===1)throw Error('interrupted');return h.answer;
+ };
+ await assert.rejects(()=>h.run(),/interrupted/);assert.equal(h.saved.result,null);
+ assert.deepEqual(await h.run(),h.answer);assert.equal(clues,1);assert.equal(attempts,2);
+ assert.equal(h.events.includes('head'),false);assert.equal(h.events.includes('sign'),false);
+});
 test('a missing or changed R2 object never reaches Gemini',async()=>{
  const h=harness();h.deps.storage.inspect=async()=>null;
  await assert.rejects(()=>h.run(),{code:'IMPORT_NOT_READY'});assert.equal(h.events.includes('find'),false);assert.ok(h.events.includes('release'));

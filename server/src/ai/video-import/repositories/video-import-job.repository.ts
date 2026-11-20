@@ -10,6 +10,7 @@ function toJob(value: unknown): VideoImportJob {
   return { id: row._id, owner: { kind: row.ownerKind, id: row.ownerId }, conversationId: row.conversationId, requestId: row.requestId,
     originalUrl: row.originalUrl, canonicalUrl: row.canonicalUrl, platform: row.platform, videoId: row.videoId,
     fingerprint: row.fingerprint, status: row.status, stage: row.stage, metadata: { ...row.metadata }, r2Key: row.r2Key,
+    transport: row.transport ?? 'r2', analysisSeconds: row.analysisSeconds ?? null,
     attempts: row.attempts, errorCode: row.errorCode, nextAttemptAt: row.nextAttemptAt, createdAt: row.createdAt };
 }
 async function releaseSlot(slotId: string, token: string) {

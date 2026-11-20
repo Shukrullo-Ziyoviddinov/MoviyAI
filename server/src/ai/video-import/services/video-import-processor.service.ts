@@ -1,19 +1,25 @@
 import { videoDownloader } from './video-downloader.service.js';
 import { videoImportStorage, videoImportObjectKey, VideoImportStorageError } from './video-import-storage.service.js';
 import { validateVideoResult } from '../validators/video-job.validator.js';
-import type { VideoImportProcessor, VideoImportResult } from '../types/video-import-job.types.js';
+import type { VideoImportProcessor, StoredVideoImportResult } from '../types/video-import-job.types.js';
+import { prepareYouTubeSource } from './youtube-source.service.js';
 
 export function createVideoImportProcessor(deps = { downloader: videoDownloader, storage: videoImportStorage }): VideoImportProcessor {
   return async (job, signal, checkpoint) => {
     signal.throwIfAborted();
     if (job.r2Key) {
       await checkpoint({stage:'probing'});
-      const saved = validateVideoResult(job, { canonicalUrl: job.canonicalUrl, videoId: job.videoId!, r2Key: job.r2Key, metadata: job.metadata as VideoImportResult['metadata'] });
+      const saved = validateVideoResult(job, { canonicalUrl: job.canonicalUrl, videoId: job.videoId!, r2Key: job.r2Key, metadata: job.metadata as StoredVideoImportResult['metadata'] });
       const object = await deps.storage.inspect(saved.r2Key, signal);
       if (object) {
         if (object.sizeBytes !== saved.metadata.sizeBytes) throw new VideoImportStorageError('INVALID_R2_OBJECT');
         return saved;
       }
+    }
+    if (job.platform === 'youtube') {
+      await checkpoint({ stage: 'url_check' });
+      signal.throwIfAborted();
+      return prepareYouTubeSource(job);
     }
     return deps.downloader.withVideo(job.canonicalUrl, async (video, uploadSignal) => {
       const result = validateVideoResult(job, { canonicalUrl: video.source.canonicalUrl, videoId: video.source.videoId,

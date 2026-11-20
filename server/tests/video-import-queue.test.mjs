@@ -8,6 +8,7 @@ import { VIDEO_IMPORT_QUEUE } from '../dist/ai/video-import/config/video-import.
 import { validateVideoCheckpoint, validateVideoResult } from '../dist/ai/video-import/validators/video-job.validator.js';
 import { abortVideoImport } from '../dist/ai/video-import/services/video-import-controls.service.js';
 import { ChatFailure } from '../dist/ai/types/chat-progress.types.js';
+import { createVideoImportProcessor } from '../dist/ai/video-import/services/video-import-processor.service.js';
 
 const copy = value => value == null ? value : structuredClone(value);
 function collection() {
@@ -82,6 +83,16 @@ const input = { conversationId: 'chat-1', requestId: 'request-1', url: 'https://
 const result = job => ({ canonicalUrl: job.canonicalUrl, videoId: job.videoId, r2Key: `videoimport/${job.id}/${'a'.repeat(64)}.mp4`,
   metadata: { durationSeconds: 10, sizeBytes: 1024, mimeType: 'video/mp4', width: 640, height: 360, hasAudio: true } });
 async function claim(h, token) { return h.repository.claim(h.now(), token, new Date(+h.now() + VIDEO_IMPORT_QUEUE.leaseMs)); }
+
+test('YouTube native readiness survives repository reload without a fabricated file or duration', async () => {
+  const h=harness();const queued=await h.service.enqueue(alice,input);
+  const worker=createVideoImportWorker({process:createVideoImportProcessor(),jobs:h.repository,now:h.now});
+  await worker.runOnce();worker.stop();
+  const restored=await createVideoImportService(h.repository).get(alice,queued.id);
+  assert.equal(restored.status,'completed');assert.equal(restored.transport,'youtube');assert.equal(restored.analysisSeconds,180);
+  assert.equal(restored.r2Key,null);assert.equal(restored.metadata.durationSeconds,null);assert.equal(restored.metadata.sizeBytes,null);
+  assert.equal(restored.canonicalUrl,'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+});
 
 test('the same message concurrently creates one durable job and preserves the first original URL', async () => {
   const h = harness();

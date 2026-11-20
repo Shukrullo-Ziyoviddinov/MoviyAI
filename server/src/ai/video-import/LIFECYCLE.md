@@ -1,5 +1,9 @@
 # Progress, stop/resume and cleanup (step 8)
 
+Native YouTube jobs prepare an exact-host canonical URL without emitting download,
+conversion or upload stages. They reuse the same recognition leases, checkpoints,
+stop/resume and cleanup tombstones; see [YOUTUBE.md](YOUTUBE.md).
+
 URL import emits real transitions: checking_link, waiting_import (queued/retry),
 downloading_video, preparing_analysis (probe/format preparation), upload_video,
 then the existing recognition/search stages. Labels and SSE allowlists are

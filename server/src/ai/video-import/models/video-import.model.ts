@@ -20,6 +20,8 @@ const schema = new Schema({
   stage: { type: String, enum: ['queued', 'url_check', 'downloading', 'probing', 'uploading', 'ready'], default: 'queued' },
   metadata: { type: metadata, default: () => ({}) },
   r2Key: { type: String, default: null, maxlength: 1024 },
+  transport: { type: String, enum: ['r2', 'youtube'], default: 'r2' },
+  analysisSeconds: { type: Number, default: null, min: 1, max: 180 },
   attempts: { type: Number, default: 0 },
   errorCode: { type: String, default: null, maxlength: 64 },
   nextAttemptAt: { type: Date, default: new Date(0) },

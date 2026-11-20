@@ -1,5 +1,8 @@
 # R2 integration (step 5)
 
+YouTube now uses native Gemini URL input; see [YOUTUBE.md](YOUTUBE.md). The R2
+flow below applies to Instagram/TikTok and existing stored YouTube imports.
+
 `createVideoImportPipeline()` composes the durable Mongo queue worker with the
 download → validation → R2 processor. Startup is explicit; there is no new public
 route or automatic worker start before the chat integration is ready.

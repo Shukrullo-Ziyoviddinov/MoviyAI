@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CHAT_VIDEO } from '../../config/chat-video.config.js';
 import { validateVideoUrl } from '../services/video-url.service.js';
-import { VideoImportJobError, type ClaimedVideoImportJob, type VideoImportCheckpoint, type VideoImportResult } from '../types/video-import-job.types.js';
+import { VideoImportJobError, type ClaimedVideoImportJob, type VideoImportCheckpoint, type VideoImportResult, type StoredVideoImportResult } from '../types/video-import-job.types.js';
 
 const id = z.string().min(1).max(128).regex(/^[a-zA-Z0-9:_-]+$/);
 export const videoOwnerSchema = z.object({ kind: z.enum(['user', 'telegram']), id }).strict();
@@ -34,11 +34,26 @@ export function validateVideoCheckpoint(job: ClaimedVideoImportJob, patch: Video
   const source = identity(job, parsed.data);
   return { ...parsed.data, ...(parsed.data.canonicalUrl ? { canonicalUrl: source.canonicalUrl } : {}) };
 }
-export function validateVideoResult(job: ClaimedVideoImportJob, result: VideoImportResult): VideoImportResult {
+export function validateVideoResult(job: ClaimedVideoImportJob, result: StoredVideoImportResult): StoredVideoImportResult {
   const parsed = resultSchema.safeParse(result);
   if (!parsed.success) throw new VideoImportJobError('INVALID_JOB');
   const source = identity(job, parsed.data);
   if (source.needsResolution) throw new VideoImportJobError('INVALID_JOB');
   if (!parsed.data.r2Key.endsWith(parsed.data.metadata.mimeType === 'video/webm' ? '.webm' : '.mp4')) throw new VideoImportJobError('INVALID_JOB');
   return { ...parsed.data, canonicalUrl: source.canonicalUrl };
+}
+
+const youtubeResultSchema = z.object({ transport: z.literal('youtube'), canonicalUrl: z.string().max(2048), videoId: id,
+  r2Key: z.null(), analysisSeconds: z.number().int().positive().max(CHAT_VIDEO.maxSeconds),
+  metadata: z.object({ durationSeconds: z.null(), sizeBytes: z.null(), mimeType: z.null(), width: z.null(), height: z.null(), hasAudio: z.null() }).strict(),
+}).strict();
+export function validatePreparedVideoResult(job: ClaimedVideoImportJob, result: VideoImportResult): VideoImportResult {
+  if ('transport' in result && result.transport === 'youtube') {
+    const parsed = youtubeResultSchema.safeParse(result);
+    if (!parsed.success) throw new VideoImportJobError('INVALID_JOB');
+    const source = identity(job, { canonicalUrl: parsed.data.canonicalUrl, videoId: parsed.data.videoId });
+    if (source.platform !== 'youtube' || source.needsResolution) throw new VideoImportJobError('INVALID_JOB');
+    return { ...parsed.data, canonicalUrl: source.canonicalUrl };
+  }
+  return validateVideoResult(job, result as StoredVideoImportResult);
 }

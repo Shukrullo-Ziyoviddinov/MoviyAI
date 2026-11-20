@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { VIDEO_IMPORT_QUEUE } from '../config/video-import.config.js';
 import { videoImportJobRepository } from '../repositories/video-import-job.repository.js';
-import { validateVideoCheckpoint, validateVideoResult } from '../validators/video-job.validator.js';
+import { validateVideoCheckpoint, validatePreparedVideoResult } from '../validators/video-job.validator.js';
 import { registerVideoImport } from './video-import-controls.service.js';
 import { VideoImportJobError, type ClaimedVideoImportJob, type VideoImportJobRepository, type VideoImportProcessor } from '../types/video-import-job.types.js';
 
@@ -51,7 +51,7 @@ export function createVideoImportWorker(options: { process: VideoImportProcessor
           Object.assign(claimed, valid, { metadata });
         });
         controller.signal.throwIfAborted();
-        const valid = validateVideoResult(claimed, result);
+        const valid = validatePreparedVideoResult(claimed, result);
         if (!await jobs.complete(claimed, valid, now())) throw new VideoImportJobError('LEASE_LOST');
       } catch (error) {
         const cause = controller.signal.aborted ? controller.signal.reason : error;

@@ -11,14 +11,20 @@ export type VideoImportCheckpoint = {
   stage?: VideoImportStage; canonicalUrl?: string; videoId?: string;
   metadata?: Partial<VideoImportMetadata>; r2Key?: string;
 };
-export type VideoImportResult = {
+export type StoredVideoImportResult = {
   canonicalUrl: string; videoId: string; r2Key: string;
   metadata: { durationSeconds: number; sizeBytes: number; mimeType: 'video/mp4' | 'video/webm'; width: number; height: number; hasAudio: boolean };
 };
+export type YouTubeImportResult = {
+  transport: 'youtube'; canonicalUrl: string; videoId: string; r2Key: null;
+  analysisSeconds: number; metadata: VideoImportMetadata;
+};
+export type VideoImportResult = StoredVideoImportResult | YouTubeImportResult;
 export type VideoImportJob = {
   id: string; owner: VideoImportOwner; conversationId: string; requestId: string;
   originalUrl: string; canonicalUrl: string; platform: VideoPlatform; videoId: string | null; fingerprint: string;
   status: VideoImportStatus; stage: VideoImportStage; metadata: VideoImportMetadata; r2Key: string | null;
+  transport?: 'r2' | 'youtube'; analysisSeconds?: number | null;
   attempts: number; errorCode: string | null; nextAttemptAt: Date; createdAt: Date;
 };
 export type ClaimedVideoImportJob = VideoImportJob & { leaseToken: string; slotId: string };
