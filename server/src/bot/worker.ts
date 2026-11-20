@@ -11,7 +11,6 @@ import { isCatalogEligible } from '../ai/catalog/utils/catalog-chat-input.js';
 import { drainBotCatalog } from './catalog.js';
 import type { AiHistoryMessage } from '../ai/types/ai.types.js';
 import type { TelegramUpdate } from './types.js';
-import { Conversation } from '../ai/models/conversation.model.js';
 import { createBotProgress } from './progress.js';
 import { findMovieFromVideoUrl, hasVideoPlatformLink } from '../ai/video-import/services/video-import-chat.service.js';
 
@@ -96,12 +95,9 @@ export async function drainBotQueue() {
           if (!notice) await progress.start(!hasMedia ? 'preparing' : incoming?.video || incoming?.document?.mime_type?.startsWith('video/') ? 'checking_video' : 'analyzing_image');
         }
         if (!notice) {
-          if (await Conversation.exists({ _id: session.conversationId, deletedAt: { $ne: null } })) {
-            session.conversationId = randomUUID();
-            await BotSession.updateOne({ _id: job.telegramId, lockToken }, { $set: { conversationId: session.conversationId } });
-          }
-          job.conversationId = session.conversationId;
-          await BotUpdate.updateOne({ _id: job._id, lockToken }, { $set: { conversationId: job.conversationId } });
+          // Each update owns a durable UI conversation ID from acceptUpdate.
+          // Telegram context stays in the session; separate results must never
+          // share its UI thread. Retries keep the same update-owned ID.
           await BotUpdate.updateOne({ _id: job._id, lockToken }, { $set: { status: 'processing' }, $inc: { attempts: 1 } });
           const update = job.update as TelegramUpdate;
           const text = (update.message?.text ?? update.message?.caption ?? '').trim();

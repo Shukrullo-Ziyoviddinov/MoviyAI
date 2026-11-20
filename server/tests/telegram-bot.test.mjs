@@ -128,7 +128,7 @@ test('a result cannot be claimed by a different Telegram identity or rebound to 
 function workerHarness(options = {}) {
   let aiCalls = 0, sendCalls = 0;
   const job = { _id: '42', telegramId: '123', status: 'pending', nextAttemptAt: new Date(0), resultToken: 'a'.repeat(64),
-    createdAt: new Date(), conversationId: 'unused', update: { update_id: 42, message: { message_id: 7, text: options.text ?? 'salom', ...(options.video ? { video: options.video } : {}) } } };
+    createdAt: new Date(), conversationId: randomUUID(), update: { update_id: 42, message: { message_id: 7, text: options.text ?? 'salom', ...(options.video ? { video: options.video } : {}) } } };
   const session = { _id: '123', conversationId: 'bot-thread', profileId: options.profileId ?? null, history: [], movie: options.previousMovie ?? null };
   const updates = {
     findOneAndUpdate: (_query, update) => ({ lean: async () => {
@@ -147,7 +147,7 @@ function workerHarness(options = {}) {
     hasVideoPlatformLink,
     findMovieFromVideoUrl:async(owner,conversationId,requestId,text,settings)=>{
       if(!hasVideoPlatformLink(text))return null;
-      assert.deepEqual(owner,{kind:'telegram',id:'123'});assert.equal(conversationId,'bot-thread');assert.equal(requestId,'telegram-42');
+      assert.deepEqual(owner,{kind:'telegram',id:'123'});assert.equal(conversationId,job.conversationId);assert.notEqual(conversationId,'bot-thread');assert.equal(requestId,'telegram-42');
       await settings.onImport('a'.repeat(64));return options.result;
     },
     randomUUID, randomBytes, BotUpdate: updates, BotSession: sessions,
@@ -176,13 +176,31 @@ function workerHarness(options = {}) {
 const { TelegramError } = load('api', {}, ['TelegramError']);
 test('delivery retries reuse a durable AI answer and do not duplicate private conversation history', async () => {
   const { worker, job, session, aiCalls, sendCalls } = workerHarness();
+  const conversationId = job.conversationId;
   await worker.drainBotQueue();
   assert.equal(aiCalls(), 1); assert.equal(job.status, 'ready');
   job.nextAttemptAt = new Date(0);
   await worker.drainBotQueue();
   assert.equal(aiCalls(), 1); assert.equal(sendCalls(), 2); assert.equal(job.status, 'sent');
   assert.equal(session.history.length, 2);
-  assert.equal(job.conversationId, 'bot-thread');
+  assert.equal(job.conversationId, conversationId);
+  assert.notEqual(job.conversationId, session.conversationId);
+});
+
+test('separate bot movie requests publish into separate UI conversations while retaining bot context', async () => {
+  const published = [];
+  const options = { fail: false, profileId: 'owner', previousMovie: { title: 'Earlier film' },
+    result: { text: 'Film found', model: 'test', movie: { title: 'New film' } } };
+  const first = workerHarness({ ...options, publishResult: async () => { published.push(first.job.conversationId); } });
+  const second = workerHarness({ ...options, publishResult: async () => { published.push(second.job.conversationId); } });
+  const ids = [first.job.conversationId, second.job.conversationId];
+  await first.worker.drainBotQueue();
+  await second.worker.drainBotQueue();
+  assert.deepEqual(published, ids);
+  assert.notEqual(ids[0], ids[1]);
+  assert.equal(first.session.history.length, 2);
+  assert.equal(second.session.history.length, 2);
+  assert.equal(first.session.movie.title, 'New film');
 });
 
 test('a Telegram platform link bypasses ordinary AI and exposes only the existing result button',async()=>{
