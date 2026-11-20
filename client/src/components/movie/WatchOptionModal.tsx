@@ -102,7 +102,7 @@ export function WatchOptionModal({ open, onClose, movie, title, onSelect }: {
     }
   };
   return createPortal(<dialog ref={dialog} aria-label={translate(language, 'movie.watchOptionsTitle')}
-    onCancel={event => { event.preventDefault(); onClose(); }}
+    onCancel={event => { event.preventDefault(); event.stopPropagation(); onClose(); }}
     onKeyDown={event => { if (event.key === 'Escape') event.stopPropagation(); }}
     className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none overflow-hidden border-0 bg-transparent p-0 backdrop:bg-transparent">
     <button ref={backdrop} type="button" onClick={onClose} aria-label={closeLabel} className="absolute inset-0 bg-black opacity-0" />

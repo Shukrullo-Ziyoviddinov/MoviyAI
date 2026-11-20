@@ -25,7 +25,7 @@ export function WatchPlayerModal({ url, embedUrl, title, loading, onClose, onOth
     return () => { window.clearTimeout(timer); node.close(); document.body.style.overflow = previous; release?.(); };
   }, []);
   if (typeof document === 'undefined') return null;
-  return createPortal(<dialog ref={dialog} onCancel={event => { event.preventDefault(); onClose(); }}
+  return createPortal(<dialog ref={dialog} onCancel={event => { if (event.target !== event.currentTarget) return; event.preventDefault(); event.stopPropagation(); onClose(); }}
     className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-[#05070d] p-0 text-white">
     <div className="flex h-full flex-col px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(16px,env(safe-area-inset-top))]">
       <header className="flex items-center justify-between gap-4 py-3"><h2 className="truncate font-semibold">{title}</h2>

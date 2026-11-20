@@ -15,3 +15,18 @@ for(const viaBack of [false,true])test(`watch options close ${viaBack?'by browse
  assert.equal(watchClosed,1);assert.equal(parentClosed,0);assert.equal(b.backs(),1);assert.equal(b.listeners.length,1);
  b.target.history.back();await new Promise(resolve=>setImmediate(resolve));assert.equal(parentClosed,1);
 });
+
+for(const viaBack of [false,true])test(`nested watch modal: ${viaBack?'browser Back':'drag or X close'} closes only the source sheet`,async()=>{
+ const b=browser();let playerClosed=0,sheetClosed=0;
+ const closePlayer=watchModalHistory(()=>playerClosed++,b.target);
+ const closeSheet=watchModalHistory(()=>sheetClosed++,b.target);
+ if(viaBack)b.target.history.back();else closeSheet();
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(sheetClosed,1);assert.equal(playerClosed,0);assert.equal(b.backs(),1);
+ // Reopening the source sheet must preserve the same underlying player.
+ const closeAgain=watchModalHistory(()=>sheetClosed++,b.target);closeAgain();
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(sheetClosed,2);assert.equal(playerClosed,0);
+ closePlayer();await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(playerClosed,1);assert.equal(b.listeners.length,0);
+});

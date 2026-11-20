@@ -165,7 +165,7 @@ export function WatchButton({ movie, title, children, style, onBeforeOpen }: {
   return <>
     <Pressable style={[style, !options.length && { opacity: 0.6 }]} disabled={!options.length || checking} accessibilityRole="button" accessibilityState={{ busy: checking }}
       onPress={() => { onBeforeOpen?.(); if (preferred) void begin(); else if (options.length === 1) void select(options[0].url); else setOpen(true); }}>{checking ? <Text style={{ color: '#fff' }}>…</Text> : children}</Pressable>
-    {active ? <WatchPlayerModal url={active} title={title} onClose={() => { clearTimeout(switching.current); setOpen(false); setActive(null); }} onOther={() => setOpen(true)} hasOther={alternatives.watchUrls.length > 0}>
+    {active ? <WatchPlayerModal url={active} title={title} onClose={() => { if (open) { setOpen(false); return; } clearTimeout(switching.current); setOpen(false); setActive(null); }} onOther={() => setOpen(true)} hasOther={alternatives.watchUrls.length > 0}>
       <WatchOptionModal visible={open} onClose={() => setOpen(false)} movie={alternatives} title={title} onSelect={url => { void select(url); }} />
     </WatchPlayerModal> : <WatchOptionModal visible={open} onClose={() => setOpen(false)} movie={movie} title={title} onSelect={url => { void select(url); }} />}
   </>;
