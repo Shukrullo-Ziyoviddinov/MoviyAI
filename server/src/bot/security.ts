@@ -31,6 +31,13 @@ export function telegramUser(initData: string, now = Date.now()): string | null 
 export function mediaSignature(id: string, expires: string) {
   return createHmac('sha256', env.telegramBotToken).update(`media:${id}:${expires}`).digest('hex');
 }
+export function avatarSignature(id: string, version: string) {
+  return createHmac('sha256', env.telegramBotToken).update(`avatar:${id}:${version}`).digest('hex');
+}
+export function validAvatarSignature(id: string, version: string, signature: string) {
+  return !!env.telegramBotToken && /^[a-f0-9]{24}$/i.test(id) && /^[a-f0-9]{16}$/.test(version)
+    && /^[a-f0-9]{64}$/.test(signature) && equal(signature, avatarSignature(id, version));
+}
 export function validMediaSignature(id: string, expires: string, signature: string) {
   const time = Number(expires);
   return !!env.telegramBotToken && Number.isFinite(time) && time > Date.now() && time <= Date.now() + 7200000

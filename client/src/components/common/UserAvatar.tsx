@@ -14,7 +14,7 @@ export function UserAvatar({
 }) {
   const { colors } = useTheme();
   const photo = picture?.trim() || "";
-  const [failed, setFailed] = useState(false);
+  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
   const letter = (name.trim().charAt(0) || "?").toUpperCase();
 
   return (
@@ -28,8 +28,8 @@ export function UserAvatar({
         borderColor: colors.borderSoft,
       }}
     >
-      {photo && !failed ? (
-        <img src={photo} alt="" className="h-full w-full object-cover" onError={() => setFailed(true)} />
+      {photo && photo !== failedPhoto ? (
+        <img key={photo} src={photo} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" onError={() => setFailedPhoto(photo)} />
       ) : (
         <span className="font-bold" style={{ color: colors.text, fontSize: size * 0.42 }}>
           {letter}

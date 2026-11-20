@@ -6,11 +6,11 @@ import { formatTelegramText, entitiesForChunk } from './format.js';
 export class TelegramError extends Error {
   constructor(public readonly status: number, public readonly retryAfter = 30) { super('Telegram request failed'); }
 }
-export async function telegram<T>(method: string, body: object = {}): Promise<T> {
+export async function telegram<T>(method: string, body: object = {}, options: { timeoutMs?: number } = {}): Promise<T> {
   if (!env.telegramBotToken) throw new TelegramError(503);
   try {
     const { data } = await axios.post<{ ok: boolean; result: T; error_code?: number; parameters?: { retry_after?: number } }>(
-      `https://api.telegram.org/bot${env.telegramBotToken}/${method}`, body, { timeout: 15000 });
+      `https://api.telegram.org/bot${env.telegramBotToken}/${method}`, body, { timeout: Math.max(1000, Math.min(15000, options.timeoutMs ?? 15000)) });
     if (!data.ok) throw new TelegramError(data.error_code ?? 502, retrySeconds(data.parameters?.retry_after));
     return data.result;
   } catch (error) {

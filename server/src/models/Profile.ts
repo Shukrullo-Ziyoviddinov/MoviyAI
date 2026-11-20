@@ -6,6 +6,7 @@ const profileSchema = new Schema(
     email: { type: String },
     telegramId: { type: String },
     telegramUsername: { type: String, default: '' },
+    telegramPhotoFileId: { type: String, select: false },
     name: { type: String, required: true, trim: true },
     picture: { type: String, default: '' },
     searchGuideVisited: { type: Boolean, default: false },

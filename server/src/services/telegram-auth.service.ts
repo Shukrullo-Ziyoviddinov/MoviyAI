@@ -2,6 +2,7 @@ import { telegramUser } from '../bot/security.js';
 import { BotSession } from '../bot/models.js';
 import { Profile } from '../models/Profile.js';
 import { signAccessToken, toAuthProfile } from './auth.service.js';
+import { telegramAvatar } from '../bot/avatar.js';
 
 export function verifiedTelegramProfile(initData: string) {
   const telegramId = telegramUser(initData);
@@ -43,8 +44,13 @@ export async function loginWithTelegram(initData: string) {
   }
   if (!doc) throw Error('PROFILE_UPSERT_FAILED');
   if (!doc.googleId) {
+    // photo_url is optional. The bot can retrieve an accessible profile photo
+    // without exposing its token-bearing file URL to the browser or database.
+    const avatar = await telegramAvatar.profilePicture(input.telegramId, doc._id.toString(), input.picture).catch(() => null);
     doc = await Profile.findOneAndUpdate({ _id: doc._id, googleId: { $exists: false } },
-      { $set: { name: input.name, picture: input.picture, telegramUsername: input.telegramUsername } }, { returnDocument: 'after' }).lean() ?? doc;
+      { $set: { name: input.name, picture: avatar?.picture ?? (input.picture || doc.picture || ''), telegramUsername: input.telegramUsername,
+        ...(avatar?.fileId ? { telegramPhotoFileId: avatar.fileId } : {}) },
+        ...(avatar?.clearPhoto ? { $unset: { telegramPhotoFileId: 1 } } : {}) }, { returnDocument: 'after' }).lean() ?? doc;
   }
   const profile = toAuthProfile(doc);
   let bound;

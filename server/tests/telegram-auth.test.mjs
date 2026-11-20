@@ -19,7 +19,7 @@ function signed(user, date = Math.floor(Date.now() / 1000)) {
   params.set('hash', createHmac('sha256', secret).update(check).digest('hex'));
   return params.toString();
 }
-function harness({ linked, google = false, race = false } = {}) {
+function harness({ linked, google = false, race = false, avatar } = {}) {
   let profile = linked ? { _id: 'existing', name: 'Google name', googleId: 'google-id', email: 'user@example.org', picture: 'https://example.org/google.jpg' } : null;
   let session = linked ? { profileId: 'existing' } : null;
   let created = 0, reads = 0;
@@ -30,6 +30,7 @@ function harness({ linked, google = false, race = false } = {}) {
       if (filter._id) {
         if (!profile || profile.telegramId && profile.telegramId !== '123') return query(null);
         Object.assign(profile, update.$set);
+        for (const key of Object.keys(update.$unset ?? {})) delete profile[key];
       } else if (!profile) {
         profile = { _id: 'new', ...update.$setOnInsert, ...(google ? { googleId: 'google-id' } : {}) };
         created++;
@@ -44,6 +45,7 @@ function harness({ linked, google = false, race = false } = {}) {
     findOneAndUpdate: async (_filter, update) => { session = { ...session, ...update.$set }; return session; },
   };
   const service = load('services/telegram-auth.service', { telegramUser, Profile: profiles, BotSession: sessions,
+    telegramAvatar: { profilePicture: avatar ?? (async (_id, _profile, picture) => ({ picture, clearPhoto: true })) },
     toAuthProfile, signAccessToken: profile => `token:${profile.id}` }, ['loginWithTelegram', 'verifiedTelegramProfile']);
   return { ...service, created: () => created, reads: () => reads, profile: () => profile, session: () => session };
 }
@@ -87,6 +89,23 @@ test('a conflicting previously linked identity is refused instead of rebinding a
   h.profile().telegramId = '456';
   await assert.rejects(() => h.loginWithTelegram(signed({ id: 123, first_name: 'Ali' })), /TELEGRAM_ACCOUNT_CONFLICT/);
   assert.equal(h.profile().telegramId, '456');
+});
+test('Bot API avatar is persisted when signed Telegram data omits photo_url', async () => {
+  const h = harness({ avatar: async () => ({ picture: 'https://example.org/api/telegram/avatar/owner?v=abc', fileId: 'private-file-id', clearPhoto: false }) });
+  const result = await h.loginWithTelegram(signed({ id: 123, first_name: 'Ali' }));
+  assert.equal(result.profile.picture, 'https://example.org/api/telegram/avatar/owner?v=abc');
+  assert.equal(h.profile().telegramPhotoFileId, 'private-file-id');
+  assert.equal(result.profile.telegramPhotoFileId, undefined);
+});
+test('temporary avatar API failure does not break login or discard an existing avatar', async () => {
+  let fail = false;
+  const h = harness({ avatar: async () => {
+    if (fail) throw Error('Temporary outage');
+    return { picture: 'https://example.org/avatar', fileId: 'private-file-id', clearPhoto: false };
+  } });
+  const data = signed({ id: 123, first_name: 'Ali' });
+  await h.loginWithTelegram(data); fail = true;
+  assert.equal((await h.loginWithTelegram(data)).profile.picture, 'https://example.org/avatar');
 });
 test('concurrent profile insert uses the verified winner instead of creating another identity', async () => {
   const h = harness({ race: true });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { UserAvatar } from '@/components/common/UserAvatar';
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-state";
 import { CloseIcon, DownloadIcon, MenuIcon, PersonIcon } from "@/components/icons";
@@ -20,8 +20,6 @@ export function ChatHeader() {
   const { viewer, closeViewer } = useChat();
   const { desktopOpen, openMenu } = useSideMenu();
   const { active: telegram } = useTelegramChrome();
-  const [photoFailed, setPhotoFailed] = useState(false);
-  const picture = profile?.picture?.trim() || "";
 
   function download() {
     if (!viewer) return;
@@ -57,14 +55,8 @@ export function ChatHeader() {
         >
           {viewer ? (
             <DownloadIcon size={20} color={colors.icon} />
-          ) : picture && !photoFailed ? (
-            <img
-              src={picture}
-              alt=""
-              className="h-full w-full object-cover"
-              referrerPolicy="no-referrer"
-              onError={() => setPhotoFailed(true)}
-            />
+          ) : profile ? (
+            <UserAvatar name={profile.name} picture={profile.picture} size={40} />
           ) : (
             <PersonIcon size={20} color={colors.icon} />
           )}

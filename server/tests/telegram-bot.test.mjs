@@ -41,7 +41,14 @@ test('only Telegram result-only turns allow an empty user prompt', async () => {
   await new ChatTurn({ ...fields, origin: 'telegram' }).validate();
   await assert.rejects(() => new ChatTurn({ ...fields, origin: 'ui' }).validate(), /text/);
 });
-const security = load('security', { createHmac, timingSafeEqual, env }, ['telegramUser', 'webhookSecret', 'validWebhook', 'mediaSignature', 'validMediaSignature']);
+const security = load('security', { createHmac, timingSafeEqual, env }, ['telegramUser', 'webhookSecret', 'validWebhook', 'mediaSignature', 'validMediaSignature', 'avatarSignature', 'validAvatarSignature']);
+test('avatar URLs bind the signature to one profile and photo version', () => {
+  const id = 'a'.repeat(24), version = 'b'.repeat(16), signature = security.avatarSignature(id, version);
+  assert.equal(security.validAvatarSignature(id, version, signature), true);
+  assert.equal(security.validAvatarSignature('c'.repeat(24), version, signature), false);
+  assert.equal(security.validAvatarSignature(id, 'c'.repeat(16), signature), false);
+  assert.equal(security.validAvatarSignature(id, version, 'bad'), false);
+});
 function initData(id, date = Math.floor(Date.now() / 1000)) {
   const params = new URLSearchParams({ user: JSON.stringify({ id }), auth_date: String(date), query_id: 'test' });
   const check = [...params.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('\n');

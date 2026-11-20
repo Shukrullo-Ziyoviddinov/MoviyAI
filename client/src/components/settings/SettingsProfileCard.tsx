@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronRightIcon, PersonIcon } from "@/components/icons";
+import { ChevronRightIcon } from "@/components/icons";
+import { UserAvatar } from '@/components/common/UserAvatar';
 import { useTheme } from "@/components/theme/theme-state";
 
 export function SettingsProfileCard({
@@ -16,8 +16,6 @@ export function SettingsProfileCard({
   onPress?: () => void;
 }) {
   const { colors } = useTheme();
-  const photo = picture?.trim() || "";
-  const [failed, setFailed] = useState(false);
 
   return (
     <button
@@ -30,11 +28,7 @@ export function SettingsProfileCard({
         className="flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-full border-2"
         style={{ backgroundColor: colors.panelSoft, borderColor: "rgba(120, 90, 255, 0.55)" }}
       >
-        {photo && !failed ? (
-          <img src={photo} alt="" className="h-full w-full object-cover" onError={() => setFailed(true)} />
-        ) : (
-          <PersonIcon size={28} color={colors.icon} />
-        )}
+        <UserAvatar name={name} picture={picture} size={48} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[16px] font-bold" style={{ color: colors.text }}>

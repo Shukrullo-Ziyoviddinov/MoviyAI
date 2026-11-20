@@ -2,15 +2,25 @@ import type { Express } from 'express';
 import { env } from '../config/env.js';
 import { requireAuth, type AuthRequest } from '../middleware/requireAuth.js';
 import { telegram } from './api.js';
-import { validWebhook, webhookSecret } from './security.js';
+import { validWebhook, webhookSecret, validAvatarSignature } from './security.js';
 import { acceptUpdate, startBotWorker } from './worker.js';
 import { relayMedia } from './media.js';
 import { claimResult } from './results.js';
+import { telegramAvatar } from './avatar.js';
 
 const webhookPath = '/api/telegram/webhook';
 let connecting = false;
 let reconnect: ReturnType<typeof setTimeout> | undefined;
 export function attachTelegramBot(app: Express) {
+  app.get('/api/telegram/avatar/:id', async (req, res) => {
+    if (!validAvatarSignature(String(req.params.id), String(req.query.v ?? ''), String(req.query.signature ?? ''))) { res.sendStatus(403); return; }
+    try {
+      const avatar = await telegramAvatar.read(String(req.params.id));
+      if (!avatar) { res.sendStatus(404); return; }
+      res.set('Content-Type', avatar.mimeType).set('Cross-Origin-Resource-Policy', 'cross-origin')
+        .set('Cache-Control', 'private, max-age=300').send(avatar.bytes);
+    } catch { res.sendStatus(502); }
+  });
   app.post(webhookPath, async (req, res) => {
     if (!validWebhook(req.header('X-Telegram-Bot-Api-Secret-Token') ?? '')) { res.sendStatus(403); return; }
     try { await acceptUpdate(req.body); res.sendStatus(200); }
