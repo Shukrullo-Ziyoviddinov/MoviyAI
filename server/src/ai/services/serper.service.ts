@@ -21,6 +21,7 @@ async function requestFresh<T>(
   endpoint: 'search' | 'images' | 'videos',
   query: string,
   options: SerperSearchOptions,
+  signal?: AbortSignal,
 ): Promise<T> {
   const apiKey = AI_CONFIG.serperApiKey?.trim();
   if (!apiKey) {
@@ -45,7 +46,7 @@ async function requestFresh<T>(
       method: 'POST',
       headers: { 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({ q, ...options }),
-      signal: operationSignal(REQUEST_TIMEOUT_MS),
+      signal: signal ? AbortSignal.any([operationSignal(REQUEST_TIMEOUT_MS), signal]) : operationSignal(REQUEST_TIMEOUT_MS),
     });
   } catch {
     // Do not expose request headers or credentials in errors.
@@ -66,14 +67,16 @@ async function requestFresh<T>(
   }
 }
 
-function request<T>(endpoint:'search'|'images'|'videos',query:string,options:SerperSearchOptions):Promise<T>{
- return chatCheckpoint(checkpointKey('serper-v1',[endpoint,query,options]),()=>requestFresh<T>(endpoint,query,options));
+function request<T>(endpoint:'search'|'images'|'videos',query:string,options:SerperSearchOptions,signal?:AbortSignal):Promise<T>{
+ signal?.throwIfAborted();
+ return chatCheckpoint(checkpointKey('serper-v1',[endpoint,query,options]),()=>requestFresh<T>(endpoint,query,options,signal));
 }
 export function searchWeb(
   query: string,
   options: SerperSearchOptions = {},
+  signal?: AbortSignal,
 ): Promise<SerperSearchResponse> {
-  return request('search', query, options);
+  return request('search', query, options, signal);
 }
 
 export function searchImages(

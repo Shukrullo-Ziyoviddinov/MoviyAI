@@ -40,11 +40,14 @@ test('priority search queries VK then OK then Mover, preserving all confirmed al
   class GoogleGenAI { models = { generateContent: async request => {
     assert.match(request.config.systemInstruction, /Reject trailers/); return { text: JSON.stringify({ indices: [0, 1, 2, 99] }) };
   } }; }
-  const searchWeb = async query => { queries.push(query); return { organic: [{ title: 'Film 2004 uzbek tilida toliq', link: urls[queries.length - 1], snippet: 'Full film, 120 minutes, Uzbek dub' }] }; };
+  const budgets=[];
+  const searchWeb = async (query,options,budget) => { queries.push(query);budgets.push(budget); return { organic: [{ title: 'Film 2004 uzbek tilida toliq', link: urls[queries.length - 1], snippet: 'Full film, 120 minutes, Uzbek dub' }] }; };
   const lookup = new Function('GoogleGenAI', 'z', 'AI_CONFIG', 'searchWeb', 'watchProvider', 'operationSignal', 'operationCheck', 'fetch', source + '\nreturn findPriorityWatchLinks;')(
     GoogleGenAI, z, { apiKey: 'fake', serperApiKey: 'fake', models: { image: 'model' } }, searchWeb, watchProvider, operations.operationSignal, operations.operationCheck,
     async () => new Response('<h1>Film 2004 uzbek tilida toliq</h1>', { headers: { 'content-type': 'text/html' } }));
-  const links = await lookup({ title: 'Film', titleUz: null, titleRu: null, year: 2004 });
+  const links = await lookup({ title: 'Film', titleUz: 'Mahalliy nom', titleRu: 'Russian name', year: 2004 });
   assert.deepEqual(queries.map(query => /site:([^ ]+)/.exec(query)[1]), ['vkvideo.ru', 'ok.ru', 'mover.uz']);
   assert.deepEqual(links.map(link => link.url), urls);
+  assert.ok(budgets[0] instanceof AbortSignal);assert.ok(budgets.every(signal=>signal===budgets[0]));
+  for(const query of queries){assert.ok(query.includes('"Film"'));assert.ok(query.includes('"Mahalliy nom"'));assert.ok(query.includes('"Russian name"'));}
 });

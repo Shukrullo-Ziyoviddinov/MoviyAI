@@ -8,7 +8,8 @@ import { useTheme } from "@/components/theme/theme-state";
 import { watchModalHistory } from './watch-modal-history';
 import { translate } from "@/i18n";
 import { watchOptions } from "@/utils/watch-options";
-import { watchProvider, verifiedEmbed } from '@/utils/watch-provider';
+import { watchProvider } from '@/utils/watch-provider';
+import { resolveWatchSource } from '@/utils/watch-resolution';
 import { apiBaseUrl } from '@/api/client';
 import { WatchPlayerModal } from './WatchPlayerModal';
 
@@ -162,8 +163,8 @@ export function WatchButton({ movie, title, children, className, style }: {
   const options = watchOptions(movie);
   useEffect(() => {
     if (!active) return; const controller = new AbortController();
-    void fetch(`${apiBaseUrl}/api/watch-embed?url=${encodeURIComponent(active)}`, { signal: controller.signal })
-      .then(response => response.json()).then(data => { if (!controller.signal.aborted) setEmbed(data.source?.embedUrl ? verifiedEmbed(active, data.source.embedUrl) : null); })
+    void resolveWatchSource(apiBaseUrl, active, controller.signal)
+      .then(embedUrl => { if (!controller.signal.aborted) setEmbed(embedUrl); })
       .catch(() => {}).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [active]);
@@ -181,13 +182,15 @@ export function WatchButton({ movie, title, children, className, style }: {
   const preferred = ['vk', 'ok', 'mover'].flatMap(provider => options.filter(option => watchProvider(option.url)?.provider === provider))[0];
   const begin = async () => {
     opening.current?.abort(); const controller = new AbortController(); opening.current = controller; setChecking(true);
+    const deadline = Date.now() + 25_000;
     try {
       for (const provider of ['vk', 'ok', 'mover']) {
-        for (const option of options.filter(option => watchProvider(option.url)?.provider === provider).slice(0, 1)) {
+        for (const option of options.filter(option => watchProvider(option.url)?.provider === provider).slice(0, 2)) {
+          if (Date.now() >= deadline) break;
           try {
-            const data = await fetch(`${apiBaseUrl}/api/watch-embed?url=${encodeURIComponent(option.url)}`, { signal: controller.signal }).then(response => response.json());
+            const embedUrl = await resolveWatchSource(apiBaseUrl, option.url, controller.signal, Math.min(12_000, deadline - Date.now()));
             if (controller.signal.aborted) return;
-            if (data.source?.embedUrl && verifiedEmbed(option.url, data.source.embedUrl)) { select(option.url); return; }
+            if (embedUrl) { select(option.url); return; }
           } catch { if (controller.signal.aborted) return; }
         }
       }

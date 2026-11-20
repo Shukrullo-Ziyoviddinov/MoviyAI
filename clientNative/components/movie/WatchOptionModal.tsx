@@ -7,7 +7,7 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import { watchOptions } from '@/src/utils/watch-options';
 import { watchProvider } from '@/src/utils/watch-provider';
 import { WatchPlayerModal } from './WatchPlayerModal';
-import { verifiedEmbed } from '@/src/utils/watch-provider';
+import { resolveWatchSource } from '@/src/utils/watch-resolution';
 import { apiBaseUrl } from '@/src/api/client';
 
 type WatchMovie = { watchUrl?: string | null; watchUrls?: string[] };
@@ -132,6 +132,7 @@ export function WatchButton({ movie, title, children, style, onBeforeOpen }: {
   const options = watchOptions(movie);
   const select = async (url: string) => {
     setOpen(false);
+    clearTimeout(switching.current);
     if (watchProvider(url)) {
       clearTimeout(switching.current);
       if (open && !active) switching.current = setTimeout(() => setActive(url), 340); else setActive(url);
@@ -144,13 +145,15 @@ export function WatchButton({ movie, title, children, style, onBeforeOpen }: {
   const preferred = ['vk', 'ok', 'mover'].flatMap(provider => options.filter(option => watchProvider(option.url)?.provider === provider))[0];
   const begin = async () => {
     opening.current?.abort(); const controller = new AbortController(); opening.current = controller; setChecking(true);
+    const deadline = Date.now() + 25_000;
     try {
       for (const provider of ['vk', 'ok', 'mover']) {
-        for (const option of options.filter(option => watchProvider(option.url)?.provider === provider).slice(0, 1)) {
+        for (const option of options.filter(option => watchProvider(option.url)?.provider === provider).slice(0, 2)) {
+          if (Date.now() >= deadline) break;
           try {
-            const data = await fetch(`${apiBaseUrl}/api/watch-embed?url=${encodeURIComponent(option.url)}`, { signal: controller.signal }).then(response => response.json());
+            const embedUrl = await resolveWatchSource(apiBaseUrl, option.url, controller.signal, Math.min(12_000, deadline - Date.now()));
             if (controller.signal.aborted) return;
-            if (data.source?.embedUrl && verifiedEmbed(option.url, data.source.embedUrl)) { await select(option.url); return; }
+            if (embedUrl) { await select(option.url); return; }
           } catch { if (controller.signal.aborted) return; }
         }
       }

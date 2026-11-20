@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { apiBaseUrl } from '@/src/api/client';
 import { verifiedEmbed } from '@/src/utils/watch-provider';
+import { resolveWatchSource } from '@/src/utils/watch-resolution';
 
 export function WatchPlayerModal({ url, title, onClose, onOther, hasOther, children }: {
   url: string; title?: string; onClose: () => void; onOther: () => void; hasOther: boolean; children?: ReactNode;
@@ -17,8 +18,8 @@ export function WatchPlayerModal({ url, title, onClose, onOther, hasOther, child
   useEffect(() => { const subscription = AppState.addEventListener('change', state => setForeground(state === 'active')); return () => subscription.remove(); }, []);
   useEffect(() => {
     const controller = new AbortController(); setEmbed(null); setLoading(true);
-    void fetch(`${apiBaseUrl}/api/watch-embed?url=${encodeURIComponent(url)}`, { signal: controller.signal })
-      .then(response => response.json()).then(data => { if (!controller.signal.aborted) setEmbed(data.source?.embedUrl ? verifiedEmbed(url, data.source.embedUrl) : null); })
+    void resolveWatchSource(apiBaseUrl, url, controller.signal)
+      .then(embedUrl => { if (!controller.signal.aborted) setEmbed(embedUrl); })
       .catch(() => {}).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [url]);
@@ -29,9 +30,9 @@ export function WatchPlayerModal({ url, title, onClose, onOther, hasOther, child
         <Pressable onPress={onClose} accessibilityLabel={labels[4]} style={{ padding: 12 }}><Text style={{ color: '#fff', fontSize: 26 }}>×</Text></Pressable>
       </View>
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        {embed && foreground ? <View style={{ width: '100%', aspectRatio: 16 / 9 }}><WebView key={embed} source={{ uri: embed }} allowsFullscreenVideo allowsInlineMediaPlayback
+        {embed && verifiedEmbed(url, embed) && foreground ? <View style={{ width: '100%', aspectRatio: 16 / 9 }}><WebView key={embed} source={{ uri: embed }} allowsFullscreenVideo allowsInlineMediaPlayback
           javaScriptCanOpenWindowsAutomatically={false} setSupportMultipleWindows={false}
-          onShouldStartLoadWithRequest={request => !!verifiedEmbed(url, request.url) || request.url === 'about:blank'}
+          onShouldStartLoadWithRequest={request => request.isTopFrame === false && request.url.startsWith('https://') || !!verifiedEmbed(url, request.url) || request.url === 'about:blank'}
           onError={() => { setEmbed(null); setLoading(false); }} style={{ backgroundColor: '#000' }} /></View>
           : <Text style={{ color: '#fff', textAlign: 'center', padding: 20 }}>{loading ? labels[2] : labels[3]}</Text>}
       </View>
