@@ -31,7 +31,7 @@ export function WatchPlayerModal({ url, embedUrl, title, loading, onClose, onOth
     className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none border-0 bg-[#05070d] p-0 text-white">
     {telegram && <TelegramNav />}
     <div className="flex h-full flex-col px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(16px,env(safe-area-inset-top))]"
-      style={telegram ? { paddingTop: 'calc(var(--tg-chrome, 0px) + 16px)' } : undefined}>
+      style={telegram ? { paddingTop: 'var(--tg-chrome, 0px)' } : undefined}>
       <header className="flex items-center justify-between gap-4 py-3"><h2 className="truncate font-semibold">{title}</h2>
         <button type="button" aria-label={labels.close} onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10"><CloseIcon size={22} color="currentColor" /></button></header>
       <div className="flex min-h-0 flex-1 items-center justify-center">

@@ -7,7 +7,7 @@ function player(telegram){
 }
 test('Telegram player reserves its existing chrome inset and draws the same Telegram toolbar background inside the dialog',()=>{
  const tree=player(true),[toolbar,content]=tree.props.children;
- assert.equal(toolbar.type,'telegram-nav');assert.equal(content.props.style.paddingTop,'calc(var(--tg-chrome, 0px) + 16px)');
+ assert.equal(toolbar.type,'telegram-nav');assert.equal(content.props.style.paddingTop,'var(--tg-chrome, 0px)');
  assert.equal(content.props.children[0].type,'header');
 });
 test('ordinary browser player retains its previous padding and has no Telegram toolbar',()=>{
