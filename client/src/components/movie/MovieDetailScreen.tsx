@@ -604,11 +604,11 @@ function MovieHeroInfo({ children, poster, title = '', loading = false, bone }: 
 }) {
   const { active: telegram } = useTelegramChrome();
   const extraPoster = !telegram && (loading || Boolean(poster));
-  return <div className={`flex flex-col md:absolute md:bottom-full md:left-0 md:z-[3] md:h-dvh md:w-[min(560px,72%)] md:justify-end md:px-8 md:pb-[16vh] ${extraPoster ? 'min-[1132px]:w-[min(900px,100%)]' : ''}`}>
+  return <div className={`flex flex-col md:absolute md:bottom-full md:left-0 md:z-[3] md:h-dvh md:justify-end md:px-8 md:pb-[16vh] ${extraPoster ? 'md:max-[1131px]:w-[min(560px,72%)] min-[1132px]:w-full' : 'md:w-[min(560px,72%)]'}`}>
     <div className={extraPoster ? 'min-[1132px]:flex min-[1132px]:items-stretch min-[1132px]:gap-8' : undefined}>
-      {extraPoster && <div className="relative order-first hidden w-[220px] shrink-0 overflow-hidden rounded-[14px] min-[1132px]:block">
+      {extraPoster && <div className="relative order-first hidden w-[220px] shrink-0 overflow-hidden rounded-[14px] border border-white/20 bg-[#080b12]/90 shadow-[0_18px_50px_rgba(0,0,0,0.65)] min-[1132px]:block">
         {loading ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> :
-          <img src={poster} alt={title} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain" />}
+          <img src={poster} alt={title} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain p-2" />}
       </div>}
       <div className="flex min-w-0 flex-1 flex-col">{children}</div>
     </div>
