@@ -1,3 +1,4 @@
+import {isCountableMovieSearch} from '../dist/movie-popularity/policy.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -185,6 +186,7 @@ function workerHarness(options = {}) {
       remove: async () => { options.events?.push(['remove']); },
       dispose: () => { options.events?.push(['dispose']); },
     }),
+    isCountableMovieSearch,
     isCatalogEligible: movie => !!movie?.title, drainBotCatalog: () => { options.onCatalog?.(); return Promise.resolve(); },
     TelegramError,
     publishResult: options.publishResult ?? (async () => { throw Error('Ordinary chat must not publish UI history'); }),
@@ -192,6 +194,17 @@ function workerHarness(options = {}) {
   }, ['drainBotQueue']);
   return { worker, job, session, aiCalls: () => aiCalls, sendCalls: () => sendCalls };
 }
+
+test('Telegram URL recognition commits the counting outbox before delivery, without counting delivery again', async () => {
+  const result = { text: 'Found', model: 'test', movie: { title: 'Film', year: 2020, confidence: 'high', presentation: 'details',
+    sources: [{ title: 'Film', url: 'https://example.com/film' }], posters: [] } };
+  const h = workerHarness({ text: 'https://www.instagram.com/reel/fixture/', result });
+  await h.worker.drainBotQueue();
+  assert.equal(h.job.status, 'ready'); assert.equal(h.job.popularityPending, true);
+  h.job.nextAttemptAt = new Date(0);
+  const calls = h.aiCalls(); await h.worker.drainBotQueue(); assert.equal(h.aiCalls(), calls);
+  assert.equal(h.job.status, 'sent'); assert.equal(h.job.popularityPending, true);
+});
 const { TelegramError } = load('api', {}, ['TelegramError']);
 test('delivery retries reuse a durable AI answer and do not duplicate private conversation history', async () => {
   const { worker, job, session, aiCalls, sendCalls } = workerHarness();
@@ -510,4 +523,16 @@ test('typing is refreshed while preparing, respects Telegram rate limits and sto
   tick(); await new Promise(resolve => setImmediate(resolve));
   assert.equal(calls.filter(call => call.method === 'sendChatAction').length, 2);
   await progress.remove(); progress.dispose();
+});
+
+
+for (const kind of ['text','image','video']) test(`bot ${kind} lookup marks identification independently of detailed presentation`,async()=>{
+ const movie={title:'Example',catalogId:8036,confidence:'high',presentation:'details',sources:[],posters:[]};
+ const found=async()=>({text:'Found',model:'test',movie});
+ const {answerBot}=load('ai',{
+   isContextMovieFollowup:()=>false,isMovieRecommendation:()=>false,isNamedMovieSearch:()=>true,
+   findMovieFromText:found,findMovieFromImages:found,findMovieFromVideo:found,
+ },['answerBot']);
+ const result=await answerBot('Example kinosini top',kind==='text'?[]:[{mimeType:kind==='video'?'video/mp4':'image/jpeg',fileUri:'https://example.com/media'}],[]);
+ assert.equal(result.searchIdentified,true);assert.equal(isCountableMovieSearch(result.movie,result.searchIdentified),true);
 });

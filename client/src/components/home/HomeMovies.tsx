@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { HomeMovie } from "@/api/movies";
+import { fetchTopSearchedMovies, type HomeMovie } from "@/api/movies";
 import { fetchWishlistIds, toggleWishlistMovie } from "@/api/wishlist";
 import { MovieCardSkeleton } from "@/components/home/MovieCard";
 import { MovieCategoryRow } from "@/components/home/MovieCategoryRow";
@@ -11,13 +11,26 @@ import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
 import { groupMoviesByCategory } from "@/data/homeMovies";
 
-export function HomeMovies({ movies }: { movies: HomeMovie[] | null }) {
+export function HomeMovies({ movies, topSearched = [] }: { movies: HomeMovie[] | null; topSearched?: HomeMovie[] }) {
   const { language } = useLanguage();
   const { isDark } = useTheme();
   const { token, requireAuth } = useAuth();
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
   const [savedIds, setSavedIds] = useState<number[]>([]);
 
+  const [liveTop, setLiveTop] = useState<HomeMovie[] | null>(null);
+  useEffect(() => {
+    let alive = true, pending = false;
+    const refresh = async () => {
+      if (pending || document.hidden) return;
+      pending = true;
+      try { const rows = await fetchTopSearchedMovies(); if (alive) setLiveTop(rows); } catch { /* Retain the last successful ranking. */ }
+      finally { pending = false; }
+    };
+    const timer = window.setInterval(() => { void refresh(); }, 60000);
+    window.addEventListener('focus', refresh);
+    return () => { alive = false; window.clearInterval(timer); window.removeEventListener('focus', refresh); };
+  }, []);
   useEffect(() => {
     if (!movies) return;
     let alive = true;
@@ -79,6 +92,7 @@ export function HomeMovies({ movies }: { movies: HomeMovie[] | null }) {
 
   return (
     <div className="mt-4">
+      {(liveTop ?? topSearched).length > 0 && <MovieCategoryRow categoryName="topSearchedMovies" ranked movies={liveTop ?? topSearched} language={language} savedIds={savedIds} onToggleSave={(id) => void onToggleSave(id)} />}
       {categories.map((group) => (
         <MovieCategoryRow
           key={group.categoryName}

@@ -12,7 +12,7 @@ import { useMoviesStore } from '@/src/stores/useMoviesStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import { groupMoviesByCategory } from '@/src/utils/groupMovies';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -31,6 +31,8 @@ export default function HomeScreen() {
   const navOffset = useBottomNavOffset(true);
   const language = useLanguageStore((s) => s.language);
   const movies = useMoviesStore((s) => s.movies);
+  const topSearched = useMoviesStore((s) => s.topSearched);
+  const loadTopSearched = useMoviesStore((s) => s.loadTopSearched);
   const loading = useMoviesStore((s) => s.loading);
   const loaded = useMoviesStore((s) => s.loaded);
   const error = useMoviesStore((s) => s.error);
@@ -51,7 +53,16 @@ export default function HomeScreen() {
   }), [bannerOn, bannerH]);
   const cardWidth = useMemo(() => Math.round(width * 0.39), [width]);
   const showSkeleton = movies.length === 0 && !error && (loading || !loaded);
-  const categories = useMemo(() => groupMoviesByCategory(movies), [movies]);
+  const regularCategories = useMemo(() => groupMoviesByCategory(movies), [movies]);
+  const categories = useMemo(() => [
+    ...(topSearched.length ? [{ categoryName: 'topSearchedMovies', movies: topSearched }] : []),
+    ...regularCategories,
+  ], [regularCategories, topSearched]);
+  useFocusEffect(useCallback(() => {
+    void loadTopSearched();
+    const timer = setInterval(() => { void loadTopSearched(); }, 60000);
+    return () => clearInterval(timer);
+  }, [loadTopSearched]));
 
   useEffect(() => {
     void loadMovies();
@@ -70,6 +81,7 @@ export default function HomeScreen() {
     <View style={index === 0 ? styles.afterBanner : undefined}>
       <MovieCategoryRow
         title={t(`home.categories.${group.categoryName}`)}
+        ranked={group.categoryName === 'topSearchedMovies'}
         movies={group.movies}
         language={language}
         cardWidth={cardWidth}

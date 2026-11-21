@@ -35,6 +35,8 @@ const turnSchema = new Schema({
     videos:{type:[new Schema({key:{type:String,required:true},hash:{type:String,required:true},mimeType:{type:String,required:true},size:{type:Number,required:true},duration:{type:Number,required:true}},{_id:false})],default:[]},
     characterImages: { type: Schema.Types.Mixed, default: [] },
     recommendations: {type:Schema.Types.Mixed,default:[]},
+    popularityRetryAt: { type: Date, default: new Date(0), select: false },
+    popularityPending: { type: Boolean, default: false, select: false },
     catalogDispatch: { type: String, enum: ['none', 'pending', 'queued'], default: 'none', select: false },
     answer: { type: String, default: '' },
     answerAt:{type:Date,default:null},
@@ -48,5 +50,6 @@ const turnSchema = new Schema({
 }, { timestamps: true, collection: 'ai_chat_turns' });
 turnSchema.index({ conversationId: 1, requestId: 1 }, { unique: true });
 turnSchema.index({ userId: 1, conversationId: 1, createdAt: 1 });
+turnSchema.index({ popularityPending: 1, popularityRetryAt: 1, createdAt: 1 });
 turnSchema.index({ catalogDispatch: 1, status: 1, createdAt: 1 });
 export const ChatTurn = model('AiChatTurn', turnSchema);

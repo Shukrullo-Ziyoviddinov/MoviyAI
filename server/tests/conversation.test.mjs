@@ -1,6 +1,8 @@
+import {isCountableMovieSearch} from '../dist/movie-popularity/policy.js';
 import {hasVideoPlatformLink} from '../dist/ai/video-import/services/video-import-chat.service.js';
 import * as operationHelpers from '../dist/ai/utils/chat-operation.js';
-const serviceFunction=(...args)=>new Function(...Object.keys(operationHelpers),...args).bind(null,...Object.values(operationHelpers));
+const serviceHelpers={...operationHelpers,isCountableMovieSearch,preserveConversationSearches:async()=>{}};
+const serviceFunction=(...args)=>new Function(...Object.keys(serviceHelpers),...args).bind(null,...Object.values(serviceHelpers));
 import {cleanupRetryDelay,cleanupErrorInfo} from '../dist/ai/utils/cleanup-retry.js';
 import {isMovieRecommendation} from '../dist/ai/services/movie-recommendation.service.js';
 import {conversationTitle} from '../dist/ai/services/conversation-title.service.js';
@@ -73,7 +75,7 @@ function repository(conversation = false) {
     deleteMany: async filter => { for(let i=rows.length-1;i>=0;i--)if(matches(rows[i],filter))rows.splice(i,1); },
   };
 }
-function harness() {
+function harness(movieOverrides = {}) {
   const Conversation = repository(true), ChatTurn = repository();
   let fail = false, calls = 0, captured, hold, wakes=0, wakeError=false;
   const savedWatchLinks=[],textRequests=[];
@@ -85,7 +87,7 @@ function harness() {
   const findMovieFromImages = async (text, images) => {
     if(fail)throw Error('image search failure');
     if(images.length)assert.ok(images[0].fileUri.startsWith('https://r2.example/'));
-    return {text:'Found movie',model:'gemini-3.5-flash-lite',movie:{uzbekLinks:[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],title:'Example',titleUz:'Example',titleRu:null,year:2014,confidence:'high',sources:[{title:'Film',url:'https://example.com/film'}],posters:[],trailer:{videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Example trailer',channel:'Studio',kind:'trailer'}}};
+    return {text:'Found movie',model:'gemini-3.5-flash-lite',movie:{...movieOverrides,uzbekLinks:[{title:'Misol',site:'uzmovi.net',url:'https://uzmovi.net/123-example.html'}],title:'Example',titleUz:'Example',titleRu:null,year:2014,confidence:'high',sources:[{title:'Film',url:'https://example.com/film'}],posters:[],trailer:{videoId:'zSWdZVtXT7E',url:'https://www.youtube.com/watch?v=zSWdZVtXT7E',title:'Example trailer',channel:'Studio',kind:'trailer'}}};
   };
   const imagePath = (_owner,id,request,index) => `/images/${id}/${request}/${index}`;
   const objects=new Map(); let storageFailure=false;
@@ -126,6 +128,16 @@ test('a platform URL uses internal import and returns a movie without exposing a
  assert.deepEqual(result.turns[0].videos,[]);assert.deepEqual(result.turns[0].images,[]);
  assert.equal(result.turns[0].videoImportId,undefined);assert.equal(h.ChatTurn.rows[0].videoImportId,'a'.repeat(64));
  assert.equal(h.ChatTurn.rows[0].catalogDispatch,'none');
+ assert.equal(h.ChatTurn.rows[0].popularityPending,true);
+});
+
+test('one successful UI request leaves one counting outbox flag; greetings do not', async () => {
+ const h=harness(),id=randomUUID(),request=randomUUID();await h.createConversation('alice',id);
+ await h.sendConversationMessage('alice',id,request,'https://www.instagram.com/reel/fixture/');
+ await h.sendConversationMessage('alice',id,request,'https://www.instagram.com/reel/fixture/');
+ assert.equal(h.ChatTurn.rows.length,1);assert.equal(h.ChatTurn.rows[0].popularityPending,true);
+ await h.sendConversationMessage('alice',id,randomUUID(),'Salom');
+ assert.equal(h.ChatTurn.rows.at(-1).popularityPending,false);
 });
 
 test('stopping releases the chat for a new question and a late answer cannot overwrite it',async()=>{
@@ -396,4 +408,22 @@ test('the initial title stays unchanged after the conversation topic changes',as
  const movie=await h.sendConversationMessage('alice',id,randomUUID(),'Rasmdagi kinoni top',undefined,[{mimeType:'image/jpeg',data:Buffer.from([255,216,255,0])}]);
  assert.equal(movie.title,greeting.title);
  assert.equal((await h.getConversation('alice',id)).title,greeting.title);
+});
+
+
+for (const cached of [false,true]) for (const kind of ['text','image','video','url']) {
+ test(`popularity counts a new ${kind} identification with detailed output (catalogue cache=${cached})`,async()=>{
+  const h=harness({presentation:'details',...(cached?{catalogId:8036}:{})}),id=randomUUID();await h.createConversation('alice',id);
+  const text=kind==='url'?'https://www.instagram.com/reel/fixture/':kind==='text'?'Example kinosini top':'Ushbu kinoni top va batafsil malumot ber';
+  const images=kind==='image'?[{mimeType:'image/jpeg',data:Buffer.from([255,216,255])}]:[];
+  await h.sendConversationMessage('alice',id,randomUUID(),text,undefined,images,false,kind==='video');
+  assert.equal(h.ChatTurn.rows.at(-1).status,'completed');assert.equal(h.ChatTurn.rows.at(-1).popularityPending,true);
+ });
+}
+
+test('a later detail-only question about an identified film leaves no new counting event',async()=>{
+ const h=harness(),id=randomUUID();await h.createConversation('alice',id);
+ await h.sendConversationMessage('alice',id,randomUUID(),'Example kinosini top');
+ await h.sendConversationMessage('alice',id,randomUUID(),'Example haqida');
+ assert.equal(h.ChatTurn.rows[0].popularityPending,true);assert.equal(h.ChatTurn.rows[1].popularityPending,false);
 });

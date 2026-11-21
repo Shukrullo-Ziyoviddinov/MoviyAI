@@ -9,6 +9,7 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import type { AppLanguage } from '@/src/stores/useLanguageStore';
 import type { Movie } from '@/src/types/movie';
 import { Image } from 'expo-image';
+import Svg, { Text as SvgText } from 'react-native-svg';
 import { router } from 'expo-router';
 import { memo, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -21,6 +22,7 @@ const NAME_HEIGHT = 22;
 
 type MovieCardProps = {
   movie: Movie;
+  rank?: number;
   language: AppLanguage;
   width: number;
   onPress?: (movie: Movie) => void;
@@ -42,7 +44,7 @@ export function MovieCardSkeleton({ width }: { width: number }) {
   );
 }
 
-export const MovieCard = memo(function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
+export const MovieCard = memo(function MovieCard({ movie, language, width, onPress, rank }: MovieCardProps) {
   const { colors } = useTheme();
   const isSaved = useWishlistStore((s) => s.isSaved(movie.id));
   const toggle = useWishlistStore((s) => s.toggle);
@@ -109,6 +111,11 @@ export const MovieCard = memo(function MovieCard({ movie, language, width, onPre
           />
         ) : null}
 
+        {rank != null ? <View pointerEvents="none" style={styles.rankBadge}>
+          <Svg width={rank === 10 ? 46 : 26} height={40}>
+            <SvgText x={2} y={33} fontSize={32} fontWeight="900" fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth={1.25} strokeLinejoin="round">{rank}</SvgText>
+          </Svg>
+        </View> : null}
         {showPosterChrome ? (
           <>
             <Pressable
@@ -150,6 +157,7 @@ export const MovieCard = memo(function MovieCard({ movie, language, width, onPre
 });
 
 const styles = StyleSheet.create({
+  rankBadge: { position: 'absolute', left: 8, bottom: 5 },
   card: {
     marginBottom: 14,
   },

@@ -23,6 +23,8 @@ const job = new Schema({
   lockUntil: { type: Date, default: new Date(0) },
   result: { type: Schema.Types.Mixed, default: null },
   resultAt: { type: Date, default: null },
+    popularityRetryAt: { type: Date, default: new Date(0), select: false },
+    popularityPending: { type: Boolean, default: false, select: false },
   catalogPending: { type: Boolean, default: false },
   catalogAttempts: { type: Number, default: 0 },
   catalogNextAttemptAt: { type: Date, default: new Date(0) },
@@ -38,5 +40,6 @@ const job = new Schema({
   expiresAt: { type: Date, default: () => new Date(Date.now() + 30 * 86400000), index: { expires: 0 } },
 }, { timestamps: true, collection: 'telegram_ai_updates' });
 job.index({ status: 1, nextAttemptAt: 1, createdAt: 1 });
+job.index({ popularityPending: 1, popularityRetryAt: 1, createdAt: 1 });
 job.index({ catalogPending: 1, catalogNextAttemptAt: 1 });
 export const BotUpdate = model('TelegramAiUpdate', job);

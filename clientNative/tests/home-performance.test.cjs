@@ -63,7 +63,8 @@ test('home poster decoding can downscale instead of retaining full-size fill bit
     react: { memo: fn => ({ type: fn }), useMemo: fn => fn(), useState: value => [value, () => {}] },
     'react-native': { View: 'view', Text: 'text', Pressable: 'pressable', StyleSheet: { create: value => value, absoluteFill: {} } },
     'expo-image': { Image: 'poster-image' },
-    'expo-router': { router: {} },
+    'react-native-svg': { __esModule: true, default: 'svg', Text: 'svg-text' },
+    'expo-router': { router: {}, useFocusEffect() {} },
     '@/components/common/SkeletonPulse': { SkeletonGroup: 'skeleton-group' },
     '@/components/common/SkeletonLoader': { SkeletonLoader: 'skeleton' },
     '@/components/icons': { BookmarkIcon: 'bookmark' },
@@ -81,13 +82,13 @@ test('home poster decoding can downscale instead of retaining full-size fill bit
 });
 
 test('home preserves its list and banner identity across loading, success and error states', () => {
-  const state = { movies: [], loading: true, loaded: false, error: null };
+  const state = { movies: [], topSearched: [], loadTopSearched: async () => {}, loading: true, loaded: false, error: null };
   const { default: Home } = load('app/home.tsx', {
     react: { useEffect() {}, useMemo: fn => fn(), useCallback: fn => fn, useState: value => [value, () => {}] },
     'react-native': { FlatList: 'list', View: 'view', StyleSheet: { create: value => value }, useWindowDimensions: () => ({ width: 400 }) },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) },
     'react-i18next': { useTranslation: () => ({ t: key => key }) },
-    'expo-router': { router: {} },
+    'expo-router': { router: {}, useFocusEffect() {} },
     '@/components/common/SkeletonLoader': { SkeletonLoader: 'skeleton' },
     '@/components/common/SkeletonPulse': { SkeletonGroup: 'skeleton-group' },
     '@/components/home/FloatingAiButton': { FloatingAiButton: 'ai-button' },
@@ -106,6 +107,13 @@ test('home preserves its list and banner identity across loading, success and er
   const loading = Home().props.children[0];
   state.movies = [{ id: 42 }]; state.loading = false; state.loaded = true;
   const loaded = Home().props.children[0];
+  state.topSearched = [{ id: 42 }];
+  const rankedList = Home().props.children[0];
+  assert.equal(rankedList.props.data.length, 2);
+  assert.equal(rankedList.props.data[0].categoryName, 'topSearchedMovies');
+  assert.equal(rankedList.props.data[1].movies[0].id, 42);
+  const rankedRow = rankedList.props.renderItem({ item: rankedList.props.data[0], index: 0 });
+  assert.equal(rankedRow.props.children.props.ranked, true);
   state.error = 'offline';
   const error = Home().props.children[0];
   for (const list of [loading, loaded, error]) {

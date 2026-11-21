@@ -10,6 +10,7 @@ const GAP = 12;
 
 type MovieCategoryRowProps = {
   title: string;
+  ranked?: boolean;
   movies: Movie[];
   language: AppLanguage;
   cardWidth: number;
@@ -18,6 +19,7 @@ type MovieCategoryRowProps = {
 
 export const MovieCategoryRow = memo(function MovieCategoryRow({
   title,
+  ranked = false,
   movies,
   language,
   cardWidth,
@@ -45,9 +47,9 @@ export const MovieCategoryRow = memo(function MovieCategoryRow({
         showsHorizontalScrollIndicator={false}
         getItemLayout={(_, index) => ({ length: cardWidth + GAP, offset: (cardWidth + GAP) * index, index })}
         contentContainerStyle={[styles.row, { paddingHorizontal: contentPad }]}
-        renderItem={({ item: movie }) => (
+        renderItem={({ item: movie, index }) => (
           <View key={movie.id} style={{ width: cardWidth, marginRight: GAP }}>
-            <MovieCard movie={movie} language={language} width={cardWidth} />
+            <MovieCard movie={movie} language={language} width={cardWidth} rank={ranked ? index + 1 : undefined} />
           </View>
         )}
       />

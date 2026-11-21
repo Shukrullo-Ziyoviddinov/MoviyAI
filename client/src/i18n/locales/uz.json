@@ -57,7 +57,8 @@
       "dramaMovies": "Drama kino",
       "comedyMovies": "Komediya kino seriallar",
       "familyMovies": "Oilaviy kino seriallar",
-      "sciFiMovies": "Fantastika kinolar"
+      "sciFiMovies": "Fantastika kinolar",
+      "topSearchedMovies": "Eng ko‘p qidirilgan kinolar — Top 10"
     }
   },
   "favorites": {

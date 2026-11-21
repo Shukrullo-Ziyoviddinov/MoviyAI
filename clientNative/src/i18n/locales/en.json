@@ -57,7 +57,8 @@
       "dramaMovies": "Drama movies",
       "comedyMovies": "Comedy movies & series",
       "familyMovies": "Family movies & series",
-      "sciFiMovies": "Sci-Fi movies"
+      "sciFiMovies": "Sci-Fi movies",
+      "topSearchedMovies": "Most searched movies — Top 10"
     }
   },
   "favorites": {

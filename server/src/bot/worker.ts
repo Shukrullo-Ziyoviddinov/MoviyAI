@@ -1,3 +1,4 @@
+import { isCountableMovieSearch } from '../movie-popularity/policy.js';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { BotSession, BotUpdate } from './models.js';
 import { sendTelegramMessage, TelegramError } from './api.js';
@@ -116,7 +117,7 @@ export async function drainBotQueue() {
                   if(!saved.matchedCount)throw new ChatFailure('stopped');
                 },
               });
-              if(imported)return imported;
+              if(imported)return { ...imported, searchIdentified: true };
               const media = await telegramMedia(job._id, update);
               return answerBot(text || 'Ushbu kinoni top', media, session.history as AiHistoryMessage[], session.movie ?? undefined, progress?.report);
             });
@@ -125,7 +126,7 @@ export async function drainBotQueue() {
           notice = botPresentation(result, job.resultToken);
           // Persist response before sending: a Telegram delivery retry never reruns AI.
           const catalogPending = !hasVideoPlatformLink(text) && (isCatalogEligible(result.movie) || !!result.recommendations?.some(item => isCatalogEligible(item.movie)) || !!result.movie?.linksOnly);
-          const written = await BotUpdate.updateOne({ _id: job._id, lockToken }, { $set: { result, resultAt: new Date(), notification: notice, status: 'ready', catalogPending } });
+          const written = await BotUpdate.updateOne({ _id: job._id, lockToken }, { $set: { result, resultAt: new Date(), notification: notice, status: 'ready', catalogPending, popularityPending: isCountableMovieSearch(result.movie, result.searchIdentified === true) } });
           if (written.matchedCount === 0) continue;
           if (catalogPending) void drainBotCatalog();
         }

@@ -151,3 +151,7 @@ export function actorImageUrl(path?: string) {
   if (!file || file.includes("..")) return "";
   return `${apiBaseUrl}/api/media/actorimg/${encodeURIComponent(file)}`;
 }
+
+export async function fetchTopSearchedMovies(): Promise<HomeMovie[]> {
+  return read<HomeMovie[]>('/api/movies/top-searched', true);
+}

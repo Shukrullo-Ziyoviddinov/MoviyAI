@@ -9,12 +9,14 @@ import { MovieCard } from "@/components/home/MovieCard";
 
 export function MovieCategoryRow({
   categoryName,
+  ranked = false,
   movies,
   language,
   savedIds,
   onToggleSave,
 }: {
   categoryName: string;
+  ranked?: boolean;
   movies: HomeMovie[];
   language: AppLanguage;
   savedIds: number[];
@@ -32,10 +34,11 @@ export function MovieCategoryRow({
         {categoryTitle(categoryName, language)}
       </h2>
       <HorizontalScroll className="gap-3 px-4 md:gap-3.5">
-        {movies.map((movie) => (
+        {movies.map((movie, index) => (
           <MovieCard
             key={movie.id}
             movie={movie}
+            rank={ranked ? index + 1 : undefined}
             language={language}
             saved={savedIds.includes(movie.id)}
             onToggleSave={onToggleSave}

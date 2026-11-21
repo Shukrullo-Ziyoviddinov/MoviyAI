@@ -57,7 +57,8 @@
       "dramaMovies": "Драмы",
       "comedyMovies": "Комедии и сериалы",
       "familyMovies": "Семейные кино и сериалы",
-      "sciFiMovies": "Фантастика"
+      "sciFiMovies": "Фантастика",
+      "topSearchedMovies": "Самые популярные поиски — Топ 10"
     }
   },
   "favorites": {

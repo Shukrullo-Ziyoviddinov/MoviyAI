@@ -1,9 +1,12 @@
-import { fetchMovies } from '@/src/api/movies';
+import { fetchMovies, fetchTopSearchedMovies } from '@/src/api/movies';
 import type { Movie } from '@/src/types/movie';
 import { create } from 'zustand';
 
 type MoviesState = {
   movies: Movie[];
+  topSearched: Movie[];
+  topLoading: boolean;
+  loadTopSearched: () => Promise<void>;
   loaded: boolean;
   loading: boolean;
   error: string | null;
@@ -12,6 +15,14 @@ type MoviesState = {
 
 export const useMoviesStore = create<MoviesState>((set, get) => ({
   movies: [],
+  topSearched: [],
+  topLoading: false,
+  loadTopSearched: async () => {
+    if (get().topLoading) return;
+    set({ topLoading: true });
+    try { set({ topSearched: await fetchTopSearchedMovies() }); } catch { /* Retain the last ranking. */ }
+    finally { set({ topLoading: false }); }
+  },
   loaded: false,
   loading: false,
   error: null,

@@ -1,3 +1,4 @@
+import { isCountableMovieSearch } from '../../movie-popularity/policy.js';
 import { randomUUID, createHash } from 'node:crypto';
 import { Conversation, ChatTurn } from '../models/conversation.model.js';
 import { chatWithGemma } from './gemma.service.js';
@@ -218,9 +219,11 @@ export async function sendConversationMessage(userId: string, id: string, reques
                 : [{ text, answer: result.text, movie: result.movie, recommendations: result.recommendations }])
             : locked.title;
         controller.signal.throwIfAborted();
+        const identificationPerformed = Boolean(searchVideos.length || searchImages.length || hasVideoPlatformLink(text)
+          || (!(previousMovie && isContextMovieFollowup(text, previousMovie)) && !isMovieRecommendation(text) && isNamedMovieSearch(text, history)));
         const completed=await ChatTurn.updateOne({ conversationId: id, userId, requestId, attemptToken: lockToken,status:'processing' }, {
             $set: { status: 'completed',answerAt:new Date(), answer: result.text, model: result.model, movie: 'movie' in result ? result.movie ?? null : null, characterImages,recommendations:result.recommendations??[],
-                progressStage:null,failureCode:null,catalogDispatch: !hasVideoPlatformLink(text)&&(isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie))) ? 'pending' : 'none' },$unset:{checkpoints:''},
+                progressStage:null,failureCode:null,popularityPending:isCountableMovieSearch(result.movie, identificationPerformed),catalogDispatch: !hasVideoPlatformLink(text)&&(isCatalogEligible(result.movie)||result.recommendations?.some(item=>isCatalogEligible(item.movie))) ? 'pending' : 'none' },$unset:{checkpoints:''},
         });
         if(completed.matchedCount===0)throw new ChatFailure('stopped');
         await Conversation.updateOne({ _id: id, userId, deletedAt: null, lockToken }, { $set: { title, titleGenerated: true } })

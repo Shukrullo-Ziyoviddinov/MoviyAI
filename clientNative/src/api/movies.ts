@@ -147,3 +147,9 @@ export async function createMovieComment(
     throw err instanceof Error ? err : new Error('Comment failed');
   }
 }
+
+export async function fetchTopSearchedMovies(): Promise<Movie[]> {
+  const { data } = await api.get<ApiResponse<Movie[]>>('/api/movies/top-searched');
+  if (!data.ok || !Array.isArray(data.data)) throw new Error('Top movies failed to load');
+  return data.data;
+}

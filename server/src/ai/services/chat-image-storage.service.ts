@@ -1,3 +1,4 @@
+import { preserveConversationSearches } from '../../movie-popularity/repository.js';
 import { ChatTurn, Conversation } from '../models/conversation.model.js';
 import { chatImageKey, putChatImage, getChatImage, deleteChatImage, signChatImage } from '../../services/r2.service.js';
 import { cleanupExpiredUploads, cleanupReservedImages } from './direct-image.service.js';
@@ -48,6 +49,7 @@ export async function cleanupConversationImages(userId: string, conversationId: 
   let operation='preserve-catalog';
   try {
   await catalogDispatcher.preserveConversation(userId, conversationId);
+  await preserveConversationSearches(userId, conversationId);
   operation='imported-videos';
   if (!await videoImportCleanup.conversation(userId,conversationId)) return;
   operation='reserved-images';

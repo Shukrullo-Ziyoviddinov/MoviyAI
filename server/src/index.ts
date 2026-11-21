@@ -1,3 +1,4 @@
+import { startPopularityWorker } from './movie-popularity/worker.js';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -62,6 +63,7 @@ async function bootstrap() {
     void connectTelegramBot();
     startChatImageCleanup();
     startCatalogWorker();
+    startPopularityWorker();
     startVideoImportWorker();
     startVideoImportCleanup();
   });
