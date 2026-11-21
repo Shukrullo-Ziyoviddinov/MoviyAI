@@ -4,6 +4,7 @@ import { AI_CONFIG } from '../config/ai.config.js';
 import { AI_TOPIC_POLICY } from '../config/ai-policy.js';
 import { generateAiResponse } from './google-ai.service.js';
 import { findMovieFromText } from './text-movie.service.js';
+import { isMovieDescription } from './text-movie-understanding.js';
 import type { AiHistoryMessage } from '../types/ai.types.js';
 import type { MovieSearchResult } from '../types/movie-search.types.js';
 
@@ -13,6 +14,7 @@ export interface MovieRecommendation {
  characterImages?:Array<{label:string;imageUrl:string;sourceUrl:string|null;kind?:'actor'|'character'}>;
 }
 export function isMovieRecommendation(text:string):boolean {
+ if(isMovieDescription(text)&&!/tavsiya|recommend|рекоменд|посовет/iu.test(text))return false;
  return /tavsiya|recommend|рекоменд|посовет|maslahat.*(?:kino|film)|(?:kino|film).*maslahat/iu.test(text)
   || /(?:qanday|qaysi|nima).*(?:kino|film|serial).*(?:ko.r|kur)|what.*(?:movie|film).*(?:watch|see)/iu.test(text);
 }
