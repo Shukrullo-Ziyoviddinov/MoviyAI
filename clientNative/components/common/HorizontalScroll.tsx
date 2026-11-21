@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { ScrollView } from 'react-native';
 
 type HorizontalScrollProps = {
   children: ReactNode;
@@ -8,10 +8,7 @@ type HorizontalScrollProps = {
   contentContainerStyle?: StyleProp<ViewStyle>;
 };
 
-/**
- * Horizontal row for movie cards.
- * gesture-handler ScrollView — Pressable (GH) bilan birga scroll ishlaydi.
- */
+/** Native axis locking keeps horizontal rows compatible with vertical page scrolling. */
 export function HorizontalScroll({
   children,
   style,
@@ -26,8 +23,6 @@ export function HorizontalScroll({
       showsVerticalScrollIndicator={false}
       bounces
       alwaysBounceHorizontal
-      decelerationRate={0.985}
-      scrollEventThrottle={16}
       nestedScrollEnabled
       directionalLockEnabled
       keyboardShouldPersistTaps="handled"

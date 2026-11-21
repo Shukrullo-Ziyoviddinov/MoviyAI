@@ -17,8 +17,7 @@ function load(file, mocks) {
 test('large movie rows defer card creation to the virtualized list and preserve late items', () => {
   const movies = Array.from({ length: 1000 }, (_, id) => ({ id }));
   const { MovieCategoryRow } = load('components/movie/MovieCategoryRow.tsx', {
-    'react-native': { StyleSheet: { create: value => value }, Text: 'text', View: 'view' },
-    'react-native-gesture-handler': { FlatList: 'virtual-list' },
+    'react-native': { StyleSheet: { create: value => value }, Text: 'text', View: 'view', FlatList: 'virtual-list' },
     '@/components/movie/MovieCard': { MovieCard: 'movie-card' },
     '@/src/stores/useThemeStore': { useTheme: () => ({ colors: {} }) },
   });
@@ -33,11 +32,12 @@ test('large movie rows defer card creation to the virtualized list and preserve 
   assert.equal(list.props.keyExtractor(movies[999]), '999');
 });
 
-test('unmounting a skeleton cancels its repeating animation', () => {
-  let cleanup, cancelled, repeats = 0;
+test('leaving a screen cancels its skeleton animation and returning restarts it', () => {
+  let cleanup, focus, cancelled, repeats = 0;
   const shared = { value: 0.45 };
   const { SkeletonLoader } = load('components/common/SkeletonLoader.tsx', {
-    react: { useEffect: fn => { cleanup = fn(); } },
+    react: { useCallback: fn => fn },
+    'expo-router': { useFocusEffect: fn => { focus = fn; cleanup = fn(); } },
     'react-native': { StyleSheet: { create: value => value } },
     '@/src/stores/useThemeStore': { useTheme: () => ({ isDark: true }) },
     'react-native-reanimated': {
@@ -53,4 +53,6 @@ test('unmounting a skeleton cancels its repeating animation', () => {
   assert.equal(cancelled, undefined);
   cleanup();
   assert.equal(cancelled, shared);
+  focus();
+  assert.equal(repeats, 2);
 });

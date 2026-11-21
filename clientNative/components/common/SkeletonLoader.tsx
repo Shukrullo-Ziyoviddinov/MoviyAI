@@ -1,5 +1,6 @@
 import { useTheme } from '@/src/stores/useThemeStore';
-import { useEffect } from 'react';
+import { useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
@@ -26,14 +27,14 @@ export function SkeletonLoader({
   const { isDark } = useTheme();
   const opacity = useSharedValue(0.45);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     opacity.value = withRepeat(
       withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) }),
       -1,
       true
     );
     return () => cancelAnimation(opacity);
-  }, [opacity]);
+  }, [opacity]));
 
   const pulse = useAnimatedStyle(() => ({
     opacity: opacity.value,

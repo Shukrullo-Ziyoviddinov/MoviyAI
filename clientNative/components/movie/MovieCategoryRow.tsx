@@ -1,4 +1,4 @@
-import { FlatList } from 'react-native-gesture-handler';
+import { FlatList } from 'react-native';
 import { MovieCard } from '@/components/movie/MovieCard';
 import type { AppLanguage } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';

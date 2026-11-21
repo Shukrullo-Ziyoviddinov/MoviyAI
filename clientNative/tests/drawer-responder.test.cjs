@@ -12,6 +12,7 @@ test('an intentional swipe from the left edge opens the drawer after release',()
 });
 test('menu history scroll does not close the drawer; horizontal closing does',()=>{
  const {state,handlers}=harness(true);handlers.onStartShouldSetPanResponder(event,move());assert.equal(handlers.onMoveShouldSetPanResponderCapture(event,move({dx:-5,dy:100})),false);assert.equal(state.open,true);
+ handlers.onStartShouldSetPanResponder(event,move());
  assert.equal(handlers.onMoveShouldSetPanResponderCapture(event,move({dx:-80})),true);handlers.onPanResponderRelease(event,move({dx:-80}));assert.equal(state.open,false);
 });
 test('picker round trip invalidates the touch that started before it',()=>{
@@ -45,4 +46,18 @@ test('an interrupted or invalidated drag settles without committing a stale open
  assert.deepEqual(values,[20]);assert.deepEqual(results,[false]);assert.equal(state.open,false);
  handlers.onStartShouldSetPanResponder(event,move());handlers.onPanResponderGrant(event,move());handlers.onPanResponderTerminate(event,move());
  assert.deepEqual(results,[false,false]);
+});
+
+
+test('a page scroll starting near the edge cannot be stolen by a later sideways wobble',()=>{
+ for(const open of [false,true]){
+  const {state,handlers}=harness(open);
+  handlers.onStartShouldSetPanResponder(event,move());
+  assert.equal(handlers.onMoveShouldSetPanResponderCapture(event,move({dx:2,dy:30})),false);
+  const sideways=move({dx:open?-95:95,dy:35});
+  assert.equal(handlers.onMoveShouldSetPanResponderCapture(event,sideways),false);
+  handlers.onPanResponderRelease(event,sideways);assert.equal(state.open,open);
+  handlers.onStartShouldSetPanResponder(event,move());
+  assert.equal(handlers.onMoveShouldSetPanResponderCapture(event,move({dx:open?-80:80})),true);
+ }
 });

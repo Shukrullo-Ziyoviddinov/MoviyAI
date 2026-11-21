@@ -14,17 +14,24 @@ export function drawerResponder(mode: 'open' | 'close', getState: () => MenuStat
 }): PanResponderCallbacks {
     let revision = -1;
     let active = false;
+    let scrollOwnsTouch = false;
     const valid = () => {
         const state = getState();
         return !state.gesturesSuspended && revision === state.gestureRevision;
     };
     const eligible = (gesture: PanResponderGestureState) => {
+        // Once a vertical scroll has started, a later sideways wobble must not
+        // transfer that same touch to the drawer and stop the page scrolling.
+        if (Math.abs(gesture.dy) > 8 && Math.abs(gesture.dy) >= Math.abs(gesture.dx)) {
+            scrollOwnsTouch = true;
+        }
+        if (scrollOwnsTouch) return false;
         const state = getState();
         return !state.gesturesSuspended && revision === state.gestureRevision
             && (mode === 'open' ? !state.open && gesture.x0 <= 28 && gesture.dx > 14 : state.open && gesture.dx < -14)
             && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5;
     };
-    const begin = () => { revision = getState().gestureRevision; return false; };
+    const begin = () => { revision = getState().gestureRevision; scrollOwnsTouch = false; return false; };
     return {
         onStartShouldSetPanResponder: begin,
         onStartShouldSetPanResponderCapture: begin,

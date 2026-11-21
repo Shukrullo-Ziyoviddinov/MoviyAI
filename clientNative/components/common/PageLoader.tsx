@@ -1,8 +1,10 @@
 import { useTheme } from '@/src/stores/useThemeStore';
-import { useEffect } from 'react';
+import { useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -23,13 +25,14 @@ export function PageLoader({ style }: PageLoaderProps) {
   const { colors } = useTheme();
   const rotation = useSharedValue(0);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     rotation.value = withRepeat(
       withTiming(360, { duration: 900, easing: Easing.linear }),
       -1,
       false
     );
-  }, [rotation]);
+    return () => cancelAnimation(rotation);
+  }, [rotation]));
 
   const spinStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],

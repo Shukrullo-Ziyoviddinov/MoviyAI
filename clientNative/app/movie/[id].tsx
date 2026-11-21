@@ -48,13 +48,14 @@ import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
+  FlatList,
+  ScrollView,
   Pressable,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PREVIEW_COMMENTS = 5;
@@ -151,31 +152,28 @@ export default function MovieDetailScreen() {
     setError(null);
     setComments([]);
     setSimilarMovies([]);
-    Promise.all([
-      fetchMovieById(movieId),
-      fetchMovieComments(movieId, 50).catch(() => ({
-        comments: [] as MovieComment[],
-        commentCount: 0,
-      })),
-      fetchSimilarMovies(movieId, 16).catch(() => [] as Movie[]),
-    ])
-      .then(([doc, commentsResult, similar]) => {
-        if (!alive) return;
-        setMovie({
-          ...doc,
-          commentCount: commentsResult.commentCount ?? doc.commentCount,
-        });
-        setComments(commentsResult.comments ?? []);
-        setSimilarMovies(similar);
-        setError(null);
+    let commentCount: number | undefined;
+    // The main movie must not wait for comments or recommendations.
+    void fetchMovieById(movieId)
+      .then((doc) => {
+        if (alive) setMovie({ ...doc, commentCount: commentCount ?? doc.commentCount });
       })
       .catch((err: unknown) => {
-        if (!alive) return;
-        setError(err instanceof Error ? err.message : 'Load failed');
-        setMovie(null);
-        setComments([]);
-        setSimilarMovies([]);
+        if (alive) setError(err instanceof Error ? err.message : 'Load failed');
       });
+    void fetchMovieComments(movieId, 50)
+      .then((result) => {
+        if (!alive) return;
+        commentCount = result.commentCount;
+        setComments(result.comments ?? []);
+        setMovie((current) => current ? { ...current, commentCount: commentCount ?? current.commentCount } : current);
+      })
+      .catch(() => undefined);
+    void fetchSimilarMovies(movieId, 16)
+      .then((rows) => {
+        if (alive) setSimilarMovies(rows);
+      })
+      .catch(() => undefined);
 
     return () => {
       alive = false;
@@ -745,16 +743,19 @@ export default function MovieDetailScreen() {
               <Text style={[styles.actorsTitle, { color: colors.text }]}>
                 {t('movie.actorsTitle')}
               </Text>
-              <HorizontalScroll
-                style={width < 768 ? styles.actorsScroll : undefined}
-                contentContainerStyle={
-                  width < 768 ? styles.actorsRowMobile : styles.actorsRow
-                }
-              >
-                {movie.actors.map((actor) => (
-                  <ActorChip key={actor.id} actor={actor} />
-                ))}
-              </HorizontalScroll>
+              <FlatList
+                horizontal
+                data={movie.actors}
+                keyExtractor={(actor) => String(actor.id)}
+                initialNumToRender={4}
+                maxToRenderPerBatch={4}
+                windowSize={3}
+                nestedScrollEnabled
+                showsHorizontalScrollIndicator={false}
+                style={styles.actorsScroll}
+                contentContainerStyle={styles.actorsRow}
+                renderItem={({ item: actor }) => <ActorChip actor={actor} />}
+              />
             </View>
           ) : null}
 
@@ -1006,16 +1007,20 @@ export default function MovieDetailScreen() {
               <Text style={[styles.similarTitle, { color: colors.text }]}>
                 {t('movie.similarMovies')}
               </Text>
-              <HorizontalScroll contentContainerStyle={styles.similarRow}>
-                {similarMovies.map((item) => (
-                  <SimilarMovieCard
-                    key={item.id}
-                    movie={item}
-                    language={language}
-                    width={Math.round(width * 0.36)}
-                  />
-                ))}
-              </HorizontalScroll>
+              <FlatList
+                horizontal
+                data={similarMovies}
+                keyExtractor={(item) => String(item.id)}
+                initialNumToRender={3}
+                maxToRenderPerBatch={3}
+                windowSize={3}
+                nestedScrollEnabled
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.similarRow}
+                renderItem={({ item }) => (
+                  <SimilarMovieCard movie={item} language={language} width={Math.round(width * 0.36)} />
+                )}
+              />
             </View>
           ) : null}
           </View>

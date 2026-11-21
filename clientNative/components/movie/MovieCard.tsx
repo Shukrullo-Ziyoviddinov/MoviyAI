@@ -11,8 +11,7 @@ import type { Movie } from '@/src/types/movie';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 const SAVE_ACTIVE = '#1E4FD6';
 const POSTER_RADIUS = 14;
