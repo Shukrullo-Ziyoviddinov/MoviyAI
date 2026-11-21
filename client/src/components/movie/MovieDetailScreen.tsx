@@ -1,4 +1,5 @@
 "use client";
+import { useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
 import { WatchButton } from "@/components/movie/WatchOptionModal";
 import { displayMovieTitle } from "@/utils/movieDisplay";
 
@@ -164,7 +165,7 @@ export function MovieDetailScreen({
           <div className="h-[calc(var(--tg-chrome)+108cqw)] shrink-0 md:h-dvh" />
           <div className="relative pb-[max(24px,env(safe-area-inset-bottom))]" style={{ backgroundColor: colors.bg }}>
             <div className="relative px-4">
-              <div className="flex flex-col md:absolute md:bottom-full md:left-0 md:z-[3] md:flex md:h-dvh md:w-[min(560px,72%)] md:flex-col md:justify-end md:px-8 md:pb-[16vh]">
+              <MovieHeroInfo loading bone={bone}>
                 <div className="relative z-[2] -mt-[calc(108cqw*0.1176)] mb-1.5 h-10 w-[62%] animate-pulse rounded-lg md:mt-0 md:h-16 md:w-[72%]" style={{ backgroundColor: bone }} />
                 <div className="mt-2.5 flex gap-2 py-1">
                   <div className={`${chip} w-[72px] md:w-[89px]`} style={{ backgroundColor: bone }} />
@@ -189,7 +190,7 @@ export function MovieDetailScreen({
                   <div className={`${chip} w-12 md:w-[62px]`} style={{ backgroundColor: bone }} />
                   <div className={`${chip} w-9 md:w-11`} style={{ backgroundColor: bone }} />
                 </div>
-              </div>
+              </MovieHeroInfo>
               <div className="mt-3 md:mt-0 md:pt-16">
               <div
                 className="relative z-[1] rounded-[14px] border px-3.5 py-3"
@@ -288,7 +289,7 @@ export function MovieDetailScreen({
           <div className="pointer-events-none absolute inset-x-0 bottom-full h-[calc(108cqw*0.42)] md:hidden" style={{ background: fadeMobile }} />
           <div className="pointer-events-none absolute inset-x-0 bottom-full hidden h-[42dvh] md:block" style={{ background: fadeDesktop }} />
           <div className="relative px-4">
-          <div className="flex flex-col md:absolute md:bottom-full md:left-0 md:z-[3] md:flex md:h-dvh md:w-[min(560px,72%)] md:flex-col md:justify-end md:px-8 md:pb-[16vh]">
+          <MovieHeroInfo poster={poster} title={title} bone={bone}>
           <h1
             className={`${oswald.className} relative z-[2] -mt-[calc(108cqw*0.1176)] mb-1.5 text-[32px] leading-[40px] tracking-wide -skew-x-[14deg] md:mt-0 md:text-[56px] md:leading-[64px]`}
             style={{ color: colors.text }}
@@ -367,7 +368,7 @@ export function MovieDetailScreen({
               <ShareIcon size={18} color={colors.icon} />
             </span>
           </div>
-          </div>
+          </MovieHeroInfo>
           {description?.text ? (
             <div className="mt-3 rounded-[14px] border px-3.5 py-3" style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}>
               <h2 className="text-[17px] leading-[22px] font-bold" style={{ color: colors.text }}>
@@ -594,4 +595,22 @@ function ReactionButton({
       {label}
     </button>
   );
+}
+
+
+/** The extra portrait is a desktop-web detail; Telegram keeps its existing hero. */
+function MovieHeroInfo({ children, poster, title = '', loading = false, bone }: {
+  children: ReactNode; poster?: string; title?: string; loading?: boolean; bone: string;
+}) {
+  const { active: telegram } = useTelegramChrome();
+  const extraPoster = !telegram && (loading || Boolean(poster));
+  return <div className={`flex flex-col md:absolute md:bottom-full md:left-0 md:z-[3] md:h-dvh md:w-[min(560px,72%)] md:justify-end md:px-8 md:pb-[16vh] ${extraPoster ? 'min-[1132px]:w-[min(900px,100%)]' : ''}`}>
+    <div className={extraPoster ? 'min-[1132px]:flex min-[1132px]:items-stretch min-[1132px]:gap-8' : undefined}>
+      <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+      {extraPoster && <div className="relative hidden w-[220px] shrink-0 overflow-hidden rounded-[14px] min-[1132px]:block">
+        {loading ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> :
+          <img src={poster} alt={title} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain" />}
+      </div>}
+    </div>
+  </div>;
 }
