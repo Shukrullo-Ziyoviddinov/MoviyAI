@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -31,6 +32,7 @@ export function SkeletonLoader({
       -1,
       true
     );
+    return () => cancelAnimation(opacity);
   }, [opacity]);
 
   const pulse = useAnimatedStyle(() => ({

@@ -1,4 +1,4 @@
-import { HorizontalScroll } from '@/components/common/HorizontalScroll';
+import { FlatList } from 'react-native-gesture-handler';
 import { MovieCard } from '@/components/movie/MovieCard';
 import type { AppLanguage } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -33,15 +33,23 @@ export function MovieCategoryRow({
       >
         {title}
       </Text>
-      <HorizontalScroll
+      <FlatList
+        horizontal
+        data={movies}
+        keyExtractor={(movie) => String(movie.id)}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={3}
+        nestedScrollEnabled
+        showsHorizontalScrollIndicator={false}
+        getItemLayout={(_, index) => ({ length: cardWidth + GAP, offset: (cardWidth + GAP) * index, index })}
         contentContainerStyle={[styles.row, { paddingHorizontal: contentPad }]}
-      >
-        {movies.map((movie) => (
+        renderItem={({ item: movie }) => (
           <View key={movie.id} style={{ width: cardWidth, marginRight: GAP }}>
             <MovieCard movie={movie} language={language} width={cardWidth} />
           </View>
-        ))}
-      </HorizontalScroll>
+        )}
+      />
     </View>
   );
 }

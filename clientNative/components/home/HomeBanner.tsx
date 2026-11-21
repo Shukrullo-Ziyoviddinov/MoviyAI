@@ -94,6 +94,9 @@ export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => vo
       <FlatList
         data={items}
         horizontal
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={3}
         pagingEnabled
         nestedScrollEnabled
         showsHorizontalScrollIndicator={false}
@@ -126,6 +129,7 @@ export function HomeBanner({ onVisible }: { onVisible?: (visible: boolean) => vo
                   style={{ width, height }}
                   contentFit="cover"
                   contentPosition="top"
+                  onError={() => setReadyImg((current) => ({ ...current, [item.img]: true }))}
                   onLoad={() =>
                     setReadyImg((current) => ({ ...current, [item.img]: true }))
                   }

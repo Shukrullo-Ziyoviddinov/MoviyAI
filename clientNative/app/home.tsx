@@ -15,7 +15,7 @@ import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CONTENT_PAD = 16;
@@ -117,30 +117,32 @@ export default function HomeScreen() {
           </View>
         </View>
       ) : (
-        <ScrollView
+        <FlatList
+          data={categories}
+          keyExtractor={(group) => group.categoryName}
+          initialNumToRender={2}
+          maxToRenderPerBatch={2}
+          windowSize={3}
           showsVerticalScrollIndicator={false}
-          nestedScrollEnabled
           contentContainerStyle={{
             paddingTop: bannerOn ? 0 : headerH,
             paddingBottom: navOffset + 12,
           }}
-        >
-          <View style={bannerSlot} collapsable={false}>
+          ListHeaderComponent={<View style={bannerSlot} collapsable={false}>
             <HomeBanner onVisible={setBannerOn} />
-          </View>
-          <View style={afterBanner}>
-          {categories.map((group) => (
-            <MovieCategoryRow
-              key={group.categoryName}
-              title={t(`home.categories.${group.categoryName}`)}
-              movies={group.movies}
-              language={language}
-              cardWidth={cardWidth}
-              contentPad={CONTENT_PAD}
-            />
-          ))}
-          </View>
-        </ScrollView>
+          </View>}
+          renderItem={({ item: group, index }) => (
+            <View style={index === 0 ? afterBanner : undefined}>
+              <MovieCategoryRow
+                title={t(`home.categories.${group.categoryName}`)}
+                movies={group.movies}
+                language={language}
+                cardWidth={cardWidth}
+                contentPad={CONTENT_PAD}
+              />
+            </View>
+          )}
+        />
       )}
 
       <View
