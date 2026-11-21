@@ -10,7 +10,7 @@ import type { AppLanguage } from '@/src/stores/useLanguageStore';
 import type { Movie } from '@/src/types/movie';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 const SAVE_ACTIVE = '#1E4FD6';
@@ -42,7 +42,7 @@ export function MovieCardSkeleton({ width }: { width: number }) {
   );
 }
 
-export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
+export const MovieCard = memo(function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
   const { colors } = useTheme();
   const isSaved = useWishlistStore((s) => s.isSaved(movie.id));
   const toggle = useWishlistStore((s) => s.toggle);
@@ -51,7 +51,7 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
   const [readyPoster, setReadyPoster] = useState<string | null>(null);
   const lang = language === 'en' ? 'uz' : language;
   const title = displayMovieTitle(movie, lang);
-  const poster = resolveMoviePoster(movie.homeImgPoster);
+  const poster = useMemo(() => resolveMoviePoster(movie.homeImgPoster), [movie.homeImgPoster]);
   const posterKey = movie.homeImgPoster ?? '';
   const posterH = Math.round(width * 1.3);
   const posterReady = posterKey.length > 0 && readyPoster === posterKey;
@@ -100,7 +100,10 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
           <Image
             source={poster}
             style={styles.poster}
-            contentFit="fill"
+            contentFit="cover"
+            allowDownscaling
+            enforceEarlyResizing
+            cachePolicy="memory-disk"
             onLoad={() => setReadyPoster(posterKey)}
             onError={() => setReadyPoster(posterKey)}
           />
@@ -144,7 +147,7 @@ export function MovieCard({ movie, language, width, onPress }: MovieCardProps) {
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

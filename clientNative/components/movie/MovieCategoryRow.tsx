@@ -1,4 +1,5 @@
 import { FlatList } from 'react-native';
+import { memo } from 'react';
 import { MovieCard } from '@/components/movie/MovieCard';
 import type { AppLanguage } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -15,7 +16,7 @@ type MovieCategoryRowProps = {
   contentPad?: number;
 };
 
-export function MovieCategoryRow({
+export const MovieCategoryRow = memo(function MovieCategoryRow({
   title,
   movies,
   language,
@@ -39,7 +40,7 @@ export function MovieCategoryRow({
         keyExtractor={(movie) => String(movie.id)}
         initialNumToRender={3}
         maxToRenderPerBatch={3}
-        windowSize={3}
+        windowSize={5}
         nestedScrollEnabled
         showsHorizontalScrollIndicator={false}
         getItemLayout={(_, index) => ({ length: cardWidth + GAP, offset: (cardWidth + GAP) * index, index })}
@@ -52,7 +53,7 @@ export function MovieCategoryRow({
       />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   section: {

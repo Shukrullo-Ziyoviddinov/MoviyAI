@@ -1,15 +1,8 @@
 import { useTheme } from '@/src/stores/useThemeStore';
-import { useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, {
-  Easing,
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
+import { useContext } from 'react';
+import { SkeletonGroupContext, useSkeletonAnimation } from './SkeletonPulse';
+import { View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 type SkeletonLoaderProps = {
   width?: number | `${number}%`;
@@ -18,48 +11,25 @@ type SkeletonLoaderProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function SkeletonLoader({
-  width,
-  height,
-  borderRadius = 8,
-  style,
-}: SkeletonLoaderProps) {
-  const { isDark } = useTheme();
-  const opacity = useSharedValue(0.45);
-
-  useFocusEffect(useCallback(() => {
-    opacity.value = withRepeat(
-      withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true
-    );
-    return () => cancelAnimation(opacity);
-  }, [opacity]));
-
-  const pulse = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        styles.bone,
-        {
-          ...(width != null ? { width } : null),
-          ...(height != null ? { height } : null),
-          borderRadius,
-          backgroundColor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(17,24,39,0.10)',
-        },
-        pulse,
-        style,
-      ]}
-    />
-  );
+export function SkeletonLoader(props: SkeletonLoaderProps) {
+  const grouped = useContext(SkeletonGroupContext);
+  return grouped ? <Bone {...props} /> : <AnimatedBone {...props} />;
 }
 
-const styles = StyleSheet.create({
-  bone: {
-    overflow: 'hidden',
-  },
-});
+function AnimatedBone(props: SkeletonLoaderProps) {
+  const pulse = useSkeletonAnimation();
+  return <Bone {...props} pulse={pulse} />;
+}
+
+function Bone({ width, height, borderRadius = 8, style, pulse }: SkeletonLoaderProps & { pulse?: ReturnType<typeof useSkeletonAnimation> }) {
+  const { isDark } = useTheme();
+  const base = [
+      styles.bone,
+      { ...(width != null ? { width } : null), ...(height != null ? { height } : null), borderRadius,
+        backgroundColor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(17,24,39,0.10)' },
+      style,
+    ];
+  return pulse ? <Animated.View pointerEvents="none" style={[base, pulse]} /> : <View pointerEvents="none" style={base} />;
+}
+
+const styles = StyleSheet.create({ bone: { overflow: 'hidden' } });

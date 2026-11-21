@@ -1,3 +1,4 @@
+import { SkeletonGroup } from '@/components/common/SkeletonPulse';
 import { SkeletonLoader } from '@/components/common/SkeletonLoader';
 import { FloatingAiButton } from '@/components/home/FloatingAiButton';
 import { HomeEmptyState } from '@/components/home/HomeEmptyState';
@@ -12,16 +13,15 @@ import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import { groupMoviesByCategory } from '@/src/utils/groupMovies';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { FlatList, ScrollView } from 'react-native';
+import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CONTENT_PAD = 16;
 const HEADER_ROW = 44;
 const CARD_GAP = 12;
-const SKELETON_ROWS = 3;
 const SKELETON_CARDS = 3;
 
 export default function HomeScreen() {
@@ -36,19 +36,19 @@ export default function HomeScreen() {
   const error = useMoviesStore((s) => s.error);
   const loadMovies = useMoviesStore((s) => s.loadMovies);
   const loadWishlistIds = useWishlistStore((s) => s.loadIds);
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const [bannerOn, setBannerOn] = useState(true);
 
   const headerH = insets.top + 10 + HEADER_ROW;
   const bannerH = homeBannerHeight(width);
   const afterBanner = [styles.afterBanner, { backgroundColor: colors.bg }];
-  const bannerSlot = {
+  const bannerSlot = useMemo(() => ({
     height: bannerOn ? bannerH : 0,
     maxHeight: bannerOn ? bannerH : 0,
     overflow: 'hidden' as const,
     flexGrow: 0,
     flexShrink: 0,
-  };
+  }), [bannerOn, bannerH]);
   const cardWidth = useMemo(() => Math.round(width * 0.39), [width]);
   const showSkeleton = movies.length === 0 && !error && (loading || !loaded);
   const categories = useMemo(() => groupMoviesByCategory(movies), [movies]);
@@ -58,92 +58,67 @@ export default function HomeScreen() {
     void loadWishlistIds();
   }, [loadMovies, loadWishlistIds]);
 
-  const goToChat = () => {
-    router.push('/');
-  };
+  const goToChat = useCallback(() => router.push('/'), []);
+  const header = useMemo(() => (
+    <View style={bannerSlot} collapsable={false}>
+      <HomeBanner onVisible={setBannerOn} />
+    </View>
+  ), [bannerSlot]);
+  const renderCategory = useCallback(({ item: group, index }: {
+    item: (typeof categories)[number]; index: number;
+  }) => (
+    <View style={index === 0 ? styles.afterBanner : undefined}>
+      <MovieCategoryRow
+        title={t(`home.categories.${group.categoryName}`)}
+        movies={group.movies}
+        language={language}
+        cardWidth={cardWidth}
+        contentPad={CONTENT_PAD}
+      />
+    </View>
+  ), [t, language, cardWidth]);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      {showSkeleton ? (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={false}
-          contentContainerStyle={{
-            paddingTop: bannerOn ? 0 : headerH,
-            paddingBottom: navOffset + 12,
-          }}
-        >
-          <View style={bannerSlot} collapsable={false}>
-            <HomeBanner onVisible={setBannerOn} />
-          </View>
-          <View style={afterBanner}>
-          {Array.from({ length: SKELETON_ROWS }, (_, row) => (
-            <View key={row} style={styles.skelSection}>
-              <SkeletonLoader
-                width={Math.round(cardWidth * 1.35)}
-                height={22}
-                borderRadius={8}
-                style={{ marginBottom: 12, marginLeft: CONTENT_PAD }}
-              />
-              <View style={[styles.skelRow, { paddingHorizontal: CONTENT_PAD }]}>
-                {Array.from({ length: SKELETON_CARDS }, (_, card) => (
-                  <View
-                    key={card}
-                    style={{ width: cardWidth, marginRight: CARD_GAP }}
-                  >
-                    <MovieCardSkeleton width={cardWidth} />
-                  </View>
-                ))}
+      <FlatList
+        data={error ? [] : categories}
+        keyExtractor={(group) => group.categoryName}
+        renderItem={renderCategory}
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={5}
+        scrollEnabled
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingTop: bannerOn ? 0 : headerH,
+          paddingBottom: navOffset + 12,
+        }}
+        ListHeaderComponent={header}
+        ListEmptyComponent={showSkeleton ? (
+          <SkeletonGroup style={afterBanner}>
+            {Array.from({ length: Math.max(1, Math.ceil(((height || 800) - bannerH) / (cardWidth * 1.3 + 98))) }, (_, row) => (
+              <View key={row} style={styles.skelSection}>
+                <SkeletonLoader
+                  width={Math.round(cardWidth * 1.35)} height={22} borderRadius={8}
+                  style={{ marginBottom: 12, marginLeft: CONTENT_PAD }}
+                />
+                <View style={[styles.skelRow, { paddingHorizontal: CONTENT_PAD }]}>
+                  {Array.from({ length: SKELETON_CARDS }, (_, card) => (
+                    <View key={card} style={{ width: cardWidth, marginRight: CARD_GAP }}>
+                      <MovieCardSkeleton width={cardWidth} />
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
-          ))}
-          </View>
-        </ScrollView>
-      ) : error || categories.length === 0 ? (
-        <View
-          style={[
-            styles.emptyWrap,
-            {
-              paddingTop: bannerOn ? 0 : headerH,
-              paddingBottom: navOffset + 8,
-            },
-          ]}
-        >
-          <View style={bannerSlot} collapsable={false}>
-            <HomeBanner onVisible={setBannerOn} />
-          </View>
+            ))}
+          </SkeletonGroup>
+        ) : (
           <View style={[styles.emptyBody, afterBanner]}>
             <HomeEmptyState onGoToChat={goToChat} />
           </View>
-        </View>
-      ) : (
-        <FlatList
-          data={categories}
-          keyExtractor={(group) => group.categoryName}
-          initialNumToRender={2}
-          maxToRenderPerBatch={2}
-          windowSize={3}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingTop: bannerOn ? 0 : headerH,
-            paddingBottom: navOffset + 12,
-          }}
-          ListHeaderComponent={<View style={bannerSlot} collapsable={false}>
-            <HomeBanner onVisible={setBannerOn} />
-          </View>}
-          renderItem={({ item: group, index }) => (
-            <View style={index === 0 ? afterBanner : undefined}>
-              <MovieCategoryRow
-                title={t(`home.categories.${group.categoryName}`)}
-                movies={group.movies}
-                language={language}
-                cardWidth={cardWidth}
-                contentPad={CONTENT_PAD}
-              />
-            </View>
-          )}
-        />
-      )}
+        )}
+      />
 
       <View
         style={[styles.headerOverlay, { paddingTop: insets.top + 10 }]}
@@ -161,9 +136,6 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1,
-  },
-  emptyWrap: {
     flex: 1,
   },
   emptyBody: {

@@ -1,3 +1,4 @@
+import { SkeletonPulseProvider } from '@/components/common/SkeletonPulse';
 import { SplashScreen as AppSplashScreen } from '@/components/SplashScreen';
 import { GoogleAuthModal } from '@/components/auth/GoogleAuthModal';
 import { LanguageModal } from '@/components/language/LanguageModal';
@@ -91,6 +92,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <SkeletonPulseProvider>
       {showSplash ? (
         <>
           <StatusBar style="light" hidden />
@@ -99,6 +101,7 @@ export default function RootLayout() {
       ) : (
         <AppNavigator />
       )}
+      </SkeletonPulseProvider>
     </SafeAreaProvider>
   );
 }

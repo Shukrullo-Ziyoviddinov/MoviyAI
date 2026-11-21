@@ -1,3 +1,6 @@
+import { SkeletonGroup } from '@/components/common/SkeletonPulse';
+import { DeferredSection } from '@/components/common/DeferredSection';
+import { createDeferredViewport } from '@/src/utils/deferred-viewport';
 import { WatchButton } from "@/components/movie/WatchOptionModal";
 import { displayMovieTitle } from "@/src/utils/movieDisplay";
 import {
@@ -121,7 +124,7 @@ export default function MovieDetailScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const language = useLanguageStore((s) => s.language);
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isSaved = useWishlistStore((s) => s.isSaved(movieId));
   const toggle = useWishlistStore((s) => s.toggle);
   const requireAuth = useAuthStore((s) => s.requireAuth);
@@ -187,6 +190,7 @@ export default function MovieDetailScreen() {
   const posterReady = posterKey.length > 0 && readyPoster === posterKey;
   const posterH = Math.round(width * 1.15);
   const fadeH = Math.round(posterH * 0.42);
+  const deferredViewport = useMemo(() => createDeferredViewport(height - posterH + 120), [movieId, width, height, posterH]);
   const description = movie
     ? movie.description[lang] ?? movie.description.uz
     : null;
@@ -339,7 +343,7 @@ export default function MovieDetailScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {!movie && !error ? (
-        <View style={styles.detailBody}>
+        <SkeletonGroup style={styles.detailBody}>
           <View
             style={[styles.posterFixed, { height: posterH }]}
             pointerEvents="none"
@@ -407,53 +411,10 @@ export default function MovieDetailScreen() {
                   borderRadius={8}
                 />
               </View>
-              <View style={styles.skelActorRow}>
-                {Array.from({ length: 4 }, (_, index) => (
-                  <View key={index} style={styles.skelActor}>
-                    <SkeletonLoader width={72} height={72} borderRadius={36} />
-                    <SkeletonLoader width={88} height={20} borderRadius={8} />
-                  </View>
-                ))}
-              </View>
-              <View style={styles.skelComments}>
-                {Array.from({ length: 2 }, (_, index) => (
-                  <View key={index} style={styles.skelCommentRow}>
-                    <SkeletonLoader width={40} height={40} borderRadius={20} />
-                    <View style={styles.skelCommentBody}>
-                      <SkeletonLoader width={96} height={16} borderRadius={6} />
-                      <SkeletonLoader
-                        width={Math.max(width - 82, 120)}
-                        height={54}
-                        borderRadius={8}
-                      />
-                    </View>
-                  </View>
-                ))}
-              </View>
-              <View style={styles.skelSimilarRow}>
-                {Array.from({ length: 3 }, (_, index) => {
-                  const cardW = Math.round(width * 0.36);
-                  const cardPosterH = Math.round(cardW * 1.35);
-                  return (
-                    <View key={index} style={{ width: cardW }}>
-                      <SkeletonLoader
-                        width={cardW}
-                        height={cardPosterH}
-                        borderRadius={14}
-                      />
-                      <SkeletonLoader
-                        width={cardW}
-                        height={22}
-                        borderRadius={8}
-                        style={{ marginTop: 8 }}
-                      />
-                    </View>
-                  );
-                })}
-              </View>
+
             </View>
           </ScrollView>
-        </View>
+        </SkeletonGroup>
       ) : error || !movie ? (
         <View style={[styles.center, { paddingHorizontal: 24 }]}>
           <Text style={{ color: colors.textMuted, textAlign: 'center' }}>
@@ -491,6 +452,8 @@ export default function MovieDetailScreen() {
           </View>
 
           <ScrollView
+            scrollEventThrottle={64}
+            onScroll={event => deferredViewport.update(event.nativeEvent.contentOffset.y + event.nativeEvent.layoutMeasurement.height - posterH + 120)}
             style={styles.scrollLayer}
             showsVerticalScrollIndicator={false}
             nestedScrollEnabled
@@ -739,7 +702,7 @@ export default function MovieDetailScreen() {
           </View>
 
           {movie.actors && movie.actors.length > 0 ? (
-            <View style={styles.actorsSection}>
+            <DeferredSection key={`actors-${movieId}`} viewport={deferredViewport} minHeight={130} style={styles.actorsSection}>{() => (<>
               <Text style={[styles.actorsTitle, { color: colors.text }]}>
                 {t('movie.actorsTitle')}
               </Text>
@@ -756,10 +719,10 @@ export default function MovieDetailScreen() {
                 contentContainerStyle={styles.actorsRow}
                 renderItem={({ item: actor }) => <ActorChip actor={actor} />}
               />
-            </View>
+            </>)}</DeferredSection>
           ) : null}
 
-          <View style={styles.commentsSection}>
+          <DeferredSection key={`comments-${movieId}`} viewport={deferredViewport} minHeight={240} style={styles.commentsSection}>{() => (<>
             <View
               style={[
                 styles.commentsCard,
@@ -1000,10 +963,10 @@ export default function MovieDetailScreen() {
                 </Pressable>
               ) : null}
             </View>
-          </View>
+          </>)}</DeferredSection>
 
           {similarMovies.length > 0 ? (
-            <View style={styles.similarSection}>
+            <DeferredSection key={`similar-${movieId}`} viewport={deferredViewport} minHeight={350} style={styles.similarSection}>{() => (<>
               <Text style={[styles.similarTitle, { color: colors.text }]}>
                 {t('movie.similarMovies')}
               </Text>
@@ -1021,7 +984,7 @@ export default function MovieDetailScreen() {
                   <SimilarMovieCard movie={item} language={language} width={Math.round(width * 0.36)} />
                 )}
               />
-            </View>
+            </>)}</DeferredSection>
           ) : null}
           </View>
           </ScrollView>
