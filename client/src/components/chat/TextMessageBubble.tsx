@@ -12,10 +12,10 @@ export function TextMessageBubble({ text, role = "user", movie, characterImages 
 
   return (
     <div className="mb-2.5 flex w-full justify-end px-3.5">
-      <div className="relative max-w-[min(78%,420px)]">
+      <div className="relative min-w-0 max-w-[min(78%,420px)]">
         <div
-          className="rounded-tl-[18px] rounded-tr-[18px] rounded-br-none rounded-bl-[18px] px-3.5 py-2.5 text-[15px] leading-[21px]"
-          style={{ backgroundColor: colors.accent, color: colors.textOnAccent }}
+          className="whitespace-pre-wrap rounded-tl-[18px] rounded-tr-[18px] rounded-br-none rounded-bl-[18px] px-3.5 py-2.5 text-[15px] leading-[21px]"
+          style={{ backgroundColor: colors.accent, color: colors.textOnAccent, overflowWrap: 'anywhere' }}
         >
           {text}
         </div>
