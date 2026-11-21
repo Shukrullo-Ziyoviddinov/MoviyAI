@@ -11,7 +11,7 @@ import { MediaViewer } from "@/components/chat/MediaViewer";
 import { VideoModal } from "@/components/chat/VideoModal";
 import { GuideSmsBubble } from "@/components/common/GuideSmsBubble";
 import { useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
-import { useTelegramChatHeight } from '@/components/telegram/useTelegramChatHeight';
+import { useChatViewport } from '@/components/chat/useChatViewport';
 import { useTheme } from "@/components/theme/theme-state";
 import { useT } from "@/i18n/useT";
 
@@ -25,9 +25,9 @@ function ChatScreen() {
   const [guideReady, setGuideReady] = useState(false);
   const [composerH, setComposerH] = useState(180);
   const dockRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
   const { active: telegram, back } = useTelegramChrome();
-  const telegramHeight = useTelegramChatHeight(telegram);
-  const composerInset = composerH + (telegram ? 20 : 0);
+  useChatViewport(mainRef, telegram);
   const topInset = telegram ? back + HEADER_ROW_HEIGHT : HEADER_ROW_HEIGHT;
   const hasMessages = loading || messages.length > 0 || Boolean(error);
 
@@ -60,15 +60,16 @@ function ChatScreen() {
   }
 
   return (
-    <main className="relative flex h-full w-full flex-col" style={{ backgroundColor: colors.bg, ...(telegramHeight ? { height: telegramHeight } : {}) }}>
+    <main ref={mainRef} className="fixed flex flex-col overflow-hidden"
+      style={{ backgroundColor: colors.bg, height: 'var(--chat-viewport-height, 100%)', top: 'var(--chat-viewport-top, 0px)', left: 'var(--chat-viewport-left, 0px)', width: 'var(--chat-viewport-width, 100%)' }}>
       {hasMessages ? (
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <ChatMessageList topInset={topInset} bottomInset={viewer ? 24 : composerInset} followResize={telegram} />
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <ChatMessageList topInset={topInset} bottomInset={viewer ? 24 : 16} followResize />
         </div>
       ) : (
         <div
-          className="flex flex-1 flex-col items-center justify-center px-2 min-[384px]:px-3.5"
-          style={{ paddingTop: topInset, paddingBottom: composerInset }}
+          className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-2 min-[384px]:px-3.5"
+          style={{ paddingTop: topInset, paddingBottom: 16 }}
         >
           <img
             src="/images/ai_preview_rev_1.png"
@@ -88,8 +89,8 @@ function ChatScreen() {
       {viewer ? null : (
         <div
           ref={dockRef}
-          className="absolute inset-x-0 bottom-0 z-20 px-3 pb-[max(10px,var(--app-bottom-inset,env(safe-area-inset-bottom)))]"
-          style={telegram ? { bottom: 8 } : undefined}
+          className="relative z-20 shrink-0 px-3 motion-safe:transition-[padding-bottom] motion-safe:duration-150 motion-safe:ease-out"
+          style={{ paddingBottom: 'var(--chat-composer-bottom, max(10px, env(safe-area-inset-bottom, 0px)))' }}
         >
           <ChatComposer />
         </div>

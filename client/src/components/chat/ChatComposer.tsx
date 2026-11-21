@@ -36,7 +36,7 @@ export function ChatComposer() {
           placeholder={t("chat.placeholder")}
           rows={1}
           maxLength={20000}
-          className="max-h-[110px] min-h-12 flex-1 resize-none rounded-3xl border px-[18px] py-3 text-[15px] outline-none"
+          className="max-h-[110px] min-h-12 flex-1 resize-none rounded-3xl border px-[18px] py-3 text-base outline-none md:text-[15px]"
           style={{
             backgroundColor: colors.panelSoft,
             borderColor: colors.borderSoft,
