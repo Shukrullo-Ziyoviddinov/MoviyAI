@@ -606,11 +606,11 @@ function MovieHeroInfo({ children, poster, title = '', loading = false, bone }: 
   const extraPoster = !telegram && (loading || Boolean(poster));
   return <div className={`flex flex-col md:absolute md:bottom-full md:left-0 md:z-[3] md:h-dvh md:w-[min(560px,72%)] md:justify-end md:px-8 md:pb-[16vh] ${extraPoster ? 'min-[1132px]:w-[min(900px,100%)]' : ''}`}>
     <div className={extraPoster ? 'min-[1132px]:flex min-[1132px]:items-stretch min-[1132px]:gap-8' : undefined}>
-      <div className="flex min-w-0 flex-1 flex-col">{children}</div>
-      {extraPoster && <div className="relative hidden w-[220px] shrink-0 overflow-hidden rounded-[14px] min-[1132px]:block">
+      {extraPoster && <div className="relative order-first hidden w-[220px] shrink-0 overflow-hidden rounded-[14px] min-[1132px]:block">
         {loading ? <div className="absolute inset-0 animate-pulse" style={{ backgroundColor: bone }} /> :
           <img src={poster} alt={title} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain" />}
       </div>}
+      <div className="flex min-w-0 flex-1 flex-col">{children}</div>
     </div>
   </div>;
 }
