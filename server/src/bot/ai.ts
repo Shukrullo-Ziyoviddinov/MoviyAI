@@ -19,7 +19,7 @@ export async function answerBot(text: string, media: ChatImageUrl[], history: Ai
   else if (sourcesOnly && previousMovie?.sources.length) result = { text: 'Manbalar:', model: 'bot-sources', telegramSources: previousMovie.sources };
   else if (previousMovie && isContextMovieFollowup(text, previousMovie)) result = await movieFollowup(text, previousMovie);
   else if (isMovieRecommendation(text)) result = await recommendMovies(text, history);
-  else if (isNamedMovieSearch(text)) result = await findMovieFromText(text);
+  else if (isNamedMovieSearch(text, history)) result = await findMovieFromText(text, undefined, undefined, history);
   else if (previousMovie && isUzbekMovieRequest(text)) {
     const links = await findUzbekMovieLinks(previousMovie);
     result = { text: uzbekLookupReply(text, links.length > 0), model: 'uzbek-movie-search', movie: { ...previousMovie, titleUz: uzbekReleaseTitle(links) ?? previousMovie.titleUz, uzbekLinks: links, linksOnly: true } };

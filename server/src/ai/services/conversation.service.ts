@@ -188,8 +188,8 @@ export async function sendConversationMessage(userId: string, id: string, reques
             result=await movieFollowup(text,previousMovie,onDelta);
         } else if(!searchImages.length&&isMovieRecommendation(text)) {
             result=await recommendMovies(text,history,onDelta);
-        } else if(!searchImages.length&&isNamedMovieSearch(text)) {
-            result=await findMovieFromText(text,onDelta);
+        } else if(!searchImages.length&&isNamedMovieSearch(text,history)) {
+            result=await findMovieFromText(text,onDelta,undefined,history);
         } else if(!searchImages.length&&previousMovie&&isUzbekMovieRequest(text)) {
             const uzbekLinks=await findUzbekMovieLinks(previousMovie);
             result={text:uzbekLookupReply(text,uzbekLinks.length>0),model:'uzbek-movie-search',movie:{...previousMovie,titleUz:uzbekReleaseTitle(uzbekLinks)??previousMovie.titleUz,uzbekLinks,linksOnly:true}};

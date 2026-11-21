@@ -5,6 +5,7 @@ import { createHmac, timingSafeEqual, randomUUID, randomBytes } from 'node:crypt
 import { Readable, PassThrough, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { formatTelegramText, entitiesForChunk } from '../dist/bot/format.js';
+import { isNamedMovieSearch } from '../dist/ai/services/text-movie.service.js';
 import { hasVideoPlatformLink } from '../dist/ai/video-import/services/video-import-chat.service.js';
 
 // Isolated dependencies: no production Telegram, Gemini, R2 or database calls.
@@ -28,6 +29,17 @@ test('ordinary bot text uses the same streaming model transport as web and retur
   assert.equal(streamed, true); assert.equal(result.text, 'Salom! Qanday kino izlayapsiz?');
   assert.equal(result.model, 'same-chat-model'); assert.deepEqual(result.characterImages, []);
 });
+test('bot remembered-film descriptions and follow-up clues use the same text-understanding route',async()=>{
+ const history=[{role:'user',text:'Bitta kino bor edi unda yigit vaqtni ortga qaytarardi'},{role:'model',text:'Qaysi yil atrofida edi?'}];
+ let called=0;
+ const {answerBot}=load('ai',{
+  isContextMovieFollowup:()=>false,isMovieRecommendation:()=>false,isNamedMovieSearch,
+  findMovieFromText:async(text,_delta,_signal,context)=>{called++;assert.equal(text,'taxminan 2010 yillarda');assert.deepEqual(context,history);return {text:'Found',model:'test'};},
+  chatWithGemma:async()=>{throw Error('must use text lookup');},
+ },['answerBot']);
+ assert.equal((await answerBot('taxminan 2010 yillarda',[],history)).text,'Found');assert.equal(called,1);
+});
+
 test('long ordinary answers remain complete and emoji are not split across Telegram messages', () => {
   const { splitTelegramText } = load('api', {}, ['splitTelegramText']);
   const text = 'x'.repeat(3999) + '🎬' + 'y'.repeat(5000);
