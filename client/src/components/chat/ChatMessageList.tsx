@@ -9,7 +9,7 @@ import { ChatSkeleton } from '@/components/chat/ChatSkeleton';
 import {useT} from '@/i18n/useT';
 import { useChat } from '@/components/chat/chat-state';
 
-export function ChatMessageList({topInset,bottomInset}:{topInset:number;bottomInset:number}) {
+export function ChatMessageList({topInset,bottomInset,followResize=false}:{topInset:number;bottomInset:number;followResize?:boolean}) {
  const t=useT();
  const {needsAttachment,paused,messages,sending,streamingText,activeId,error,retry,loading,refreshMedia,progressStage,failureCode}=useChat();
  useEffect(()=>{const timer=setInterval(()=>{void refreshMedia();},60000);return()=>clearInterval(timer);},[refreshMedia]);
@@ -32,6 +32,16 @@ export function ChatMessageList({topInset,bottomInset}:{topInset:number;bottomIn
   const frame=requestAnimationFrame(()=>{const scroller=root.current?.parentElement;if(scroller && following.current)scroller.scrollTop=loading ? 0 : scroller.scrollHeight;});
   return()=>cancelAnimationFrame(frame);
  },[messages,streamingText,sending,error,bottomInset,loading]);
+ useEffect(()=>{
+  const scroller=root.current?.parentElement;if(!followResize||!scroller)return;
+  let frame=0;
+  const observer=new ResizeObserver(()=>{
+   cancelAnimationFrame(frame);
+   frame=requestAnimationFrame(()=>{if(following.current&&!loading)scroller.scrollTop=scroller.scrollHeight;});
+  });
+  observer.observe(scroller);
+  return()=>{observer.disconnect();cancelAnimationFrame(frame);};
+ },[followResize,loading]);
  if(loading) return <div ref={root} aria-busy="true" className="min-h-full w-full" style={{paddingTop:topInset+8,paddingBottom:bottomInset}}><ChatSkeleton/></div>;
  return <div ref={root} aria-busy={sending} className="flex min-h-full w-full flex-col justify-start" style={{paddingTop:topInset+8,paddingBottom:bottomInset}}>
   {messages.map(item=>item.kind==='text'?<TextMessageBubble key={item.id} text={item.text} role={item.role} movie={item.movie} characterImages={item.characterImages}/>:<MediaGridBlock key={item.id} items={item.items}/>)}

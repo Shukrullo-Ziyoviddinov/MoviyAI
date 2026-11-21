@@ -11,6 +11,7 @@ import { MediaViewer } from "@/components/chat/MediaViewer";
 import { VideoModal } from "@/components/chat/VideoModal";
 import { GuideSmsBubble } from "@/components/common/GuideSmsBubble";
 import { useTelegramChrome } from "@/components/telegram/TelegramFullscreen";
+import { useTelegramChatHeight } from '@/components/telegram/useTelegramChatHeight';
 import { useTheme } from "@/components/theme/theme-state";
 import { useT } from "@/i18n/useT";
 
@@ -25,6 +26,8 @@ function ChatScreen() {
   const [composerH, setComposerH] = useState(180);
   const dockRef = useRef<HTMLDivElement>(null);
   const { active: telegram, back } = useTelegramChrome();
+  const telegramHeight = useTelegramChatHeight(telegram);
+  const composerInset = composerH + (telegram ? 20 : 0);
   const topInset = telegram ? back + HEADER_ROW_HEIGHT : HEADER_ROW_HEIGHT;
   const hasMessages = loading || messages.length > 0 || Boolean(error);
 
@@ -57,15 +60,15 @@ function ChatScreen() {
   }
 
   return (
-    <main className="relative flex h-full w-full flex-col" style={{ backgroundColor: colors.bg }}>
+    <main className="relative flex h-full w-full flex-col" style={{ backgroundColor: colors.bg, ...(telegramHeight ? { height: telegramHeight } : {}) }}>
       {hasMessages ? (
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <ChatMessageList topInset={topInset} bottomInset={viewer ? 24 : composerH} />
+          <ChatMessageList topInset={topInset} bottomInset={viewer ? 24 : composerInset} followResize={telegram} />
         </div>
       ) : (
         <div
           className="flex flex-1 flex-col items-center justify-center px-2 min-[384px]:px-3.5"
-          style={{ paddingTop: topInset, paddingBottom: composerH }}
+          style={{ paddingTop: topInset, paddingBottom: composerInset }}
         >
           <img
             src="/images/ai_preview_rev_1.png"
@@ -86,6 +89,7 @@ function ChatScreen() {
         <div
           ref={dockRef}
           className="absolute inset-x-0 bottom-0 z-20 px-3 pb-[max(10px,var(--app-bottom-inset,env(safe-area-inset-bottom)))]"
+          style={telegram ? { bottom: 8 } : undefined}
         >
           <ChatComposer />
         </div>
