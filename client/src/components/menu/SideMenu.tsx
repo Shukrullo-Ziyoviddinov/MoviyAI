@@ -269,8 +269,13 @@ function MenuBody({
     router.push(href);
   }
 
-  function onItem(key: Exclude<NavKey, "kino">) {
+  function onItem(key: NavKey) {
     setHistoryMenuId(null);
+    if (key === "kino") {
+      onPick?.();
+      if (pathname !== "/kino-olami") router.push("/kino-olami");
+      return;
+    }
     if (collapsed) {
       onOpen?.();
       return;
@@ -362,6 +367,7 @@ function MenuBody({
           const label = labelKey ? t(labelKey) : "Kino olami";
           const active =
             (key === "home" && pathname === "/home") ||
+            (key === "kino" && pathname === "/kino-olami") ||
             (key === "profile" && pathname === "/profile") ||
             (key === "settings" && pathname === "/settings");
           return (
@@ -369,8 +375,10 @@ function MenuBody({
               <button
                 type="button"
                 aria-label={label}
-                aria-disabled={key === "kino"}
-                onClick={key === "kino" ? (event) => event.stopPropagation() : () => onItem(key)}
+                onClick={(event) => {
+                  if (key === "kino") event.stopPropagation();
+                  onItem(key);
+                }}
                 className={
                   collapsed
                     ? "flex h-11 w-11 items-center justify-center rounded-xl"

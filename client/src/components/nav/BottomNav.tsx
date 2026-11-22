@@ -13,10 +13,10 @@ import { useT } from "@/i18n/useT";
 export const BOTTOM_NAV_BAR = 60;
 export const BOTTOM_NAV_LIFT = 10;
 
-type TabKey = "home" | "favorites" | "chat" | "menu" | "profile";
+type TabKey = "home" | "favorites" | "kino" | "menu" | "profile";
 type IconComp = (props: { size?: number; color?: string }) => ReactNode;
 
-function ChatLogo() {
+function KinoLogo() {
   return (
     <Image
       src="/images/Kino-olami%20logo_preview_rev_1.png"
@@ -31,7 +31,7 @@ function ChatLogo() {
 const TABS: { key: TabKey; labelKey: string; Icon: IconComp; href?: string }[] = [
   { key: "home", labelKey: "menu.home", Icon: HomeIcon, href: "/home" },
   { key: "favorites", labelKey: "menu.favorites", Icon: HeartIcon, href: "/favorites" },
-  { key: "chat", labelKey: "menu.chat", Icon: ChatLogo },
+  { key: "kino", labelKey: "", Icon: KinoLogo, href: "/kino-olami" },
   { key: "menu", labelKey: "menu.menyu", Icon: MenuIcon },
   { key: "profile", labelKey: "menu.profile", Icon: PersonIcon, href: "/profile" },
 ];
@@ -60,7 +60,7 @@ function BottomNavBar() {
 
   if (mobileOpen) return null;
 
-  const active: TabKey | null = pathname === "/favorites" ? "favorites" : pathname === "/home" ? "home" : null;
+  const active = TABS.find((tab) => tab.href === pathname)?.key;
 
   function onTab(key: TabKey, href?: string) {
     if (key === "menu") {
@@ -89,8 +89,7 @@ function BottomNavBar() {
           <button
             key={key}
             type="button"
-            disabled={key === "chat"}
-            aria-label={key === "chat" ? t(labelKey) : undefined}
+            aria-label={key === "kino" ? "Kino olami" : undefined}
             onClick={() => onTab(key, href)}
             className="flex h-full min-w-0 flex-1 items-center justify-center px-[3px] py-[5px]"
           >
@@ -107,7 +106,7 @@ function BottomNavBar() {
               ) : (
                 <Icon size={24} color={color} />
               )}
-              {key !== "chat" && (
+              {key !== "kino" && (
                 <span
                   className={`max-w-full truncate text-[12px] leading-[14px] ${isActive ? "font-bold" : "font-medium"}`}
                   style={{ color: isActive ? colors.accentBright : colors.textMuted }}

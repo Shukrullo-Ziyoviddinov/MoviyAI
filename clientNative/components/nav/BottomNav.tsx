@@ -34,13 +34,13 @@ export function useBottomNavOffset(enabled = true) {
   return BOTTOM_NAV_BAR + Math.max(insets.bottom, 0) + BOTTOM_NAV_LIFT;
 }
 
-type TabKey = 'home' | 'favorites' | 'chat' | 'menu' | 'profile';
+type TabKey = 'home' | 'favorites' | 'kino' | 'menu' | 'profile';
 type IconComp = ComponentType<{ size?: number; color?: string }>;
 
-const CHAT_LOGO = require('../../assets/images/Kino-olami logo_preview_rev_1.png');
+const KINO_LOGO = require('../../assets/images/Kino-olami logo_preview_rev_1.png');
 
-function ChatLogo() {
-  return <Image source={CHAT_LOGO} style={styles.chatLogo} contentFit="contain" />;
+function KinoLogo() {
+  return <Image source={KINO_LOGO} style={styles.kinoLogo} contentFit="contain" />;
 }
 
 function shouldShowNav(pathname: string) {
@@ -91,7 +91,7 @@ export function BottomNav() {
     key: TabKey;
     label: string;
     Icon: IconComp;
-    onPress?: () => void;
+    onPress: () => void;
   }[] = [
     {
       key: 'home',
@@ -106,9 +106,10 @@ export function BottomNav() {
       onPress: goFavorites,
     },
     {
-      key: 'chat',
-      label: t('menu.chat'),
-      Icon: ChatLogo,
+      key: 'kino',
+      label: 'Kino olami',
+      Icon: KinoLogo,
+      onPress: () => router.push('/kino-olami'),
     },
     {
       key: 'menu',
@@ -148,7 +149,6 @@ export function BottomNav() {
             key={key}
             style={styles.tab}
             onPress={onPress}
-            disabled={!onPress}
             accessibilityRole="button"
             accessibilityLabel={label}
           >
@@ -168,7 +168,7 @@ export function BottomNav() {
               ) : (
                 <Icon size={24} color={color} />
               )}
-              {key !== 'chat' && (
+              {key !== 'kino' && (
                 <Text
                   style={[
                     styles.label,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
   },
-  chatLogo: {
+  kinoLogo: {
     width: 48,
     maxWidth: '100%',
     height: 48,

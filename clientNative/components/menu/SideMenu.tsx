@@ -58,6 +58,7 @@ type SideMenuProps = {
 
 function isNavActive(key: NavKey, pathname: string) {
   if (key === 'home') return pathname === '/home';
+  if (key === 'kino') return pathname === '/kino-olami';
   if (key === 'profile') return pathname === '/profile';
   if (key === 'settings') return pathname === '/settings';
   return false;
@@ -127,10 +128,15 @@ export function SideMenu({ children }: SideMenuProps) {
     router.push('/home');
   };
 
-  const handleNav = (key: Exclude<NavKey, 'kino'>) => {
+  const handleNav = (key: NavKey) => {
     setHistoryMenuId(null);
     if (key === 'home') {
       goHome();
+      return;
+    }
+    if (key === 'kino') {
+      closeMenu();
+      if (pathname !== '/kino-olami') router.push('/kino-olami');
       return;
     }
     if (key === 'profile') {
@@ -198,7 +204,7 @@ export function SideMenu({ children }: SideMenuProps) {
         <View style={styles.nav}>
           {NAV_ITEMS.map(({ key, labelKey, Icon }) => {
           const active = isNavActive(key, pathname);
-          const onPress = key === 'kino' ? undefined : () => handleNav(key);
+          const onPress = () => handleNav(key);
           const content = (
             <>
               <Icon size={22} color={active ? colors.accentBright : colors.icon} />
@@ -235,7 +241,7 @@ export function SideMenu({ children }: SideMenuProps) {
           }
 
             return (
-              <Pressable key={key} style={styles.navItem} onPress={onPress} disabled={!onPress}>
+              <Pressable key={key} style={styles.navItem} onPress={onPress}>
                 {content}
               </Pressable>
             );

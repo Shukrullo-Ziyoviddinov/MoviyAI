@@ -60,6 +60,7 @@ function AppNavigator() {
           >
             <Stack.Screen name="index" options={{ animation: 'none' }} />
             <Stack.Screen name="home" />
+            <Stack.Screen name="kino-olami" />
             <Stack.Screen name="recommendations/[categoryName]" />
             <Stack.Screen name="favorites" />
             <Stack.Screen name="search" />
