@@ -112,8 +112,8 @@ export const MovieCard = memo(function MovieCard({ movie, language, width, onPre
         ) : null}
 
         {rank != null ? <View pointerEvents="none" style={styles.rankBadge}>
-          <Svg width={rank === 10 ? 58 : 32} height={48}>
-            <SvgText x={2} y={41} fontSize={40} fontWeight="900" fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth={1.25} strokeLinejoin="round">{rank}</SvgText>
+          <Svg width={rank === 10 ? 68 : 38} height={58}>
+            <SvgText x={2} y={49} fontSize={48} fontWeight="900" fill="none" stroke="rgba(255,255,255,0.95)" strokeWidth={1.25} strokeLinejoin="round">{rank}</SvgText>
           </Svg>
         </View> : null}
         {showPosterChrome ? (
