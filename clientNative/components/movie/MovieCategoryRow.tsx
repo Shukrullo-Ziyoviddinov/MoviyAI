@@ -64,7 +64,7 @@ export const MovieCategoryRow = memo(function MovieCategoryRow({
 });
 
 const styles = StyleSheet.create({
-  heading: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12, alignSelf: 'flex-start' },
+  heading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12, alignSelf: 'stretch' },
   section: {
     marginBottom: 18,
   },

@@ -35,7 +35,7 @@ export function MovieCategoryRow({
         style={{ color: colors.text }}
       >
         {!ranked && isMovieSection(categoryName) ? (
-          <Link href={`/recommendations/${categoryName}`} prefetch={false} className="flex w-fit items-center gap-2">
+          <Link href={`/recommendations/${categoryName}`} prefetch={false} className="flex w-full items-center justify-between gap-3">
             {categoryTitle(categoryName, language)}
             <ChevronRightIcon size={22} color={colors.text} />
           </Link>
