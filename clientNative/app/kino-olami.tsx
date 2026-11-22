@@ -3,7 +3,7 @@ import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef } from 'react';
-import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
@@ -43,19 +43,6 @@ export default function KinoOlamiScreen() {
       paddingLeft: insets.left,
       paddingRight: insets.right,
     }]}>
-      <View style={[styles.header, { borderBottomColor: colors.borderSoft }]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Orqaga"
-          onPress={goBack}
-          style={styles.back}
-        >
-          <ChevronLeftIcon size={22} color={colors.icon} />
-        </Pressable>
-        <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]}>
-          Kino olami
-        </Text>
-      </View>
       <WebView
         ref={webView}
         source={{ uri: embedUrl }}
@@ -68,19 +55,33 @@ export default function KinoOlamiScreen() {
           canGoBack.current = navigation.canGoBack;
         }}
       />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Orqaga"
+        onPress={goBack}
+        style={[styles.back, {
+          left: insets.left + 12,
+          bottom: insets.bottom + 12,
+          backgroundColor: colors.panel,
+          borderColor: colors.borderSoft,
+        }]}
+      >
+        <ChevronLeftIcon size={22} color={colors.icon} />
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: {
-    flexDirection: 'row',
+  back: {
+    position: 'absolute',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
-    minHeight: 36,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'center',
   },
-  back: { width: 48, height: 36, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 16, fontWeight: '600' },
   webView: { flex: 1 },
 });
