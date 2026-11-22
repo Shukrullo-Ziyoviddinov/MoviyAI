@@ -77,10 +77,10 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 48,
+    minHeight: 36,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  back: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  back: { width: 48, height: 36, alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 16, fontWeight: '600' },
   webView: { flex: 1 },
 });
