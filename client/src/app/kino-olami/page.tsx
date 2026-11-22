@@ -10,7 +10,7 @@ const embedUrl = process.env.NEXT_PUBLIC_KINO_OLAMI_EMBED_URL?.trim() ||
 
 export default function KinoOlamiPage() {
   return (
-    <main className="flex h-full flex-col pt-[var(--tg-back,env(safe-area-inset-top))] pb-[calc(78px+var(--app-bottom-inset,env(safe-area-inset-bottom)))] md:pb-0">
+    <main className="flex h-full flex-col pt-[var(--tg-back,env(safe-area-inset-top))]">
       <iframe
         src={embedUrl}
         title="Kino olami"
