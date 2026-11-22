@@ -89,6 +89,11 @@ export function HomeMovies({ movies, topSearched = [], weeklySearched = [] }: { 
   const categories = groupMoviesByCategory(movies);
   const displayedTop = liveTop ?? topSearched;
   const displayedWeekly = liveWeekly ?? weeklySearched;
+  const orderedCategories = [...categories];
+  if (displayedWeekly.length) {
+    const dramaIndex = orderedCategories.findIndex(group => group.categoryName === 'dramaMovies');
+    orderedCategories.splice(dramaIndex >= 0 ? dramaIndex + 1 : orderedCategories.length, 0, { categoryName: 'weeklyTopSearchedMovies', movies: displayedWeekly });
+  }
 
   if (categories.length === 0 && !displayedTop.length && !displayedWeekly.length) {
     return (
@@ -101,11 +106,11 @@ export function HomeMovies({ movies, topSearched = [], weeklySearched = [] }: { 
   return (
     <div className="mt-4">
       {displayedTop.length > 0 && <MovieCategoryRow categoryName="topSearchedMovies" ranked movies={displayedTop} language={language} savedIds={savedIds} onToggleSave={(id) => void onToggleSave(id)} />}
-      {displayedWeekly.length > 0 && <MovieCategoryRow categoryName="weeklyTopSearchedMovies" ranked movies={displayedWeekly} language={language} savedIds={savedIds} onToggleSave={(id) => void onToggleSave(id)} />}
-      {categories.map((group) => (
+      {orderedCategories.map((group) => (
         <MovieCategoryRow
           key={group.categoryName}
           categoryName={group.categoryName}
+          ranked={group.categoryName === 'weeklyTopSearchedMovies'}
           movies={group.movies}
           language={language}
           savedIds={savedIds}

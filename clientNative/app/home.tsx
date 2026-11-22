@@ -55,11 +55,17 @@ export default function HomeScreen() {
   const cardWidth = useMemo(() => Math.round(width * 0.39), [width]);
   const showSkeleton = movies.length === 0 && !error && (loading || !loaded);
   const regularCategories = useMemo(() => groupMoviesByCategory(movies), [movies]);
-  const categories = useMemo(() => [
-    ...(topSearched.length ? [{ categoryName: 'topSearchedMovies', movies: topSearched }] : []),
-    ...(weeklySearched.length ? [{ categoryName: 'weeklyTopSearchedMovies', movies: weeklySearched }] : []),
-    ...regularCategories,
-  ], [regularCategories, topSearched, weeklySearched]);
+  const categories = useMemo(() => {
+    const ordered = [...regularCategories];
+    if (weeklySearched.length) {
+      const dramaIndex = ordered.findIndex(group => group.categoryName === 'dramaMovies');
+      ordered.splice(dramaIndex >= 0 ? dramaIndex + 1 : ordered.length, 0, { categoryName: 'weeklyTopSearchedMovies', movies: weeklySearched });
+    }
+    return [
+      ...(topSearched.length ? [{ categoryName: 'topSearchedMovies', movies: topSearched }] : []),
+      ...ordered,
+    ];
+  }, [regularCategories, topSearched, weeklySearched]);
   useFocusEffect(useCallback(() => {
     void loadTopSearched();
     const timer = setInterval(() => { void loadTopSearched(); }, 60000);
