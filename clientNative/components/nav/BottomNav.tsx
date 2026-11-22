@@ -1,6 +1,5 @@
 import { UserAvatar } from '@/components/common/UserAvatar';
 import {
-  ChatBubbleIcon,
   HeartIcon,
   HomeIcon,
   MenuIcon,
@@ -10,6 +9,7 @@ import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
+import { Image } from 'expo-image';
 import { router, usePathname } from 'expo-router';
 import { useEffect, useState, type ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +36,12 @@ export function useBottomNavOffset(enabled = true) {
 
 type TabKey = 'home' | 'favorites' | 'chat' | 'menu' | 'profile';
 type IconComp = ComponentType<{ size?: number; color?: string }>;
+
+const CHAT_LOGO = require('../../assets/images/Kino-olami logo_preview_rev_1.png');
+
+function ChatLogo() {
+  return <Image source={CHAT_LOGO} style={styles.chatLogo} contentFit="contain" />;
+}
 
 function shouldShowNav(pathname: string) {
   return pathname === '/home' || pathname === '/favorites';
@@ -77,10 +83,6 @@ export function BottomNav() {
     router.replace('/favorites');
   };
 
-  const goChat = () => {
-    router.push('/');
-  };
-
   const goProfile = () => {
     router.push('/profile');
   };
@@ -89,7 +91,7 @@ export function BottomNav() {
     key: TabKey;
     label: string;
     Icon: IconComp;
-    onPress: () => void;
+    onPress?: () => void;
   }[] = [
     {
       key: 'home',
@@ -106,8 +108,7 @@ export function BottomNav() {
     {
       key: 'chat',
       label: t('menu.chat'),
-      Icon: ChatBubbleIcon,
-      onPress: goChat,
+      Icon: ChatLogo,
     },
     {
       key: 'menu',
@@ -143,7 +144,14 @@ export function BottomNav() {
         const color = isActive ? colors.accentBright : colors.icon;
 
         return (
-          <Pressable key={key} style={styles.tab} onPress={onPress}>
+          <Pressable
+            key={key}
+            style={styles.tab}
+            onPress={onPress}
+            disabled={!onPress}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+          >
             <View
               style={[
                 styles.tabInner,
@@ -160,16 +168,18 @@ export function BottomNav() {
               ) : (
                 <Icon size={24} color={color} />
               )}
-              <Text
-                style={[
-                  styles.label,
-                  { color: isActive ? colors.accentBright : colors.textMuted },
-                  isActive && styles.labelActive,
-                ]}
-                numberOfLines={1}
-              >
-                {label}
-              </Text>
+              {key !== 'chat' && (
+                <Text
+                  style={[
+                    styles.label,
+                    { color: isActive ? colors.accentBright : colors.textMuted },
+                    isActive && styles.labelActive,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {label}
+                </Text>
+              )}
             </View>
           </Pressable>
         );
@@ -218,6 +228,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(30, 79, 214, 0.22)',
     borderRadius: 18,
     overflow: 'hidden',
+  },
+  chatLogo: {
+    width: 48,
+    maxWidth: '100%',
+    height: 48,
   },
   label: {
     fontSize: 12,

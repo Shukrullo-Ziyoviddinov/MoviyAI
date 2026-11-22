@@ -1,10 +1,11 @@
 "use client";
 
 import { Suspense, useEffect, type ReactNode } from "react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-state";
 import { UserAvatar } from "@/components/common/UserAvatar";
-import { ChatBubbleIcon, HeartIcon, HomeIcon, MenuIcon, PersonIcon } from "@/components/icons";
+import { HeartIcon, HomeIcon, MenuIcon, PersonIcon } from "@/components/icons";
 import { useSideMenu } from "@/components/menu/SideMenu";
 import { useTheme } from "@/components/theme/theme-state";
 import { useT } from "@/i18n/useT";
@@ -15,10 +16,22 @@ export const BOTTOM_NAV_LIFT = 10;
 type TabKey = "home" | "favorites" | "chat" | "menu" | "profile";
 type IconComp = (props: { size?: number; color?: string }) => ReactNode;
 
+function ChatLogo() {
+  return (
+    <Image
+      src="/images/Kino-olami%20logo_preview_rev_1.png"
+      alt=""
+      width={48}
+      height={48}
+      className="h-12 w-12 max-w-full object-contain"
+    />
+  );
+}
+
 const TABS: { key: TabKey; labelKey: string; Icon: IconComp; href?: string }[] = [
   { key: "home", labelKey: "menu.home", Icon: HomeIcon, href: "/home" },
   { key: "favorites", labelKey: "menu.favorites", Icon: HeartIcon, href: "/favorites" },
-  { key: "chat", labelKey: "menu.chat", Icon: ChatBubbleIcon, href: "/" },
+  { key: "chat", labelKey: "menu.chat", Icon: ChatLogo },
   { key: "menu", labelKey: "menu.menyu", Icon: MenuIcon },
   { key: "profile", labelKey: "menu.profile", Icon: PersonIcon, href: "/profile" },
 ];
@@ -42,7 +55,6 @@ function BottomNavBar() {
   useEffect(() => {
     router.prefetch("/home");
     router.prefetch("/favorites");
-    router.prefetch("/");
     router.prefetch("/profile");
   }, [router]);
 
@@ -74,7 +86,14 @@ function BottomNavBar() {
         const isActive = key === active;
         const color = isActive ? colors.accentBright : colors.icon;
         return (
-          <button key={key} type="button" onClick={() => onTab(key, href)} className="flex h-full min-w-0 flex-1 items-center justify-center px-[3px] py-[5px]">
+          <button
+            key={key}
+            type="button"
+            disabled={key === "chat"}
+            aria-label={key === "chat" ? t(labelKey) : undefined}
+            onClick={() => onTab(key, href)}
+            className="flex h-full min-w-0 flex-1 items-center justify-center px-[3px] py-[5px]"
+          >
             <span
               className="flex h-full w-full flex-col items-center justify-center gap-0.5 overflow-hidden rounded-[18px] px-1"
               style={
@@ -88,12 +107,14 @@ function BottomNavBar() {
               ) : (
                 <Icon size={24} color={color} />
               )}
-              <span
-                className={`max-w-full truncate text-[12px] leading-[14px] ${isActive ? "font-bold" : "font-medium"}`}
-                style={{ color: isActive ? colors.accentBright : colors.textMuted }}
-              >
-                {t(labelKey)}
-              </span>
+              {key !== "chat" && (
+                <span
+                  className={`max-w-full truncate text-[12px] leading-[14px] ${isActive ? "font-bold" : "font-medium"}`}
+                  style={{ color: isActive ? colors.accentBright : colors.textMuted }}
+                >
+                  {t(labelKey)}
+                </span>
+              )}
             </span>
           </button>
         );
