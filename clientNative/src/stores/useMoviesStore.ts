@@ -1,9 +1,10 @@
-import { fetchMovies, fetchTopSearchedMovies, fetchWeeklyTopSearchedMovies } from '@/src/api/movies';
-import type { Movie } from '@/src/types/movie';
+import { fetchTopSearchedMovies, fetchWeeklyTopSearchedMovies } from '@/src/api/movies';
+import { fetchHomeSections } from '@/src/api/movie-sections';
+import type { Movie, MovieCardData } from '@/src/types/movie';
 import { create } from 'zustand';
 
 type MoviesState = {
-  movies: Movie[];
+  movies: MovieCardData[];
   topSearched: Movie[];
   weeklySearched: Movie[];
   topLoading: boolean;
@@ -40,7 +41,8 @@ export const useMoviesStore = create<MoviesState>((set, get) => ({
 
     set({ loading: true, error: null });
     try {
-      const movies = await fetchMovies();
+      const sections = await fetchHomeSections();
+      const movies = sections.flatMap(section => section.movies);
       set({ movies, loaded: true, error: null });
     } catch (err) {
       set({

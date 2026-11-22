@@ -62,6 +62,13 @@
       "weeklyTopSearchedMovies": "Most searched movies of the week — Top 10"
     }
   },
+  "listing": {
+    "back": "Back to home",
+    "empty": "No movies in this section yet.",
+    "error": "Could not load movies. Please try again.",
+    "retry": "Try again",
+    "more": "Load more"
+  },
   "favorites": {
     "emptyTitle": "Favorites is empty",
     "emptySubtitle": "Find your favorite movies through AI Chat and save them to favorites.",

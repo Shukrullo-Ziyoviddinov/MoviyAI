@@ -3,15 +3,17 @@ import { memo } from 'react';
 import { MovieCard } from '@/components/movie/MovieCard';
 import type { AppLanguage } from '@/src/stores/useLanguageStore';
 import { useTheme } from '@/src/stores/useThemeStore';
-import type { Movie } from '@/src/types/movie';
-import { StyleSheet, Text, View } from 'react-native';
+import type { MovieCardData } from '@/src/types/movie';
+import { ChevronRightIcon } from '@/components/icons';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 const GAP = 12;
 
 type MovieCategoryRowProps = {
   title: string;
   ranked?: boolean;
-  movies: Movie[];
+  movies: MovieCardData[];
+  onOpen?: () => void;
   language: AppLanguage;
   cardWidth: number;
   contentPad?: number;
@@ -24,6 +26,7 @@ export const MovieCategoryRow = memo(function MovieCategoryRow({
   language,
   cardWidth,
   contentPad = 16,
+  onOpen,
 }: MovieCategoryRowProps) {
   const { colors } = useTheme();
 
@@ -31,11 +34,14 @@ export const MovieCategoryRow = memo(function MovieCategoryRow({
 
   return (
     <View style={styles.section}>
-      <Text
+      {onOpen && !ranked ? <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={onOpen} style={[styles.heading, { paddingHorizontal: contentPad }]}>
+        <Text style={[styles.title, { color: colors.text, marginBottom: 0, flexShrink: 1 }]}>{title}</Text>
+        <ChevronRightIcon size={22} color={colors.text} />
+      </Pressable> : <Text
         style={[styles.title, { color: colors.text, paddingHorizontal: contentPad }]}
       >
         {title}
-      </Text>
+      </Text>}
       <FlatList
         horizontal
         data={movies}
@@ -58,6 +64,7 @@ export const MovieCategoryRow = memo(function MovieCategoryRow({
 });
 
 const styles = StyleSheet.create({
+  heading: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12, alignSelf: 'flex-start' },
   section: {
     marginBottom: 18,
   },

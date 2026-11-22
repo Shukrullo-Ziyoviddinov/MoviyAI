@@ -65,6 +65,7 @@ const movieSchema = new Schema(
 movieSchema.index({ 'catalogIdentity.imdbId': 1 }, { unique: true, partialFilterExpression: { 'catalogIdentity.imdbId': { $type: 'string' } } });
 movieSchema.index({ 'catalogIdentity.kinopoiskId': 1 }, { unique: true, partialFilterExpression: { 'catalogIdentity.kinopoiskId': { $type: 'string' } } });
 movieSchema.index({ 'catalogIdentity.nameKeys': 1 });
+movieSchema.index({ categoryName: 1, id: 1 });
 movieSchema.index({'catalogIdentity.sourceKeys':1},{unique:true,partialFilterExpression:{'catalogIdentity.sourceKeys':{$exists:true}}});
 
 export type MovieDocument = InferSchemaType<typeof movieSchema> & {

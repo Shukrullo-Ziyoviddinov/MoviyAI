@@ -62,6 +62,13 @@
       "weeklyTopSearchedMovies": "Haftaning eng ko‘p qidirilgan kinolari — Top 10"
     }
   },
+  "listing": {
+    "back": "Asosiy sahifaga qaytish",
+    "empty": "Bu bo‘limda hozircha kinolar yo‘q.",
+    "error": "Kinolarni yuklab bo‘lmadi. Qayta urinib ko‘ring.",
+    "retry": "Qayta urinish",
+    "more": "Yana yuklash"
+  },
   "favorites": {
     "emptyTitle": "Sevimlilar bo'sh",
     "emptySubtitle": "O'z sevimli kino filmlaringizni AI Chat orqali qidiring va sevimli kino filmlarni saqlang.",

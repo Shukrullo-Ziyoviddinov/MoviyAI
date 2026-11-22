@@ -12,10 +12,11 @@ import { useMoviesStore } from '@/src/stores/useMoviesStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import { groupMoviesByCategory } from '@/src/utils/groupMovies';
+import { isMovieSection } from '@/src/api/movie-sections';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -94,6 +95,7 @@ export default function HomeScreen() {
         language={language}
         cardWidth={cardWidth}
         contentPad={CONTENT_PAD}
+        onOpen={isMovieSection(group.categoryName) ? () => router.push({ pathname: '/recommendations/[categoryName]', params: { categoryName: group.categoryName } }) : undefined}
       />
     </View>
   ), [t, language, cardWidth]);
@@ -101,7 +103,7 @@ export default function HomeScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <FlatList
-        data={error ? categories.filter(group => group.categoryName === 'topSearchedMovies' || group.categoryName === 'weeklyTopSearchedMovies') : categories}
+        data={categories}
         keyExtractor={(group) => group.categoryName}
         renderItem={renderCategory}
         initialNumToRender={1}
@@ -115,6 +117,12 @@ export default function HomeScreen() {
           paddingBottom: navOffset + 12,
         }}
         ListHeaderComponent={header}
+        ListFooterComponent={error ? <View style={{ alignItems: 'center', gap: 12, padding: CONTENT_PAD }} accessibilityLiveRegion="polite">
+          <Text style={{ color: colors.text, textAlign: 'center' }}>{t('listing.error')}</Text>
+          <Pressable accessibilityRole="button" disabled={loading} onPress={() => void loadMovies(true)} style={{ paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, backgroundColor: colors.panelSoft }}>
+            <Text style={{ color: colors.text }}>{t(loading ? 'common.loading' : 'listing.retry')}</Text>
+          </Pressable>
+        </View> : null}
         ListEmptyComponent={showSkeleton ? (
           <SkeletonGroup style={afterBanner}>
             {Array.from({ length: Math.max(1, Math.ceil(((height || 800) - bannerH) / (cardWidth * 1.3 + 98))) }, (_, row) => (
@@ -133,7 +141,7 @@ export default function HomeScreen() {
               </View>
             ))}
           </SkeletonGroup>
-        ) : (
+        ) : error ? null : (
           <View style={[styles.emptyBody, afterBanner]}>
             <HomeEmptyState onGoToChat={goToChat} />
           </View>

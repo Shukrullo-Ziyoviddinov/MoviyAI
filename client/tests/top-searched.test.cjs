@@ -9,6 +9,8 @@ test('top-search row passes ranks 1–10 in server order; ordinary category card
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const mocks = {
+    '@/api/movie-sections': { isMovieSection: key => key === 'actionMovies' },
+    '@/components/icons': { ChevronRightIcon: 'chevron' },
     '@/components/theme/theme-state': { useTheme: () => ({ colors: {} }) },
     '@/data/homeMovies': { categoryTitle: key => key },
     '@/components/common/HorizontalScroll': { HorizontalScroll: 'strip' },

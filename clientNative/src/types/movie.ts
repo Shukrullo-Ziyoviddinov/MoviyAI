@@ -47,6 +47,9 @@ export type Movie = {
   actors?: import('./actor').Actor[];
 };
 
+/** Public listing cards do not contain detail-page or internal catalogue fields. */
+export type MovieCardData = Pick<Movie, 'id' | 'categoryName' | 'title' | 'homeImgPoster' | 'ratingImdb' | 'ratingKinopoisk' | 'catalogIdentity'>;
+
 export type MovieComment = {
   id: string;
   movieId: number;

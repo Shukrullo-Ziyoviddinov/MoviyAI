@@ -1,8 +1,8 @@
-import type { Movie } from '@/src/types/movie';
+import type { MovieCardData } from '@/src/types/movie';
 
 export type MovieCategoryGroup = {
   categoryName: string;
-  movies: Movie[];
+  movies: MovieCardData[];
 };
 
 /** Hozircha faqat shu bo'limlar */
@@ -17,7 +17,7 @@ const ACTIVE_CATEGORIES = [
   'sciFiMovies',
 ] as const;
 
-export function groupMoviesByCategory(movies: Movie[]): MovieCategoryGroup[] {
+export function groupMoviesByCategory(movies: MovieCardData[]): MovieCategoryGroup[] {
   const groups: MovieCategoryGroup[] = [];
 
   for (const categoryName of ACTIVE_CATEGORIES) {

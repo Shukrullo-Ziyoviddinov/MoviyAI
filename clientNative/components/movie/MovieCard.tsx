@@ -7,7 +7,7 @@ import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useWishlistStore } from '@/src/stores/useWishlistStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import type { AppLanguage } from '@/src/stores/useLanguageStore';
-import type { Movie } from '@/src/types/movie';
+import type { MovieCardData } from '@/src/types/movie';
 import { Image } from 'expo-image';
 import Svg, { Text as SvgText } from 'react-native-svg';
 import { router } from 'expo-router';
@@ -21,11 +21,11 @@ const NAME_LINES = 1;
 const NAME_HEIGHT = 22;
 
 type MovieCardProps = {
-  movie: Movie;
+  movie: MovieCardData;
   rank?: number;
   language: AppLanguage;
   width: number;
-  onPress?: (movie: Movie) => void;
+  onPress?: (movie: MovieCardData) => void;
 };
 
 export function MovieCardSkeleton({ width }: { width: number }) {

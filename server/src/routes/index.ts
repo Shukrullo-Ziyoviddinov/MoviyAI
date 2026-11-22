@@ -10,6 +10,7 @@ import authRoutes from './auth.routes.js';
 import genreRoutes from './genre.routes.js';
 import mediaRoutes from './media.routes.js';
 import movieRoutes from './movie.routes.js';
+import movieListingRoutes from '../movie-listing/routes/movie-listing.routes.js';
 import privacyRoutes from './privacy.routes.js';
 import wishlistRoutes from './wishlist.routes.js';
 
@@ -23,6 +24,7 @@ router.use('/about', aboutRoutes);
 router.use('/privacy', privacyRoutes);
 router.use('/media', mediaRoutes);
 router.use('/movies', movieRoutes);
+router.use('/movie-listing', movieListingRoutes);
 router.use('/genres', genreRoutes);
 router.use('/countries', countryRoutes);
 router.use('/actors', actorRoutes);

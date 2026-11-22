@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { fetchHomeSections } from '@/api/movie-sections';
+import { translate } from '@/i18n';
 import { fetchTopSearchedMovies, fetchWeeklyTopSearchedMovies, type HomeMovie } from "@/api/movies";
 import { fetchWishlistIds, toggleWishlistMovie } from "@/api/wishlist";
 import { MovieCardSkeleton } from "@/components/home/MovieCard";
@@ -11,12 +13,28 @@ import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
 import { groupMoviesByCategory } from "@/data/homeMovies";
 
-export function HomeMovies({ movies, topSearched = [], weeklySearched = [] }: { movies: HomeMovie[] | null; topSearched?: HomeMovie[]; weeklySearched?: HomeMovie[] }) {
+export function HomeMovies({ movies: initialMovies, moviesError = false, topSearched = [], weeklySearched = [] }: { movies: HomeMovie[] | null; moviesError?: boolean; topSearched?: HomeMovie[]; weeklySearched?: HomeMovie[] }) {
   const { language } = useLanguage();
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
+  const [retried, setRetried] = useState<{ source: HomeMovie[] | null; movies: HomeMovie[] } | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const retryBusy = useRef(false);
+  const movies = retried?.source === initialMovies ? retried.movies : initialMovies;
+  const loadError = moviesError && retried?.source !== initialMovies;
   const { token, requireAuth } = useAuth();
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
   const [savedIds, setSavedIds] = useState<number[]>([]);
+
+  async function retrySections() {
+    if (retryBusy.current) return;
+    retryBusy.current = true;
+    setRetrying(true);
+    try {
+      const sections = await fetchHomeSections();
+      setRetried({ source: initialMovies, movies: sections.flatMap(section => section.movies) });
+    } catch { /* Keep the visible error and allow another explicit retry. */ }
+    finally { retryBusy.current = false; setRetrying(false); }
+  }
 
   const [liveWeekly, setLiveWeekly] = useState<HomeMovie[] | null>(null);
   const [liveTop, setLiveTop] = useState<HomeMovie[] | null>(null);
@@ -95,7 +113,7 @@ export function HomeMovies({ movies, topSearched = [], weeklySearched = [] }: { 
     orderedCategories.splice(dramaIndex >= 0 ? dramaIndex + 1 : orderedCategories.length, 0, { categoryName: 'weeklyTopSearchedMovies', movies: displayedWeekly });
   }
 
-  if (categories.length === 0 && !displayedTop.length && !displayedWeekly.length) {
+  if (categories.length === 0 && !displayedTop.length && !displayedWeekly.length && !loadError) {
     return (
       <div className="mt-4 flex min-h-[320px]">
         <HomeEmptyState />
@@ -117,6 +135,12 @@ export function HomeMovies({ movies, topSearched = [], weeklySearched = [] }: { 
           onToggleSave={(id) => void onToggleSave(id)}
         />
       ))}
+      {loadError && <div role="alert" className="flex flex-col items-center gap-3 px-4 py-8" style={{ color: colors.text }}>
+        <p>{translate(language, 'listing.error')}</p>
+        <button type="button" disabled={retrying} onClick={() => void retrySections()} className="rounded-xl px-5 py-3 disabled:opacity-60" style={{ backgroundColor: colors.panelSoft }}>
+          {translate(language, retrying ? 'common.loading' : 'listing.retry')}
+        </button>
+      </div>}
     </div>
   );
 }

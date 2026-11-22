@@ -56,7 +56,7 @@ export type Movie = {
   actors?: MovieActor[];
 };
 
-export type HomeMovie = Pick<Movie, "id" | "categoryName" | "title" | "homeImgPoster" | "ratingImdb" | "catalogIdentity">;
+export type HomeMovie = Pick<Movie, "id" | "categoryName" | "title" | "homeImgPoster" | "ratingImdb" | "catalogIdentity"> & { ratingKinopoisk?: number | null };
 
 export type MovieCommentsResult = {
   comments: MovieComment[];

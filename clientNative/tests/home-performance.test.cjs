@@ -19,6 +19,7 @@ test('large movie rows defer card creation to the virtualized list and preserve 
   const { MovieCategoryRow } = load('components/movie/MovieCategoryRow.tsx', {
     'react-native': { StyleSheet: { create: value => value }, Text: 'text', View: 'view', FlatList: 'virtual-list' },
     '@/components/movie/MovieCard': { MovieCard: 'movie-card' },
+    '@/components/icons': { ChevronRightIcon: 'chevron' },
     '@/src/stores/useThemeStore': { useTheme: () => ({ colors: {} }) },
   });
   const tree = MovieCategoryRow.type({ title: 'Movies', movies, language: 'uz', cardWidth: 150 });
@@ -82,10 +83,11 @@ test('home poster decoding can downscale instead of retaining full-size fill bit
 });
 
 test('home preserves its list and banner identity across loading, success and error states', () => {
-  const state = { movies: [], topSearched: [], weeklySearched: [], loadTopSearched: async () => {}, loading: true, loaded: false, error: null };
+  let forced;
+  const state = { movies: [], topSearched: [], weeklySearched: [], loadTopSearched: async () => {}, loadMovies: async force => { forced = force; }, loading: true, loaded: false, error: null };
   const { default: Home } = load('app/home.tsx', {
     react: { useEffect() {}, useMemo: fn => fn(), useCallback: fn => fn, useState: value => [value, () => {}] },
-    'react-native': { FlatList: 'list', View: 'view', StyleSheet: { create: value => value }, useWindowDimensions: () => ({ width: 400 }) },
+    'react-native': { FlatList: 'list', View: 'view', Text: 'text', Pressable: 'button', StyleSheet: { create: value => value }, useWindowDimensions: () => ({ width: 400 }) },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) },
     'react-i18next': { useTranslation: () => ({ t: key => key }) },
     'expo-router': { router: {}, useFocusEffect() {} },
@@ -103,6 +105,7 @@ test('home preserves its list and banner identity across loading, success and er
     '@/src/stores/useWishlistStore': { useWishlistStore: fn => fn({ loadIds() {} }) },
     '@/src/stores/useThemeStore': { useTheme: () => ({ colors: {} }) },
     '@/src/utils/groupMovies': { groupMoviesByCategory: movies => movies.length ? [{ categoryName: 'actionMovies', movies }] : [] },
+    '@/src/api/movie-sections': { isMovieSection: key => key === 'actionMovies' },
   });
   const loading = Home().props.children[0];
   state.movies = [{ id: 42 }]; state.loading = false; state.loaded = true;
@@ -117,11 +120,15 @@ test('home preserves its list and banner identity across loading, success and er
   state.weeklySearched = [{ id: 99 }];
   const weeklyList = Home().props.children[0];
   assert.equal(weeklyList.props.data.length, 3);
-  assert.equal(weeklyList.props.data[1].categoryName, 'weeklyTopSearchedMovies');
-  assert.equal(weeklyList.props.data[2].movies[0].id, 42);
-  assert.equal(weeklyList.props.renderItem({ item: weeklyList.props.data[1], index: 1 }).props.children.props.ranked, true);
+  assert.equal(weeklyList.props.data[2].categoryName, 'weeklyTopSearchedMovies');
+  assert.equal(weeklyList.props.data[1].movies[0].id, 42);
+  assert.equal(weeklyList.props.renderItem({ item: weeklyList.props.data[2], index: 2 }).props.children.props.ranked, true);
   state.error = 'offline';
   const error = Home().props.children[0];
+  assert.ok(error.props.data.some(group => group.categoryName === 'actionMovies'));
+  assert.equal(error.props.ListFooterComponent.props.children[0].props.children, 'listing.error');
+  error.props.ListFooterComponent.props.children[1].props.onPress();
+  assert.equal(forced, true);
   for (const list of [loading, loaded, error]) {
     assert.equal(list.type, 'list');
     assert.equal(list.props.ListHeaderComponent.props.children.type, 'banner');

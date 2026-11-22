@@ -14,6 +14,7 @@ test('weekly and lifetime requests refresh independently, preserve results on fa
       fetchTopSearchedMovies: () => { totalCalls++; return total.promise; },
       fetchWeeklyTopSearchedMovies: () => { weeklyCalls++; return weekly.promise; },
     },
+    '@/src/api/movie-sections': { fetchHomeSections: async () => [{ categoryName: 'actionMovies', movies: [{ id: 1 }] }] },
   };
   new Function('require', 'exports', 'module', source)(name => mocks[name] ?? require(name), module.exports, module);
   await state.loadMovies();

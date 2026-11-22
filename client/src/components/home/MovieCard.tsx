@@ -13,13 +13,13 @@ import { movieTitle } from "@/data/homeMovies";
 export const movieCardWidth = "w-[39cqw] md:w-[clamp(168px,18cqw,200px)]";
 export const moviePosterHeight = "h-[calc(39cqw*1.3)] md:h-[calc(clamp(168px,18cqw,200px)*1.3)]";
 
-export function MovieCardSkeleton() {
+export function MovieCardSkeleton({ grid = false }: { grid?: boolean } = {}) {
   const { isDark } = useTheme();
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
 
   return (
-    <div className={`${movieCardWidth} shrink-0`}>
-      <div className={`${moviePosterHeight} animate-pulse rounded-[14px] md:rounded-[16px]`} style={{ backgroundColor: bone }} />
+    <div className={`${grid ? 'w-full min-w-0' : movieCardWidth} shrink-0`}>
+      <div className={`${grid ? 'aspect-[10/13]' : moviePosterHeight} animate-pulse rounded-[14px] md:rounded-[16px]`} style={{ backgroundColor: bone }} />
       <div className="mt-2 h-[22px] animate-pulse rounded-lg md:h-6" style={{ backgroundColor: bone }} />
     </div>
   );
@@ -33,12 +33,14 @@ export function MovieCard({
   language,
   saved,
   onToggleSave,
+  grid = false,
 }: {
   movie: HomeMovie;
   rank?: number;
   language: AppLanguage;
   saved: boolean;
   onToggleSave: (movieId: number) => void;
+  grid?: boolean;
 }) {
   const { colors, isDark } = useTheme();
   const poster = moviePosterUrl(movie.homeImgPoster);
@@ -48,10 +50,10 @@ export function MovieCard({
   const showChrome = !poster || ready;
 
   return (
-    <div className={`${movieCardWidth} relative mb-[14px] shrink-0 md:mb-4`}>
+    <div className={`${grid ? 'w-full min-w-0' : movieCardWidth} relative mb-[14px] shrink-0 md:mb-4`}>
       <Link href={`/movie/${movie.id}`} className="block">
         <div
-          className={`relative overflow-hidden rounded-[14px] md:rounded-[16px] ${moviePosterHeight}`}
+          className={`relative overflow-hidden rounded-[14px] md:rounded-[16px] ${grid ? 'aspect-[10/13]' : moviePosterHeight}`}
           style={{ backgroundColor: colors.panelSoft }}
         >
           {poster && !ready ? (
@@ -63,6 +65,7 @@ export function MovieCard({
                 if (node?.complete) setReady(true);
               }}
               src={poster}
+              loading={grid ? 'lazy' : undefined}
               alt=""
               draggable={false}
               className="h-full w-full object-fill"
