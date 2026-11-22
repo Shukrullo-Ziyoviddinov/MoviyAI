@@ -1,7 +1,6 @@
 import Svg, { Path } from 'react-native-svg';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import {
-  ChatBubbleIcon,
   ChevronRightIcon,
   HomeIcon,
   LogoutIcon,
@@ -32,16 +31,22 @@ import {
 const GOOGLE_LOGO = require('../../assets/images/google-logo.png');
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type NavKey = 'home' | 'chat' | 'profile' | 'settings' | 'newChat';
+type NavKey = 'home' | 'kino' | 'profile' | 'settings' | 'newChat';
 type IconComp = ComponentType<{ size?: number; color?: string }>;
+
+const KINO_LOGO = require('../../assets/images/Kino-olami logo_preview_rev_1.png');
+
+function KinoIcon({ size = 22 }: { size?: number }) {
+  return <Image source={KINO_LOGO} style={{ width: size, height: size }} contentFit="contain" />;
+}
 
 const NAV_ITEMS: {
   key: NavKey;
-  labelKey: string;
+  labelKey?: string;
   Icon: IconComp;
 }[] = [
   { key: 'home', labelKey: 'menu.home', Icon: HomeIcon },
-  { key: 'chat', labelKey: 'menu.chat', Icon: ChatBubbleIcon },
+  { key: 'kino', Icon: KinoIcon },
   { key: 'profile', labelKey: 'menu.profile', Icon: PersonIcon },
   { key: 'settings', labelKey: 'menu.settings', Icon: SettingsIcon },
   { key: 'newChat', labelKey: 'menu.newChat', Icon: PlusIcon },
@@ -53,7 +58,6 @@ type SideMenuProps = {
 
 function isNavActive(key: NavKey, pathname: string) {
   if (key === 'home') return pathname === '/home';
-  if (key === 'chat') return pathname === '/' || pathname === '/index';
   if (key === 'profile') return pathname === '/profile';
   if (key === 'settings') return pathname === '/settings';
   return false;
@@ -123,24 +127,10 @@ export function SideMenu({ children }: SideMenuProps) {
     router.push('/home');
   };
 
-  const goChat = () => {
-    closeMenu();
-    if (pathname === '/' || pathname === '/index') return;
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace('/');
-  };
-
-  const handleNav = (key: NavKey) => {
+  const handleNav = (key: Exclude<NavKey, 'kino'>) => {
     setHistoryMenuId(null);
     if (key === 'home') {
       goHome();
-      return;
-    }
-    if (key === 'chat') {
-      goChat();
       return;
     }
     if (key === 'profile') {
@@ -208,6 +198,7 @@ export function SideMenu({ children }: SideMenuProps) {
         <View style={styles.nav}>
           {NAV_ITEMS.map(({ key, labelKey, Icon }) => {
           const active = isNavActive(key, pathname);
+          const onPress = key === 'kino' ? undefined : () => handleNav(key);
           const content = (
             <>
               <Icon size={22} color={active ? colors.accentBright : colors.icon} />
@@ -218,7 +209,7 @@ export function SideMenu({ children }: SideMenuProps) {
                   active && styles.navLabelActive,
                 ]}
               >
-                {t(labelKey)}
+                {labelKey ? t(labelKey) : 'Kino olami'}
               </Text>
             </>
           );
@@ -227,7 +218,7 @@ export function SideMenu({ children }: SideMenuProps) {
             return (
               <Pressable
                 key={key}
-                onPress={() => handleNav(key)}
+                onPress={onPress}
                 style={[
                   styles.navItemActive,
                   {
@@ -244,7 +235,7 @@ export function SideMenu({ children }: SideMenuProps) {
           }
 
             return (
-              <Pressable key={key} style={styles.navItem} onPress={() => handleNav(key)}>
+              <Pressable key={key} style={styles.navItem} onPress={onPress} disabled={!onPress}>
                 {content}
               </Pressable>
             );

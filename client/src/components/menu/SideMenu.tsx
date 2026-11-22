@@ -1,9 +1,9 @@
 "use client";
 
 import { Suspense, createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  ChatBubbleIcon,
   ChevronRightIcon,
   CloseIcon,
   HomeIcon,
@@ -22,11 +22,23 @@ import { ChatHistoryItem } from './ChatHistoryItem';
 
 const SLIDE = "260ms cubic-bezier(0.33, 1, 0.68, 1)";
 
-type NavKey = "home" | "chat" | "profile" | "settings" | "newChat";
+type NavKey = "home" | "kino" | "profile" | "settings" | "newChat";
 
-const NAV_ITEMS: { key: NavKey; labelKey: string; Icon: typeof HomeIcon }[] = [
+function KinoIcon({ size = 22 }: { size?: number }) {
+  return (
+    <Image
+      src="/images/Kino-olami%20logo_preview_rev_1.png"
+      alt=""
+      width={size}
+      height={size}
+      className="shrink-0 object-contain"
+    />
+  );
+}
+
+const NAV_ITEMS: { key: NavKey; labelKey?: string; Icon: typeof HomeIcon }[] = [
   { key: "home", labelKey: "menu.home", Icon: HomeIcon },
-  { key: "chat", labelKey: "menu.chat", Icon: ChatBubbleIcon },
+  { key: "kino", Icon: KinoIcon },
   { key: "profile", labelKey: "menu.profile", Icon: PersonIcon },
   { key: "settings", labelKey: "menu.settings", Icon: SettingsIcon },
   { key: "newChat", labelKey: "menu.newChat", Icon: PlusIcon },
@@ -257,14 +269,13 @@ function MenuBody({
     router.push(href);
   }
 
-  function onItem(key: NavKey) {
+  function onItem(key: Exclude<NavKey, "kino">) {
     setHistoryMenuId(null);
     if (collapsed) {
       onOpen?.();
       return;
     }
     if (key === "home") go("/home");
-    else if (key === "chat") go("/");
     else if (key === "profile") go("/profile");
     else if (key === "settings") go("/settings");
     else { if (!sending && !loading) { newChat(); go('/'); } }
@@ -348,10 +359,9 @@ function MenuBody({
 
       <div className={`flex flex-col gap-1.5 ${collapsed ? "w-full items-center" : ""}`}>
         {NAV_ITEMS.map(({ key, labelKey, Icon }) => {
-          const label = t(labelKey);
+          const label = labelKey ? t(labelKey) : "Kino olami";
           const active =
             (key === "home" && pathname === "/home") ||
-            (key === "chat" && pathname === "/") ||
             (key === "profile" && pathname === "/profile") ||
             (key === "settings" && pathname === "/settings");
           return (
@@ -359,7 +369,8 @@ function MenuBody({
               <button
                 type="button"
                 aria-label={label}
-                onClick={() => onItem(key)}
+                aria-disabled={key === "kino"}
+                onClick={key === "kino" ? (event) => event.stopPropagation() : () => onItem(key)}
                 className={
                   collapsed
                     ? "flex h-11 w-11 items-center justify-center rounded-xl"
