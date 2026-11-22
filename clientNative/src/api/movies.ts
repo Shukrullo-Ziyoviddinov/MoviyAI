@@ -153,3 +153,9 @@ export async function fetchTopSearchedMovies(): Promise<Movie[]> {
   if (!data.ok || !Array.isArray(data.data)) throw new Error('Top movies failed to load');
   return data.data;
 }
+
+export async function fetchWeeklyTopSearchedMovies(): Promise<Movie[]> {
+  const { data } = await api.get<ApiResponse<Movie[]>>('/api/movies/top-searched/weekly');
+  if (!data.ok || !Array.isArray(data.data)) throw new Error('Weekly top movies failed to load');
+  return data.data;
+}

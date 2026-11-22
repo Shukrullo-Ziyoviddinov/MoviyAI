@@ -11,11 +11,21 @@ import { catalogOperation,catalogFailureDetails,type CatalogStage } from '../uti
 import { ensureCatalogDictionary } from './catalog-dictionary.service.js';
 import { uzbekReleaseTitle } from '../../services/uzbek-movie.service.js';
 import {refreshCatalogMovie} from './catalog-refresh.service.js';
+import { identityIds, movieIdentitySources } from '../utils/catalog-identity.js';
 
 const defaults={ matcher: catalogMatcher, references: () => catalogReferenceRepository.load(), enrich: enrichCatalogDraft, links: researchCatalogLinks, save: saveCatalogMovie, franchise: researchCatalogFranchise, ensureReferences:ensureCatalogDictionary,refresh:refreshCatalogMovie };
 export function createCatalogChatProcessor(deps:Omit<typeof defaults,'ensureReferences'|'franchise'|'refresh'>&Partial<Pick<typeof defaults,'ensureReferences'|'franchise'|'refresh'>> = defaults) {
   const process: CatalogJobProcessor = async (input, checkpointed, signal, checkpoint) => {
     let draft = checkpointed ? structuredClone(checkpointed) : prepareCatalogDraft(input.movie, { language: input.language });
+    // Old checkpoints can predate the numbered-sequel source guard.
+    if (checkpointed) {
+      const sources = draft.research.identitySources ?? draft.research.sources;
+      const verified = movieIdentitySources(sources, [draft.identity.originalTitle, draft.movie.title.uz ?? '', draft.movie.title.ru ?? '']);
+      if (verified.length !== sources.length) {
+        Object.assign(draft.identity, identityIds(verified, 'movie'));
+        draft.research.identitySources = verified;
+      }
+    }
     let checkpointError:unknown;
     let checkpointFailed=false;
     const persist=async(next:typeof draft)=>{draft=structuredClone(next);try{await checkpoint(next);}catch(error){checkpointFailed=true;checkpointError=error;throw error;}};
@@ -30,7 +40,7 @@ export function createCatalogChatProcessor(deps:Omit<typeof defaults,'ensureRefe
     }
     signal.throwIfAborted();
     const match = await catalogOperation({provider:'mongodb',stage:'duplicate-check'},()=>deps.matcher.movie(movieMatchInput(draft)));
-    if (match.status === 'existing') return deps.refresh?deps.refresh(match.id,input,signal,checkpointed,persist):{ status: 'existing', movieId: match.id };
+    if (match.status === 'existing') return deps.refresh?deps.refresh(match.id,input,signal,checkpointed ? draft : null,persist):{ status: 'existing', movieId: match.id };
     if (match.status === 'conflict' || match.status === 'needs-research' && draft.identity.year !== null)
       return { status: 'needs-enrichment', issues: [{ path: 'identity', action: 'research', blocking: true, message: match.reason }] };
     draft=(await references()).draft;

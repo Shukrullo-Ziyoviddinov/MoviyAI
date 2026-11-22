@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { ChatTurn } from '../ai/models/conversation.model.js';
 import { BotUpdate } from '../bot/models.js';
-import { Movie } from '../models/Movie.js';
 import { prepareCatalogDraft } from '../ai/catalog/mappers/movie.mapper.js';
 import { movieMatchInput } from '../ai/catalog/services/catalog-match.service.js';
 import type { MovieSearchResult } from '../ai/types/movie-search.types.js';
@@ -70,14 +69,4 @@ export async function deferSearchEvent(event: SearchEvent) {
   await MovieSearchEvent.updateOne({ _id: event.id, movieId: null }, {
     $inc: { attempts: 1 }, $set: { nextAttemptAt: new Date(Date.now() + Math.min(300000, 15000 * 2 ** Math.min(event.attempts, 5))) },
   });
-}
-
-export async function topSearchedMovies() {
-  return MovieSearchTotal.aggregate([
-    { $match: { count: { $gt: 0 } } }, { $sort: { count: -1, _id: 1 } },
-    { $lookup: { from: Movie.collection.name, localField: '_id', foreignField: 'id', as: 'movie' } },
-    { $unwind: '$movie' }, { $limit: 10 },
-    { $replaceRoot: { newRoot: { $mergeObjects: ['$movie', { searchCount: '$count' }] } } },
-    { $project: { _id: 0, __v: 0, catalogResearch: 0 } },
-  ]);
 }

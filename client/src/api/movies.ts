@@ -155,3 +155,7 @@ export function actorImageUrl(path?: string) {
 export async function fetchTopSearchedMovies(): Promise<HomeMovie[]> {
   return read<HomeMovie[]>('/api/movies/top-searched', true);
 }
+
+export async function fetchWeeklyTopSearchedMovies(): Promise<HomeMovie[]> {
+  return read<HomeMovie[]>('/api/movies/top-searched/weekly', true);
+}

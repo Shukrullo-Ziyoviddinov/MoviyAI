@@ -82,7 +82,7 @@ test('home poster decoding can downscale instead of retaining full-size fill bit
 });
 
 test('home preserves its list and banner identity across loading, success and error states', () => {
-  const state = { movies: [], topSearched: [], loadTopSearched: async () => {}, loading: true, loaded: false, error: null };
+  const state = { movies: [], topSearched: [], weeklySearched: [], loadTopSearched: async () => {}, loading: true, loaded: false, error: null };
   const { default: Home } = load('app/home.tsx', {
     react: { useEffect() {}, useMemo: fn => fn(), useCallback: fn => fn, useState: value => [value, () => {}] },
     'react-native': { FlatList: 'list', View: 'view', StyleSheet: { create: value => value }, useWindowDimensions: () => ({ width: 400 }) },
@@ -114,6 +114,12 @@ test('home preserves its list and banner identity across loading, success and er
   assert.equal(rankedList.props.data[1].movies[0].id, 42);
   const rankedRow = rankedList.props.renderItem({ item: rankedList.props.data[0], index: 0 });
   assert.equal(rankedRow.props.children.props.ranked, true);
+  state.weeklySearched = [{ id: 99 }];
+  const weeklyList = Home().props.children[0];
+  assert.equal(weeklyList.props.data.length, 3);
+  assert.equal(weeklyList.props.data[1].categoryName, 'weeklyTopSearchedMovies');
+  assert.equal(weeklyList.props.data[2].movies[0].id, 42);
+  assert.equal(weeklyList.props.renderItem({ item: weeklyList.props.data[1], index: 1 }).props.children.props.ranked, true);
   state.error = 'offline';
   const error = Home().props.children[0];
   for (const list of [loading, loaded, error]) {

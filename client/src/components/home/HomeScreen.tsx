@@ -10,7 +10,7 @@ import { BottomNav } from "@/components/nav/BottomNav";
 import { useTheme } from "@/components/theme/theme-state";
 import { useTelegramChrome } from '@/components/telegram/TelegramFullscreen';
 
-export function HomeScreen({ banners, movies, topSearched = [] }: { banners: Banner[] | null; movies: HomeMovie[] | null; topSearched?: HomeMovie[] }) {
+export function HomeScreen({ banners, movies, topSearched = [], weeklySearched = [] }: { banners: Banner[] | null; movies: HomeMovie[] | null; topSearched?: HomeMovie[]; weeklySearched?: HomeMovie[] }) {
   const { colors } = useTheme();
   const { active: telegram } = useTelegramChrome();
 
@@ -26,7 +26,7 @@ export function HomeScreen({ banners, movies, topSearched = [] }: { banners: Ban
         style={{ marginTop: "var(--tg-chrome)", height: "calc(100% - var(--tg-chrome))" }}
       >
         <HomeBanner banners={banners} />
-        <HomeMovies movies={movies} topSearched={topSearched} />
+        <HomeMovies movies={movies} topSearched={topSearched} weeklySearched={weeklySearched} />
       </div>
       <div
         className="pointer-events-none absolute inset-x-0 z-40 max-md:fixed"

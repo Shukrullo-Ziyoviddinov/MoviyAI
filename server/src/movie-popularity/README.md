@@ -29,3 +29,17 @@ descending and numeric movie ID ascending for stable ties. Removed films are
 skipped before the limit. Regular categories and stored movie categories are
 unchanged. Clients show rank 1–10 and refresh the public ranking every 60 seconds
 while active. No user identity or original prompts are stored in search events.
+
+## Weekly ranking
+
+The collection and counting worker are shared. `rankings/lifetime.service.ts`
+keeps the existing lifetime query; `rankings/weekly.service.ts` reads resolved
+events whose `occurredAt` is between now minus seven days and now (inclusive).
+Late catalogue resolution does not make an old search appear new. No second
+counter is incremented. Monday, month boundaries and restarts do not reset data.
+
+`GET /api/movies/top-searched/weekly` returns the same public film shape and up to
+ten results with weekly `searchCount`. Ties use ascending movie ID. Both services
+share only their public movie projection. A fifteen-second weekly cache combines
+concurrent reads; failed reads are retryable. The occurrence-date index bounds
+the event scan, and the existing client polling refreshes both rows independently.

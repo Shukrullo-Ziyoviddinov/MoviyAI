@@ -3,7 +3,7 @@ import type { MovieFact } from '../../types/movie-dossier.types.js';
 import { uzbekDetailUrl, uzbekReleaseTitle } from '../../services/uzbek-movie.service.js';
 import { catalogActorPayloadSchema, catalogMoviePayloadSchema, isPublicHttpsUrl } from '../validators/catalog.validator.js';
 import type { CatalogAssessment, CatalogDraft, CatalogIssue, CatalogLocale, CatalogLocalizedFacts, CatalogResolvedReferences } from '../types/catalog.types.js';
-import { identityIds } from '../utils/catalog-identity.js';
+import { identityIds, movieIdentitySources } from '../utils/catalog-identity.js';
 
 function sourced<T>(fact?: MovieFact<T>): T | null {
   if (!fact || fact.value === null || typeof fact.value === 'string' && !fact.value.trim() || Array.isArray(fact.value) && !fact.value.length) return null;
@@ -18,6 +18,7 @@ export function prepareCatalogDraft(result: MovieSearchResult, options: {
   confirmedUnavailable?: CatalogDraft['confirmedUnavailable'];
 }): CatalogDraft {
   const details = result.details;
+  const identitySources = movieIdentitySources(result.identitySources ?? result.sources, [result.title, result.titleUz ?? '', result.titleRu ?? '']);
   const references = options.references;
   const runtime = sourced(details?.runtimeMinutes);
   const descriptions = (locale: 'uz' | 'ru') => ({
@@ -43,7 +44,7 @@ export function prepareCatalogDraft(result: MovieSearchResult, options: {
     version: 1,
     identity: {
       originalTitle: result.title.trim(), year: result.year,
-      ...identityIds(result.identitySources ?? result.sources, 'movie'),
+      ...identityIds(identitySources, 'movie'),
     },
     language: options.language,
     movie: {
@@ -65,7 +66,7 @@ export function prepareCatalogDraft(result: MovieSearchResult, options: {
       role: actor.role, actorImg: null, actorAbout: { uz: null, ru: null }, sources: structuredClone(actor.sources),
     })),
     posterCandidates: result.posters.filter(poster => isPublicHttpsUrl(poster.url)).map(poster => ({ ...poster })),
-    research: structuredClone(result),
+    research: { ...structuredClone(result), ...(identitySources.length !== (result.identitySources ?? result.sources).length ? { identitySources: structuredClone(identitySources) } : {}) },
     confirmedUnavailable: [...(options.confirmedUnavailable ?? [])],
   };
 }

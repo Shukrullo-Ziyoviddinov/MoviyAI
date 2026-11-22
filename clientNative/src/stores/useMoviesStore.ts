@@ -1,10 +1,11 @@
-import { fetchMovies, fetchTopSearchedMovies } from '@/src/api/movies';
+import { fetchMovies, fetchTopSearchedMovies, fetchWeeklyTopSearchedMovies } from '@/src/api/movies';
 import type { Movie } from '@/src/types/movie';
 import { create } from 'zustand';
 
 type MoviesState = {
   movies: Movie[];
   topSearched: Movie[];
+  weeklySearched: Movie[];
   topLoading: boolean;
   loadTopSearched: () => Promise<void>;
   loaded: boolean;
@@ -16,11 +17,17 @@ type MoviesState = {
 export const useMoviesStore = create<MoviesState>((set, get) => ({
   movies: [],
   topSearched: [],
+  weeklySearched: [],
   topLoading: false,
   loadTopSearched: async () => {
     if (get().topLoading) return;
     set({ topLoading: true });
-    try { set({ topSearched: await fetchTopSearchedMovies() }); } catch { /* Retain the last ranking. */ }
+    try {
+      await Promise.allSettled([
+        fetchTopSearchedMovies().then(rows => set({ topSearched: rows })),
+        fetchWeeklyTopSearchedMovies().then(rows => set({ weeklySearched: rows })),
+      ]);
+    }
     finally { set({ topLoading: false }); }
   },
   loaded: false,

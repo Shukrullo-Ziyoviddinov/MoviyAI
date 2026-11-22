@@ -32,6 +32,7 @@ export default function HomeScreen() {
   const language = useLanguageStore((s) => s.language);
   const movies = useMoviesStore((s) => s.movies);
   const topSearched = useMoviesStore((s) => s.topSearched);
+  const weeklySearched = useMoviesStore((s) => s.weeklySearched);
   const loadTopSearched = useMoviesStore((s) => s.loadTopSearched);
   const loading = useMoviesStore((s) => s.loading);
   const loaded = useMoviesStore((s) => s.loaded);
@@ -56,8 +57,9 @@ export default function HomeScreen() {
   const regularCategories = useMemo(() => groupMoviesByCategory(movies), [movies]);
   const categories = useMemo(() => [
     ...(topSearched.length ? [{ categoryName: 'topSearchedMovies', movies: topSearched }] : []),
+    ...(weeklySearched.length ? [{ categoryName: 'weeklyTopSearchedMovies', movies: weeklySearched }] : []),
     ...regularCategories,
-  ], [regularCategories, topSearched]);
+  ], [regularCategories, topSearched, weeklySearched]);
   useFocusEffect(useCallback(() => {
     void loadTopSearched();
     const timer = setInterval(() => { void loadTopSearched(); }, 60000);
@@ -81,7 +83,7 @@ export default function HomeScreen() {
     <View style={index === 0 ? styles.afterBanner : undefined}>
       <MovieCategoryRow
         title={t(`home.categories.${group.categoryName}`)}
-        ranked={group.categoryName === 'topSearchedMovies'}
+        ranked={group.categoryName === 'topSearchedMovies' || group.categoryName === 'weeklyTopSearchedMovies'}
         movies={group.movies}
         language={language}
         cardWidth={cardWidth}
@@ -93,7 +95,7 @@ export default function HomeScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <FlatList
-        data={error ? [] : categories}
+        data={error ? categories.filter(group => group.categoryName === 'topSearchedMovies' || group.categoryName === 'weeklyTopSearchedMovies') : categories}
         keyExtractor={(group) => group.categoryName}
         renderItem={renderCategory}
         initialNumToRender={1}

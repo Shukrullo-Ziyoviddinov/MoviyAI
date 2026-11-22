@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchTopSearchedMovies, type HomeMovie } from "@/api/movies";
+import { fetchTopSearchedMovies, fetchWeeklyTopSearchedMovies, type HomeMovie } from "@/api/movies";
 import { fetchWishlistIds, toggleWishlistMovie } from "@/api/wishlist";
 import { MovieCardSkeleton } from "@/components/home/MovieCard";
 import { MovieCategoryRow } from "@/components/home/MovieCategoryRow";
@@ -11,20 +11,26 @@ import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
 import { groupMoviesByCategory } from "@/data/homeMovies";
 
-export function HomeMovies({ movies, topSearched = [] }: { movies: HomeMovie[] | null; topSearched?: HomeMovie[] }) {
+export function HomeMovies({ movies, topSearched = [], weeklySearched = [] }: { movies: HomeMovie[] | null; topSearched?: HomeMovie[]; weeklySearched?: HomeMovie[] }) {
   const { language } = useLanguage();
   const { isDark } = useTheme();
   const { token, requireAuth } = useAuth();
   const bone = isDark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.10)";
   const [savedIds, setSavedIds] = useState<number[]>([]);
 
+  const [liveWeekly, setLiveWeekly] = useState<HomeMovie[] | null>(null);
   const [liveTop, setLiveTop] = useState<HomeMovie[] | null>(null);
   useEffect(() => {
     let alive = true, pending = false;
     const refresh = async () => {
       if (pending || document.hidden) return;
       pending = true;
-      try { const rows = await fetchTopSearchedMovies(); if (alive) setLiveTop(rows); } catch { /* Retain the last successful ranking. */ }
+      try {
+        await Promise.allSettled([
+          fetchTopSearchedMovies().then(rows => { if (alive) setLiveTop(rows); }),
+          fetchWeeklyTopSearchedMovies().then(rows => { if (alive) setLiveWeekly(rows); }),
+        ]);
+      }
       finally { pending = false; }
     };
     const timer = window.setInterval(() => { void refresh(); }, 60000);
@@ -81,8 +87,10 @@ export function HomeMovies({ movies, topSearched = [] }: { movies: HomeMovie[] |
   }
 
   const categories = groupMoviesByCategory(movies);
+  const displayedTop = liveTop ?? topSearched;
+  const displayedWeekly = liveWeekly ?? weeklySearched;
 
-  if (categories.length === 0) {
+  if (categories.length === 0 && !displayedTop.length && !displayedWeekly.length) {
     return (
       <div className="mt-4 flex min-h-[320px]">
         <HomeEmptyState />
@@ -92,7 +100,8 @@ export function HomeMovies({ movies, topSearched = [] }: { movies: HomeMovie[] |
 
   return (
     <div className="mt-4">
-      {(liveTop ?? topSearched).length > 0 && <MovieCategoryRow categoryName="topSearchedMovies" ranked movies={liveTop ?? topSearched} language={language} savedIds={savedIds} onToggleSave={(id) => void onToggleSave(id)} />}
+      {displayedTop.length > 0 && <MovieCategoryRow categoryName="topSearchedMovies" ranked movies={displayedTop} language={language} savedIds={savedIds} onToggleSave={(id) => void onToggleSave(id)} />}
+      {displayedWeekly.length > 0 && <MovieCategoryRow categoryName="weeklyTopSearchedMovies" ranked movies={displayedWeekly} language={language} savedIds={savedIds} onToggleSave={(id) => void onToggleSave(id)} />}
       {categories.map((group) => (
         <MovieCategoryRow
           key={group.categoryName}

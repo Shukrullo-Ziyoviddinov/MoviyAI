@@ -5,6 +5,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = Router();
 
+router.get('/top-searched/weekly', asyncHandler(movieController.listWeeklyTopSearchedMovies));
 router.get('/top-searched', asyncHandler(movieController.listTopSearchedMovies));
 router.get('/', asyncHandler(movieController.listMovies));
 router.post('/', movieController.uploadPoster, asyncHandler(movieController.createMovie));

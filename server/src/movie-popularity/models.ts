@@ -10,6 +10,7 @@ const event = new Schema({
   attempts: { type: Number, default: 0 },
 }, { collection: 'movie_search_events', timestamps: true });
 event.index({ movieId: 1, nextAttemptAt: 1 });
+event.index({ occurredAt: 1, movieId: 1 });
 export const MovieSearchEvent = model('MovieSearchEvent', event);
 
 const total = new Schema({ _id: { type: Number, required: true }, count: { type: Number, required: true, default: 0 } },

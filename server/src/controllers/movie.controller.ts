@@ -1,4 +1,5 @@
-import { topSearchedMovies } from '../movie-popularity/repository.js';
+import { topSearchedMovies } from '../movie-popularity/rankings/lifetime.service.js';
+import { weeklyTopSearchedMovies } from '../movie-popularity/rankings/weekly.service.js';
 import {parseMovieFields} from '../utils/movie-fields.js';
 import type { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
@@ -327,4 +328,8 @@ export async function updateMovie(req: Request, res: Response) {
 
 export async function listTopSearchedMovies(_req: Request, res: Response) {
   res.json({ ok: true, data: await topSearchedMovies() });
+}
+
+export async function listWeeklyTopSearchedMovies(_req: Request, res: Response) {
+  res.json({ ok: true, data: await weeklyTopSearchedMovies() });
 }
