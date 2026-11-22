@@ -70,7 +70,7 @@ export function MovieCard({
               onError={() => setReady(true)}
             />
           ) : null}
-          {rank != null && <span className="pointer-events-none absolute bottom-2 left-2 z-[1] text-[32px] leading-none font-black text-transparent"
+          {rank != null && <span className="pointer-events-none absolute bottom-2 left-2 z-[1] text-[40px] leading-none font-black text-transparent md:text-[52px]"
             style={{ WebkitTextStroke: '1.25px rgba(255,255,255,0.95)' }}>{rank}</span>}
           {showChrome ? (
             <span className="absolute right-2 bottom-2 flex items-center gap-1 rounded-lg bg-black/[0.72] px-2 py-1">
