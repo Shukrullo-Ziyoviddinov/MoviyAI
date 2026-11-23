@@ -6,6 +6,7 @@ import {
   PersonIcon,
 } from '@/components/icons';
 import { useAuthStore } from '@/src/stores/useAuthStore';
+import { useKinoModalStore } from '@/src/stores/useKinoModalStore';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -44,7 +45,7 @@ function KinoLogo() {
 }
 
 function shouldShowNav(pathname: string) {
-  return pathname === '/home' || pathname === '/favorites';
+  return pathname === '/home' || pathname === '/favorites' || pathname === '/kino-olami';
 }
 
 export function BottomNav() {
@@ -55,6 +56,7 @@ export function BottomNav() {
   const openMenu = useSideMenuStore((s) => s.openMenu);
   const menuOpen = useSideMenuStore((s) => s.open);
   const viewing = useMediaViewerStore((s) => !!s.item);
+  const kinoModalOpen = useKinoModalStore((s) => s.open);
   const profile = useAuthStore((s) => s.profile);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
@@ -69,7 +71,7 @@ export function BottomNav() {
     };
   }, []);
 
-  if (!shouldShowNav(pathname) || viewing || keyboardOpen || menuOpen) {
+  if (!shouldShowNav(pathname) || viewing || keyboardOpen || menuOpen || (pathname === '/kino-olami' && kinoModalOpen)) {
     return null;
   }
 
@@ -109,7 +111,9 @@ export function BottomNav() {
       key: 'kino',
       label: 'Kino olami',
       Icon: KinoLogo,
-      onPress: () => router.push('/kino-olami'),
+      onPress: () => {
+        if (pathname !== '/kino-olami') router.push('/kino-olami');
+      },
     },
     {
       key: 'menu',
@@ -126,7 +130,7 @@ export function BottomNav() {
   ];
 
   const active: TabKey | null =
-    pathname === '/favorites' ? 'favorites' : pathname === '/home' ? 'home' : null;
+    pathname === '/kino-olami' ? 'kino' : pathname === '/favorites' ? 'favorites' : 'home';
 
   return (
     <View

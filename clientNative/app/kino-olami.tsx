@@ -1,11 +1,11 @@
-import { ChevronLeftIcon } from '@/components/icons';
+import { useKinoModalStore } from '@/src/stores/useKinoModalStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
+import { BackHandler, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 const publicEmbedUrl = 'https://www.kino-olami.uz/embed';
 const initialEmbedUrl = process.env.EXPO_PUBLIC_KINO_OLAMI_EMBED_URL?.trim() || publicEmbedUrl;
@@ -13,6 +13,7 @@ const initialEmbedUrl = process.env.EXPO_PUBLIC_KINO_OLAMI_EMBED_URL?.trim() || 
 export default function KinoOlamiScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const setKinoModalOpen = useKinoModalStore((s) => s.setOpen);
   const webView = useRef<WebView>(null);
   const canGoBack = useRef(false);
   const [embedUrl, setEmbedUrl] = useState(initialEmbedUrl);
@@ -27,13 +28,27 @@ export default function KinoOlamiScreen() {
 
   useFocusEffect(useCallback(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', goBackInWebView);
-    return () => subscription.remove();
-  }, [goBackInWebView]));
+    return () => {
+      subscription.remove();
+      setKinoModalOpen(false);
+    };
+  }, [goBackInWebView, setKinoModalOpen]));
 
-  function goBack() {
-    if (goBackInWebView()) return;
-    if (router.canGoBack()) router.back();
-    else router.replace('/home');
+  function handleWebViewMessage({ nativeEvent }: WebViewMessageEvent) {
+    try {
+      // Android can report the sender origin without a path.
+      const senderOrigin = new URL(nativeEvent.url).origin;
+      const isTrustedOrigin = [embedUrl, publicEmbedUrl].some(
+        (url) => new URL(url).origin === senderOrigin
+      );
+      if (!isTrustedOrigin) return;
+      const message = JSON.parse(nativeEvent.data);
+      if (message?.type === 'kino-olami:share-modal' && typeof message.open === 'boolean') {
+        setKinoModalOpen(message.open);
+      }
+    } catch {
+      // Other WebView messages do not control the navbar.
+    }
   }
 
   return (
@@ -54,6 +69,8 @@ export default function KinoOlamiScreen() {
             setEmbedUrl(publicEmbedUrl);
           }
         }}
+        onMessage={handleWebViewMessage}
+        onLoadStart={() => setKinoModalOpen(false)}
         style={styles.webView}
         javaScriptEnabled
         domStorageEnabled
@@ -63,33 +80,11 @@ export default function KinoOlamiScreen() {
           canGoBack.current = navigation.canGoBack;
         }}
       />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Orqaga"
-        onPress={goBack}
-        style={[styles.back, {
-          left: insets.left + 12,
-          bottom: insets.bottom + 12,
-          backgroundColor: colors.panel,
-          borderColor: colors.borderSoft,
-        }]}
-      >
-        <ChevronLeftIcon size={22} color={colors.icon} />
-      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  back: {
-    position: 'absolute',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   webView: { flex: 1 },
 });
