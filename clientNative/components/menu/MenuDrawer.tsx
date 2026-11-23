@@ -20,21 +20,23 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
   const position = useRef(open ? 1 : 0);
   const dragBase = useRef(0);
   const dragging = useRef(false);
-  const settlingTarget = useRef<boolean | null>(null);
-  const version = useRef(0);
+  const animationTarget = useRef<boolean | null>(open);
+  const animation = useRef({ version: 0 }).current;
   const [visible, setVisible] = useState(open);
 
   useEffect(() => {
     const listener = progress.addListener(({ value }) => { position.current = value; });
     return () => {
-      ++version.current;
+      ++animation.version;
       progress.stopAnimation();
       progress.removeListener(listener);
     };
-  }, [progress]);
+  }, [animation, progress]);
 
   const animate = useCallback((opening: boolean) => {
-    const currentVersion = ++version.current;
+    if (animationTarget.current === opening) return;
+    animationTarget.current = opening;
+    const currentVersion = ++animation.version;
     progress.stopAnimation();
     if (opening) setVisible(true);
     Animated.timing(progress, {
@@ -43,10 +45,10 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start(({ finished }) => {
-      if (finished && currentVersion === version.current && !opening
+      if (finished && currentVersion === animation.version && !opening
           && !useSideMenuStore.getState().open && !dragging.current) setVisible(false);
     });
-  }, [progress]);
+  }, [animation, progress]);
 
   const close = useCallback(() => {
     if (useSideMenuStore.getState().open) useSideMenuStore.getState().closeMenu();
@@ -58,11 +60,6 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
       Keyboard.dismiss();
       setVisible(true);
     }
-    if (settlingTarget.current === open) {
-      settlingTarget.current = null;
-      return;
-    }
-    settlingTarget.current = null;
     if (!dragging.current) animate(open);
   }, [open, animate]);
 
@@ -77,7 +74,8 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
 
   const drag = useMemo(() => ({
     start: () => {
-      ++version.current;
+      animationTarget.current = null;
+      ++animation.version;
       progress.stopAnimation();
       dragBase.current = position.current;
       dragging.current = true;
@@ -93,12 +91,15 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
       dragging.current = false;
       const state = interactionState();
       const opening = valid ? position.current >= 0.4 : state.open;
-      settlingTarget.current = opening === state.open ? null : opening;
-      if (opening) state.openFromGesture(state.gestureRevision);
-      else state.closeMenu();
-      animate(opening);
+      if (opening === state.open) {
+        animate(opening);
+      } else if (opening) {
+        state.openFromGesture(state.gestureRevision);
+      } else {
+        state.closeMenu();
+      }
     },
-  }), [animate, panelWidth, progress]);
+  }), [animate, animation, panelWidth, progress]);
 
   useEffect(() => {
     if (!webViewHandlesSwipe) return;
@@ -138,15 +139,27 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
   return <View style={[styles.root, visible && !webViewHandlesSwipe && styles.foreground]} {...(!webViewHandlesSwipe && opener.panHandlers)}>
     <View style={styles.root} pointerEvents={visible && !webViewHandlesSwipe ? 'none' : 'auto'}
       importantForAccessibility={visible ? 'no-hide-descendants' : 'auto'}>{children}</View>
-    {footer}
+    {webViewHandlesSwipe ? (
+      <Animated.View
+        pointerEvents={visible ? 'none' : 'box-none'}
+        importantForAccessibility={visible ? 'no-hide-descendants' : 'auto'}
+        style={[StyleSheet.absoluteFill, styles.footer, {
+          opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+        }]}
+      >
+        {footer}
+      </Animated.View>
+    ) : footer}
     <View style={[StyleSheet.absoluteFill, styles.foreground]} pointerEvents={visible && (!webViewHandlesSwipe || open) ? 'auto' : 'none'}
       accessibilityElementsHidden={!visible} importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
       accessibilityViewIsModal={visible}>
       <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityRole="button"
         accessibilityLabel={t('common.close')} testID="menu-backdrop">
-        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.backdrop, {
-          opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0, 0.55] }),
-        }]} />
+        {!webViewHandlesSwipe && (
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.backdrop, {
+            opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0, 0.55] }),
+          }]} />
+        )}
       </Pressable>
       <Animated.View style={[styles.panel, { width: panelWidth, transform: [{
         translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [-panelWidth, 0] }),
@@ -158,6 +171,7 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
 const styles = StyleSheet.create({
   root: { flex: 1 },
   foreground: { zIndex: 100 },
+  footer: { zIndex: 50 },
   backdrop: { backgroundColor: '#000' },
   panel: { position: 'absolute', left: 0, top: 0, bottom: 0 },
 });

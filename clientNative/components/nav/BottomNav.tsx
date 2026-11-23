@@ -71,7 +71,7 @@ export function BottomNav() {
     };
   }, []);
 
-  if (!shouldShowNav(pathname) || viewing || keyboardOpen || menuOpen || (pathname === '/kino-olami' && kinoModalOpen)) {
+  if (!shouldShowNav(pathname) || viewing || keyboardOpen || (menuOpen && pathname !== '/kino-olami') || (pathname === '/kino-olami' && kinoModalOpen)) {
     return null;
   }
 
