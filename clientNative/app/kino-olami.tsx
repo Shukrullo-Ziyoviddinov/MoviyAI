@@ -30,6 +30,7 @@ export default function KinoOlamiScreen() {
     const subscription = BackHandler.addEventListener('hardwareBackPress', goBackInWebView);
     return () => {
       subscription.remove();
+      useSideMenuStore.getState().setWebMenuSwipe({ phase: 'cancel', dx: 0 });
       setKinoModalOpen(false);
     };
   }, [goBackInWebView, setKinoModalOpen]));
@@ -43,8 +44,10 @@ export default function KinoOlamiScreen() {
       );
       if (!isTrustedOrigin) return;
       const message = JSON.parse(nativeEvent.data);
-      if (message?.type === 'kino-olami:open-menu' && !useKinoModalStore.getState().open) {
-        useSideMenuStore.getState().openMenu();
+      if (message?.type === 'kino-olami:menu-swipe' &&
+          (message.phase === 'move' || message.phase === 'end' || message.phase === 'cancel') &&
+          typeof message.dx === 'number' && Number.isFinite(message.dx)) {
+        useSideMenuStore.getState().setWebMenuSwipe({ phase: message.phase, dx: message.dx });
         return;
       }
       if (message?.type === 'kino-olami:share-modal' && typeof message.open === 'boolean') {

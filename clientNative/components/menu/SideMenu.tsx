@@ -54,6 +54,7 @@ const NAV_ITEMS: {
 
 type SideMenuProps = {
   children: ReactNode;
+  footer: ReactNode;
 };
 
 function isNavActive(key: NavKey, pathname: string) {
@@ -64,7 +65,7 @@ function isNavActive(key: NavKey, pathname: string) {
   return false;
 }
 
-export function SideMenu({ children }: SideMenuProps) {
+export function SideMenu({ children, footer }: SideMenuProps) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const pathname = usePathname();
@@ -154,7 +155,7 @@ export function SideMenu({ children }: SideMenuProps) {
   };
 
   return (
-    <MenuDrawer webViewHandlesSwipe={pathname === '/kino-olami'} menu={
+    <MenuDrawer footer={footer} webViewHandlesSwipe={pathname === '/kino-olami'} menu={
       <View
         style={[
           styles.panel,

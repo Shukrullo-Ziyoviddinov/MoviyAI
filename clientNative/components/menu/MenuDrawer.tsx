@@ -11,7 +11,7 @@ function interactionState() {
 }
 
 /** One persistent panel for both button transitions and finger tracking. */
-export function MenuDrawer({ children, menu, webViewHandlesSwipe = false }: { children: ReactNode; menu: ReactNode; webViewHandlesSwipe?: boolean }) {
+export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false }: { children: ReactNode; menu: ReactNode; footer: ReactNode; webViewHandlesSwipe?: boolean }) {
   const open = useSideMenuStore(state => state.open);
   const { width } = useWindowDimensions();
   const { t } = useTranslation();
@@ -75,40 +75,71 @@ export function MenuDrawer({ children, menu, webViewHandlesSwipe = false }: { ch
     return () => subscription.remove();
   }, [visible, close]);
 
+  const drag = useMemo(() => ({
+    start: () => {
+      ++version.current;
+      progress.stopAnimation();
+      dragBase.current = position.current;
+      dragging.current = true;
+      Keyboard.dismiss();
+      setVisible(true);
+    },
+    move: (dx: number) => {
+      const value = Math.max(0, Math.min(1, dragBase.current + dx / panelWidth));
+      position.current = value;
+      progress.setValue(value);
+    },
+    end: (valid: boolean) => {
+      dragging.current = false;
+      const state = interactionState();
+      const opening = valid ? position.current >= 0.4 : state.open;
+      settlingTarget.current = opening === state.open ? null : opening;
+      if (opening) state.openFromGesture(state.gestureRevision);
+      else state.closeMenu();
+      animate(opening);
+    },
+  }), [animate, panelWidth, progress]);
+
+  useEffect(() => {
+    if (!webViewHandlesSwipe) return;
+    let revision: number | null = null;
+    const unsubscribe = useSideMenuStore.subscribe((state, previous) => {
+      const swipe = state.webMenuSwipe;
+      if (!swipe || swipe === previous.webMenuSwipe) return;
+      const current = interactionState();
+      if (swipe.phase === 'move' && revision === null && !current.open && !current.gesturesSuspended) {
+        revision = current.gestureRevision;
+        drag.start();
+      }
+      if (revision === null) return;
+      const valid = !current.gesturesSuspended && revision === current.gestureRevision;
+      if (valid && swipe.phase !== 'cancel') drag.move(swipe.dx);
+      if (swipe.phase !== 'move' || !valid) {
+        revision = null;
+        drag.end(valid && swipe.phase === 'end');
+      }
+    });
+    return () => {
+      unsubscribe();
+      if (revision !== null) drag.end(false);
+    };
+  }, [drag, webViewHandlesSwipe]);
+
   const makeResponder = useCallback((mode: 'open' | 'close') => PanResponder.create(
     drawerResponder(mode, interactionState, {
-      start: () => {
-        ++version.current;
-        progress.stopAnimation();
-        dragBase.current = position.current;
-        dragging.current = true;
-        Keyboard.dismiss();
-        setVisible(true);
-      },
-      move: dx => {
-        const value = Math.max(0, Math.min(1, dragBase.current + dx / panelWidth));
-        position.current = value;
-        progress.setValue(value);
-      },
-      end: (_gesture, valid) => {
-        dragging.current = false;
-        const state = interactionState();
-        // Match the web drawer: settle to open after revealing 40% of the panel.
-        const opening = valid ? position.current >= 0.4 : state.open;
-        settlingTarget.current = opening === state.open ? null : opening;
-        if (opening) state.openFromGesture(state.gestureRevision);
-        else state.closeMenu();
-        animate(opening);
-      },
+      start: drag.start,
+      move: drag.move,
+      end: (_gesture, valid) => drag.end(valid),
     })
-  ), [animate, panelWidth, progress]);
+  ), [drag]);
   const opener = useMemo(() => makeResponder('open'), [makeResponder]);
   const closer = useMemo(() => makeResponder('close'), [makeResponder]);
 
-  return <View style={[styles.root, visible && styles.foreground]} {...(!webViewHandlesSwipe && opener.panHandlers)}>
+  return <View style={[styles.root, visible && !webViewHandlesSwipe && styles.foreground]} {...(!webViewHandlesSwipe && opener.panHandlers)}>
     <View style={styles.root} pointerEvents={visible && !webViewHandlesSwipe ? 'none' : 'auto'}
       importantForAccessibility={visible ? 'no-hide-descendants' : 'auto'}>{children}</View>
-    <View style={StyleSheet.absoluteFill} pointerEvents={visible ? 'auto' : 'none'}
+    {footer}
+    <View style={[StyleSheet.absoluteFill, styles.foreground]} pointerEvents={visible && (!webViewHandlesSwipe || open) ? 'auto' : 'none'}
       accessibilityElementsHidden={!visible} importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
       accessibilityViewIsModal={visible}>
       <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityRole="button"

@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 
+type WebMenuSwipe = { phase: 'move' | 'end' | 'cancel'; dx: number };
+
 type SideMenuState = {
+  webMenuSwipe: WebMenuSwipe | null;
+  setWebMenuSwipe: (swipe: WebMenuSwipe) => void;
   open: boolean;
   gesturesSuspended: boolean;
   gestureRevision: number;
@@ -13,6 +17,8 @@ type SideMenuState = {
 };
 
 export const useSideMenuStore = create<SideMenuState>((set) => ({
+  webMenuSwipe: null,
+  setWebMenuSwipe: (webMenuSwipe) => set({ webMenuSwipe }),
   open: false,
   gesturesSuspended: false,
   gestureRevision: 0,

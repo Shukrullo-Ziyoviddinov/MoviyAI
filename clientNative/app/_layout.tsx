@@ -46,7 +46,7 @@ function AppNavigator() {
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <GestureHandlerRootView style={[styles.root, { backgroundColor: colors.bg }]}>
-        <SideMenu>
+        <SideMenu footer={<BottomNav />}>
           <Stack
             screenOptions={{
               headerShown: false,
@@ -73,7 +73,6 @@ function AppNavigator() {
             <Stack.Screen name="data-manage" />
           </Stack>
         </SideMenu>
-        <BottomNav />
         <LanguageModal />
         <GoogleAuthModal />
       </GestureHandlerRootView>
