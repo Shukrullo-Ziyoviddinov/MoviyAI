@@ -2,19 +2,20 @@ import { ChevronLeftIcon } from '@/components/icons';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
-const embedUrl = process.env.EXPO_PUBLIC_KINO_OLAMI_EMBED_URL?.trim() ||
-  'https://kino-olami.uz/embed';
+const publicEmbedUrl = 'https://www.kino-olami.uz/embed';
+const initialEmbedUrl = process.env.EXPO_PUBLIC_KINO_OLAMI_EMBED_URL?.trim() || publicEmbedUrl;
 
 export default function KinoOlamiScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const webView = useRef<WebView>(null);
   const canGoBack = useRef(false);
+  const [embedUrl, setEmbedUrl] = useState(initialEmbedUrl);
 
   const goBackInWebView = useCallback(() => {
     if (useSideMenuStore.getState().open || !webView.current || !canGoBack.current) {
@@ -45,7 +46,14 @@ export default function KinoOlamiScreen() {
     }]}>
       <WebView
         ref={webView}
+        key={embedUrl}
         source={{ uri: embedUrl }}
+        onError={() => {
+          if (embedUrl !== publicEmbedUrl) {
+            canGoBack.current = false;
+            setEmbedUrl(publicEmbedUrl);
+          }
+        }}
         style={styles.webView}
         javaScriptEnabled
         domStorageEnabled
