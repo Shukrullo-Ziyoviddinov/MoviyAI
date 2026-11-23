@@ -3,7 +3,6 @@ import { Animated, BackHandler, Easing, Keyboard, PanResponder, Pressable, Style
 import { useTranslation } from 'react-i18next';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { drawerResponder } from '@/src/utils/side-menu-responder';
-import { useKinoModalStore } from '@/src/stores/useKinoModalStore';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
 
 function interactionState() {
@@ -12,9 +11,8 @@ function interactionState() {
 }
 
 /** One persistent panel for both button transitions and finger tracking. */
-export function MenuDrawer({ children, menu, isolatedEdge = false }: { children: ReactNode; menu: ReactNode; isolatedEdge?: boolean }) {
+export function MenuDrawer({ children, menu, webViewHandlesSwipe = false }: { children: ReactNode; menu: ReactNode; webViewHandlesSwipe?: boolean }) {
   const open = useSideMenuStore(state => state.open);
-  const kinoModalOpen = useKinoModalStore(state => state.open);
   const { width } = useWindowDimensions();
   const { t } = useTranslation();
   const panelWidth = width * 0.7;
@@ -107,17 +105,9 @@ export function MenuDrawer({ children, menu, isolatedEdge = false }: { children:
   const opener = useMemo(() => makeResponder('open'), [makeResponder]);
   const closer = useMemo(() => makeResponder('close'), [makeResponder]);
 
-  return <View style={[styles.root, visible && styles.foreground]} {...(!isolatedEdge && opener.panHandlers)}>
-    <View style={styles.root} pointerEvents={visible && !isolatedEdge ? 'none' : 'auto'}
+  return <View style={[styles.root, visible && styles.foreground]} {...(!webViewHandlesSwipe && opener.panHandlers)}>
+    <View style={styles.root} pointerEvents={visible && !webViewHandlesSwipe ? 'none' : 'auto'}
       importantForAccessibility={visible ? 'no-hide-descendants' : 'auto'}>{children}</View>
-    {isolatedEdge && (
-      <View
-        collapsable={false}
-        pointerEvents={kinoModalOpen ? 'none' : 'auto'}
-        style={styles.swipeEdge}
-        {...opener.panHandlers}
-      />
-    )}
     <View style={StyleSheet.absoluteFill} pointerEvents={visible ? 'auto' : 'none'}
       accessibilityElementsHidden={!visible} importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
       accessibilityViewIsModal={visible}>
@@ -137,7 +127,6 @@ export function MenuDrawer({ children, menu, isolatedEdge = false }: { children:
 const styles = StyleSheet.create({
   root: { flex: 1 },
   foreground: { zIndex: 100 },
-  swipeEdge: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 16 },
   backdrop: { backgroundColor: '#000' },
   panel: { position: 'absolute', left: 0, top: 0, bottom: 0 },
 });

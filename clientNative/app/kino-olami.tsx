@@ -43,6 +43,10 @@ export default function KinoOlamiScreen() {
       );
       if (!isTrustedOrigin) return;
       const message = JSON.parse(nativeEvent.data);
+      if (message?.type === 'kino-olami:open-menu' && !useKinoModalStore.getState().open) {
+        useSideMenuStore.getState().openMenu();
+        return;
+      }
       if (message?.type === 'kino-olami:share-modal' && typeof message.open === 'boolean') {
         setKinoModalOpen(message.open);
       }
