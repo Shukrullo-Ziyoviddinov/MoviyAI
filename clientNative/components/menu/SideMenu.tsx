@@ -154,7 +154,7 @@ export function SideMenu({ children }: SideMenuProps) {
   };
 
   return (
-    <MenuDrawer menu={
+    <MenuDrawer isolatedEdge={pathname === '/kino-olami'} menu={
       <View
         style={[
           styles.panel,

@@ -71,7 +71,7 @@ export default function KinoOlamiScreen() {
         }}
         onMessage={handleWebViewMessage}
         onLoadStart={() => setKinoModalOpen(false)}
-        style={styles.webView}
+        style={[styles.webView, { backgroundColor: colors.bg }]}
         javaScriptEnabled
         domStorageEnabled
         allowsFullscreenVideo
