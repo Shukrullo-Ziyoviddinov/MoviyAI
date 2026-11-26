@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, BackHandler, Easing, Keyboard, PanResponder, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { drawerResponder } from '@/src/utils/side-menu-responder';
 import { useMediaViewerStore } from '@/src/stores/useMediaViewerStore';
+
+export const KinoDrawerNavbarContext = createContext<{
+  interactive: boolean;
+} | null>(null);
 
 function interactionState() {
   const state = useSideMenuStore.getState();
@@ -57,11 +61,11 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
 
   useEffect(() => {
     if (open) {
-      Keyboard.dismiss();
+      if (!webViewHandlesSwipe) Keyboard.dismiss();
       setVisible(true);
     }
     if (!dragging.current) animate(open);
-  }, [open, animate]);
+  }, [open, animate, webViewHandlesSwipe]);
 
   useEffect(() => {
     if (!visible) return;
@@ -79,7 +83,7 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
       progress.stopAnimation();
       dragBase.current = position.current;
       dragging.current = true;
-      Keyboard.dismiss();
+      if (!webViewHandlesSwipe) Keyboard.dismiss();
       setVisible(true);
     },
     move: (dx: number) => {
@@ -87,10 +91,10 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
       position.current = value;
       progress.setValue(value);
     },
-    end: (valid: boolean) => {
+    end: (valid: boolean, openAfterSwipe?: boolean) => {
       dragging.current = false;
       const state = interactionState();
-      const opening = valid ? position.current >= 0.4 : state.open;
+      const opening = valid ? (openAfterSwipe ?? position.current >= 0.4) : state.open;
       if (opening === state.open) {
         animate(opening);
       } else if (opening) {
@@ -99,7 +103,7 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
         state.closeMenu();
       }
     },
-  }), [animate, animation, panelWidth, progress]);
+  }), [animate, animation, panelWidth, progress, webViewHandlesSwipe]);
 
   useEffect(() => {
     if (!webViewHandlesSwipe) return;
@@ -117,14 +121,15 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
       if (valid && swipe.phase !== 'cancel') drag.move(swipe.dx);
       if (swipe.phase !== 'move' || !valid) {
         revision = null;
-        drag.end(valid && swipe.phase === 'end');
+        const releaseDistance = Math.min(42, panelWidth * 0.4);
+        drag.end(valid && swipe.phase === 'end', swipe.dx >= releaseDistance);
       }
     });
     return () => {
       unsubscribe();
       if (revision !== null) drag.end(false);
     };
-  }, [drag, webViewHandlesSwipe]);
+  }, [drag, panelWidth, webViewHandlesSwipe]);
 
   const makeResponder = useCallback((mode: 'open' | 'close') => PanResponder.create(
     drawerResponder(mode, interactionState, {
@@ -135,21 +140,16 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
   ), [drag]);
   const opener = useMemo(() => makeResponder('open'), [makeResponder]);
   const closer = useMemo(() => makeResponder('close'), [makeResponder]);
+  const kinoNavbar = useMemo(() => webViewHandlesSwipe ? {
+    interactive: !visible,
+  } : null, [visible, webViewHandlesSwipe]);
 
   return <View style={[styles.root, visible && !webViewHandlesSwipe && styles.foreground]} {...(!webViewHandlesSwipe && opener.panHandlers)}>
-    <View style={styles.root} pointerEvents={visible && !webViewHandlesSwipe ? 'none' : 'auto'}
+    <View collapsable={false} style={styles.root} pointerEvents={visible && !webViewHandlesSwipe ? 'none' : 'auto'}
       importantForAccessibility={visible ? 'no-hide-descendants' : 'auto'}>{children}</View>
-    {webViewHandlesSwipe ? (
-      <Animated.View
-        pointerEvents={visible ? 'none' : 'box-none'}
-        importantForAccessibility={visible ? 'no-hide-descendants' : 'auto'}
-        style={[StyleSheet.absoluteFill, styles.footer, {
-          opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
-        }]}
-      >
-        {footer}
-      </Animated.View>
-    ) : footer}
+    <KinoDrawerNavbarContext.Provider value={kinoNavbar}>
+      {footer}
+    </KinoDrawerNavbarContext.Provider>
     <View style={[StyleSheet.absoluteFill, styles.foreground]} pointerEvents={visible && (!webViewHandlesSwipe || open) ? 'auto' : 'none'}
       accessibilityElementsHidden={!visible} importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
       accessibilityViewIsModal={visible}>
@@ -171,7 +171,6 @@ export function MenuDrawer({ children, menu, footer, webViewHandlesSwipe = false
 const styles = StyleSheet.create({
   root: { flex: 1 },
   foreground: { zIndex: 100 },
-  footer: { zIndex: 50 },
   backdrop: { backgroundColor: '#000' },
   panel: { position: 'absolute', left: 0, top: 0, bottom: 0 },
 });

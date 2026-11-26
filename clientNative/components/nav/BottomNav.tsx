@@ -1,3 +1,4 @@
+import { KinoDrawerNavbarContext } from '@/components/menu/MenuDrawer';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import {
   HeartIcon,
@@ -12,7 +13,7 @@ import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { Image } from 'expo-image';
 import { router, usePathname } from 'expo-router';
-import { useEffect, useState, type ComponentType } from 'react';
+import { useContext, useEffect, useState, type ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Keyboard,
@@ -53,6 +54,7 @@ export function BottomNav() {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
+  const kinoDrawer = useContext(KinoDrawerNavbarContext);
   const openMenu = useSideMenuStore((s) => s.openMenu);
   const menuOpen = useSideMenuStore((s) => s.open);
   const viewing = useMediaViewerStore((s) => !!s.item);
@@ -134,6 +136,8 @@ export function BottomNav() {
 
   return (
     <View
+      pointerEvents={kinoDrawer && !kinoDrawer.interactive ? 'none' : 'auto'}
+      importantForAccessibility={kinoDrawer && !kinoDrawer.interactive ? 'no-hide-descendants' : 'auto'}
       style={[
         styles.wrap,
         {
