@@ -59,6 +59,8 @@ export function BottomNav() {
   const menuOpen = useSideMenuStore((s) => s.open);
   const viewing = useMediaViewerStore((s) => !!s.item);
   const kinoModalOpen = useKinoModalStore((s) => s.open);
+  const kinoWishlist = useKinoModalStore((s) => s.wishlist);
+  const requestKinoPage = useKinoModalStore((s) => s.requestPage);
   const profile = useAuthStore((s) => s.profile);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
@@ -83,6 +85,10 @@ export function BottomNav() {
   };
 
   const goFavorites = () => {
+    if (pathname === '/kino-olami') {
+      requestKinoPage('wishlist');
+      return;
+    }
     if (pathname === '/favorites') return;
     router.replace('/favorites');
   };
@@ -114,7 +120,8 @@ export function BottomNav() {
       label: 'Kino olami',
       Icon: KinoLogo,
       onPress: () => {
-        if (pathname !== '/kino-olami') router.push('/kino-olami');
+        if (pathname === '/kino-olami') requestKinoPage('catalog');
+        else router.push('/kino-olami');
       },
     },
     {
@@ -132,7 +139,7 @@ export function BottomNav() {
   ];
 
   const active: TabKey | null =
-    pathname === '/kino-olami' ? 'kino' : pathname === '/favorites' ? 'favorites' : 'home';
+    pathname === '/kino-olami' ? (kinoWishlist ? 'favorites' : 'kino') : pathname === '/favorites' ? 'favorites' : 'home';
 
   return (
     <View

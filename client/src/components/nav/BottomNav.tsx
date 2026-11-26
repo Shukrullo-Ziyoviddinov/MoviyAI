@@ -36,15 +36,17 @@ const TABS: { key: TabKey; labelKey: string; Icon: IconComp; href?: string }[] =
   { key: "profile", labelKey: "menu.profile", Icon: PersonIcon, href: "/profile" },
 ];
 
-export function BottomNav() {
+type KinoNav = { wishlist: boolean; open: (page: "catalog" | "wishlist") => void };
+
+export function BottomNav({ kino }: { kino?: KinoNav } = {}) {
   return (
     <Suspense fallback={null}>
-      <BottomNavBar />
+      <BottomNavBar kino={kino} />
     </Suspense>
   );
 }
 
-function BottomNavBar() {
+function BottomNavBar({ kino }: { kino?: KinoNav }) {
   const pathname = usePathname();
   const router = useRouter();
   const { colors, isDark } = useTheme();
@@ -60,11 +62,15 @@ function BottomNavBar() {
 
   if (mobileOpen) return null;
 
-  const active = TABS.find((tab) => tab.href === pathname)?.key;
+  const active = kino ? (kino.wishlist ? "favorites" : "kino") : TABS.find((tab) => tab.href === pathname)?.key;
 
   function onTab(key: TabKey, href?: string) {
     if (key === "menu") {
       openMenu();
+      return;
+    }
+    if (kino && (key === "favorites" || key === "kino")) {
+      kino.open(key === "favorites" ? "wishlist" : "catalog");
       return;
     }
     if (!href || pathname === href) return;
