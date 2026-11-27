@@ -2,6 +2,16 @@
 
 MoviyAI mobile client (React Native / Expo).
 
+## Web search
+
+The Next.js client uses `https://www.moviyai.uz` for movie canonical URLs,
+site name metadata and the sitemap. Set `SITE_URL` before building if the
+public frontend origin changes. Deployments should redirect alternate public
+hostnames to the canonical hostname while preserving the path.
+
+The sitemap is available at `/sitemap.xml` and is linked from `/robots.txt`.
+Movie detail URLs use `/movie/{id}` and the sitemap refreshes from the movie API.
+
 ## Kino olami
 
 The bottom navbar logo and the side menu open `/kino-olami`.

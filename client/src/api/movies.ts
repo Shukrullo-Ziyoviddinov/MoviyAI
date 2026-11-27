@@ -90,8 +90,14 @@ export async function fetchMovies(): Promise<HomeMovie[]> {
   return read<HomeMovie[]>("/api/movies");
 }
 
-export async function fetchMovieById(id: number): Promise<Movie> {
-  return read<Movie>(`/api/movies/${id}`);
+export async function fetchMovieById(id: number): Promise<Movie | null> {
+  const result = await apiFetch<ApiResponse<Movie>>(`/api/movies/${id}`, {
+    signal: AbortSignal.timeout(15000),
+    next: { revalidate: 60 },
+  }, true);
+  if (result === null) return null;
+  if (!result.ok || result.data == null) throw new Error(result.error || "Request failed");
+  return result.data;
 }
 
 export async function fetchMovieComments(id: number, limit = 50): Promise<MovieCommentsResult> {

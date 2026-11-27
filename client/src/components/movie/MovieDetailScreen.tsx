@@ -111,6 +111,7 @@ export function MovieDetailScreen({
 
   const lang = language === "en" ? "uz" : language;
   const title = current ? displayMovieTitle(current, lang) : "";
+  const originalTitle = current?.catalogIdentity?.originalTitle?.trim();
   const description: MovieDescription | null = current?.description
     ? (current.description[lang] ?? current.description.uz ?? null)
     : null;
@@ -296,6 +297,9 @@ export function MovieDetailScreen({
           >
             {title}
           </h1>
+          {originalTitle && originalTitle.toLowerCase() !== title.trim().toLowerCase() ? (
+            <p className="text-sm md:text-base" style={{ color: colors.text }}>{originalTitle}</p>
+          ) : null}
           <HorizontalScroll className="mt-2.5 gap-2 py-1">
             {specs.map((item) => (
               <span

@@ -29,7 +29,9 @@ export function clearAuthToken() {
   window.localStorage.removeItem(authStorageKey(TOKEN_KEY));
 }
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T>;
+export async function apiFetch<T>(path: string, init: RequestInit, allowNotFound: true): Promise<T | null>;
+export async function apiFetch<T>(path: string, init?: RequestInit, allowNotFound = false): Promise<T | null> {
   const headers = new Headers(init?.headers);
   headers.set("Accept", "application/json");
   if (init?.body && !headers.has("Content-Type")) {
@@ -39,5 +41,6 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   const response = await fetch(`${apiBaseUrl}${path}`, { ...init, headers });
+  if (allowNotFound && response.status === 404) return null;
   return (await response.json()) as T;
 }
