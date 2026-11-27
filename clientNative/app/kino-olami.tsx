@@ -20,6 +20,7 @@ export default function KinoOlamiScreen() {
   const canGoBack = useRef(false);
   const [embedUrl, setEmbedUrl] = useState(initialEmbedUrl);
   const [frameReady, setFrameReady] = useState(false);
+  const [frameDocument, setFrameDocument] = useState<number | null>(null);
   const [sessionRevision, setSessionRevision] = useState(0);
   const sessionError = useRef(false);
   const token = useAuthStore((state) => state.token);
@@ -39,11 +40,11 @@ export default function KinoOlamiScreen() {
   }, [embedUrl]);
 
   useEffect(() => {
-    if (!frameReady || !focused) return;
-    if (!hydrated || !token) {
-      send({ type: 'moviyai:kino-session', token: null });
-      return;
-    }
+    if (frameReady && frameDocument !== null) send({ type: 'moviyai:kino-session', token: null });
+  }, [focused, frameDocument, frameReady, hydrated, send, token]);
+
+  useEffect(() => {
+    if (!frameReady || frameDocument === null || !focused || !hydrated || !token) return;
     const controller = new AbortController();
     let request = 0;
     async function refresh() {
@@ -69,15 +70,14 @@ export default function KinoOlamiScreen() {
     return () => {
       controller.abort();
       clearInterval(timer);
-      send({ type: 'moviyai:kino-session', token: null });
     };
-  }, [focused, frameReady, hydrated, send, sessionRevision, token]);
+  }, [focused, frameDocument, frameReady, hydrated, send, sessionRevision, token]);
 
   useEffect(() => {
-    if (!focused || !frameReady || !requestedPage) return;
+    if (!focused || !frameReady || frameDocument === null || !requestedPage) return;
     send({ type: 'moviyai:kino-page', page: requestedPage.page });
     useKinoModalStore.getState().clearPageRequest();
-  }, [focused, frameReady, requestedPage, send]);
+  }, [focused, frameDocument, frameReady, requestedPage, send]);
 
   const goBackInWebView = useCallback(() => {
     if (useSideMenuStore.getState().open || !webView.current || !canGoBack.current) {
@@ -106,6 +106,10 @@ export default function KinoOlamiScreen() {
       if (!isTrustedOrigin) return;
       const message = JSON.parse(nativeEvent.data);
       if (message?.type === 'kino-olami:ready') setFrameReady(true);
+      if (message?.type === 'kino-olami:native-document' &&
+          typeof message.id === 'number' && Number.isFinite(message.id)) {
+        setFrameDocument(message.id);
+      }
       if (message?.type === 'kino-olami:page' && typeof message.wishlist === 'boolean') {
         useKinoModalStore.getState().setWishlist(message.wishlist);
       }
@@ -143,17 +147,25 @@ export default function KinoOlamiScreen() {
         onError={() => {
           if (embedUrl !== publicEmbedUrl) {
             canGoBack.current = false;
+            setFrameReady(false);
+            setFrameDocument(null);
             setEmbedUrl(publicEmbedUrl);
           }
         }}
         onMessage={handleWebViewMessage}
         onLoadStart={() => {
-          setFrameReady(false);
           setKinoModalOpen(false);
         }}
         onLoadEnd={() => {
+          // Both platforms can emit load callbacks for in-page history.
+          webView.current?.injectJavaScript(`
+            window.ReactNativeWebView?.postMessage(JSON.stringify({
+              type: 'kino-olami:native-document',
+              id: performance.timeOrigin,
+            }));
+            true;
+          `);
           send({ type: 'moviyai:hello' });
-          setSessionRevision((value) => value + 1);
         }}
         style={[styles.webView, { backgroundColor: colors.bg }]}
         javaScriptEnabled

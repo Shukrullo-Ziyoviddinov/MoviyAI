@@ -40,11 +40,11 @@ export function KinoOlamiFrame({ embedUrl }: { embedUrl: string }) {
   }, [allowedOrigin, openAuthModal, ready, sessionError, token]);
 
   useEffect(() => {
-    if (!frameOrigin) return;
-    if (!token || !ready) {
-      send({ type: "moviyai:kino-session", token: null });
-      return;
-    }
+    if (frameOrigin) send({ type: "moviyai:kino-session", token: null });
+  }, [frameOrigin, ready, send, token]);
+
+  useEffect(() => {
+    if (!frameOrigin || !token || !ready) return;
     const controller = new AbortController();
     let request = 0;
     async function refresh() {
@@ -70,7 +70,6 @@ export function KinoOlamiFrame({ embedUrl }: { embedUrl: string }) {
     return () => {
       controller.abort();
       window.clearInterval(timer);
-      send({ type: "moviyai:kino-session", token: null });
     };
   }, [frameOrigin, ready, send, sessionRevision, token]);
 
