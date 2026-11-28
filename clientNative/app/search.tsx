@@ -1,5 +1,5 @@
 import { GuideSmsBubble } from '@/components/common/GuideSmsBubble';
-import { CameraIcon, ChevronLeftIcon } from '@/components/icons';
+import { CameraIcon, ChevronLeftIcon, CloseIcon, SendIcon, VideoIcon } from '@/components/icons';
 import { dismissSearchGuide } from '@/src/api/auth';
 import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
@@ -15,6 +15,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Pressable,
+  Animated,
+  Easing,
   Alert,
   Keyboard,
   StyleSheet,
@@ -34,6 +36,12 @@ export default function SearchScreen() {
   const inputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
   const [pendingMedia, setPendingMedia] = useState<SearchMedia | null>(null);
+  const selectionMotion = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    selectionMotion.setValue(0);
+    if (pendingMedia) Animated.timing(selectionMotion, { toValue: 1, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    return () => selectionMotion.stopAnimation();
+  }, [pendingMedia, selectionMotion]);
   const [searchMedia, setSearchMedia] = useState<SearchMedia | null>(null);
   const [historyId, setHistoryId] = useState<string | null>(null), [hasHistory, setHasHistory] = useState(false), [historyVersion, setHistoryVersion] = useState(0);
   const picking = useRef(false);
@@ -124,7 +132,10 @@ export default function SearchScreen() {
             },
           ]}
         >
-          <TextInput
+          {pendingMedia ? <Animated.View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingRight: 8, opacity: selectionMotion, transform: [{ translateY: selectionMotion.interpolate({ inputRange: [0, 1], outputRange: [5, 0] }) }] }}>
+            {pendingMedia.type === 'image' ? <Image source={{ uri: pendingMedia.uri }} contentFit="cover" style={{ width: 32, height: 32, borderRadius: 8 }} /> : <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}><VideoIcon size={20} color={colors.icon} /></View>}
+            <Text numberOfLines={1} style={{ flex: 1, fontSize: 14, fontWeight: '500', color: colors.text }}>{pendingMedia.fileName || t('mediaSearch.selected')}</Text>
+          </Animated.View> : <TextInput
             ref={inputRef}
             value={query}
             onChangeText={setQuery}
@@ -135,22 +146,18 @@ export default function SearchScreen() {
             autoCorrect={false}
             autoCapitalize="none"
             clearButtonMode="while-editing"
-          />
-          <Pressable
+          />}
+          {pendingMedia ? <Pressable accessibilityLabel={t('chat.send')} hitSlop={6} onPress={() => { Keyboard.dismiss(); setSearchMedia(pendingMedia); setPendingMedia(null); setQuery(''); setShowGuide(false); }} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' }}><SendIcon size={17} color={colors.textOnAccent} /></Pressable> : <Pressable
             style={styles.cameraBtn}
             onPress={() => void pickMedia()}
             hitSlop={8}
           >
             <CameraIcon size={28} color={colors.icon} strokeWidth={2.15} />
-          </Pressable>
+          </Pressable>}
         </View>
+        {pendingMedia && <Pressable accessibilityLabel={t('common.close')} onPress={() => setPendingMedia(null)} hitSlop={6} style={{ width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}><CloseIcon size={19} color={colors.textMuted} /></Pressable>}
       </View>
 
-      {pendingMedia && <View style={{ margin: 16, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSoft, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <Text numberOfLines={1} style={{ flex: 1, color: colors.text }}>{pendingMedia.fileName || t('mediaSearch.selected')}</Text>
-        <Pressable onPress={() => { setSearchMedia(pendingMedia); setPendingMedia(null); }} style={{ padding: 12, borderRadius: 12, backgroundColor: colors.accent }}><Text style={{ color: colors.textOnAccent }}>{t('chat.send')}</Text></Pressable>
-        <Pressable onPress={() => setPendingMedia(null)}><Text style={{ color: colors.text, fontSize: 24 }}>×</Text></Pressable>
-      </View>}
       {profile && (searchMedia || historyId) && <SearchMediaResultModal key={profile.id + (historyId || searchMedia!.uri)} media={searchMedia ?? undefined} historyId={historyId ?? undefined} onClose={() => { setSearchMedia(null); setHistoryId(null); setHistoryVersion(value => value + 1); }} />}
       <SearchHistory version={historyVersion} onOpen={id => { setHistoryId(id); setShowGuide(false); }} onHasItems={setHasHistory} />
 

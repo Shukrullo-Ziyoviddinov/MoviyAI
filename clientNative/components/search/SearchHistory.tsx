@@ -42,7 +42,7 @@ export function SearchHistory({ version, onOpen, onHasItems }: { version: number
   }
   if (!token || !visibleItems.length && !error) return null;
   return <FlatList
-    style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+    style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingTop: 10, paddingBottom: 32 }}
     data={visibleItems} keyExtractor={item => item.id} initialNumToRender={10} maxToRenderPerBatch={6}
     ListHeaderComponent={<Text style={{ color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: 12 }}>{t('mediaSearch.history')}</Text>}
     renderItem={({ item }) => <View style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 16, backgroundColor: colors.panelSoft }}>
@@ -50,7 +50,7 @@ export function SearchHistory({ version, onOpen, onHasItems }: { version: number
         <Image source={item.poster ? { uri: item.poster } : undefined} contentFit="cover" style={{ width: 40, height: 60, borderRadius: 8, backgroundColor: colors.panel }} />
         <Text numberOfLines={2} style={{ flex: 1, fontSize: 14, fontWeight: '600', color: colors.text }}>{language === 'ru' ? item.titleRu || item.title : language === 'uz' ? item.titleUz || item.title : item.title}</Text>
       </Pressable>
-      <Pressable accessibilityLabel={t('mediaSearch.delete')} disabled={!!deleting} onPress={() => void remove(item.id)} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}><CloseIcon size={20} color={colors.textMuted} /></Pressable>
+      <Pressable accessibilityLabel={t('mediaSearch.delete')} disabled={!!deleting} onPress={() => void remove(item.id)} style={{ width: 40, height: 40, alignItems: 'flex-end', justifyContent: 'center' }}><CloseIcon size={20} color={colors.textMuted} /></Pressable>
     </View>}
     ListFooterComponent={<>
       {error && <Text style={{ color: colors.text, paddingVertical: 8 }}>{t('mediaSearch.historyError')}</Text>}

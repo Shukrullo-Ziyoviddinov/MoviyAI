@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { dismissSearchGuide } from "@/api/auth";
 import { useAuth } from "@/components/auth/auth-state";
 import { useMobileBackClose } from "@/components/common/useMobileBackClose";
-import { CameraIcon, ChevronLeftIcon } from "@/components/icons";
+import { CameraIcon, ChevronLeftIcon, CloseIcon, SendIcon } from "@/components/icons";
 import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
 import { searchCopy } from "@/data/searchCopy";
@@ -63,6 +63,12 @@ export function SearchModal({
   const [searchFile, setSearchFile] = useState<File | null>(null);
   const [historyId, setHistoryId] = useState<string | null>(null), [hasHistory, setHasHistory] = useState(false), [historyVersion, setHistoryVersion] = useState(0);
   const [fileError, setFileError] = useState(false);
+  const [selectionPreview, setSelectionPreview] = useState('');
+  useEffect(() => {
+    const url = selectedFile ? URL.createObjectURL(selectedFile) : '';
+    const frame = requestAnimationFrame(() => setSelectionPreview(url));
+    return () => { cancelAnimationFrame(frame); if (url) URL.revokeObjectURL(url); };
+  }, [selectedFile]);
   const t = useT();
   useEffect(() => {
     const frame = requestAnimationFrame(() => { setHistoryId(null); setSearchFile(null); setSelectedFile(null); });
@@ -200,7 +206,12 @@ export function SearchModal({
             className="flex min-h-[42px] min-w-0 flex-1 items-center rounded-full border pr-1.5 pl-3.5"
             style={{ backgroundColor: colors.panelSoft, borderColor: colors.borderSoft }}
           >
-            <input
+            {selectedFile ? <div className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-2" style={{ animation: 'search-attachment-in 220ms ease-out' }}>
+              <span className="h-8 w-8 shrink-0 overflow-hidden rounded-lg" style={{ backgroundColor: colors.bg }}>
+                {selectionPreview && (mediaKind(selectedFile) === 'video' ? <video src={selectionPreview} muted playsInline preload="metadata" className="h-full w-full object-cover" /> : <img src={selectionPreview} alt="" className="h-full w-full object-cover" />)}
+              </span>
+              <span className="min-w-0 truncate text-sm font-medium" style={{ color: colors.text }}>{selectedFile.name}</span>
+            </div> : <input
               ref={inputRef}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -210,11 +221,12 @@ export function SearchModal({
               autoCapitalize="none"
               className="search-modal-input min-w-0 flex-1 bg-transparent py-2.5 pr-2 text-[16px] font-medium outline-none"
               style={{ color: colors.text, caretColor: colors.accent, ["--search-placeholder" as string]: colors.textMuted }}
-            />
-            <button type="button" aria-label="Kamera" onClick={() => { if (requireAuth()) fileInput.current?.click(); }} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+            />}
+            {selectedFile ? <button type="button" aria-label={t('chat.send')} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: colors.accent, animation: 'search-attachment-in 220ms ease-out' }} onClick={() => { inputRef.current?.blur(); setSearchFile(selectedFile); setSelectedFile(null); setQuery(''); setGuideOn(false); }}><SendIcon size={17} color={colors.textOnAccent} /></button> : <button type="button" aria-label="Kamera" onClick={() => { if (requireAuth()) fileInput.current?.click(); }} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
               <CameraIcon size={28} color={colors.icon} strokeWidth={2.15} />
-            </button>
+            </button>}
           </div>
+          {selectedFile && <button type="button" onClick={() => setSelectedFile(null)} aria-label={t('common.close')} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ animation: 'search-attachment-in 220ms ease-out' }}><CloseIcon size={19} color={colors.textMuted} /></button>}
         </div>
 
         <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" className="hidden" onChange={event => {
@@ -223,11 +235,6 @@ export function SearchModal({
           try { mediaKind(file); setSelectedFile(file); setFileError(false); } catch { setFileError(true); }
         }} />
         {fileError && <p role="alert" className="px-5 pt-3 text-sm" style={{ color: colors.text }}>{t('mediaSearch.invalid')}</p>}
-        {selectedFile && <div className="mx-4 mt-4 flex items-center gap-3 rounded-2xl border p-4" style={{ borderColor: colors.borderSoft, color: colors.text }}>
-          <span className="min-w-0 flex-1 truncate">{selectedFile.name}</span>
-          <button className="rounded-xl px-4 py-2 font-semibold" style={{ backgroundColor: colors.accent, color: colors.textOnAccent }} onClick={() => { inputRef.current?.blur(); setSearchFile(selectedFile); setSelectedFile(null); setGuideOn(false); }}>{t('chat.send')}</button>
-          <button onClick={() => setSelectedFile(null)} aria-label={t('common.close')}>×</button>
-        </div>}
 
         <SearchHistory active={open} version={historyVersion} onOpen={id => { setHistoryId(id); setGuideOn(false); }} onHasItems={setHasHistory} />
         {!hasHistory && <div className="flex flex-1 flex-col items-center justify-center px-8 pb-12">
@@ -274,6 +281,10 @@ export function SearchModal({
       {profile && (searchFile || historyId) && <SearchMediaResultModal key={profile.id + (historyId || searchFile!.name + searchFile!.lastModified)} file={searchFile ?? undefined} historyId={historyId ?? undefined} onClose={() => { setSearchFile(null); setHistoryId(null); setHistoryVersion(value => value + 1); }} />}
       <style>{`
         .search-modal-input::placeholder { color: var(--search-placeholder); }
+        @keyframes search-attachment-in {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         @keyframes search-guide-in {
           from { opacity: 0; transform: scale(0.35, 0.12); }
           to { opacity: 1; transform: scale(1, 1); }
