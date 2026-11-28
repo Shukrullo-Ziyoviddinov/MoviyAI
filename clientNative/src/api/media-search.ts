@@ -1,12 +1,24 @@
 import { File } from 'expo-file-system';
 import * as Crypto from 'expo-crypto';
 import { fetch } from 'expo/fetch';
-import { apiBaseUrl } from './client';
+import { api, apiBaseUrl } from './client';
 import { getAuthTokenKey, getAuthTokenSync } from '@/src/utils/authToken';
 import { getSecureItem } from '@/src/utils/storage';
 import { prepareChatVideo } from '@/src/media/prepare-chat-video';
 import { readMediaSearchStream } from './media-search-stream';
 import type { ChatStage } from '@/src/types/chat-progress';
+import type { MovieSearchResult } from '@/src/types/chat';
+
+export type SearchHistoryItem = { id: string; title: string; titleUz: string | null; titleRu: string | null; poster: string | null; kind: 'image' | 'video'; createdAt: string };
+export type SavedMediaSearch = { id: string; movie: MovieSearchResult; media: { kind: 'image' | 'video'; url: string } };
+async function historyRequest<T>(path: string, method = 'GET', signal?: AbortSignal): Promise<T> {
+  const response = await api.request<{ ok: boolean; data: T }>({ url: '/api/media-search/history' + path, method, signal, timeout: 30000 });
+  if (!response.data.ok) throw new Error('Search history unavailable');
+  return response.data.data;
+}
+export const fetchSearchHistory = (cursor: string | null = null, signal?: AbortSignal) => historyRequest<{ items: SearchHistoryItem[]; nextCursor: string | null }>(cursor ? '?cursor=' + encodeURIComponent(cursor) : '', 'GET', signal);
+export const readSearchHistory = (id: string, signal?: AbortSignal) => historyRequest<SavedMediaSearch>('/' + encodeURIComponent(id), 'GET', signal);
+export const deleteSearchHistory = (id: string) => historyRequest<{ id: string; pending: boolean }>('/' + encodeURIComponent(id), 'DELETE');
 
 export type SearchMedia = { uri: string; type: 'image' | 'video'; mimeType?: string; fileName?: string; durationSeconds?: number };
 export async function searchFromMedia(media: SearchMedia, id: string, language: string, signal: AbortSignal, progress: (stage: ChatStage) => void) {

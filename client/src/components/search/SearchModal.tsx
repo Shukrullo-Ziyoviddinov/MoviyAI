@@ -10,6 +10,7 @@ import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
 import { searchCopy } from "@/data/searchCopy";
 import { SearchMediaResultModal } from './SearchMediaResultModal';
+import { SearchHistory } from './SearchHistory';
 import { mediaKind } from '@/api/media-search';
 import { useT } from '@/i18n/useT';
 
@@ -60,8 +61,13 @@ export function SearchModal({
   const fileInput = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [searchFile, setSearchFile] = useState<File | null>(null);
+  const [historyId, setHistoryId] = useState<string | null>(null), [hasHistory, setHasHistory] = useState(false), [historyVersion, setHistoryVersion] = useState(0);
   const [fileError, setFileError] = useState(false);
   const t = useT();
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => { setHistoryId(null); setSearchFile(null); setSelectedFile(null); });
+    return () => cancelAnimationFrame(frame);
+  }, [profile?.id]);
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
   const [shown, setShown] = useState(false);
@@ -80,7 +86,7 @@ export function SearchModal({
 
   useEffect(() => {
     if (!open) {
-      const frame = window.requestAnimationFrame(() => { setSearchFile(null); setSelectedFile(null); setFileError(false); setShown(false); });
+      const frame = window.requestAnimationFrame(() => { setSearchFile(null); setHistoryId(null); setSelectedFile(null); setFileError(false); setShown(false); });
       const timer = window.setTimeout(() => setMounted(false), OPEN_MS);
       return () => { window.cancelAnimationFrame(frame); window.clearTimeout(timer); };
     }
@@ -107,11 +113,11 @@ export function SearchModal({
   useEffect(() => {
     if (!open) return;
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape" && !searchFile) onClose();
+      if (event.key === "Escape" && !searchFile && !historyId) onClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose, searchFile]);
+  }, [open, onClose, searchFile, historyId]);
 
   useEffect(() => {
     if (!open) {
@@ -223,7 +229,8 @@ export function SearchModal({
           <button onClick={() => setSelectedFile(null)} aria-label={t('common.close')}>×</button>
         </div>}
 
-        <div className="flex flex-1 flex-col items-center justify-center px-8 pb-12">
+        <SearchHistory active={open} version={historyVersion} onOpen={id => { setHistoryId(id); setGuideOn(false); }} onHasItems={setHasHistory} />
+        {!hasHistory && <div className="flex flex-1 flex-col items-center justify-center px-8 pb-12">
           <img src="/images/iasearch_preview_rev_1.png" alt="" className="mb-[22px] h-[150px] w-[150px] object-contain" />
           <p className="mb-2.5 text-center text-[13px] font-bold tracking-[0.3px] uppercase" style={{ color: colors.accent }}>
             {copy.aiHelper}
@@ -234,7 +241,7 @@ export function SearchModal({
           <p className="max-w-[300px] text-center text-[15px] leading-[22px] font-medium" style={{ color: colors.textMuted }}>
             {copy.heroSubtitle}
           </p>
-        </div>
+        </div>}
 
         {guideOn ? (
           <div
@@ -264,7 +271,7 @@ export function SearchModal({
           </div>
         ) : null}
       </div>
-      {searchFile && <SearchMediaResultModal key={searchFile.name + searchFile.lastModified} file={searchFile} onClose={() => setSearchFile(null)} />}
+      {profile && (searchFile || historyId) && <SearchMediaResultModal key={profile.id + (historyId || searchFile!.name + searchFile!.lastModified)} file={searchFile ?? undefined} historyId={historyId ?? undefined} onClose={() => { setSearchFile(null); setHistoryId(null); setHistoryVersion(value => value + 1); }} />}
       <style>{`
         .search-modal-input::placeholder { color: var(--search-placeholder); }
         @keyframes search-guide-in {

@@ -2,7 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { searchUpload, validSearchImage } from '../dist/media-search/media-search.validator.js';
 import { identifySearchUpload, publicSearchMovie, analyzeSearch, reserveSearch } from '../dist/media-search/media-search.service.js';
-import { MediaSearch, MediaSearchLease } from '../dist/media-search/media-search.model.js';
+import { MediaSearch, MediaSearchLease, MediaSearchDeletion } from '../dist/media-search/media-search.model.js';
+
+const originalDeletionExists = MediaSearchDeletion.exists;
+test.beforeEach(() => { MediaSearchDeletion.exists = async () => null; });
+test.afterEach(() => { MediaSearchDeletion.exists = originalDeletionExists; });
 
 const id = 'c9b36f4c-1137-4fb2-a732-c930cc629625';
 const input = { id, kind: 'image', size: 120, mimeType: 'image/jpeg', hash: 'a'.repeat(64) };

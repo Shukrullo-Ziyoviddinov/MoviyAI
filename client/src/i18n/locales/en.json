@@ -45,6 +45,9 @@
     "guideGotIt": "Got it"
   },
   "mediaSearch": {
+    "history": "Search history",
+    "delete": "Delete search",
+    "historyError": "Could not update search history. Please try again.",
     "heading": "Find a film from media",
     "selected": "Selected photo or video",
     "invalid": "Choose JPG, PNG or WebP up to 4 MB, or MP4, MOV, WebM up to 3 minutes and 80 MB.",

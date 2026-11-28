@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { MediaSearch, MediaSearchLease } from './media-search.model.js';
+import { MediaSearch, MediaSearchLease, MediaSearchDeletion } from './media-search.model.js';
 import { searchUpload, validSearchImage } from './media-search.validator.js';
 import { chatImageKey, chatVideoKey, signChatImage, inspectChatImage, inspectChatVideo } from '../services/r2.service.js';
 import { findMovieFromImages } from '../ai/services/image-movie.service.js';
@@ -33,6 +33,7 @@ export async function identifySearchUpload(row: { kind: string; key: string; siz
 }
 export async function reserveSearch(userId: string, raw: unknown, sign = signChatImage) {
   const input = searchUpload.parse(raw);
+  if (await MediaSearchDeletion.exists({ _id: input.id })) return failure(410, 'Search deleted');
   const key = (input.kind === 'video' ? chatVideoKey(`search-${input.id}`, input.id, input.hash) : chatImageKey(`search-${input.id}`, input.id, 0, input.hash));
   try {
     await MediaSearch.updateOne({ _id: input.id, userId }, { $setOnInsert: {
@@ -41,7 +42,7 @@ export async function reserveSearch(userId: string, raw: unknown, sign = signCha
     } }, { upsert: true });
   } catch (error) { if ((error as { code?: number }).code === 11000) failure(409, 'Search already exists'); else throw error; }
   const row = await MediaSearch.findOne({ _id: input.id, userId }).lean();
-  if (!row || row.expiresAt <= new Date() || row.hash !== input.hash || row.size !== input.size || row.mimeType !== input.mimeType || row.kind !== input.kind)
+  if (!row || row.deletedAt || row.expiresAt <= new Date() || row.hash !== input.hash || row.size !== input.size || row.mimeType !== input.mimeType || row.kind !== input.kind)
     return failure(409, 'Search expired or attachment changed');
   if (row.status === 'processing' && row.lockUntil > new Date()) return failure(409, 'Search in progress');
   const seconds = Math.min(300, Math.floor((row.expiresAt.getTime() - Date.now()) / 1000) - 60);
@@ -52,7 +53,7 @@ export async function reserveSearch(userId: string, raw: unknown, sign = signCha
 
 export async function analyzeSearch(userId: string, id: string, language: 'uz' | 'ru' | 'en', signal: AbortSignal, progress?: ChatProgress) {
   signal.throwIfAborted();
-  const prior = await MediaSearch.findOne({ _id: id, userId, expiresAt: { $gt: new Date() } }).lean();
+  const prior = await MediaSearch.findOne({ _id: id, userId, deletedAt: null, $or: [{ status: 'completed' }, { expiresAt: { $gt: new Date() } }] }).lean();
   if (!prior) return failure(404, 'Search not found');
   if (prior.status === 'completed' && prior.movie) return publicSearchMovie(prior.movie as MovieSearchResult);
   const token = randomUUID(), until = new Date(Date.now() + 240000);
@@ -60,10 +61,10 @@ export async function analyzeSearch(userId: string, id: string, language: 'uz' |
     await MediaSearchLease.findOneAndUpdate({ _id: userId, until: { $lte: new Date() } }, { $set: { token, until } }, { upsert: true });
   } catch (error) { if ((error as { code?: number }).code === 11000) return failure(429, 'Another media search is in progress'); throw error; }
   try {
-    const row = await MediaSearch.findOneAndUpdate({ _id: id, userId, status: { $ne: 'completed' }, expiresAt: { $gt: new Date() }, lockUntil: { $lte: new Date() } },
+    const row = await MediaSearch.findOneAndUpdate({ _id: id, userId, deletedAt: null, status: { $ne: 'completed' }, expiresAt: { $gt: new Date() }, lockUntil: { $lte: new Date() } },
       { $set: { status: 'processing', token, lockUntil: until } }, { returnDocument: 'after' }).lean();
     if (!row) {
-      const completed = await MediaSearch.findOne({ _id: id, userId, status: 'completed', expiresAt: { $gt: new Date() } }).lean();
+      const completed = await MediaSearch.findOne({ _id: id, userId, status: 'completed', deletedAt: null }).lean();
       if (completed?.movie) return publicSearchMovie(completed.movie as MovieSearchResult);
       return failure(409, 'Search in progress');
     }

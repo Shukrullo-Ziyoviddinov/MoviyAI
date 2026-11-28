@@ -7,6 +7,7 @@ import { getSecureItem, setSecureItem } from '@/src/utils/storage';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { SearchMediaResultModal } from '@/components/search/SearchMediaResultModal';
+import { SearchHistory } from '@/components/search/SearchHistory';
 import type { SearchMedia } from '@/src/api/media-search';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { router } from 'expo-router';
@@ -34,6 +35,7 @@ export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const [pendingMedia, setPendingMedia] = useState<SearchMedia | null>(null);
   const [searchMedia, setSearchMedia] = useState<SearchMedia | null>(null);
+  const [historyId, setHistoryId] = useState<string | null>(null), [hasHistory, setHasHistory] = useState(false), [historyVersion, setHistoryVersion] = useState(0);
   const picking = useRef(false);
   async function pickMedia() {
     if (!requireAuth('profile') || picking.current) return;
@@ -56,6 +58,10 @@ export default function SearchScreen() {
   const profile = useAuthStore((s) => s.profile);
   const setSession = useAuthStore((s) => s.setSession);
   const requireAuth = useAuthStore((s) => s.requireAuth);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => { setHistoryId(null); setSearchMedia(null); setPendingMedia(null); });
+    return () => cancelAnimationFrame(frame);
+  }, [profile?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -145,9 +151,10 @@ export default function SearchScreen() {
         <Pressable onPress={() => { setSearchMedia(pendingMedia); setPendingMedia(null); }} style={{ padding: 12, borderRadius: 12, backgroundColor: colors.accent }}><Text style={{ color: colors.textOnAccent }}>{t('chat.send')}</Text></Pressable>
         <Pressable onPress={() => setPendingMedia(null)}><Text style={{ color: colors.text, fontSize: 24 }}>×</Text></Pressable>
       </View>}
-      {searchMedia && <SearchMediaResultModal media={searchMedia} onClose={() => setSearchMedia(null)} />}
+      {profile && (searchMedia || historyId) && <SearchMediaResultModal key={profile.id + (historyId || searchMedia!.uri)} media={searchMedia ?? undefined} historyId={historyId ?? undefined} onClose={() => { setSearchMedia(null); setHistoryId(null); setHistoryVersion(value => value + 1); }} />}
+      <SearchHistory version={historyVersion} onOpen={id => { setHistoryId(id); setShowGuide(false); }} onHasItems={setHasHistory} />
 
-      <View style={styles.hero}>
+      {!hasHistory && <View style={styles.hero}>
         <Image
           source={SEARCH_HERO}
           style={styles.heroImage}
@@ -163,7 +170,7 @@ export default function SearchScreen() {
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
           {t('search.heroSubtitle')}
         </Text>
-      </View>
+      </View>}
 
       {guideReady ? (
         <GuideSmsBubble

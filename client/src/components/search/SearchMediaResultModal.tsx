@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { searchFromMedia, mediaKind } from '@/api/media-search';
+import { searchFromMedia, mediaKind, readSearchHistory } from '@/api/media-search';
 import type { MovieSearchResult } from '@/types/chat';
 import type { ChatStage } from '@/types/chat-progress';
 import { useTheme } from '@/components/theme/theme-state';
@@ -11,7 +11,7 @@ import { useT } from '@/i18n/useT';
 import { UzbekMovieLinks } from '@/components/chat/UzbekMovieLinks';
 import { CloseIcon } from '@/components/icons';
 
-export function SearchMediaResultModal({ file, onClose }: { file: File; onClose: () => void }) {
+export function SearchMediaResultModal({ file, historyId, onClose }: { file?: File; historyId?: string; onClose: () => void }) {
   const { colors } = useTheme(); const { language } = useLanguage(); const t = useT();
   const [shown, setShown] = useState(false), [preview, setPreview] = useState('');
   const [movie, setMovie] = useState<MovieSearchResult | null>(null), [error, setError] = useState<string | null>(null);
@@ -19,17 +19,22 @@ export function SearchMediaResultModal({ file, onClose }: { file: File; onClose:
   const requestId = useRef(crypto.randomUUID());
   const closing = useRef(false);
   const controller = useRef<AbortController | null>(null), closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => { const url = URL.createObjectURL(file); const frame = requestAnimationFrame(() => { setPreview(url); setShown(true); }); return () => { URL.revokeObjectURL(url); cancelAnimationFrame(frame); if (closeTimer.current) clearTimeout(closeTimer.current); }; }, [file]);
+  const [savedKind, setSavedKind] = useState<'image' | 'video'>('image');
+  useEffect(() => { const url = file ? URL.createObjectURL(file) : ''; const frame = requestAnimationFrame(() => { if (url) setPreview(url); setShown(true); }); return () => { if (url) URL.revokeObjectURL(url); cancelAnimationFrame(frame); if (closeTimer.current) clearTimeout(closeTimer.current); }; }, [file]);
   useEffect(() => {
     const abort = new AbortController();
     controller.current = abort;
-    searchFromMedia(file, requestId.current, language, abort.signal, value => { if (!abort.signal.aborted) setStage(value); })
+    const work = historyId ? readSearchHistory(historyId, abort.signal).then(saved => {
+      if (!abort.signal.aborted) { setPreview(saved.media.url); setSavedKind(saved.media.kind); }
+      return saved.movie;
+    }) : file ? searchFromMedia(file, requestId.current, language, abort.signal, value => { if (!abort.signal.aborted) setStage(value); }) : Promise.reject(new Error('Missing media'));
+    work
       .then(result => { if (!abort.signal.aborted) { setMovie(result); setError(null); } })
       .catch(cause => { if (!abort.signal.aborted) setError(cause.failureCode === 'invalid_media' ? t('mediaSearch.invalid') : t(`chat.failures.${cause.name === 'TimeoutError' ? 'timeout' : cause.failureCode || 'unknown'}`)); });
     return () => abort.abort();
     // Keep a submitted request in its original language when app settings change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [file, attempt]);
+  }, [file, historyId, attempt]);
   function close() { if (closing.current) return; closing.current = true; controller.current?.abort(); setShown(false); closeTimer.current = setTimeout(onClose, 280); }
   useEffect(() => { const key = (event: KeyboardEvent) => { if (event.key === 'Escape' && !document.querySelector('dialog[open]')) close(); }; document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key); });
   return createPortal(<div className="fixed inset-0 z-[160] flex items-end justify-center md:items-center" style={{ paddingTop: 'var(--tg-chrome, 0px)' }}>
@@ -41,7 +46,7 @@ export function SearchMediaResultModal({ file, onClose }: { file: File; onClose:
         <button onClick={close} aria-label={t('common.close')} className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: colors.panelSoft }}><CloseIcon size={22} color={colors.text} /></button>
       </header>
       <div className="min-h-0 overflow-y-auto p-4 pb-[max(20px,var(--app-bottom-inset,env(safe-area-inset-bottom)))]">
-        {preview && (mediaKind(file) === 'video' ? <video src={preview} controls playsInline preload="metadata" className="mx-auto max-h-52 w-full rounded-2xl bg-black object-contain" /> : <img src={preview} alt={t('mediaSearch.selected')} className="mx-auto max-h-52 w-full rounded-2xl object-contain" />)}
+        {preview && ((file ? mediaKind(file) : savedKind) === 'video' ? <video src={preview} controls playsInline preload="metadata" className="mx-auto max-h-52 w-full rounded-2xl bg-black object-contain" /> : <img src={preview} alt={t('mediaSearch.selected')} className="mx-auto max-h-52 w-full rounded-2xl object-contain" />)}
         {!movie && !error && <div role="status" className="flex items-center justify-center gap-3 py-8" style={{ color: colors.textMuted }}><span className="h-7 w-7 animate-spin rounded-full border-2 border-current border-t-transparent" />{t(`chat.progress.${stage}`)}…</div>}
         {error && <div role="alert" className="space-y-3 py-6 text-center" style={{ color: colors.text }}><p>{error}</p><button className="rounded-xl px-5 py-3" style={{ backgroundColor: colors.panelSoft }} onClick={() => { setError(null); setAttempt(value => value + 1); }}>{t('chat.retry')}</button></div>}
         {movie && <div className="pt-5">

@@ -45,6 +45,9 @@
     "guideGotIt": "Tushundim"
   },
   "mediaSearch": {
+    "history": "Qidiruv tarixi",
+    "delete": "Qidiruvni o‘chirish",
+    "historyError": "Qidiruv tarixini yangilab bo‘lmadi. Qayta urinib ko‘ring.",
     "heading": "Tasvir orqali kino topish",
     "selected": "Tanlangan rasm yoki video",
     "invalid": "JPG, PNG yoki WebP rasm (4 MB gacha), yoki MP4, MOV, WebM video (3 daqiqa va 80 MB gacha) tanlang.",

@@ -2,6 +2,21 @@ import { apiBaseUrl, readAuthToken } from './client';
 import { readMediaSearchStream } from './media-search-stream';
 import { prepareChatVideo } from '@/media/prepare-chat-video';
 import type { ChatStage } from '@/types/chat-progress';
+import type { MovieSearchResult } from '@/types/chat';
+
+export type SearchHistoryItem = { id: string; title: string; titleUz: string | null; titleRu: string | null; poster: string | null; kind: 'image' | 'video'; createdAt: string };
+export type SavedMediaSearch = { id: string; movie: MovieSearchResult; media: { kind: 'image' | 'video'; url: string } };
+async function historyRequest<T>(path: string, method = 'GET', signal?: AbortSignal): Promise<T> {
+  const token = readAuthToken(); if (!token) throw new Error('Authentication required');
+  const response = await fetch(apiBaseUrl + '/api/media-search/history' + path, { method, cache: 'no-store', headers: { Authorization: `Bearer ${token}` },
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(30000)]) : AbortSignal.timeout(30000) });
+  if (!response.ok) throw new Error('Search history unavailable');
+  const result = await response.json(); if (!result.ok) throw new Error('Search history unavailable');
+  return result.data;
+}
+export const fetchSearchHistory = (cursor: string | null = null, signal?: AbortSignal) => historyRequest<{ items: SearchHistoryItem[]; nextCursor: string | null }>(cursor ? '?cursor=' + encodeURIComponent(cursor) : '', 'GET', signal);
+export const readSearchHistory = (id: string, signal?: AbortSignal) => historyRequest<SavedMediaSearch>('/' + encodeURIComponent(id), 'GET', signal);
+export const deleteSearchHistory = (id: string) => historyRequest<{ id: string; pending: boolean }>('/' + encodeURIComponent(id), 'DELETE');
 
 export function mediaKind(file: File): 'image' | 'video' {
   const video = file.type.startsWith('video/') || /\.(mp4|mov|webm)$/i.test(file.name);

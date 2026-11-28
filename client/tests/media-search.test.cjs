@@ -9,6 +9,31 @@ function load(file, mocks = {}) {
   return module.exports;
 }
 const movie = { title: 'Example', posters: [], uzbekLinks: [] };
+test('history lists, reopens and deletes saved searches without uploading or analyzing again', async () => {
+  const requests = [], original = global.fetch;
+  const api = load('src/api/media-search.ts', {
+    './client': { apiBaseUrl: 'https://api.test', readAuthToken: () => 'owner-token' },
+    './media-search-stream': {}, '@/media/prepare-chat-video': {},
+  });
+  global.fetch = async (url, init) => {
+    requests.push({ url, init });
+    return { ok: true, json: async () => ({ ok: true, data: { movie } }) };
+  };
+  try {
+    await api.fetchSearchHistory('cursor+/=');
+    assert.deepEqual(await api.readSearchHistory('saved-id'), { movie });
+    await api.deleteSearchHistory('saved-id');
+    assert.deepEqual(requests.map(r => [r.url, r.init.method]), [
+      ['https://api.test/api/media-search/history?cursor=cursor%2B%2F%3D', 'GET'],
+      ['https://api.test/api/media-search/history/saved-id', 'GET'],
+      ['https://api.test/api/media-search/history/saved-id', 'DELETE'],
+    ]);
+    for (const { init } of requests) {
+      assert.equal(init.headers.Authorization, 'Bearer owner-token');
+      assert.equal(init.cache, 'no-store');
+    }
+  } finally { global.fetch = original; }
+});
 for (const file of ['src/api/media-search-stream.ts', '../clientNative/src/api/media-search-stream.ts']) {
   test(`${file}: split chunks preserve progress and a complete result`, async () => {
     const { readMediaSearchStream } = load(file);

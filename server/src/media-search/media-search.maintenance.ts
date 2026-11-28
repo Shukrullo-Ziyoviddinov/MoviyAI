@@ -1,4 +1,4 @@
-import { MediaSearch, MediaSearchLease } from './media-search.model.js';
+import { MediaSearch, MediaSearchLease, MediaSearchDeletion } from './media-search.model.js';
 import { deleteChatImage } from '../services/r2.service.js';
 import { CatalogSaveJob } from '../ai/catalog/models/catalog-job.model.js';
 import { catalogChatInput, isCatalogEligible, catalogJobId } from '../ai/catalog/utils/catalog-chat-input.js';
@@ -8,9 +8,7 @@ import { prepareCatalogDraft } from '../ai/catalog/mappers/movie.mapper.js';
 import { movieMatchInput } from '../ai/catalog/services/catalog-match.service.js';
 import type { MovieSearchResult } from '../ai/types/movie-search.types.js';
 
-export async function maintainMediaSearches() {
-  for (const row of await MediaSearch.find({ status: 'completed', dispatchPending: true }).limit(20).lean()) {
-    try {
+export async function dispatchMediaSearch(row: { _id: string; movie?: unknown; completedAt?: Date | null; updatedAt: Date }) {
       const movie = row.movie as MovieSearchResult;
       if (isCatalogEligible(movie)) await CatalogSaveJob.updateOne({ _id: catalogJobId(`search-${row._id}`, row._id) },
         { $setOnInsert: { input: catalogChatInput(movie, []), status: 'pending', attempts: 0, nextAttemptAt: new Date() } }, { upsert: true });
@@ -19,11 +17,34 @@ export async function maintainMediaSearches() {
         catalogId: movie.catalogId ?? null, occurredAt: row.completedAt ?? row.updatedAt,
       } }, { upsert: true });
       await MediaSearch.updateOne({ _id: row._id }, { $set: { dispatchPending: false } });
+}
+export async function finishSearchDeletion(id: string, remove = deleteChatImage) {
+  const task = await MediaSearchDeletion.findById(id).lean();
+  if (!task) return;
+  const row = await MediaSearch.findById(id).lean();
+  if (row && !row.deletedAt) throw new Error('SEARCH_NOT_DELETED');
+  if (row?.dispatchPending) await dispatchMediaSearch(row);
+  await remove(task.key);
+  await MediaSearch.deleteOne({ _id: id, deletedAt: { $ne: null }, dispatchPending: false });
+  if (task.until <= new Date()) await MediaSearchDeletion.deleteOne({ _id: id });
+  else await MediaSearchDeletion.updateOne({ _id: id }, { $set: { nextAttemptAt: task.until } });
+}
+export async function maintainMediaSearches() {
+  for (const row of await MediaSearch.find({ status: 'completed', dispatchPending: true }).limit(20).lean()) {
+    try { await dispatchMediaSearch(row);
     } catch { console.warn('[MEDIA_SEARCH] Result dispatch will retry'); }
   }
-  for (const row of await MediaSearch.find({ expiresAt: { $lte: new Date() }, lockUntil: { $lte: new Date() }, dispatchPending: false }).limit(20).lean()) {
+  for (const row of await MediaSearch.find({ status: { $ne: 'completed' }, expiresAt: { $lte: new Date() }, lockUntil: { $lte: new Date() }, dispatchPending: false }).limit(20).lean()) {
     try { await deleteChatImage(row.key); await MediaSearch.deleteOne({ _id: row._id, lockUntil: { $lte: new Date() } }); }
     catch { console.warn('[MEDIA_SEARCH] Private upload cleanup will retry'); }
+  }
+  // Recover a crash between hiding a history item and creating its cleanup task.
+  for (const row of await MediaSearch.find({ deletedAt: { $ne: null }, status: 'completed' }).limit(20).lean()) {
+    await MediaSearchDeletion.updateOne({ _id: row._id }, { $setOnInsert: { key: row.key, until: row.expiresAt, nextAttemptAt: new Date() } }, { upsert: true });
+  }
+  for (const task of await MediaSearchDeletion.find({ nextAttemptAt: { $lte: new Date() } }).limit(20).lean()) {
+    try { await finishSearchDeletion(task._id); }
+    catch { await MediaSearchDeletion.updateOne({ _id: task._id }, { $set: { nextAttemptAt: new Date(Date.now() + 60000) } }); console.warn('[MEDIA_SEARCH] History deletion will retry'); }
   }
   await MediaSearchLease.deleteMany({ until: { $lte: new Date(Date.now() - 3600000) } });
 }

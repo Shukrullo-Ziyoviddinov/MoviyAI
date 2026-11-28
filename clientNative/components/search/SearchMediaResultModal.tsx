@@ -5,7 +5,7 @@ import { VideoPreview } from '@/components/chat/VideoPreview';
 import * as Crypto from 'expo-crypto';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { searchFromMedia, type SearchMedia } from '@/src/api/media-search';
+import { searchFromMedia, readSearchHistory, type SearchMedia } from '@/src/api/media-search';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { useLanguageStore } from '@/src/stores/useLanguageStore';
 import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
@@ -13,7 +13,7 @@ import type { MovieSearchResult } from '@/src/types/chat';
 import type { ChatStage } from '@/src/types/chat-progress';
 import { UzbekMovieLinks } from '@/components/chat/UzbekMovieLinks';
 
-export function SearchMediaResultModal({ media, onClose }: { media: SearchMedia; onClose: () => void }) {
+export function SearchMediaResultModal({ media, historyId, onClose }: { media?: SearchMedia; historyId?: string; onClose: () => void }) {
   const { t } = useTranslation(), { colors } = useTheme();
   const language = useLanguageStore(state => state.language);
   const insets = useSafeAreaInsets(), { width } = useWindowDimensions();
@@ -22,17 +22,23 @@ export function SearchMediaResultModal({ media, onClose }: { media: SearchMedia;
   const [stage, setStage] = useState<ChatStage>('preparing');
   const id = useRef(Crypto.randomUUID()), controller = useRef<AbortController | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [savedMedia, setSavedMedia] = useState<SearchMedia | null>(null);
+  const displayedMedia = media ?? savedMedia;
   useEffect(() => {
     useSideMenuStore.getState().suspendGestures();
     return () => { useSideMenuStore.getState().resumeGestures(); if (closeTimer.current) clearTimeout(closeTimer.current); };
   }, []);
   useEffect(() => {
     const abort = new AbortController(); controller.current = abort;
-    searchFromMedia(media, id.current, language, abort.signal, value => { if (!abort.signal.aborted) setStage(value); })
+    const work = historyId ? readSearchHistory(historyId, abort.signal).then(saved => {
+      if (!abort.signal.aborted) setSavedMedia({ uri: saved.media.url, type: saved.media.kind });
+      return saved.movie;
+    }) : media ? searchFromMedia(media, id.current, language, abort.signal, value => { if (!abort.signal.aborted) setStage(value); }) : Promise.reject(new Error('Missing media'));
+    work
       .then(result => { if (!abort.signal.aborted) { setMovie(result); setError(null); } })
       .catch(cause => { if (!abort.signal.aborted) setError(cause.failureCode === 'invalid_media' ? t('mediaSearch.invalid') : t(`chat.failures.${cause.name === 'TimeoutError' ? 'timeout' : cause.failureCode || 'unknown'}`)); });
     return () => abort.abort();
-  }, [media, attempt]);
+  }, [media, historyId, attempt]);
   function close() {
     if (closeTimer.current) return;
     controller.current?.abort(); setVisible(false);
@@ -47,7 +53,7 @@ export function SearchMediaResultModal({ media, onClose }: { media: SearchMedia;
           <Pressable accessibilityLabel={t('common.close')} onPress={close} style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.panelSoft }}><Text style={{ color: colors.text, fontSize: 27 }}>×</Text></Pressable>
         </View>
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: Math.max(insets.bottom, 20) }}>
-          {media.type === 'video' ? <View style={{ width: '100%', height: 190, borderRadius: 14, overflow: 'hidden', backgroundColor: '#000' }}><VideoPreview uri={media.uri} /></View> : <Image source={{ uri: media.uri }} contentFit="contain" style={{ width: '100%', height: 190, borderRadius: 14 }} />}
+          {displayedMedia && (displayedMedia.type === 'video' ? <View style={{ width: '100%', height: 190, borderRadius: 14, overflow: 'hidden', backgroundColor: '#000' }}><VideoPreview uri={displayedMedia.uri} /></View> : <Image source={{ uri: displayedMedia.uri }} contentFit="contain" style={{ width: '100%', height: 190, borderRadius: 14 }} />)}
           {!movie && !error && <View style={{ paddingVertical: 30, alignItems: 'center', gap: 12 }}><ActivityIndicator color={colors.accent} /><Text style={{ color: colors.textMuted }}>{t(`chat.progress.${stage}`)}…</Text></View>}
           {error && <View style={{ paddingVertical: 24, alignItems: 'center', gap: 12 }}><Text style={{ color: colors.text, textAlign: 'center' }}>{error}</Text><Pressable onPress={() => { setError(null); setAttempt(value => value + 1); }} style={{ padding: 14, backgroundColor: colors.panelSoft, borderRadius: 12 }}><Text style={{ color: colors.text }}>{t('chat.retry')}</Text></Pressable></View>}
           {movie && <View style={{ paddingTop: 20 }}>
