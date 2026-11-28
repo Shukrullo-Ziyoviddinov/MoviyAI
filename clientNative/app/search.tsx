@@ -5,11 +5,17 @@ import { useAuthStore } from '@/src/stores/useAuthStore';
 import { useTheme } from '@/src/stores/useThemeStore';
 import { getSecureItem, setSecureItem } from '@/src/utils/storage';
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
+import { SearchMediaResultModal } from '@/components/search/SearchMediaResultModal';
+import type { SearchMedia } from '@/src/api/media-search';
+import { useSideMenuStore } from '@/src/stores/useSideMenuStore';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Pressable,
+  Alert,
+  Keyboard,
   StyleSheet,
   Text,
   TextInput,
@@ -26,6 +32,25 @@ export default function SearchScreen() {
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
+  const [pendingMedia, setPendingMedia] = useState<SearchMedia | null>(null);
+  const [searchMedia, setSearchMedia] = useState<SearchMedia | null>(null);
+  const picking = useRef(false);
+  async function pickMedia() {
+    if (!requireAuth('profile') || picking.current) return;
+    Keyboard.dismiss();
+    picking.current = true; useSideMenuStore.getState().suspendGestures();
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images', 'videos'], allowsMultipleSelection: false,
+        quality: 0.9, preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible });
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        const type = asset.type === 'video' ? 'video' : 'image';
+        if (asset.fileSize && asset.fileSize > (type === 'video' ? 80 : 4) * 1024 * 1024 || asset.duration && asset.duration > 180000) { Alert.alert(t('common.error'), t('mediaSearch.invalid')); return; }
+        setPendingMedia({ uri: asset.uri, type, mimeType: asset.mimeType, fileName: asset.fileName ?? undefined, durationSeconds: asset.duration ? asset.duration / 1000 : undefined });
+      }
+    } catch { Alert.alert(t('common.error'), t('mediaSearch.invalid')); }
+    finally { picking.current = false; useSideMenuStore.getState().resumeGestures(); }
+  }
   const [showGuide, setShowGuide] = useState(false);
   const [guideReady, setGuideReady] = useState(false);
   const profile = useAuthStore((s) => s.profile);
@@ -107,15 +132,20 @@ export default function SearchScreen() {
           />
           <Pressable
             style={styles.cameraBtn}
-            onPress={() => {
-              // Keyinroq: surat orqali qidiruv
-            }}
+            onPress={() => void pickMedia()}
             hitSlop={8}
           >
             <CameraIcon size={28} color={colors.icon} strokeWidth={2.15} />
           </Pressable>
         </View>
       </View>
+
+      {pendingMedia && <View style={{ margin: 16, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSoft, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Text numberOfLines={1} style={{ flex: 1, color: colors.text }}>{pendingMedia.fileName || t('mediaSearch.selected')}</Text>
+        <Pressable onPress={() => { setSearchMedia(pendingMedia); setPendingMedia(null); }} style={{ padding: 12, borderRadius: 12, backgroundColor: colors.accent }}><Text style={{ color: colors.textOnAccent }}>{t('chat.send')}</Text></Pressable>
+        <Pressable onPress={() => setPendingMedia(null)}><Text style={{ color: colors.text, fontSize: 24 }}>×</Text></Pressable>
+      </View>}
+      {searchMedia && <SearchMediaResultModal media={searchMedia} onClose={() => setSearchMedia(null)} />}
 
       <View style={styles.hero}>
         <Image

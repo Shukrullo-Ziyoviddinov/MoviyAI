@@ -9,6 +9,9 @@ import { CameraIcon, ChevronLeftIcon } from "@/components/icons";
 import { useLanguage } from "@/components/language/language-state";
 import { useTheme } from "@/components/theme/theme-state";
 import { searchCopy } from "@/data/searchCopy";
+import { SearchMediaResultModal } from './SearchMediaResultModal';
+import { mediaKind } from '@/api/media-search';
+import { useT } from '@/i18n/useT';
 
 const GUIDE_KEY = "moviy-search-guide-understood";
 const OPEN_MS = 380;
@@ -54,6 +57,11 @@ export function SearchModal({
   const { profile, requireAuth, replaceProfile } = useAuth();
   const copy = searchCopy(language);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [searchFile, setSearchFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState(false);
+  const t = useT();
   const [query, setQuery] = useState("");
   const [mounted, setMounted] = useState(false);
   const [shown, setShown] = useState(false);
@@ -63,25 +71,22 @@ export function SearchModal({
   const [portalReady, setPortalReady] = useState(false);
 
   useEffect(() => {
-    setPortalReady(true);
     const media = window.matchMedia("(min-width: 768px)");
-    const sync = () => setDesktop(media.matches);
-    sync();
+    const sync = () => { setPortalReady(true); setDesktop(media.matches); };
+    const frame = window.requestAnimationFrame(sync);
     media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
+    return () => { window.cancelAnimationFrame(frame); media.removeEventListener("change", sync); };
   }, []);
 
   useEffect(() => {
     if (!open) {
-      setShown(false);
+      const frame = window.requestAnimationFrame(() => { setSearchFile(null); setSelectedFile(null); setFileError(false); setShown(false); });
       const timer = window.setTimeout(() => setMounted(false), OPEN_MS);
-      return () => window.clearTimeout(timer);
+      return () => { window.cancelAnimationFrame(frame); window.clearTimeout(timer); };
     }
-    setBox(origin ? panelBox(origin) : null);
-    setMounted(true);
-    setShown(false);
     let cancelled = false;
     const frame = window.requestAnimationFrame(() => {
+      setBox(origin ? panelBox(origin) : null); setMounted(true); setShown(false);
       window.requestAnimationFrame(() => {
         if (!cancelled) setShown(true);
       });
@@ -102,16 +107,16 @@ export function SearchModal({
   useEffect(() => {
     if (!open) return;
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !searchFile) onClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, onClose, searchFile]);
 
   useEffect(() => {
     if (!open) {
-      setGuideOn(false);
-      return;
+      const frame = window.requestAnimationFrame(() => setGuideOn(false));
+      return () => window.cancelAnimationFrame(frame);
     }
     const understood = window.localStorage.getItem(GUIDE_KEY) === "1" || Boolean(profile?.searchGuideUnderstood);
     if (understood) return;
@@ -200,11 +205,23 @@ export function SearchModal({
               className="search-modal-input min-w-0 flex-1 bg-transparent py-2.5 pr-2 text-[16px] font-medium outline-none"
               style={{ color: colors.text, caretColor: colors.accent, ["--search-placeholder" as string]: colors.textMuted }}
             />
-            <button type="button" aria-label="Kamera" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+            <button type="button" aria-label="Kamera" onClick={() => { if (requireAuth()) fileInput.current?.click(); }} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
               <CameraIcon size={28} color={colors.icon} strokeWidth={2.15} />
             </button>
           </div>
         </div>
+
+        <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" className="hidden" onChange={event => {
+          const file = event.target.files?.[0]; event.target.value = '';
+          if (!file) return;
+          try { mediaKind(file); setSelectedFile(file); setFileError(false); } catch { setFileError(true); }
+        }} />
+        {fileError && <p role="alert" className="px-5 pt-3 text-sm" style={{ color: colors.text }}>{t('mediaSearch.invalid')}</p>}
+        {selectedFile && <div className="mx-4 mt-4 flex items-center gap-3 rounded-2xl border p-4" style={{ borderColor: colors.borderSoft, color: colors.text }}>
+          <span className="min-w-0 flex-1 truncate">{selectedFile.name}</span>
+          <button className="rounded-xl px-4 py-2 font-semibold" style={{ backgroundColor: colors.accent, color: colors.textOnAccent }} onClick={() => { inputRef.current?.blur(); setSearchFile(selectedFile); setSelectedFile(null); setGuideOn(false); }}>{t('chat.send')}</button>
+          <button onClick={() => setSelectedFile(null)} aria-label={t('common.close')}>×</button>
+        </div>}
 
         <div className="flex flex-1 flex-col items-center justify-center px-8 pb-12">
           <img src="/images/iasearch_preview_rev_1.png" alt="" className="mb-[22px] h-[150px] w-[150px] object-contain" />
@@ -247,6 +264,7 @@ export function SearchModal({
           </div>
         ) : null}
       </div>
+      {searchFile && <SearchMediaResultModal key={searchFile.name + searchFile.lastModified} file={searchFile} onClose={() => setSearchFile(null)} />}
       <style>{`
         .search-modal-input::placeholder { color: var(--search-placeholder); }
         @keyframes search-guide-in {

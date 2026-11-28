@@ -44,6 +44,12 @@
     "guideText": "Kino nomi yoki his-tuyg‘ularingizni ta’riflab, sizga yoqadigan janr va qiziqarli yo‘nalishni yozing. Yoki topa olmayotgan kinolarni rasm va video orqali tez va oson toping.",
     "guideGotIt": "Tushundim"
   },
+  "mediaSearch": {
+    "heading": "Tasvir orqali kino topish",
+    "selected": "Tanlangan rasm yoki video",
+    "invalid": "JPG, PNG yoki WebP rasm (4 MB gacha), yoki MP4, MOV, WebM video (3 daqiqa va 80 MB gacha) tanlang.",
+    "noLinks": "Bu kino uchun o‘zbekcha dublaj havolasi topilmadi."
+  },
   "home": {
     "emptyTitle": "Hali hech narsa yo'q",
     "emptySubtitle": "Kinolar va tavsiyalar shu yerda paydo bo'ladi. Hozir AI Chat orqali qidirishni boshlang.",

@@ -1,4 +1,5 @@
 import { startPopularityWorker } from './movie-popularity/worker.js';
+import { startMediaSearchMaintenance } from './media-search/media-search.maintenance.js';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -64,6 +65,7 @@ async function bootstrap() {
     startChatImageCleanup();
     startCatalogWorker();
     startPopularityWorker();
+    startMediaSearchMaintenance();
     startVideoImportWorker();
     startVideoImportCleanup();
   });

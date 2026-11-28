@@ -44,6 +44,12 @@
     "guideText": "Type a movie title or describe your mood, favorite genres, and interests. Or find movies you can’t locate via photo and video — fast and easy.",
     "guideGotIt": "Got it"
   },
+  "mediaSearch": {
+    "heading": "Find a film from media",
+    "selected": "Selected photo or video",
+    "invalid": "Choose JPG, PNG or WebP up to 4 MB, or MP4, MOV, WebM up to 3 minutes and 80 MB.",
+    "noLinks": "No Uzbek-dubbed links were found for this film."
+  },
   "home": {
     "emptyTitle": "Nothing here yet",
     "emptySubtitle": "Movies and recommendations will show up here. Start searching with AI Chat.",
